@@ -1,0 +1,1 @@
+(fun (x : Int, y : String) => x) (10, "hello")

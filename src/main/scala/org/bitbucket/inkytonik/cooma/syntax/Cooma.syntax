@@ -1,0 +1,113 @@
+module syntax.CoomaParser;
+
+header {
+    import syntax.CoomaParserSyntax.*;
+}
+
+// Cooma source language
+
+Program =
+  Spacing Expression EOF.
+
+Expression {paren} =
+    "fun" '(' Argument ** "," ")" "=>" Expression   {Fun, right, 3}
+  | Expression '(' Expression ** "," ')'            {App, left, 2}
+  | Expression '.' Identifier                       {Fld, left, 1}
+  | Block
+  | '{' Field '}'                                   {Row}
+  | '{' '}'                                         {Uni}
+  | IntLit                                          {Num, 1: Integer.parseInt : Int}
+  | StringLit                                       {Str}
+  | Identifier                                      {IdnUse}
+  | '(' Expression ')'.
+
+Argument =
+  Identifier sp ":" Type.
+
+Field =
+  Identifier sp "=" Expression.
+
+Block : Expression =
+  '{' nestnl (BlockExp) \n '}'.
+
+BlockExp =
+    LetVal
+  | Expression   {TailExp}.
+
+LetVal : BlockExp =
+  ValueDefinition BlockExp.
+
+ValueDefinition =
+  "val" Identifier sp "=" Expression \n   {Val}.
+
+Type =
+    Type sp "->" Type         {FunT, right, 1}
+  | RowType                   {PiT}
+  | 'Int'                     {IntT}
+  | 'String'                  {StrT}
+  | Identifier                {IdnT}.
+
+RowType =
+  '{' FieldType ** "," '}'.
+
+FieldType =
+  Identifier sp ":" Type.
+
+// Continuation-based intermediate representation
+
+Value =
+    "arg" IntLit                                  {ArgV, 1: Integer.parseInt : Int}
+  | "cap" Identifier sp Identifier                {CapV}
+  | Identifier '.' Identifier                     {FldV}
+  | "fun" Identifier sp Identifier sp "=>" Term   {FunV}
+  | IntLit                                        {IntV, 1: Integer.parseInt : Int}
+  | "prm" Identifier sp Identifier+               {PrmV}
+  | '{' FieldValue '}'                            {RowV}
+  | StringLit                                     {StrV}
+  | '{' '}'                                       {UniV}.
+
+FieldValue =
+  Identifier sp "=" Identifier.
+
+Term =
+    "letv" Identifier sp "=" Value sp "in"
+      nestnl (Term)                                      {LetV}
+  | "letc" Identifier sp Identifier sp "=" Term sp "in"
+      nestnl (Term)                                      {LetC}
+  | Identifier sp Identifier sp Identifier               {AppF}
+  | Identifier sp Identifier                             {AppC}.
+
+// Runtime
+
+ValueR =
+    '[' Env "," "fun" Identifier sp Identifier sp "=>" Term ']'   {ClsR}
+  | "err" StringLit                                               {ErrR}
+  | IntLit                                                        {IntR, 1: Integer.parseInt : Int}
+  | '{' FldR '}'                                                  {RowR}
+  | StringLit                                                     {StrR}
+  | '{' '}'                                                       {UniR}.
+
+FldR =
+  Identifier "=" ValueR.
+
+ValueC =
+  '[' Env "," "fun" Identifier "." Term ']'   {ClsC}.
+
+Env =
+    Env "," Identifier "|->" ValueR   {ConsVE, left, 1}
+  | Env "," Identifier "|->" ValueC   {ConsCE, left, 1}
+  | 'empty'                           {NilE}.
+
+// Lexical syntax
+
+IntLit : Token =
+  Digits.
+
+Digits : String =
+  Digit+.
+
+Digit : String =
+  [0-9].
+
+StringLit : Token =
+  '"' (!'"' _)* '"'.
