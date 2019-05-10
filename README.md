@@ -132,7 +132,8 @@ letv x1 = arg 0 in
             letv x5 = "Hello world!" in
                 letc k2 x3 = halt x3 in
                     x4 k2 x5
-"Hello world!"{}```
+"Hello world!"{}
+```
 
 `{}` is the unit value returned by `c.write`.
 
@@ -161,7 +162,8 @@ letv x1 = arg 0 in
                             letc k6 x7 = letc k3 x4 = halt x4 in
                                 x5 k3 x7 in
                                 x9 k6 z8
-(fun (x : Int, y : String) => x) (10, "hello") {}```
+(fun (x : Int, y : String) => x) (10, "hello") {}
+```
 
 A Reader capability is only provided if the designated file can be read.
 
