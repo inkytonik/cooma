@@ -1,9 +1,9 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.kiama.util.CompilerBase
-import syntax.CoomaParserSyntax.Program
+import syntax.CoomaParserSyntax.{ASTNode, Program}
 
-object Main extends CompilerBase[Program, Program, Config] {
+object Main extends CompilerBase[ASTNode, Program, Config] {
 
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.util.Source
