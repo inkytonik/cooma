@@ -44,11 +44,14 @@ Specification and reference implementation is under way.
 
 ### Prerequisites
 
-* [Scala Build Tool](https://www.scala-sbt.org)
+* [Scala Build Tool - sbt](https://www.scala-sbt.org)
 
 ### Running
 
-Clone this project, go to the cloned directory, run `sbt`, then at the sbt prompt, run the Cooma implementation.
+* clone this project
+* go to the cloned directory
+* run `sbt`
+* at the sbt prompt, run the Cooma implementation
 
 E.g., for the program `src/test/resources/multiArgCall.cooma` which is a simple multiple argument function call:
 
@@ -82,7 +85,11 @@ cooma 0.1.0 2.12.8> run -i -r src/test/resources/multiArgCall.cooma
 [info] 10
 ```
 
-## More Examples
+### Testing
+
+Use the sbt command `test` to run the automated tests.
+
+## Examples
 
 NOTE: sbt `[info]` markers have been removed to simplify the output.
 
