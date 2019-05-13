@@ -4,7 +4,7 @@ object Compiler {
 
     import syntax.CoomaParserPrettyPrinter.show
     import syntax.CoomaParserSyntax._
-    import Util.{fresh, unescape}
+    import org.bitbucket.inkytonik.cooma.Util.{fresh, unescape}
 
     val halt = x => AppC("halt", x)
 
