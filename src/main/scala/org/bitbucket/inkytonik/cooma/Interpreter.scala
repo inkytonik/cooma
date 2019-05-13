@@ -3,6 +3,7 @@ package org.bitbucket.inkytonik.cooma
 object Interpreter {
 
     import java.nio.file.{Files, Paths}
+    import org.bitbucket.inkytonik.kiama.util.FileSource
     import syntax.CoomaParserPrettyPrinter.show
     import syntax.CoomaParserSyntax._
     import Util.fresh
@@ -79,13 +80,18 @@ object Interpreter {
                 case PrmV(name, args) =>
                     (name, args) match {
                         case ("console", Vector(f, x)) =>
-                            val s = show(lookupR(rho, x))
+                            val s =
+                                lookupR(rho, x) match {
+                                    case StrR(s) =>
+                                        s
+                                    case v =>
+                                        show(v)
+                                }
                             Files.write(Paths.get(f), s.getBytes())
                             UniR()
 
                         case ("reader", Vector(f)) =>
-                            val s = new String(Files.readAllBytes(Paths.get(f)))
-                            StrR(s)
+                            StrR(FileSource(f).content)
 
                         case (name, arg) =>
                             sys.error(s"interpretValue: unknown primitive call $name $arg")
