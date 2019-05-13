@@ -28,7 +28,9 @@ libraryDependencies ++=
         "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
         "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
         "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
-        "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests")
+        "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
+        "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+        "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
     )
 
 resolvers ++=
