@@ -11,7 +11,8 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
     import syntax.CoomaParser
     import syntax.CoomaParserPrettyPrinter
     import syntax.CoomaParserPrettyPrinter.{any, layout, show}
-    import syntax.CoomaParserSyntax.ErrR
+    import syntax.CoomaParserSyntax.{ClsR, ErrR, StrR}
+    import Util.escape
 
     val name = "cooma"
 
@@ -48,8 +49,17 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
             case ErrR(msg) =>
                 config.output().emitln(s"cooma: $msg")
             case v =>
-                if (config.resultPrint())
-                    config.output().emitln(show(v))
+                if (config.resultPrint()) {
+                    val result = v match {
+                        case _ : ClsR =>
+                            "<function>"
+                        case StrR(s) =>
+                            s""""${escape(s)}""""
+                        case _ =>
+                            show(v)
+                    }
+                    config.output().emitln(result)
+                }
         }
     }
 
