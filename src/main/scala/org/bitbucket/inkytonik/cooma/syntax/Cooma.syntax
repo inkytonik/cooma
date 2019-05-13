@@ -41,7 +41,7 @@ ValueDefinition =
   "val" Identifier sp "=" Expression \n   {Val}.
 
 Type =
-    Type sp "->" Type         {FunT, right, 1}
+    Type sp "=>" Type         {FunT, right, 1}
   | RowType                   {PiT}
   | 'Int'                     {IntT}
   | 'String'                  {StrT}
@@ -88,7 +88,7 @@ ValueR =
   | '{' '}'                                                       {UniR}.
 
 FldR =
-  Identifier "=" ValueR.
+  Identifier sp "=" ValueR.
 
 ValueC =
   '[' Env "," "fun" Identifier "." Term ']'   {ClsC}.
@@ -110,4 +110,14 @@ Digit : String =
   [0-9].
 
 StringLit : Token =
-  '"' (!'"' _)* '"'.
+  '"' StringChar* '"'.
+
+StringChar : String =
+  '\\' ([btnfr] / '\\' / '"' / "'" /
+        OctDigit OctDigit OctDigit /
+        OctDigit OctDigit /
+        OctDigit OctDigit) /
+  !'"' _.
+
+OctDigit : String =
+  [0-7].
