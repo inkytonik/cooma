@@ -4,7 +4,7 @@ object Compiler {
 
     import syntax.CoomaParserPrettyPrinter.show
     import syntax.CoomaParserSyntax._
-    import Util.fresh
+    import Util.{fresh, unescape}
 
     val halt = x => AppC("halt", x)
 
@@ -96,8 +96,5 @@ object Compiler {
                 val x = fresh("x")
                 LetV(x, UniV(), kappa(x))
         }
-
-    def unescape(s : String) : String =
-        StringContext.treatEscapes(s)
 
 }
