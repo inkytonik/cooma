@@ -59,3 +59,22 @@ scalariformPreferences := scalariformPreferences.value
     .setPreference(IndentSpaces, 4)
     .setPreference(SpaceBeforeColon, true)
     .setPreference(SpacesAroundMultiImports, false)
+
+// License
+
+// File headers
+
+//  Use headerCheck to check which files need new headers
+//  Use headerCreate in sbt to generate the headers
+//  Use Test/headerCheck etc to do same in test code
+
+headerLicense := Some(HeaderLicense.Custom(
+   """|This file is part of Cooma.
+      |
+      |Copyright (C) 2019 Anthony M Sloane, Macquarie University.
+      |
+      |This Source Code Form is subject to the terms of the Mozilla Public
+      |License, v. 2.0. If a copy of the MPL was not distributed with this
+      |file, You can obtain one at http://mozilla.org/MPL/2.0/.
+      |""".stripMargin
+))

@@ -31,6 +31,7 @@
         "makeast",
         "mantirosian",
         "mc",
+        "mpl",
         "mq",
         "ocampo",
         "oliveira",
@@ -47,6 +48,8 @@
         "tty",
         "txt",
         "ve",
-        "wadler"
+        "wadler",
+        "xms",
+        "xmx"
     ]
 }

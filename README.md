@@ -2,6 +2,8 @@
 
 The Cooma project at Macquarie University is investigating secure programming language design based on fine-grained object capabilities.
 
+[![License: MPL v2.0](https://img.shields.io/badge/License-MPL%20v2-blue.svg)](http://mozilla.org/MPL/2.0/)
+
 ## Participants
 
 * Anthony Sloane (Anthony.Sloane@mq.edu.au)
