@@ -90,11 +90,14 @@ object Compiler {
 
             case Str(s) =>
                 val x = fresh("x")
-                LetV(x, StrV(s), kappa(x))
+                LetV(x, StrV(unescape(s.tail.init)), kappa(x))
 
             case Uni() =>
                 val x = fresh("x")
                 LetV(x, UniV(), kappa(x))
         }
+
+    def unescape(s : String) : String =
+        StringContext.treatEscapes(s)
 
 }
