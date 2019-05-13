@@ -27,7 +27,7 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
 
     override def makeast(source : Source, config : Config) : Either[Program, Messages] = {
         val p = new CoomaParser(source, positions)
-        val pr = p.pProgram (0)
+        val pr = p.pProgram(0)
         if (pr.hasValue)
             Left(p.value(pr).asInstanceOf[Program])
         else

@@ -31,8 +31,10 @@ object Interpreter {
                                 ConsCE(
                                     ConsVE(rho, y, lookupR(rho, x)),
                                     j,
-                                    lookupC(rho, k)),
-                                t)
+                                    lookupC(rho, k)
+                                ),
+                                t
+                            )
 
                         case err : ErrR =>
                             err
@@ -46,7 +48,7 @@ object Interpreter {
 
                 case LetV(x, v, t) =>
                     interpretAux(ConsVE(rho, x, interpretValue(v, rho)), t)
-        }
+            }
 
         def interpretValue(value : Value, rho : Env) : ValueR =
             value match {

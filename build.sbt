@@ -40,9 +40,22 @@ resolvers ++=
 
 fork := true
 
+// sbt-rats
+
 ratsScalaRepetitionType := Some(VectorType)
 ratsUseScalaOptions := true
 ratsUseScalaPositions := true
 ratsDefineASTClasses := true
 ratsDefinePrettyPrinter := true
 ratsUseKiama := 2
+
+// ScalariForm
+
+import scalariform.formatter.preferences._
+
+scalariformPreferences := scalariformPreferences.value
+    .setPreference(AlignSingleLineCaseStatements, true)
+    .setPreference(DanglingCloseParenthesis, Force)
+    .setPreference(IndentSpaces, 4)
+    .setPreference(SpaceBeforeColon, true)
+    .setPreference(SpacesAroundMultiImports, false)

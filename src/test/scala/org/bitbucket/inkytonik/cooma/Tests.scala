@@ -21,68 +21,106 @@ class Tests extends FunSuiteLike with Matchers {
         List(
             // Functional core
 
-            Test("integer",
-                 "42",
-                 "42"),
-            Test("string",
-                 """"hello"""",
-                 """"hello""""),
-            Test("string with quote",
-                 """"hel\"lo"""",
-                 """"hel\"lo""""),
-            Test("string with newline",
-                 """"hello\n"""",
-                 """"hello\n""""),
-            Test("row",
-                 "{x = 65}",
-                 "{x = 65}"),
-            Test("field select",
-                 """{s = "Hi"}.s""",
-                 """"Hi""""),
-            Test("nested field select",
-                 "{r = {y = 42}}.r.y",
-                 "42"),
-            Test("unit",
-                 "{}",
-                 "{}"),
-            Test("unit argument",
-                 "(fun (x : {}) => 100)()",
-                 "100"),
-            Test("single integer argument",
-                 """(fun (x : Int) => x)(10)""",
-                 "10"),
-            Test("multiple arguments - first",
-                 """(fun (x : Int, y : String) => x)(10, "hello")""",
-                 "10"),
-            Test("multiple arguments - second",
-                 """(fun (x : Int, y : String) => y)(10, "hello")""",
-                 """"hello""""),
-            Test("row argument",
-                 "(fun (r : {x : Int}) => r.x)({x = 20})",
-                 "20"),
-            Test("single field row return",
-                 "(fun (x : Int) => {a = x})(9)",
-                 "{a = 9}"),
-            Test("function argument",
-                 """(fun (f : Int => String) => f(10))(fun (x : Int) => "yes")""",
-                 """"yes""""),
-            Test("function return then call",
-                 "(fun (x : Int) => (fun (y : Int) => x))(10)(15)",
-                 "10"),
-            Test("function program result",
-                 "(fun (f : Int => Int) => f)(fun (x : Int) => x)",
-                 "<function>"),
+            Test(
+                "integer",
+                "42",
+                "42"
+            ),
+            Test(
+                "string",
+                """"hello"""",
+                """"hello""""
+            ),
+            Test(
+                "string with quote",
+                """"hel\"lo"""",
+                """"hel\"lo""""
+            ),
+            Test(
+                "string with newline",
+                """"hello\n"""",
+                """"hello\n""""
+            ),
+            Test(
+                "row",
+                "{x = 65}",
+                "{x = 65}"
+            ),
+            Test(
+                "field select",
+                """{s = "Hi"}.s""",
+                """"Hi""""
+            ),
+            Test(
+                "nested field select",
+                "{r = {y = 42}}.r.y",
+                "42"
+            ),
+            Test(
+                "unit",
+                "{}",
+                "{}"
+            ),
+            Test(
+                "unit argument",
+                "(fun (x : {}) => 100)()",
+                "100"
+            ),
+            Test(
+                "single integer argument",
+                """(fun (x : Int) => x)(10)""",
+                "10"
+            ),
+            Test(
+                "multiple arguments - first",
+                """(fun (x : Int, y : String) => x)(10, "hello")""",
+                "10"
+            ),
+            Test(
+                "multiple arguments - second",
+                """(fun (x : Int, y : String) => y)(10, "hello")""",
+                """"hello""""
+            ),
+            Test(
+                "row argument",
+                "(fun (r : {x : Int}) => r.x)({x = 20})",
+                "20"
+            ),
+            Test(
+                "single field row return",
+                "(fun (x : Int) => {a = x})(9)",
+                "{a = 9}"
+            ),
+            Test(
+                "function argument",
+                """(fun (f : Int => String) => f(10))(fun (x : Int) => "yes")""",
+                """"yes""""
+            ),
+            Test(
+                "function return then call",
+                "(fun (x : Int) => (fun (y : Int) => x))(10)(15)",
+                "10"
+            ),
+            Test(
+                "function program result",
+                "(fun (f : Int => Int) => f)(fun (x : Int) => x)",
+                "<function>"
+            ),
 
             // Command-line arguments
 
-            Test("string command argument",
-                 "fun (s : String) => s",
-                 """"hello"""",
-                 Seq("hello")),
-            Test("multiple string command arguments",
-                 "fun (s : String, t : String) => t",
-                 """"there"""",
-                 Seq("hello", "there"))
+            Test(
+                "string command argument",
+                "fun (s : String) => s",
+                """"hello"""",
+                Seq("hello")
+            ),
+            Test(
+                "multiple string command arguments",
+                "fun (s : String, t : String) => t",
+                """"there"""",
+                Seq("hello", "there")
+            )
         )
 
     for (aTest <- tests) {
