@@ -70,7 +70,8 @@ Term =
   | "letc" Identifier sp Identifier sp "=" Term sp "in"
       nestnl (Term)                                      {LetC}
   | Identifier sp Identifier sp Identifier               {AppF}
-  | Identifier sp Identifier                             {AppC}.
+  | Identifier sp Identifier                             {AppC}
+  | "halt" Identifier                                    {Halt}.
 
 // Runtime
 

@@ -24,9 +24,6 @@ object Interpreter {
 
         def interpretAux(rho : Env, term : Term) : ValueR =
             term match {
-                case AppC("halt", x) =>
-                    lookupR(rho, x)
-
                 case AppC(k, x) =>
                     lookupC(rho, k) match {
                         case ClsC(rho2, y, t) =>
@@ -54,6 +51,9 @@ object Interpreter {
                         case v =>
                             sys.error(s"interpret AppF: $f is $v")
                     }
+
+                case Halt(x) =>
+                    lookupR(rho, x)
 
                 case LetC(k, x, t1, t2) =>
                     interpretAux(ConsCE(rho, k, ClsC(rho, x, t1)), t2)
@@ -139,7 +139,14 @@ object Interpreter {
                     sys.error(s"interpretCap: unknown primitive $name")
             }
 
-        interpretAux(NilE(), term)
+        val initEnv =
+            ConsCE(
+                NilE(),
+                "halt",
+                ClsC(NilE(), "x", Halt("x"))
+            )
+
+        interpretAux(initEnv, term)
     }
 
     def console(x : String, rho : Env) : ValueR =
@@ -202,6 +209,9 @@ object Interpreter {
         }
 
     def lookupC(rho : Env, x : String) : ValueC =
+        // if (x == "halt")
+        //     ClsR(NilE, "k", "x", IdnUse("x"))
+        // else
         rho match {
             case ConsCE(rho2, y, v) if x == y =>
                 v

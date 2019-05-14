@@ -171,6 +171,17 @@ class Tests extends FunSuiteLike with Matchers {
                 "{ val x = 10 val y = 20 x }",
                 "10"
             ),
+            Test(
+                "nested val block with functions",
+                """
+                {
+                    val f = fun (x : Int) => x
+                    val g = fun (y : Int) => f(y)
+                    g(10)
+                }
+                """,
+                "10"
+            ),
 
             // Command-line arguments
 

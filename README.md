@@ -31,7 +31,7 @@ The Cooma project at Macquarie University is investigating secure programming la
 
 Specification and reference implementation is under way.
 
-* Functional core (no polymorphism)
+* Functional core (tail call optimisation, but no polymorphism)
 * Row-based data types (simple creation and field ref, no extension)
 * Object capabilities via rows
 * Runtime-provided resource capabilities (Console and Reader only)
@@ -77,13 +77,12 @@ Use `--help` to see all of the options for printing the source AST, IR and IR AS
 ```ml
 cooma 0.1.0 2.12.8> run -i -r src/test/resources/multiArgCall.cooma
 [info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r src/test/resources/multiArgCall.cooma
-[info] letv f5 = fun k6 x => letv f7 = fun k8 y => k8 x in
-[info]     k6 f7 in
-[info]     letv x9 = 10 in
-[info]         letc k3 x4 = letv x10 = "hello" in
-[info]             letc k1 x2 = halt x2 in
-[info]                 x4 k1 x10 in
-[info]             f5 k3 x9
+[info] letv f3 = fun k4 x => letv f5 = fun j6 y => j6 x in
+[info]     k4 f5 in
+[info]     letv x7 = 10 in
+[info]         letc k1 x2 = letv x8 = "hello" in
+[info]             x2 halt x8 in
+[info]             f3 k1 x7
 [info] 10
 ```
 
