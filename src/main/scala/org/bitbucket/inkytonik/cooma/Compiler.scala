@@ -52,14 +52,6 @@ object Compiler {
 
     def compile(exp : Expression, kappa : String => Term) : Term =
         exp match {
-            case App(e, Vector()) =>
-                val k = fresh("k")
-                val x = fresh("x")
-                val z = fresh("z")
-                compile(e, y =>
-                    LetV(z, UniV(),
-                        LetC(k, x, kappa(x), AppF(y, k, z))))
-
             case App(e, Vector(a)) =>
                 val k = fresh("k")
                 val x = fresh("x")
@@ -72,11 +64,6 @@ object Compiler {
 
             case Block(es) =>
                 sys.error("compile: block")
-
-            case Fld(e, f) =>
-                val x = fresh("x")
-                compile(e, z =>
-                    LetV(x, FldV(z, f), kappa(x)))
 
             case Fun(Vector(Argument(x, _)), e) =>
                 val f = fresh("f")
@@ -93,18 +80,32 @@ object Compiler {
                 val x = fresh("x")
                 LetV(x, IntV(i), kappa(x))
 
-            case Row(Field(f, e)) =>
+            case Row(fields) =>
+                val x = fresh("x")
+                compileRow(fields, fvs => LetV(x, RowV(fvs), kappa(x)))
+
+            case Sel(e, f) =>
                 val x = fresh("x")
                 compile(e, z =>
-                    LetV(x, RowV(FieldValue(f, z)), kappa(x)))
+                    LetV(x, SelV(z, f), kappa(x)))
 
             case Str(s) =>
                 val x = fresh("x")
                 LetV(x, StrV(unescape(s.tail.init)), kappa(x))
 
-            case Uni() =>
-                val x = fresh("x")
-                LetV(x, UniV(), kappa(x))
+        }
+
+    def compileRow(
+        fields : Vector[Field],
+        kappa : Vector[FieldValue] => Term
+    ) : Term =
+        fields match {
+            case Field(f, e) +: t =>
+                compile(e, z =>
+                    compileRow(t, fvs => kappa(FieldValue(f, z) +: fvs)))
+
+            case Vector() =>
+                kappa(Vector())
         }
 
 }

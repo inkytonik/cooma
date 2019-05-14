@@ -158,7 +158,7 @@ cooma: Console capability unavailable: can't write /does/not/exist
 ### Console and Reader capabilities
 
 ```ml
-fun (c : Console, r : Reader) => c.write(r.read())
+fun (c : Console, r : Reader) => c.write(r.read({}))
 
 > run -i -r src/test/resources/consoleReaderCmdArg.cooma /dev/tty src/test/resources/multiArgCall.cooma
 letv x1 = arg 0 in

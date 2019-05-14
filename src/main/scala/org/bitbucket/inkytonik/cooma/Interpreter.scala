@@ -20,6 +20,8 @@ object Interpreter {
 
     def interpret(term : Term, args : List[String]) : ValueR = {
 
+        val unit = RowR(Vector())
+
         def interpretAux(rho : Env, term : Term) : ValueR =
             term match {
                 case AppC("halt", x) =>
@@ -71,18 +73,6 @@ object Interpreter {
                 case CapV(p, x) =>
                     interpretCap(p, x, rho)
 
-                case FldV(x, f1) =>
-                    lookupR(rho, x) match {
-                        case RowR(FldR(f2, v)) if f1 == f2 =>
-                            v
-
-                        case err : ErrR =>
-                            err
-
-                        case v =>
-                            sys.error(s"interpret FldC: $x is $v, looking for field $f1")
-                    }
-
                 case FunV(k, x, t) =>
                     ClsR(rho, k, x, t)
 
@@ -100,7 +90,7 @@ object Interpreter {
                                         show(v)
                                 }
                             Files.write(Paths.get(f), s.getBytes())
-                            UniR()
+                            unit
 
                         case ("reader", Vector(f)) =>
                             StrR(FileSource(f).content)
@@ -109,14 +99,34 @@ object Interpreter {
                             sys.error(s"interpretValue: unknown primitive call $name $arg")
                     }
 
-                case RowV(FieldValue(x, y)) =>
-                    RowR(FldR(x, lookupR(rho, y)))
+                case RowV(fields) =>
+                    RowR(fields.map {
+                        case FieldValue(f, v) =>
+                            FldR(f, lookupR(rho, v))
+                    })
+
+                case SelV(x, f1) =>
+                    lookupR(rho, x) match {
+                        case RowR(fields) =>
+                            fields.collectFirst {
+                                case FldR(f2, v) if f1 == f2 =>
+                                    v
+                            } match {
+                                case Some(v) =>
+                                    v
+                                case None =>
+                                    sys.error(s"interpret SelV: can't find field $f1 in $fields")
+                            }
+
+                        case err : ErrR =>
+                            err
+
+                        case v =>
+                            sys.error(s"interpret SelV: $x is $v, looking for field $f1")
+                    }
 
                 case StrV(s) =>
                     StrR(s)
-
-                case UniV() =>
-                    UniR()
             }
 
         def interpretCap(name : String, x : String, rho : Env) : ValueR =
@@ -139,14 +149,14 @@ object Interpreter {
                     val k = fresh("k")
                     val y = fresh("y")
                     val p = fresh("p")
-                    RowR(
+                    RowR(Vector(
                         FldR(
                             "write",
                             ClsR(NilE(), k, y,
                                 LetV(p, PrmV("console", Vector(s, y)),
                                     AppC(k, p)))
                         )
-                    )
+                    ))
                 } else
                     ErrR(s"Console capability unavailable: can't write $s")
 
@@ -161,14 +171,14 @@ object Interpreter {
                     val k = fresh("k")
                     val y = fresh("y")
                     val p = fresh("p")
-                    RowR(
+                    RowR(Vector(
                         FldR(
                             "read",
                             ClsR(NilE(), k, y,
                                 LetV(p, PrmV("reader", Vector(s)),
                                     AppC(k, p)))
                         )
-                    )
+                    ))
                 } else
                     ErrR(s"Reader capability unavailable: can't read $s")
 

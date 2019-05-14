@@ -1,1 +1,1 @@
-fun (c : Console, r : Reader) => c.write(r.read())
+fun (c : Console, r : Reader) => c.write(r.read({}))

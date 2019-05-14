@@ -10,15 +10,14 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Argument ** "," ")" "=>" Expression   {Fun, right, 3}
-  | Expression '(' Expression ** "," ')'            {App, left, 2}
-  | Expression '.' Identifier                       {Fld, left, 1}
+    "fun" '(' Argument ++ "," ")" "=>" Expression   {Fun, right, 3}
+  | Expression '(' Expression ++ "," ')'            {App, left, 2}
+  | Expression '.' Identifier                       {Sel, left, 1}
   | Block
-  | '{' Field '}'                                   {Row}
-  | '{' '}'                                         {Uni}
+  | '{' Field ** "," '}'                            {Row}
   | IntLit                                          {Num, 1: Integer.parseInt : Int}
-  | StringLit                                       {Str}
   | Identifier                                      {IdnUse}
+  | StringLit                                       {Str}
   | '(' Expression ')'.
 
 Argument =
@@ -58,13 +57,12 @@ FieldType =
 Value =
     "arg" IntLit                                  {ArgV, 1: Integer.parseInt : Int}
   | "cap" Identifier sp Identifier                {CapV}
-  | Identifier '.' Identifier                     {FldV}
   | "fun" Identifier sp Identifier sp "=>" Term   {FunV}
   | IntLit                                        {IntV, 1: Integer.parseInt : Int}
   | "prm" Identifier sp Identifier+               {PrmV}
-  | '{' FieldValue '}'                            {RowV}
-  | StringLit                                     {StrV}
-  | '{' '}'                                       {UniV}.
+  | '{' FieldValue ** "," '}'                     {RowV}
+  | Identifier '.' Identifier                     {SelV}
+  | StringLit                                     {StrV}.
 
 FieldValue =
   Identifier sp "=" Identifier.
@@ -83,9 +81,8 @@ ValueR =
     '[' Env "," "fun" Identifier sp Identifier sp "=>" Term ']'   {ClsR}
   | "err" StringLit                                               {ErrR}
   | IntLit                                                        {IntR, 1: Integer.parseInt : Int}
-  | '{' FldR '}'                                                  {RowR}
-  | StringLit                                                     {StrR}
-  | '{' '}'                                                       {UniR}.
+  | '{' FldR ** "," '}'                                           {RowR}
+  | StringLit                                                     {StrR}.
 
 FldR =
   Identifier sp "=" ValueR.

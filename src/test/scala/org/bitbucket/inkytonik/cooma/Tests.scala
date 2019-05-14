@@ -52,14 +52,44 @@ class Tests extends FunSuiteLike with Matchers {
                 """"hello\n""""
             ),
             Test(
-                "row",
+                "row (single int field)",
                 "{x = 65}",
                 "{x = 65}"
             ),
             Test(
-                "field select",
+                "row (single string field)",
+                """{name = "Harold"}""",
+                """{name = "Harold"}"""
+            ),
+            Test(
+                "row (two fields)",
+                "{a = 1, b = 2}",
+                "{a = 1, b = 2}"
+            ),
+            Test(
+                "row (many fields)",
+                """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
+                """{name = "Bob", age = 24, year = 1998, sex = "F"}"""
+            ),
+            Test(
+                "field select (first of one)",
                 """{s = "Hi"}.s""",
                 """"Hi""""
+            ),
+            Test(
+                "field select (first of two)",
+                """{s = "Hi", t = 10}.s""",
+                """"Hi""""
+            ),
+            Test(
+                "field select (second of two)",
+                """{s = "Hi", t = 10}.t""",
+                "10"
+            ),
+            Test(
+                "field select (many fields)",
+                """{name = "Bob", age = 24, year = 1998, sex = "F"}.sex""",
+                """"F""""
             ),
             Test(
                 "nested field select",
@@ -73,7 +103,7 @@ class Tests extends FunSuiteLike with Matchers {
             ),
             Test(
                 "unit argument",
-                "(fun (x : {}) => 100)()",
+                "(fun (x : {}) => 100)({})",
                 "100"
             ),
             Test(
@@ -177,7 +207,7 @@ class Tests extends FunSuiteLike with Matchers {
 
     {
         val name = "console and reader command arguments"
-        val program = "fun (c : Console, r : Reader) => c.write(r.read())"
+        val program = "fun (c : Console, r : Reader) => c.write(r.read({}))"
         val console = makeTempFilename(".txt")
         val reader = makeTempFilename(".txt")
         val args = Seq(console, reader)
