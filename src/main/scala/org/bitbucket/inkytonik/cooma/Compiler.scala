@@ -62,8 +62,8 @@ object Compiler {
             case App(e, a +: as) =>
                 compile(App(App(e, Vector(a)), as), kappa)
 
-            case Block(es) =>
-                sys.error("compile: block")
+            case Block(be) =>
+                compileBlockExp(be, kappa)
 
             case Fun(Vector(Argument(x, _)), e) =>
                 val f = fresh("f")
@@ -93,6 +93,16 @@ object Compiler {
                 val x = fresh("x")
                 LetV(x, StrV(unescape(s.tail.init)), kappa(x))
 
+        }
+
+    def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
+        be match {
+            case LetVal(Val(x, e), be2) =>
+                val j = fresh("j")
+                LetC(j, x, compileBlockExp(be2, kappa),
+                    compile(e, z => AppC(j, z)))
+            case Return(e) =>
+                compile(e, kappa)
         }
 
     def compileRow(

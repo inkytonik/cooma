@@ -151,6 +151,26 @@ class Tests extends FunSuiteLike with Matchers {
                 "(fun (f : Int => Int) => f)(fun (x : Int) => x)",
                 "<function>"
             ),
+            Test(
+                "trivial block",
+                "{ 10 }",
+                "10"
+            ),
+            Test(
+                "val block",
+                "{ val x = 10 x }",
+                "10"
+            ),
+            Test(
+                "nested val block (inner ref)",
+                "{ val x = 10 val y = 20 y }",
+                "20"
+            ),
+            Test(
+                "nested val block (outer ref)",
+                "{ val x = 10 val y = 20 x }",
+                "10"
+            ),
 
             // Command-line arguments
 

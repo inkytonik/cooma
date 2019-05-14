@@ -104,6 +104,19 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 20
 ```
 
+### Blocks (lets)
+
+```ml
+{
+    val x = 10
+    val y = 20
+    y
+}
+
+> run -r src/test/resources/block.cooma
+20
+```
+
 ### String command-line arguments
 
 ```ml

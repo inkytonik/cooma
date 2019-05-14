@@ -30,11 +30,8 @@ Block : Expression =
   '{' nestnl (BlockExp) \n '}'.
 
 BlockExp =
-    LetVal
-  | Expression   {TailExp}.
-
-LetVal : BlockExp =
-  ValueDefinition BlockExp.
+    ValueDefinition BlockExp {LetVal}
+  | Expression               {Return}.
 
 ValueDefinition =
   "val" Identifier sp "=" Expression \n   {Val}.
