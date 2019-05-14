@@ -10,18 +10,18 @@
 
 package org.bitbucket.inkytonik.cooma
 
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
 import org.bitbucket.inkytonik.kiama.util.CompilerBase
-import syntax.CoomaParserSyntax.{ASTNode, Program}
 
 object Main extends CompilerBase[ASTNode, Program, Config] {
 
+    import org.bitbucket.inkytonik.cooma.CoomaParser
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ErrR
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.util.Source
     import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
-    import syntax.CoomaParser
-    import syntax.CoomaParserPrettyPrinter
-    import syntax.CoomaParserPrettyPrinter.{any, layout}
-    import syntax.CoomaParserSyntax.ErrR
 
     val name = "cooma"
 

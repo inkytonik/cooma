@@ -12,8 +12,8 @@ package org.bitbucket.inkytonik.cooma
 
 object Compiler {
 
-    import syntax.CoomaParserPrettyPrinter.show
-    import syntax.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.Util.{fresh, unescape}
 
     def compile(prog : Program) : Term =

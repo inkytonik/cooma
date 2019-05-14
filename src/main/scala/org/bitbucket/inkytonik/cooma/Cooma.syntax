@@ -1,7 +1,7 @@
-module syntax.CoomaParser;
+module org.bitbucket.inkytonik.cooma.CoomaParser;
 
 header {
-    import syntax.CoomaParserSyntax.*;
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.*;
 }
 
 // Cooma source language

@@ -10,9 +10,9 @@
 
 package org.bitbucket.inkytonik.cooma
 
-object PrettyPrinter extends syntax.CoomaParserPrettyPrinter {
+object PrettyPrinter extends org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter {
 
-    import syntax.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 

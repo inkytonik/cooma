@@ -13,10 +13,10 @@ package org.bitbucket.inkytonik.cooma
 object Interpreter {
 
     import java.nio.file.{Files, Paths}
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.Util.fresh
     import org.bitbucket.inkytonik.kiama.util.FileSource
-    import syntax.CoomaParserPrettyPrinter.show
-    import syntax.CoomaParserSyntax._
 
     def interpret(term : Term, args : List[String]) : ValueR = {
 
