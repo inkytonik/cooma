@@ -20,7 +20,7 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
     import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
     import syntax.CoomaParser
     import syntax.CoomaParserPrettyPrinter
-    import syntax.CoomaParserPrettyPrinter.{any, layout, show}
+    import syntax.CoomaParserPrettyPrinter.{any, layout}
     import syntax.CoomaParserSyntax.ErrR
 
     val name = "cooma"
@@ -49,7 +49,7 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
 
         val ir = Compiler.compile(prog)
         if (config.irPrint())
-            config.output().emitln(show(ir, 5))
+            config.output().emitln(PrettyPrinter.showTerm(ir, 5))
         if (config.irASTPrint())
             config.output().emitln(layout(any(ir)))
 
@@ -59,7 +59,7 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
                 config.output().emitln(s"cooma: $msg")
             case v =>
                 if (config.resultPrint()) {
-                    val resultStr = PrettyPrinter.showValue(v)
+                    val resultStr = PrettyPrinter.showRuntimeValue(v)
                     config.output().emitln(resultStr)
                 }
         }

@@ -10,9 +10,7 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.kiama.output.{PrettyPrinter => PP}
-
-object PrettyPrinter extends PP {
+object PrettyPrinter extends syntax.CoomaParserPrettyPrinter {
 
     import syntax.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.Util.escape
@@ -26,28 +24,61 @@ object PrettyPrinter extends PP {
      *   - strings quoted with special characters escaped
      */
 
-    def showValue(v : ValueR, w : Width = defaultWidth) : String =
-        formatValue(v, w).layout
+    def showRuntimeValue(v : ValueR, w : Width = defaultWidth) : String =
+        formatRuntimeValue(v, w).layout
 
-    def formatValue(v : ValueR, w : Width = defaultWidth) : Document =
-        pretty(group(toDocValue(v)), w)
+    def formatRuntimeValue(v : ValueR, w : Width = defaultWidth) : Document =
+        pretty(group(toDocRuntimeValue(v)), w)
 
-    def toDocValue(v : ValueR) : Doc =
+    def toDocRuntimeValue(v : ValueR) : Doc =
         v match {
             case ClsR(v1, v2, v3, v4) =>
                 text("<function>")
-            case ErrR(v1) =>
-                text("err") <> space <> value(v1)
-            case IntR(v1) =>
-                value(v1)
             case RowR(v1) =>
                 text("{") <> ssep(v1.map(toDocField), text(",") <> space) <> text("}")
             case StrR(v1) =>
                 text("\"") <> value(escape(v1)) <> text("\"")
+            case _ =>
+                toDoc(v)
         }
 
     def toDocField(field : FldR) : Doc =
         value(field.identifier) <> space <> text("=") <> space <>
-            toDocValue(field.valueR)
+            toDocRuntimeValue(field.valueR)
+
+    /*
+     * Similarly to showRuntimeValue etc but for the IR.
+     */
+    def showTerm(t : Term, w : Width = defaultWidth) : String =
+        formatTerm(t, w).layout
+
+    def formatTerm(t : Term, w : Width = defaultWidth) : Document =
+        pretty(group(toDocTerm(t)), w)
+
+    def toDocTerm(t : Term) : Doc =
+        t match {
+            case LetV(v1, v2, v3) =>
+                text("letv") <> space <> value(v1) <> space <> text("=") <> space <> toDocValue(v2) <> space <> text("in") <> space <> nest(line <> toDocTerm(v3))
+            case LetC(v1, v2, v3, v4) =>
+                text("letc") <> space <> value(v1) <> space <> value(v2) <> space <> text("=") <> space <> toDocTerm(v3) <> space <> text("in") <> space <> nest(line <> toDocTerm(v4))
+            case _ =>
+                toDoc(t)
+        }
+
+    def toDocValue(v : Value) : Doc =
+        v match {
+            case FunV(v1, v2, v3) =>
+                text("fun") <> space <> value(v1) <> space <> value(v2) <> space <> text("=>") <> space <> toDocTerm(v3)
+            case RowV(v1) =>
+                text("{") <> ssep(v1.map(toDocFieldValue), text(",") <> space) <> text("}")
+            case StrV(v1) =>
+                text("\"") <> value(escape(v1)) <> text("\"")
+            case _ =>
+                toDoc(v)
+        }
+
+    def toDocFieldValue(field : FieldValue) : Doc =
+        value(field.identifier1) <> space <> text("=") <> space <>
+            value(field.identifier2)
 
 }
