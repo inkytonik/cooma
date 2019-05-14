@@ -98,15 +98,9 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ### Row argument and field reference
 
 ```ml
-(fun (r : {x : Int}) => r.x) ({x = 20})
+(fun (r : {x : Int, y : Int, z : String}) => r.x) ({x = 20, y = 10, z = "Hi"})
 
-> run -i -r src/test/resources/rowArg.cooma
-letv f3 = fun k4 r => letv x5 = r.x in
-    k4 x5 in
-    letv x7 = 20 in
-        letv x6 = {x = x7} in
-            letc k1 x2 = halt x2 in
-                f3 k1 x6
+> run -r src/test/resources/rowArg.cooma
 20
 ```
 
@@ -115,38 +109,26 @@ letv f3 = fun k4 r => letv x5 = r.x in
 ```ml
 fun (s : String) => s
 
-> run -i -r src/test/resources/stringCmdArg.cooma hello
-letv s = arg 0 in
-    halt s
+> run -r src/test/resources/stringCmdArg.cooma hello
 hello
 
 fun (s : String, t : String) => t
 
-> run -i -r src/test/resources/multiStringCmdArg.cooma hello there
-letv s = arg 0 in
-    letv t = arg 1 in
-       halt t
+> run -r src/test/resources/multiStringCmdArg.cooma hello there
 there
 ```
 
 ### Console capability
 
 ```ml
-fun (c : Console) => c.write("Hello world!")
+fun (c : Console) => c.write("Hello world!\n")
 
-> run -i -r src/test/resources/consoleCmdArg.cooma /dev/tty
-letv x1 = arg 0 in
-    letv c = cap Console x1 in
-        letv x4 = c.write in
-            letv x5 = "Hello world!" in
-                letc k2 x3 = halt x3 in
-                    x4 k2 x5
-"Hello world!"{}
+> run -r src/test/resources/consoleCmdArg.cooma /dev/tty
+Hello world!
+{}
 ```
 
 `{}` is the unit value returned by `c.write`.
-
-NOTE: Cooma doesn't yet support escape sequences in strings, so there is no newline, and the quotes will eventually be removed from the string.
 
 If the specified file name is not writeable, the runtime system causes the execution to fail.
 
@@ -160,18 +142,9 @@ cooma: Console capability unavailable: can't write /does/not/exist
 ```ml
 fun (c : Console, r : Reader) => c.write(r.read({}))
 
-> run -i -r src/test/resources/consoleReaderCmdArg.cooma /dev/tty src/test/resources/multiArgCall.cooma
-letv x1 = arg 0 in
-    letv c = cap Console x1 in
-        letv x2 = arg 1 in
-            letv r = cap Reader x2 in
-                letv x5 = c.write in
-                    letv x9 = r.read in
-                        letv z8 = {} in
-                            letc k6 x7 = letc k3 x4 = halt x4 in
-                                x5 k3 x7 in
-                                x9 k6 z8
-(fun (x : Int, y : String) => x) (10, "hello") {}
+> run -r src/test/resources/consoleReaderCmdArg.cooma /dev/tty src/test/resources/multiArgCall.cooma
+(fun (x : Int, y : String) => x) (10, "hello")
+{}
 ```
 
 A Reader capability is only provided if the designated file can be read.
