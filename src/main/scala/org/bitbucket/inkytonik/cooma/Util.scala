@@ -34,7 +34,7 @@ object Util {
             case '"'  => "\\\""
             case '\'' => "\\\'"
             case '\\' => "\\\\"
-            case _ => if (ch.isControl) "\\0" + Integer.toOctalString(ch.toInt)
+            case _ => if (ch.isControl) "\\" + Integer.toOctalString(ch.toInt)
             else String.valueOf(ch)
         }
 

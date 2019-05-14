@@ -52,6 +52,11 @@ class Tests extends FunSuiteLike with Matchers {
                 """"hello\n""""
             ),
             Test(
+                "string with escape sequences",
+                """"\b\t\n\f\t\7\15\167"""",
+                """"\b\t\n\f\t\7\rw"""",
+            ),
+            Test(
                 "row (single int field)",
                 "{x = 65}",
                 "{x = 65}"
