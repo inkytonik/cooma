@@ -100,12 +100,31 @@ object Compiler {
 
     def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
         be match {
+            case LetFun(ds, be2) =>
+                LetF(
+                    ds.map(compileDef),
+                    compileBlockExp(be2, kappa)
+                )
+
             case LetVal(Val(x, e), be2) =>
                 val j = fresh("j")
                 LetC(j, x, compileBlockExp(be2, kappa),
                     tailCompile(e, j))
+
             case Return(e) =>
                 compile(e, kappa)
+        }
+
+    def compileDef(fd : FunctionDefinition) : DefTerm =
+        fd match {
+            case Def(f, Argument(x, _) +: otherArgs, e) =>
+                val k = fresh("k")
+                val body =
+                    if (otherArgs.isEmpty)
+                        tailCompile(e, k)
+                    else
+                        tailCompile(Fun(otherArgs, e), k)
+                DefTerm(f, k, x, body)
         }
 
     def compileRow(
@@ -169,10 +188,17 @@ object Compiler {
 
     def tailCompileBlockExp(be : BlockExp, k : String) : Term =
         be match {
+            case LetFun(ds, be2) =>
+                LetF(
+                    ds.map(compileDef),
+                    tailCompileBlockExp(be2, k)
+                )
+
             case LetVal(Val(x, e), be2) =>
                 val j = fresh("j")
                 LetC(j, x, tailCompileBlockExp(be2, k),
                     tailCompile(e, j))
+
             case Return(e) =>
                 tailCompile(e, k)
         }

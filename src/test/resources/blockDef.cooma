@@ -1,0 +1,5 @@
+{
+    def f (x : Int) = x
+    def g (y : Int) = f(y)
+    g(10)
+}

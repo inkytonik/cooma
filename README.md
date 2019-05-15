@@ -103,7 +103,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 20
 ```
 
-### Blocks (lets)
+### Blocks (values and function definitions)
 
 ```ml
 {
@@ -112,8 +112,19 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     y
 }
 
-> run -r src/test/resources/block.cooma
+> run -r src/test/resources/blockVal.cooma
 20
+```
+
+```ml
+{
+    def f (x : Int) = x
+    def g (y : Int) = f(y)
+    g(10)
+}
+
+> run -r src/test/resources/blockDef.cooma
+10
 ```
 
 ### String command-line arguments

@@ -162,17 +162,17 @@ class Tests extends FunSuiteLike with Matchers {
                 "10"
             ),
             Test(
-                "nested val block (inner ref)",
+                "val block (inner ref)",
                 "{ val x = 10 val y = 20 y }",
                 "20"
             ),
             Test(
-                "nested val block (outer ref)",
+                "val block (outer ref)",
                 "{ val x = 10 val y = 20 x }",
                 "10"
             ),
             Test(
-                "nested val block with functions",
+                "val block with functions",
                 """
                 {
                     val f = fun (x : Int) => x
@@ -181,6 +181,139 @@ class Tests extends FunSuiteLike with Matchers {
                 }
                 """,
                 "10"
+            ),
+            Test(
+                "def block (single)",
+                """
+                {
+                    def f(x : Int) = x
+                    f(10)
+                }
+                """,
+                "10"
+            ),
+            Test(
+                "def block (multi inner)",
+                """
+                {
+                    def f(x : Int) = x
+                    def g(y : Int) = f(y)
+                    g(10)
+                }
+                """,
+                "10"
+            ),
+            Test(
+                "def block (multi outer)",
+                """
+                {
+                    def f(x : Int) = x
+                    def g(y : Int) = f(y)
+                    f(10)
+                }
+                """,
+                "10"
+            ),
+            Test(
+                "block (val and def)",
+                """
+                {
+                    val a = 20
+                    def f(x : Int) = a
+                    f(10)
+                }
+                """,
+                "20"
+            ),
+            Test(
+                "def redefinition",
+                """
+                {
+                    def f(x : Int) = 10
+                    val a = 20
+                    def f(y : Int) = 30
+                    f(0)
+                }
+                """,
+                "30"
+            ),
+            Test(
+                "nested val block (inner)",
+                """
+                {
+                    val a = 10
+                    {
+                        val b = 20
+                        b
+                    }
+                }
+                """,
+                "20"
+            ),
+            Test(
+                "nested val block (outer)",
+                """
+                {
+                    val a = 10
+                    {
+                        val b = 20
+                        a
+                    }
+                }
+                """,
+                "10"
+            ),
+            Test(
+                "nested val block (redefinition)",
+                """
+                {
+                    val a = 10
+                    {
+                        val a = 20
+                        a
+                    }
+                }
+                """,
+                "20"
+            ),
+            Test(
+                "nested def block (outer)",
+                """
+                {
+                    def f(x : Int) = 10
+                    {
+                        def g(y : Int) = 20
+                        f(0)
+                    }
+                }
+                """,
+                "10"
+            ),
+            Test(
+                "nested def block (inner)",
+                """
+                {
+                    def f(x : Int) = 10
+                    {
+                        def g(y : Int) = 20
+                        g(0)
+                    }
+                }
+                """,
+                "20"
+            ),
+            Test(
+                "nested def block (redefinition)",
+                """
+                {
+                    def f(x : Int) = 10
+                    {
+                        def f(y : Int) = 20
+                        f(0)
+                    }
+                }
+                """,
+                "20"
             ),
 
             // Command-line arguments

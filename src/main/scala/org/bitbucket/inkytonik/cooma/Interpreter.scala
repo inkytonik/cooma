@@ -10,15 +10,35 @@
 
 package org.bitbucket.inkytonik.cooma
 
-object Interpreter {
+class Interpreter(config : Config) {
 
     import java.nio.file.{Files, Paths}
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.Util.fresh
+    import org.bitbucket.inkytonik.cooma.Util.{escape, fresh}
+    import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
+    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
     import org.bitbucket.inkytonik.kiama.util.FileSource
 
-    def interpret(term : Term, args : List[String]) : ValueR = {
+    // Runtime structures
+
+    sealed abstract class ValueR
+    case class ClsR(env : Env, f : String, x : String, e : Term) extends ValueR
+    case class ErrR(msg : String) extends ValueR
+    case class IntR(num : Int) extends ValueR
+    case class RowR(fields : Vector[FldR]) extends ValueR
+    case class StrR(str : String) extends ValueR
+
+    case class FldR(x : String, v : ValueR)
+
+    case class ClsC(env : Env, k : String, e : Term)
+
+    sealed abstract class Env
+    case class ConsCE(env : Env, x : String, v : ClsC) extends Env
+    case class ConsFE(env : Env, clsEnv : () => Env, ds : Vector[DefTerm]) extends Env
+    case class ConsVE(env : Env, x : String, v : ValueR) extends Env
+    case class NilE() extends Env
+
+    def interpret(term : Term, args : List[String]) {
 
         val unit = RowR(Vector())
 
@@ -56,10 +76,16 @@ object Interpreter {
                     lookupR(rho, x)
 
                 case LetC(k, x, t1, t2) =>
-                    interpretAux(ConsCE(rho, k, ClsC(rho, x, t1)), t2)
+                    val rho2 = ConsCE(rho, k, ClsC(rho, x, t1))
+                    interpretAux(rho2, t2)
+
+                case LetF(ds, t) =>
+                    lazy val rho2 : Env = ConsFE(rho, () => rho2, ds)
+                    interpretAux(rho2, t)
 
                 case LetV(x, v, t) =>
-                    interpretAux(ConsVE(rho, x, interpretValue(v, rho)), t)
+                    val rho2 = ConsVE(rho, x, interpretValue(v, rho))
+                    interpretAux(rho2, t)
             }
 
         def interpretValue(value : Value, rho : Env) : ValueR =
@@ -84,10 +110,12 @@ object Interpreter {
                         case ("console", Vector(f, x)) =>
                             val s =
                                 lookupR(rho, x) match {
+                                    case IntR(i) =>
+                                        i.toString
                                     case StrR(s) =>
                                         s
                                     case v =>
-                                        show(v)
+                                        sys.error(s"interpretValue: can't write $v")
                                 }
                             Files.write(Paths.get(f), s.getBytes())
                             unit
@@ -146,7 +174,13 @@ object Interpreter {
                 ClsC(NilE(), "x", Halt("x"))
             )
 
-        interpretAux(initEnv, term)
+        interpretAux(initEnv, term) match {
+            case ErrR(msg) =>
+                config.output().emitln(s"cooma: $msg")
+            case v =>
+                if (config.resultPrint())
+                    config.output().emitln(showRuntimeValue(v))
+        }
     }
 
     def console(x : String, rho : Env) : ValueR =
@@ -198,6 +232,17 @@ object Interpreter {
             case ConsCE(rho2, _, _) =>
                 lookupR(rho2, x)
 
+            case ConsFE(rho2, rho2f, ds) =>
+                ds.collectFirst {
+                    case DefTerm(f, k, y, e) if x == f =>
+                        ClsR(rho2f(), k, y, e)
+                } match {
+                    case Some(v) =>
+                        v
+                    case None =>
+                        lookupR(rho2, x)
+                }
+
             case ConsVE(rho2, y, v) if x == y =>
                 v
 
@@ -205,18 +250,18 @@ object Interpreter {
                 lookupR(rho2, x)
 
             case NilE() =>
-                sys.error(s"lookupR: can't find $x")
+                sys.error(s"lookupR: can't find value $x")
         }
 
-    def lookupC(rho : Env, x : String) : ValueC =
-        // if (x == "halt")
-        //     ClsR(NilE, "k", "x", IdnUse("x"))
-        // else
+    def lookupC(rho : Env, x : String) : ClsC =
         rho match {
             case ConsCE(rho2, y, v) if x == y =>
                 v
 
             case ConsCE(rho2, _, _) =>
+                lookupC(rho2, x)
+
+            case ConsFE(rho2, _, _) =>
                 lookupC(rho2, x)
 
             case ConsVE(rho2, _, _) =>
@@ -225,5 +270,32 @@ object Interpreter {
             case NilE() =>
                 sys.error(s"lookupC: can't find $x")
         }
+
+    /*
+     * Pretty-printer for runtime result values.
+     */
+
+    def showRuntimeValue(v : ValueR, w : Width = defaultWidth) : String =
+        formatRuntimeValue(v, w).layout
+
+    def formatRuntimeValue(v : ValueR, w : Width = defaultWidth) : Document =
+        pretty(group(toDocRuntimeValue(v)), w)
+
+    def toDocRuntimeValue(v : ValueR) : Doc =
+        v match {
+            case ClsR(v1, v2, v3, v4) =>
+                text("<function>")
+            case ErrR(msg) =>
+                text(msg)
+            case IntR(i) =>
+                value(i)
+            case RowR(v1) =>
+                text("{") <> ssep(v1.map(toDocField), text(",") <> space) <> text("}")
+            case StrR(v1) =>
+                text("\"") <> value(escape(v1)) <> text("\"")
+        }
+
+    def toDocField(field : FldR) : Doc =
+        value(field.x) <> space <> text("=") <> space <> toDocRuntimeValue(field.v)
 
 }

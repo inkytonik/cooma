@@ -30,8 +30,13 @@ Block : Expression =
   '{' nestnl (BlockExp) \n '}'.
 
 BlockExp =
-    ValueDefinition BlockExp {LetVal}
-  | Expression               {Return}.
+    FunctionDefinition+ BlockExp   {LetFun}
+  | ValueDefinition BlockExp       {LetVal}
+  | Expression                     {Return}.
+
+FunctionDefinition =
+  "def" Identifier sp '(' Argument ++ "," ")" '='
+    nestnl (Expression) \n                {Def}.
 
 ValueDefinition =
   "val" Identifier sp "=" Expression \n   {Val}.
@@ -65,33 +70,18 @@ FieldValue =
   Identifier sp "=" Identifier.
 
 Term =
-    "letv" Identifier sp "=" Value sp "in"
-      nestnl (Term)                                      {LetV}
-  | "letc" Identifier sp Identifier sp "=" Term sp "in"
+    "letc" Identifier sp Identifier sp "=" Term sp "in"
       nestnl (Term)                                      {LetC}
+  | "letf" nestnl (DefTerm+) "in"
+      nestnl (Term)                                      {LetF}
+  | "letv" Identifier sp "=" Value sp "in"
+      nestnl (Term)                                      {LetV}
   | Identifier sp Identifier sp Identifier               {AppF}
   | Identifier sp Identifier                             {AppC}
   | "halt" Identifier                                    {Halt}.
 
-// Runtime
-
-ValueR =
-    '[' Env "," "fun" Identifier sp Identifier sp "=>" Term ']'   {ClsR}
-  | "err" StringLit                                               {ErrR}
-  | IntLit                                                        {IntR, 1: Integer.parseInt : Int}
-  | '{' FldR ** "," '}'                                           {RowR}
-  | StringLit                                                     {StrR}.
-
-FldR =
-  Identifier sp "=" ValueR.
-
-ValueC =
-  '[' Env "," "fun" Identifier "." Term ']'   {ClsC}.
-
-Env =
-    Env "," Identifier "|->" ValueR   {ConsVE, left, 1}
-  | Env "," Identifier "|->" ValueC   {ConsCE, left, 1}
-  | 'empty'                           {NilE}.
+DefTerm =
+  Identifier sp Identifier sp Identifier sp "=" Term \n.
 
 // Lexical syntax
 

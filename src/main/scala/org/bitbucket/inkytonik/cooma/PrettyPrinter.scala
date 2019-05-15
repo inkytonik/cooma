@@ -17,37 +17,7 @@ object PrettyPrinter extends org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrin
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 
     /*
-     * Custom pretty-printer for runtime result values. Differs from
-     * standard one in that it prints closures and strings in a more
-     * human-readable way:
-     *   - closures as "<function>"
-     *   - strings quoted with special characters escaped
-     */
-
-    def showRuntimeValue(v : ValueR, w : Width = defaultWidth) : String =
-        formatRuntimeValue(v, w).layout
-
-    def formatRuntimeValue(v : ValueR, w : Width = defaultWidth) : Document =
-        pretty(group(toDocRuntimeValue(v)), w)
-
-    def toDocRuntimeValue(v : ValueR) : Doc =
-        v match {
-            case ClsR(v1, v2, v3, v4) =>
-                text("<function>")
-            case RowR(v1) =>
-                text("{") <> ssep(v1.map(toDocField), text(",") <> space) <> text("}")
-            case StrR(v1) =>
-                text("\"") <> value(escape(v1)) <> text("\"")
-            case _ =>
-                toDoc(v)
-        }
-
-    def toDocField(field : FldR) : Doc =
-        value(field.identifier) <> space <> text("=") <> space <>
-            toDocRuntimeValue(field.valueR)
-
-    /*
-     * Similarly to showRuntimeValue etc but for the IR.
+     * Custom IR pretty-printer that escapes string terms.
      */
     def showTerm(t : Term, w : Width = defaultWidth) : String =
         formatTerm(t, w).layout

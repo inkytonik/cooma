@@ -18,7 +18,6 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
     import org.bitbucket.inkytonik.cooma.CoomaParser
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ErrR
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.util.Source
     import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
@@ -54,15 +53,8 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
             config.output().emitln(layout(any(ir)))
 
         val args = config.filenames().tail
-        Interpreter.interpret(ir, args) match {
-            case ErrR(msg) =>
-                config.output().emitln(s"cooma: $msg")
-            case v =>
-                if (config.resultPrint()) {
-                    val resultStr = PrettyPrinter.showRuntimeValue(v)
-                    config.output().emitln(resultStr)
-                }
-        }
+        val interpreter = new Interpreter(config)
+        interpreter.interpret(ir, args)
     }
 
     override def format(prog : Program) : Document =
