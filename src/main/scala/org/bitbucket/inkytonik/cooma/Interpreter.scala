@@ -105,7 +105,7 @@ class Interpreter(config : Config) {
 
                 case ArgV(i) =>
                     if ((i < 0) || (i >= args.length))
-                        sys.error(s"interpretValue: argument $i does not exist (max: ${args.length - 1})")
+                        ErrR(s"command-line argument $i does not exist (arg count = ${args.length})")
                     else
                         StrR(args(i))
 
@@ -214,6 +214,9 @@ class Interpreter(config : Config) {
                 } else
                     ErrR(s"Console capability unavailable: can't write $s")
 
+            case err : ErrR =>
+                err
+
             case v =>
                 sys.error(s"interpretPrim console: got non-String $v")
         }
@@ -235,6 +238,9 @@ class Interpreter(config : Config) {
                     ))
                 } else
                     ErrR(s"Reader capability unavailable: can't read $s")
+
+            case err : ErrR =>
+                err
 
             case v =>
                 sys.error(s"interpretPrim reader: got non-String $v")

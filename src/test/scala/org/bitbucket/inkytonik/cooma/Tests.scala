@@ -375,48 +375,57 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
     // Command-line tests
 
-    {
-        val program = "src/test/resources/capability/stringCmdArg.cooma"
-        val name = s"string command argument ($program)"
-        val args = Seq("hello")
+    case class CmdLineTest(
+        name : String,
+        filename : String,
+        expectedResult : String,
+        args : Seq[String] = Seq(),
+        usedArg : Int
+    )
 
-        test(name) {
-            val result = runCoomaOnFile(program, Seq(), args)
+    val cmdLineTests =
+        List(
+            CmdLineTest(
+                "one string command argument",
+                "src/test/resources/capability/stringCmdArg.cooma",
+                "\"hello\"",
+                Seq("hello"),
+                0
+            ),
+            CmdLineTest(
+                "two string command arguments",
+                "src/test/resources/capability/multiStringCmdArg.cooma",
+                "\"there\"",
+                Seq("hello", "there"),
+                1
+            )
+        )
+
+    for (aTest <- cmdLineTests) {
+        test(s"${aTest.name} (${aTest.filename})") {
+            val result = runCoomaOnFile(aTest.filename, Seq(), aTest.args)
             result shouldBe ""
         }
-
-        test(s"$name: result") {
-            val result = runCoomaOnFile(program, Seq("-r"), args)
-            result shouldBe "\"hello\"\n"
+        test(s"${aTest.name} (${aTest.filename}): result") {
+            val result = runCoomaOnFile(aTest.filename, Seq("-r"), aTest.args)
+            result shouldBe s"${aTest.expectedResult}\n"
+        }
+        test(s"${aTest.name} (${aTest.filename}): no args") {
+            val result = runCoomaOnFile(aTest.filename, Seq(), Seq())
+            result shouldBe s"cooma: command-line argument ${aTest.usedArg} does not exist (arg count = 0)\n"
         }
     }
 
     {
-        val program = "src/test/resources/capability/multiStringCmdArg.cooma"
-        val name = s"string command argument ($program)"
-        val args = Seq("hello", "there")
-
-        test(name) {
-            val result = runCoomaOnFile(program, Seq(), args)
-            result shouldBe ""
-        }
-
-        test(s"$name: result") {
-            val result = runCoomaOnFile(program, Seq("-r"), args)
-            result shouldBe "\"there\"\n"
-        }
-    }
-
-    {
-        val program = "src/test/resources/capability/consoleCmdArg.cooma"
-        val name = s"console command argument ($program)"
+        val filename = "src/test/resources/capability/consoleCmdArg.cooma"
+        val name = s"console command argument ($filename)"
         val console = makeTempFilename(".txt")
         val args = Seq(console)
         val content = "Hello world!\n"
 
         test(name) {
             createFile(console, "")
-            val result = runCoomaOnFile(program, Seq(), args)
+            val result = runCoomaOnFile(filename, Seq(), args)
             result shouldBe ""
             FileSource(console).content shouldBe content
             deleteFile(console)
@@ -424,23 +433,28 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
         test(s"$name: result") {
             createFile(console, "")
-            val result = runCoomaOnFile(program, Seq("-r"), args)
+            val result = runCoomaOnFile(filename, Seq("-r"), args)
             result shouldBe "{}\n"
             FileSource(console).content shouldBe content
             deleteFile(console)
         }
 
         test(s"$name: non-existent console") {
-            val filename = "notThere.txt"
-            val result = runCoomaOnFile(program, Seq(), Seq(filename))
-            result shouldBe "cooma: Console capability unavailable: can't write notThere.txt\n"
-            Files.exists(Paths.get(filename)) shouldBe false
+            val console = "notThere.txt"
+            val result = runCoomaOnFile(filename, Seq(), Seq(console))
+            result shouldBe s"cooma: Console capability unavailable: can't write $console\n"
+            Files.exists(Paths.get(console)) shouldBe false
+        }
+
+        test(s"$name: no args") {
+            val result = runCoomaOnFile(filename, Seq(), Seq())
+            result shouldBe s"cooma: command-line argument 0 does not exist (arg count = 0)\n"
         }
     }
 
     {
-        val program = "src/test/resources/capability/consoleReaderCmdArg.cooma"
-        val name = s"console and reader command arguments ($program)"
+        val filename = "src/test/resources/capability/consoleReaderCmdArg.cooma"
+        val name = s"console and reader command arguments ($filename)"
         val console = makeTempFilename(".txt")
         val reader = makeTempFilename(".txt")
         val args = Seq(console, reader)
@@ -449,7 +463,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         test(s"$name") {
             createFile(console, "")
             createFile(reader, content)
-            val result = runCoomaOnFile(program, Seq(), args)
+            val result = runCoomaOnFile(filename, Seq(), args)
             result shouldBe ""
             FileSource(console).content shouldBe content
             FileSource(reader).content shouldBe content
@@ -460,7 +474,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         test(s"$name: result") {
             createFile(console, "")
             createFile(reader, content)
-            val result = runCoomaOnFile(program, Seq("-r"), args)
+            val result = runCoomaOnFile(filename, Seq("-r"), args)
             result shouldBe "{}\n"
             FileSource(console).content shouldBe content
             FileSource(reader).content shouldBe content
@@ -470,19 +484,31 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
         test(s"$name: non-existent console") {
             createFile(reader, "")
-            val filename = "notThere.txt"
-            val result = runCoomaOnFile(program, Seq(), Seq(filename, reader))
-            result shouldBe s"cooma: Console capability unavailable: can't write $filename\n"
-            Files.exists(Paths.get(filename)) shouldBe false
+            val console = "notThere.txt"
+            val result = runCoomaOnFile(filename, Seq(), Seq(console, reader))
+            result shouldBe s"cooma: Console capability unavailable: can't write $console\n"
+            Files.exists(Paths.get(console)) shouldBe false
             deleteFile(console)
         }
 
         test(s"$name: non-existent reader") {
             createFile(console, "")
-            val filename = "notThere.txt"
-            val result = runCoomaOnFile(program, Seq(), Seq(console, filename))
-            result shouldBe s"cooma: Reader capability unavailable: can't read $filename\n"
-            Files.exists(Paths.get(filename)) shouldBe false
+            val reader = "notThere.txt"
+            val result = runCoomaOnFile(filename, Seq(), Seq(console, reader))
+            result shouldBe s"cooma: Reader capability unavailable: can't read $reader\n"
+            Files.exists(Paths.get(reader)) shouldBe false
+            deleteFile(console)
+        }
+
+        test(s"$name: no args") {
+            val result = runCoomaOnFile(filename, Seq(), Seq())
+            result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 0)\n"
+        }
+
+        test(s"$name: one arg") {
+            createFile(console, "")
+            val result = runCoomaOnFile(filename, Seq(), Seq(console))
+            result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 1)\n"
             deleteFile(console)
         }
     }
