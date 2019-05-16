@@ -29,7 +29,7 @@ class Tests extends FunSuiteLike with Matchers {
 
     val tests =
         List(
-            // Functional core
+            // Primitive values
 
             Test(
                 "integer",
@@ -55,6 +55,14 @@ class Tests extends FunSuiteLike with Matchers {
                 "string with escape sequences",
                 """"\b\t\n\f\t\7\15\167"""",
                 """"\b\t\n\f\t\7\rw""""
+            ),
+
+            // Rows
+
+            Test(
+                "unit",
+                "{}",
+                "{}"
             ),
             Test(
                 "row (single int field)",
@@ -102,55 +110,71 @@ class Tests extends FunSuiteLike with Matchers {
                 "42"
             ),
             Test(
-                "unit",
-                "{}",
-                "{}"
+                "row concatenation",
+                """{ val r = {x = 10, y = 20} val s = {a = "Hi"} r & s }""",
+                """{x = 10, y = 20, a = "Hi"}"""
             ),
             Test(
+                "select from row concatenation (left)",
+                """{ val r = {x = 10, y = 20} val s = {a = "Hi"} {r & s}.x }""",
+                "10"
+            ),
+            Test(
+                "select from row concatenation (right)",
+                """{ val r = {x = 10, y = 20} val s = {a = "Hi"} {r & s}.a }""",
+                """"Hi""""
+            ),
+
+            // Functions
+
+            Test(
                 "unit argument",
-                "(fun (x : {}) => 100)({})",
+                "{fun (x : {}) => 100}({})",
                 "100"
             ),
             Test(
                 "single integer argument",
-                """(fun (x : Int) => x)(10)""",
+                """{fun (x : Int) => x}(10)""",
                 "10"
             ),
             Test(
                 "multiple arguments - first",
-                """(fun (x : Int, y : String) => x)(10, "hello")""",
+                """{fun (x : Int, y : String) => x}(10, "hello")""",
                 "10"
             ),
             Test(
                 "multiple arguments - second",
-                """(fun (x : Int, y : String) => y)(10, "hello")""",
+                """{fun (x : Int, y : String) => y}(10, "hello")""",
                 """"hello""""
             ),
             Test(
                 "row argument",
-                "(fun (r : {x : Int}) => r.x)({x = 20})",
+                "{fun (r : {x : Int}) => r.x}({x = 20})",
                 "20"
             ),
             Test(
                 "single field row return",
-                "(fun (x : Int) => {a = x})(9)",
+                "{fun (x : Int) => {a = x}}(9)",
                 "{a = 9}"
             ),
             Test(
                 "function argument",
-                """(fun (f : Int => String) => f(10))(fun (x : Int) => "yes")""",
+                """{fun (f : Int => String) => f(10)}(fun (x : Int) => "yes")""",
                 """"yes""""
             ),
             Test(
                 "function return then call",
-                "(fun (x : Int) => (fun (y : Int) => x))(10)(15)",
+                "{fun (x : Int) => {fun (y : Int) => x}}(10)(15)",
                 "10"
             ),
             Test(
                 "function program result",
-                "(fun (f : Int => Int) => f)(fun (x : Int) => x)",
+                "{fun (f : Int => Int) => f}(fun (x : Int) => x)",
                 "<function>"
             ),
+
+            // Blocks
+
             Test(
                 "trivial block",
                 "{ 10 }",

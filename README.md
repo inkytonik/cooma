@@ -32,7 +32,7 @@ The Cooma project at Macquarie University is investigating secure programming la
 Specification and reference implementation is under way.
 
 * Functional core (tail call optimisation, but no polymorphism)
-* Row-based data types (simple creation and field ref, no extension)
+* Row-based data types (literals, selection, concatenation, no variants)
 * Object capabilities via rows
 * Runtime-provided resource capabilities (Console and Reader only)
 * Implicit argument resolution (not started)
@@ -58,7 +58,7 @@ Specification and reference implementation is under way.
 E.g., for the program `src/test/resources/multiArgCall.cooma` which is a simple multiple argument function call:
 
 ```ml
-(fun (x : Int, y : String) => x) (10, "hello")
+{fun (x : Int, y : String) => x} (10, "hello")
 ```
 
 we get the following using the `-r` option to print the program result:
@@ -97,10 +97,23 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ### Row argument and field reference
 
 ```ml
-(fun (r : {x : Int, y : Int, z : String}) => r.x) ({x = 20, y = 10, z = "Hi"})
+{fun (r : {x : Int, y : Int, z : String}) => r.x} ({x = 20, y = 10, z = "Hi"})
 
 > run -r src/test/resources/rowArg.cooma
 20
+```
+
+### Row concatenation
+
+```ml
+{
+    val r = {x = 10, y = 20}
+    val s = {a = "Hi"}
+    {r & s}.x
+}
+
+> run -r src/test/resources/rowConcat.cooma
+10
 ```
 
 ### Blocks (values and function definitions)

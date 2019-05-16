@@ -10,15 +10,15 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Argument ++ "," ")" "=>" Expression   {Fun, right, 3}
-  | Expression '(' Expression ++ "," ')'            {App, left, 2}
+    "fun" '(' Argument ++ "," ")" "=>" Expression   {Fun, right, 4}
+  | Expression '(' Expression ++ "," ')'            {App, left, 3}
+  | Expression "&" Expression                       {And, left, 2}
   | Expression '.' Identifier                       {Sel, left, 1}
-  | Block
   | '{' Field ** "," '}'                            {Row}
+  | Block
   | IntLit                                          {Num, 1: Integer.parseInt : Int}
   | Identifier                                      {IdnUse}
-  | StringLit                                       {Str}
-  | '(' Expression ')'.
+  | StringLit                                       {Str}.
 
 Argument =
   Identifier sp ":" Type.
@@ -57,7 +57,8 @@ FieldType =
 // Continuation-based intermediate representation
 
 Value =
-    "arg" IntLit                                  {ArgV, 1: Integer.parseInt : Int}
+    Identifier sp "&" Identifier                  {AndV}
+  | "arg" IntLit                                  {ArgV, 1: Integer.parseInt : Int}
   | "cap" Identifier sp Identifier                {CapV}
   | "fun" Identifier sp Identifier sp "=>" Term   {FunV}
   | IntLit                                        {IntV, 1: Integer.parseInt : Int}

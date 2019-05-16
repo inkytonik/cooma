@@ -90,6 +90,19 @@ class Interpreter(config : Config) {
 
         def interpretValue(value : Value, rho : Env) : ValueR =
             value match {
+                case AndV(l, r) =>
+                    lookupR(rho, l) match {
+                        case RowR(lFields) =>
+                            lookupR(rho, r) match {
+                                case RowR(rFields) =>
+                                    RowR(lFields ++ rFields)
+                                case rv =>
+                                    sys.error(s"interpretValue: right argument $r of & is non-row $rv")
+                            }
+                        case lv =>
+                            sys.error(s"interpretValue: left argument $r of & is non-row $lv")
+                    }
+
                 case ArgV(i) =>
                     if ((i < 0) || (i >= args.length))
                         sys.error(s"interpretValue: argument $i does not exist (max: ${args.length - 1})")

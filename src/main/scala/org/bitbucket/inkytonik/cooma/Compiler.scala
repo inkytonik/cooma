@@ -50,6 +50,13 @@ object Compiler {
 
     def compile(exp : Expression, kappa : String => Term) : Term =
         exp match {
+            case And(l, r) =>
+                val x = fresh("x")
+                compile(l, y =>
+                    compile(r, z =>
+                        LetV(x, AndV(y, z),
+                            kappa(x))))
+
             case App(e, Vector(a)) =>
                 val k = fresh("k")
                 val x = fresh("x")
@@ -142,6 +149,13 @@ object Compiler {
 
     def tailCompile(exp : Expression, k : String) : Term =
         exp match {
+            case And(l, r) =>
+                val x = fresh("x")
+                compile(l, y =>
+                    compile(r, z =>
+                        LetV(x, AndV(y, z),
+                            AppC(k, x))))
+
             case App(e, Vector(a)) =>
                 compile(e, x1 =>
                     compile(a, x2 =>
