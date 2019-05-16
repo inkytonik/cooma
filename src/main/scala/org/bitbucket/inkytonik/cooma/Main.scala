@@ -13,7 +13,7 @@ package org.bitbucket.inkytonik.cooma
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
 import org.bitbucket.inkytonik.kiama.util.CompilerBase
 
-object Main extends CompilerBase[ASTNode, Program, Config] {
+class Driver extends CompilerBase[ASTNode, Program, Config] {
 
     import org.bitbucket.inkytonik.cooma.CoomaParser
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter
@@ -61,3 +61,5 @@ object Main extends CompilerBase[ASTNode, Program, Config] {
         CoomaParserPrettyPrinter.format(prog, 5)
 
 }
+
+object Main extends Driver

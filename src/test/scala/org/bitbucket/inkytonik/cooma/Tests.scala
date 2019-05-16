@@ -10,15 +10,18 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import org.scalatest.{FunSuiteLike, Matchers}
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
+import org.bitbucket.inkytonik.kiama.util.TestCompilerWithConfig
 
-class Tests extends FunSuiteLike with Matchers {
+class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
 
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
     import org.bitbucket.inkytonik.kiama.util.FileSource
     import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
     import org.rogach.scallop.throwError
+
+    // Basic tests
 
     case class Test(
         name : String,
@@ -358,25 +361,62 @@ class Tests extends FunSuiteLike with Matchers {
 
     for (aTest <- tests) {
         test(aTest.name) {
-            val result = runCooma(aTest.name, aTest.program, Seq(), aTest.args)
+            val result = runCoomaOnString(aTest.name, aTest.program, Seq(), aTest.args)
             result shouldBe ""
         }
         test(s"${aTest.name}: result") {
-            val result = runCooma(aTest.name, aTest.program, Seq("-r"), aTest.args)
+            val result = runCoomaOnString(aTest.name, aTest.program, Seq("-r"), aTest.args)
             result shouldBe s"${aTest.expectedResult}\n"
         }
     }
 
+    filetests("file execution: basic", "src/test/resources/basic", ".cooma", ".out",
+        argslist = List(List("-r")))
+
+    // Command-line tests
+
     {
-        val name = "console command argument"
-        val program = """fun (c : Console) => c.write("Hello world!\n")"""
+        val program = "src/test/resources/capability/stringCmdArg.cooma"
+        val name = s"string command argument ($program)"
+        val args = Seq("hello")
+
+        test(name) {
+            val result = runCoomaOnFile(program, Seq(), args)
+            result shouldBe ""
+        }
+
+        test(s"$name: result") {
+            val result = runCoomaOnFile(program, Seq("-r"), args)
+            result shouldBe "\"hello\"\n"
+        }
+    }
+
+    {
+        val program = "src/test/resources/capability/multiStringCmdArg.cooma"
+        val name = s"string command argument ($program)"
+        val args = Seq("hello", "there")
+
+        test(name) {
+            val result = runCoomaOnFile(program, Seq(), args)
+            result shouldBe ""
+        }
+
+        test(s"$name: result") {
+            val result = runCoomaOnFile(program, Seq("-r"), args)
+            result shouldBe "\"there\"\n"
+        }
+    }
+
+    {
+        val program = "src/test/resources/capability/consoleCmdArg.cooma"
+        val name = s"console command argument ($program)"
         val console = makeTempFilename(".txt")
         val args = Seq(console)
         val content = "Hello world!\n"
 
-        test(s"$name") {
+        test(name) {
             createFile(console, "")
-            val result = runCooma(name, program, Seq(), args)
+            val result = runCoomaOnFile(program, Seq(), args)
             result shouldBe ""
             FileSource(console).content shouldBe content
             deleteFile(console)
@@ -384,7 +424,7 @@ class Tests extends FunSuiteLike with Matchers {
 
         test(s"$name: result") {
             createFile(console, "")
-            val result = runCooma(name, program, Seq("-r"), args)
+            val result = runCoomaOnFile(program, Seq("-r"), args)
             result shouldBe "{}\n"
             FileSource(console).content shouldBe content
             deleteFile(console)
@@ -392,15 +432,15 @@ class Tests extends FunSuiteLike with Matchers {
 
         test(s"$name: non-existent console") {
             val filename = "notThere.txt"
-            val result = runCooma(name, program, Seq(), Seq(filename))
+            val result = runCoomaOnFile(program, Seq(), Seq(filename))
             result shouldBe "cooma: Console capability unavailable: can't write notThere.txt\n"
             Files.exists(Paths.get(filename)) shouldBe false
         }
     }
 
     {
-        val name = "console and reader command arguments"
-        val program = "fun (c : Console, r : Reader) => c.write(r.read({}))"
+        val program = "src/test/resources/capability/consoleReaderCmdArg.cooma"
+        val name = s"console and reader command arguments ($program)"
         val console = makeTempFilename(".txt")
         val reader = makeTempFilename(".txt")
         val args = Seq(console, reader)
@@ -409,7 +449,7 @@ class Tests extends FunSuiteLike with Matchers {
         test(s"$name") {
             createFile(console, "")
             createFile(reader, content)
-            val result = runCooma(name, program, Seq(), args)
+            val result = runCoomaOnFile(program, Seq(), args)
             result shouldBe ""
             FileSource(console).content shouldBe content
             FileSource(reader).content shouldBe content
@@ -420,7 +460,7 @@ class Tests extends FunSuiteLike with Matchers {
         test(s"$name: result") {
             createFile(console, "")
             createFile(reader, content)
-            val result = runCooma(name, program, Seq("-r"), args)
+            val result = runCoomaOnFile(program, Seq("-r"), args)
             result shouldBe "{}\n"
             FileSource(console).content shouldBe content
             FileSource(reader).content shouldBe content
@@ -431,7 +471,7 @@ class Tests extends FunSuiteLike with Matchers {
         test(s"$name: non-existent console") {
             createFile(reader, "")
             val filename = "notThere.txt"
-            val result = runCooma(name, program, Seq(), Seq(filename, reader))
+            val result = runCoomaOnFile(program, Seq(), Seq(filename, reader))
             result shouldBe s"cooma: Console capability unavailable: can't write $filename\n"
             Files.exists(Paths.get(filename)) shouldBe false
             deleteFile(console)
@@ -440,25 +480,41 @@ class Tests extends FunSuiteLike with Matchers {
         test(s"$name: non-existent reader") {
             createFile(console, "")
             val filename = "notThere.txt"
-            val result = runCooma(name, program, Seq(), Seq(console, filename))
+            val result = runCoomaOnFile(program, Seq(), Seq(console, filename))
             result shouldBe s"cooma: Reader capability unavailable: can't read $filename\n"
             Files.exists(Paths.get(filename)) shouldBe false
             deleteFile(console)
         }
     }
 
-    def runCooma(name : String, program : String, options : Seq[String], args : Seq[String]) : String = {
-        val allArgs = Seq("--Koutput", "string") ++ options ++ ("test.cooma" +: args)
-
+    def makeConfig(args : Seq[String]) : Config = {
         // Set Scallop so that errors don't just exit the process
         val saveThrowError = throwError.value
         throwError.value = true
-        val config = Main.createConfig(allArgs)
+        val config = Main.createConfig(args)
         config.verify()
         throwError.value = saveThrowError
+        config
+    }
 
+    def runCoomaOnString(name : String, program : String, options : Seq[String], args : Seq[String]) : String = {
+        val allArgs = Seq("--Koutput", "string") ++ options ++ ("test.cooma" +: args)
+        val config = makeConfig(allArgs)
         try {
             Main.compileString(name, program, config)
+        } catch {
+            case e : Exception =>
+                info("failed with an exception ")
+                throw (e)
+        }
+        config.stringEmitter.result
+    }
+
+    def runCoomaOnFile(program : String, options : Seq[String], args : Seq[String]) : String = {
+        val allArgs = Seq("--Koutput", "string") ++ options ++ (program +: args)
+        val config = makeConfig(allArgs)
+        try {
+            Main.compileFile(program, config)
         } catch {
             case e : Exception =>
                 info("failed with an exception ")

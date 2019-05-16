@@ -55,7 +55,7 @@ Specification and reference implementation is under way.
 * run `sbt`
 * at the sbt prompt, run the Cooma implementation
 
-E.g., for the program `src/test/resources/multiArgCall.cooma` which is a simple multiple argument function call:
+E.g., for the program `src/test/resources/basic/multiArgCall.cooma` which is a simple multiple argument function call:
 
 ```ml
 {fun (x : Int, y : String) => x} (10, "hello")
@@ -67,16 +67,16 @@ we get the following using the `-r` option to print the program result:
 $ sbt
 [info] Loading settings for project global-plugins from metals.sbt ...
 ... more loading messages ...
-cooma 0.1.0 2.12.8> run -r src/test/resources/multiArgCall.cooma`
-[info] Running (fork) org.bitbucket.inkytonik.cooma.Main -r src/test/resources/multiArgCall.cooma
+cooma 0.1.0 2.12.8> run -r src/test/resources/basic/multiArgCall.cooma`
+[info] Running (fork) org.bitbucket.inkytonik.cooma.Main -r src/test/resources/basic/multiArgCall.cooma
 [info] 10
 ```
 
 Use `--help` to see all of the options for printing the source AST, IR and IR AST. E.g., use `-i` to print the IR AST:
 
 ```ml
-cooma 0.1.0 2.12.8> run -i -r src/test/resources/multiArgCall.cooma
-[info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r src/test/resources/multiArgCall.cooma
+cooma 0.1.0 2.12.8> run -i -r src/test/resources/basic/multiArgCall.cooma
+[info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r src/test/resources/basic/multiArgCall.cooma
 [info] letv f3 = fun k4 x => letv f5 = fun j6 y => j6 x in
 [info]     k4 f5 in
 [info]     letv x7 = 10 in
@@ -99,7 +99,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ```ml
 {fun (r : {x : Int, y : Int, z : String}) => r.x} ({x = 20, y = 10, z = "Hi"})
 
-> run -r src/test/resources/rowArg.cooma
+> run -r src/test/resources/basic/rowArg.cooma
 20
 ```
 
@@ -112,7 +112,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     {r & s}.x
 }
 
-> run -r src/test/resources/rowConcat.cooma
+> run -r src/test/resources/basic/rowConcat.cooma
 10
 ```
 
@@ -125,7 +125,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     y
 }
 
-> run -r src/test/resources/blockVal.cooma
+> run -r src/test/resources/basic/blockVal.cooma
 20
 ```
 
@@ -136,7 +136,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     g(10)
 }
 
-> run -r src/test/resources/blockDef.cooma
+> run -r src/test/resources/basic/blockDef.cooma
 10
 ```
 
@@ -145,12 +145,12 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ```ml
 fun (s : String) => s
 
-> run -r src/test/resources/stringCmdArg.cooma hello
+> run -r src/test/resources/capability/stringCmdArg.cooma hello
 hello
 
 fun (s : String, t : String) => t
 
-> run -r src/test/resources/multiStringCmdArg.cooma hello there
+> run -r src/test/resources/capability/multiStringCmdArg.cooma hello there
 there
 ```
 
@@ -159,7 +159,7 @@ there
 ```ml
 fun (c : Console) => c.write("Hello world!\n")
 
-> run -r src/test/resources/consoleCmdArg.cooma /dev/tty
+> run -r src/test/resources/capability/consoleCmdArg.cooma /dev/tty
 Hello world!
 {}
 ```
@@ -169,7 +169,7 @@ Hello world!
 If the specified file name is not writeable, the runtime system causes the execution to fail.
 
 ```ml
-> run src/test/resources/consoleCmdArg.cooma /does/not/exist
+> run src/test/resources/capability/consoleCmdArg.cooma /does/not/exist
 cooma: Console capability unavailable: can't write /does/not/exist
 ```
 
@@ -178,7 +178,7 @@ cooma: Console capability unavailable: can't write /does/not/exist
 ```ml
 fun (c : Console, r : Reader) => c.write(r.read({}))
 
-> run -r src/test/resources/consoleReaderCmdArg.cooma /dev/tty src/test/resources/multiArgCall.cooma
+> run -r src/test/resources/capability/consoleReaderCmdArg.cooma /dev/tty src/test/resources/basic/multiArgCall.cooma
 (fun (x : Int, y : String) => x) (10, "hello")
 {}
 ```
@@ -187,6 +187,6 @@ A Reader capability is only provided if the designated file can be read.
 
 ```ml
 
-> run src/test/resources/consoleReaderCmdArg.cooma /dev/tty /does/not/exist
+> run src/test/resources/capability/consoleReaderCmdArg.cooma /dev/tty /does/not/exist
 cooma: Reader capability unavailable: can't read /does/not/exist
 ```
