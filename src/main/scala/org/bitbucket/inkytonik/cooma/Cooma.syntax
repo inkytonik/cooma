@@ -54,36 +54,6 @@ RowType =
 FieldType =
   Identifier sp ":" Type.
 
-// Continuation-based intermediate representation
-
-Value =
-    Identifier sp "&" Identifier                  {AndV}
-  | "arg" IntLit                                  {ArgV, 1: Integer.parseInt : Int}
-  | "cap" Identifier sp Identifier                {CapV}
-  | "fun" Identifier sp Identifier sp "=>" Term   {FunV}
-  | IntLit                                        {IntV, 1: Integer.parseInt : Int}
-  | "prm" Identifier sp Identifier+               {PrmV}
-  | '{' FieldValue ** "," '}'                     {RowV}
-  | Identifier '.' Identifier                     {SelV}
-  | StringLit                                     {StrV}.
-
-FieldValue =
-  Identifier sp "=" Identifier.
-
-Term =
-    "letc" Identifier sp Identifier sp "=" Term sp 'in'
-      nestnl (Term)                                      {LetC}
-  | "letf" nestnl (DefTerm+) 'in'
-      nestnl (Term)                                      {LetF}
-  | "letv" Identifier sp "=" Value sp 'in'
-      nestnl (Term)                                      {LetV}
-  | Identifier sp Identifier sp Identifier               {AppF}
-  | Identifier sp Identifier                             {AppC}
-  | "halt" Identifier                                    {Halt}.
-
-DefTerm =
-  Identifier sp Identifier sp Identifier sp "=" Term \n.
-
 // Lexical syntax
 
 IntLit : Token =

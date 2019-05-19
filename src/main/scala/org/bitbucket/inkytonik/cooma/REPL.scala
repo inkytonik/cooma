@@ -17,6 +17,7 @@ class REPLDriver extends REPLBase[Config] {
     import org.bitbucket.inkytonik.cooma.BuildInfo
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.IR.showTerm
     import org.bitbucket.inkytonik.cooma.Runtime.showRuntimeValue
     import org.bitbucket.inkytonik.kiama.util.{Console, StringConsole, Source}
 
@@ -158,7 +159,7 @@ class REPLDriver extends REPLBase[Config] {
 
         // Pretty print the program's IR
         if (config.irPrint())
-            config.output().emitln(PrettyPrinter.showTerm(ir, 5))
+            config.output().emitln(showTerm(ir, 5))
         if (config.irASTPrint())
             config.output().emitln(layout(any(ir), 5))
 

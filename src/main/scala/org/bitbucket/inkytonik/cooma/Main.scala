@@ -18,6 +18,7 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
     import org.bitbucket.inkytonik.cooma.CoomaParser
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
+    import org.bitbucket.inkytonik.cooma.IR.showTerm
     import org.bitbucket.inkytonik.cooma.Runtime.showRuntimeValue
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.util.Source
@@ -65,7 +66,7 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
 
         val ir = Compiler.compile(prog)
         if (config.irPrint())
-            config.output().emitln(PrettyPrinter.showTerm(ir, 5))
+            config.output().emitln(showTerm(ir, 5))
         if (config.irASTPrint())
             config.output().emitln(layout(any(ir), 5))
 

@@ -13,7 +13,6 @@ package org.bitbucket.inkytonik.cooma
 class Interpreter(config : Config) {
 
     import java.nio.file.{Files, Paths}
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.Util.fresh
     import org.bitbucket.inkytonik.kiama.util.FileSource
 

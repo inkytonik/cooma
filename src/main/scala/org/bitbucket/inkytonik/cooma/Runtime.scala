@@ -10,8 +10,6 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{DefTerm, Term}
-
 sealed abstract class ValueR
 case class ClsR(env : Env, f : String, x : String, e : Term) extends ValueR
 case class ErrR(msg : String) extends ValueR
@@ -60,6 +58,6 @@ object Runtime {
         }
 
     def toDocField(field : FldR) : Doc =
-        value(field.x) <> space <> text("=") <> space <> toDocRuntimeValue(field.v)
+        value(field.x) <+> text("=") <+> toDocRuntimeValue(field.v)
 
 }
