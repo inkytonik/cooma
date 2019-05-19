@@ -17,44 +17,44 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
-    import org.bitbucket.inkytonik.kiama.util.FileSource
+    import org.bitbucket.inkytonik.kiama.util.{FileSource, StringConsole}
     import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
     import org.rogach.scallop.throwError
 
     // Basic tests
 
-    case class Test(
+    case class BasicTest(
         name : String,
         program : String,
         expectedResult : String,
         args : Seq[String] = Seq()
     )
 
-    val tests =
+    val basicTests =
         List(
             // Primitive values
 
-            Test(
+            BasicTest(
                 "integer",
                 "42",
                 "42"
             ),
-            Test(
+            BasicTest(
                 "string",
                 """"hello"""",
                 """"hello""""
             ),
-            Test(
+            BasicTest(
                 "string with quote",
                 """"hel\"lo"""",
                 """"hel\"lo""""
             ),
-            Test(
+            BasicTest(
                 "string with newline",
                 """"hello\n"""",
                 """"hello\n""""
             ),
-            Test(
+            BasicTest(
                 "string with escape sequences",
                 """"\b\t\n\f\t\7\15\167"""",
                 """"\b\t\n\f\t\7\rw""""
@@ -62,115 +62,141 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             // Rows
 
-            Test(
+            BasicTest(
                 "unit",
                 "{}",
                 "{}"
             ),
-            Test(
+            BasicTest(
                 "row (single int field)",
                 "{x = 65}",
                 "{x = 65}"
             ),
-            Test(
+            BasicTest(
                 "row (single string field)",
                 """{name = "Harold"}""",
                 """{name = "Harold"}"""
             ),
-            Test(
+            BasicTest(
                 "row (two fields)",
                 "{a = 1, b = 2}",
                 "{a = 1, b = 2}"
             ),
-            Test(
+            BasicTest(
                 "row (many fields)",
                 """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
                 """{name = "Bob", age = 24, year = 1998, sex = "F"}"""
             ),
-            Test(
+            BasicTest(
+                "multi-line row",
+                """{
+                    name = "Bob",
+                    age = 24
+                   }""",
+                """{name = "Bob", age = 24}"""
+            ),
+            BasicTest(
                 "field select (first of one)",
                 """{s = "Hi"}.s""",
                 """"Hi""""
             ),
-            Test(
+            BasicTest(
                 "field select (first of two)",
                 """{s = "Hi", t = 10}.s""",
                 """"Hi""""
             ),
-            Test(
+            BasicTest(
                 "field select (second of two)",
                 """{s = "Hi", t = 10}.t""",
                 "10"
             ),
-            Test(
+            BasicTest(
                 "field select (many fields)",
                 """{name = "Bob", age = 24, year = 1998, sex = "F"}.sex""",
                 """"F""""
             ),
-            Test(
+            BasicTest(
                 "nested field select",
                 "{r = {y = 42}}.r.y",
                 "42"
             ),
-            Test(
+            BasicTest(
                 "row concatenation",
-                """{ val r = {x = 10, y = 20} val s = {a = "Hi"} r & s }""",
+                """{
+                    val r = {x = 10, y = 20}
+                    val s = {a = "Hi"}
+                    r & s
+                    }""",
                 """{x = 10, y = 20, a = "Hi"}"""
             ),
-            Test(
+            BasicTest(
                 "select from row concatenation (left)",
-                """{ val r = {x = 10, y = 20} val s = {a = "Hi"} {r & s}.x }""",
+                """{
+                    val r = {x = 10, y = 20}
+                    val s = {a = "Hi"}
+                    {r & s}.x
+                   }""",
                 "10"
             ),
-            Test(
+            BasicTest(
                 "select from row concatenation (right)",
-                """{ val r = {x = 10, y = 20} val s = {a = "Hi"} {r & s}.a }""",
+                """{
+                    val r = {x = 10, y = 20}
+                    val s = {a = "Hi"}
+                    {r & s}.a
+                   }""",
                 """"Hi""""
             ),
 
             // Functions
 
-            Test(
+            BasicTest(
                 "unit argument",
                 "{fun (x : {}) => 100}({})",
                 "100"
             ),
-            Test(
+            BasicTest(
                 "single integer argument",
                 """{fun (x : Int) => x}(10)""",
                 "10"
             ),
-            Test(
+            BasicTest(
                 "multiple arguments - first",
                 """{fun (x : Int, y : String) => x}(10, "hello")""",
                 "10"
             ),
-            Test(
+            BasicTest(
                 "multiple arguments - second",
                 """{fun (x : Int, y : String) => y}(10, "hello")""",
                 """"hello""""
             ),
-            Test(
+            BasicTest(
+                "multi-line function",
+                """{fun (x : Int) =>
+                      x}(10)""",
+                "10"
+            ),
+            BasicTest(
                 "row argument",
                 "{fun (r : {x : Int}) => r.x}({x = 20})",
                 "20"
             ),
-            Test(
+            BasicTest(
                 "single field row return",
                 "{fun (x : Int) => {a = x}}(9)",
                 "{a = 9}"
             ),
-            Test(
+            BasicTest(
                 "function argument",
                 """{fun (f : Int => String) => f(10)}(fun (x : Int) => "yes")""",
                 """"yes""""
             ),
-            Test(
+            BasicTest(
                 "function return then call",
                 "{fun (x : Int) => {fun (y : Int) => x}}(10)(15)",
                 "10"
             ),
-            Test(
+            BasicTest(
                 "function program result",
                 "{fun (f : Int => Int) => f}(fun (x : Int) => x)",
                 "<function>"
@@ -178,27 +204,43 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             // Blocks
 
-            Test(
+            BasicTest(
                 "trivial block",
                 "{ 10 }",
                 "10"
             ),
-            Test(
+            BasicTest(
                 "val block",
-                "{ val x = 10 x }",
+                """
+                {
+                    val x = 10
+                    x
+                }""",
                 "10"
             ),
-            Test(
+            BasicTest(
                 "val block (inner ref)",
-                "{ val x = 10 val y = 20 y }",
+                """
+                {
+                    val x = 10
+                    val y = 20
+                    y
+                }
+                """,
                 "20"
             ),
-            Test(
+            BasicTest(
                 "val block (outer ref)",
-                "{ val x = 10 val y = 20 x }",
+                """
+                {
+                    val x = 10
+                    val y = 20
+                    x
+                }
+                """,
                 "10"
             ),
-            Test(
+            BasicTest(
                 "val block with functions",
                 """
                 {
@@ -209,7 +251,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "10"
             ),
-            Test(
+            BasicTest(
                 "def block (single)",
                 """
                 {
@@ -219,7 +261,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "10"
             ),
-            Test(
+            BasicTest(
                 "def block (multi inner)",
                 """
                 {
@@ -230,7 +272,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "10"
             ),
-            Test(
+            BasicTest(
                 "def block (multi outer)",
                 """
                 {
@@ -241,7 +283,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "10"
             ),
-            Test(
+            BasicTest(
                 "block (val and def)",
                 """
                 {
@@ -252,7 +294,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "20"
             ),
-            Test(
+            BasicTest(
                 "def redefinition",
                 """
                 {
@@ -264,7 +306,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "30"
             ),
-            Test(
+            BasicTest(
                 "nested val block (inner)",
                 """
                 {
@@ -277,7 +319,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "20"
             ),
-            Test(
+            BasicTest(
                 "nested val block (outer)",
                 """
                 {
@@ -290,7 +332,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "10"
             ),
-            Test(
+            BasicTest(
                 "nested val block (redefinition)",
                 """
                 {
@@ -303,7 +345,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "20"
             ),
-            Test(
+            BasicTest(
                 "nested def block (outer)",
                 """
                 {
@@ -316,7 +358,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "10"
             ),
-            Test(
+            BasicTest(
                 "nested def block (inner)",
                 """
                 {
@@ -329,7 +371,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 """,
                 "20"
             ),
-            Test(
+            BasicTest(
                 "nested def block (redefinition)",
                 """
                 {
@@ -345,13 +387,13 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             // Command-line arguments
 
-            Test(
+            BasicTest(
                 "string command argument",
                 "fun (s : String) => s",
                 """"hello"""",
                 Seq("hello")
             ),
-            Test(
+            BasicTest(
                 "multiple string command arguments",
                 "fun (s : String, t : String) => t",
                 """"there"""",
@@ -359,19 +401,140 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             )
         )
 
-    for (aTest <- tests) {
-        test(aTest.name) {
-            val result = runCoomaOnString(aTest.name, aTest.program, Seq(), aTest.args)
+    // Compiler tests
+
+    for (aTest <- basicTests) {
+        test(s"compiler: ${aTest.name}") {
+            val result = runCompilerOnString(aTest.name, aTest.program, Seq(), aTest.args)
             result shouldBe ""
         }
-        test(s"${aTest.name}: result") {
-            val result = runCoomaOnString(aTest.name, aTest.program, Seq("-r"), aTest.args)
+        test(s"compiler: ${aTest.name}: result") {
+            val result = runCompilerOnString(aTest.name, aTest.program, Seq("-r"), aTest.args)
             result shouldBe s"${aTest.expectedResult}\n"
         }
     }
 
-    filetests("file execution: basic", "src/test/resources/basic", ".cooma", ".out",
+    filetests("compiler: file execution", "src/test/resources/basic", ".cooma", ".out",
         argslist = List(List("-r")))
+
+    // REPL tests
+
+    for (aTest <- basicTests) {
+        test(s"REPL: ${aTest.name}") {
+            val result = runREPLOnLine(aTest.name, aTest.program, Seq(), aTest.args)
+            result shouldBe s"res0 = ${aTest.expectedResult}\n"
+        }
+    }
+
+    case class REPLTest(
+        name : String,
+        program : String,
+        expectedResult : String,
+    )
+
+    val replTests =
+        List(
+            REPLTest(
+                "single evaluation (int)",
+                """
+                    10
+                """,
+                "res0 = 10"
+            ),
+            REPLTest(
+                "single evaluation (string)",
+                """
+                    "Hello"
+                """,
+                """res0 = "Hello""""
+            ),
+            REPLTest(
+                "multiple evaluations",
+                """
+                    10
+                    20
+                """,
+                "res0 = 10\nres1 = 20"
+            ),
+            REPLTest(
+                "single value definition",
+                """
+                    val x = 1
+                    x
+                """,
+                "x = 1\nres0 = 1"
+            ),
+            REPLTest(
+                "multiple value definitions (upper)",
+                """
+                    val x = 1
+                    val y = 2
+                    x
+                """,
+                "x = 1\ny = 2\nres0 = 1"
+            ),
+            REPLTest(
+                "multiple value definitions (lower)",
+                """
+                    val x = 1
+                    val y = 2
+                    y
+                """,
+                "x = 1\ny = 2\nres0 = 2"
+            ),
+            REPLTest(
+                "single function definition",
+                """
+                    def f(x : Int) = x
+                    f(10)
+                """,
+                "f\nres0 = 10"
+            ),
+            REPLTest(
+                "value and function definition",
+                """
+                    val x = 10
+                    def f(y : Int) = x
+                    f(20)
+                """,
+                "x = 10\nf\nres0 = 10"
+            ),
+            REPLTest(
+                "multiple function definitions (upper)",
+                """
+                    def f(x : Int) = 10
+                    def g(y : Int) = 20
+                    f(1)
+                """,
+                "f\ng\nres0 = 10"
+            ),
+            REPLTest(
+                "multiple function definitions (lower)",
+                """
+                    def f(x : Int) = 10
+                    def g(y : Int) = 20
+                    g(1)
+                """,
+                "f\ng\nres0 = 20"
+            ),
+            REPLTest(
+                "multiple function definitions (chain)",
+                """
+                    def f(x : Int) = 10
+                    def g(y : Int) = f(y)
+                    g(1)
+                """,
+                "f\ng\nres0 = 10"
+            )
+
+        )
+
+    for (aTest <- replTests) {
+        test(s"REPL: ${aTest.name}") {
+            val result = runREPLOnLines(aTest.name, aTest.program, Seq(), Seq())
+            result shouldBe s"${aTest.expectedResult}\n"
+        }
+    }
 
     // Command-line tests
 
@@ -402,16 +565,16 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         )
 
     for (aTest <- cmdLineTests) {
-        test(s"${aTest.name} (${aTest.filename})") {
-            val result = runCoomaOnFile(aTest.filename, Seq(), aTest.args)
+        test(s"compiler: ${aTest.name} (${aTest.filename})") {
+            val result = runCompilerOnFile(aTest.filename, Seq(), aTest.args)
             result shouldBe ""
         }
-        test(s"${aTest.name} (${aTest.filename}): result") {
-            val result = runCoomaOnFile(aTest.filename, Seq("-r"), aTest.args)
+        test(s"compiler: ${aTest.name} (${aTest.filename}): result") {
+            val result = runCompilerOnFile(aTest.filename, Seq("-r"), aTest.args)
             result shouldBe s"${aTest.expectedResult}\n"
         }
-        test(s"${aTest.name} (${aTest.filename}): no args") {
-            val result = runCoomaOnFile(aTest.filename, Seq(), Seq())
+        test(s"compiler: ${aTest.name} (${aTest.filename}): no args") {
+            val result = runCompilerOnFile(aTest.filename, Seq(), Seq())
             result shouldBe s"cooma: command-line argument ${aTest.usedArg} does not exist (arg count = 0)\n"
         }
     }
@@ -423,31 +586,31 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         val args = Seq(console)
         val content = "Hello world!\n"
 
-        test(name) {
+        test(s"compiler: name") {
             createFile(console, "")
-            val result = runCoomaOnFile(filename, Seq(), args)
+            val result = runCompilerOnFile(filename, Seq(), args)
             result shouldBe ""
             FileSource(console).content shouldBe content
             deleteFile(console)
         }
 
-        test(s"$name: result") {
+        test(s"compiler: $name: result") {
             createFile(console, "")
-            val result = runCoomaOnFile(filename, Seq("-r"), args)
+            val result = runCompilerOnFile(filename, Seq("-r"), args)
             result shouldBe "{}\n"
             FileSource(console).content shouldBe content
             deleteFile(console)
         }
 
-        test(s"$name: non-existent console") {
+        test(s"compiler: $name: non-existent console") {
             val console = "notThere.txt"
-            val result = runCoomaOnFile(filename, Seq(), Seq(console))
+            val result = runCompilerOnFile(filename, Seq(), Seq(console))
             result shouldBe s"cooma: Console capability unavailable: can't write $console\n"
             Files.exists(Paths.get(console)) shouldBe false
         }
 
-        test(s"$name: no args") {
-            val result = runCoomaOnFile(filename, Seq(), Seq())
+        test(s"compiler: $name: no args") {
+            val result = runCompilerOnFile(filename, Seq(), Seq())
             result shouldBe s"cooma: command-line argument 0 does not exist (arg count = 0)\n"
         }
     }
@@ -460,10 +623,10 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         val args = Seq(console, reader)
         val content = "The file contents"
 
-        test(s"$name") {
+        test(s"compiler: $name") {
             createFile(console, "")
             createFile(reader, content)
-            val result = runCoomaOnFile(filename, Seq(), args)
+            val result = runCompilerOnFile(filename, Seq(), args)
             result shouldBe ""
             FileSource(console).content shouldBe content
             FileSource(reader).content shouldBe content
@@ -471,10 +634,10 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             deleteFile(reader)
         }
 
-        test(s"$name: result") {
+        test(s"compiler: $name: result") {
             createFile(console, "")
             createFile(reader, content)
-            val result = runCoomaOnFile(filename, Seq("-r"), args)
+            val result = runCompilerOnFile(filename, Seq("-r"), args)
             result shouldBe "{}\n"
             FileSource(console).content shouldBe content
             FileSource(reader).content shouldBe content
@@ -482,32 +645,32 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             deleteFile(reader)
         }
 
-        test(s"$name: non-existent console") {
+        test(s"compiler: $name: non-existent console") {
             createFile(reader, "")
             val console = "notThere.txt"
-            val result = runCoomaOnFile(filename, Seq(), Seq(console, reader))
+            val result = runCompilerOnFile(filename, Seq(), Seq(console, reader))
             result shouldBe s"cooma: Console capability unavailable: can't write $console\n"
             Files.exists(Paths.get(console)) shouldBe false
             deleteFile(console)
         }
 
-        test(s"$name: non-existent reader") {
+        test(s"compiler: $name: non-existent reader") {
             createFile(console, "")
             val reader = "notThere.txt"
-            val result = runCoomaOnFile(filename, Seq(), Seq(console, reader))
+            val result = runCompilerOnFile(filename, Seq(), Seq(console, reader))
             result shouldBe s"cooma: Reader capability unavailable: can't read $reader\n"
             Files.exists(Paths.get(reader)) shouldBe false
             deleteFile(console)
         }
 
-        test(s"$name: no args") {
-            val result = runCoomaOnFile(filename, Seq(), Seq())
+        test(s"compiler: $name: no args") {
+            val result = runCompilerOnFile(filename, Seq(), Seq())
             result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 0)\n"
         }
 
-        test(s"$name: one arg") {
+        test(s"compiler: $name: one arg") {
             createFile(console, "")
-            val result = runCoomaOnFile(filename, Seq(), Seq(console))
+            val result = runCompilerOnFile(filename, Seq(), Seq(console))
             result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 1)\n"
             deleteFile(console)
         }
@@ -523,11 +686,10 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         config
     }
 
-    def runCoomaOnString(name : String, program : String, options : Seq[String], args : Seq[String]) : String = {
-        val allArgs = Seq("--Koutput", "string") ++ options ++ ("test.cooma" +: args)
-        val config = makeConfig(allArgs)
+    def runTest(name : String, tester : Config => Unit, options : Seq[String], args : Seq[String]) : String = {
+        val config = makeConfig(args)
         try {
-            Main.compileString(name, program, config)
+            tester(config)
         } catch {
             case e : Exception =>
                 info("failed with an exception ")
@@ -536,17 +698,32 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         config.stringEmitter.result
     }
 
-    def runCoomaOnFile(program : String, options : Seq[String], args : Seq[String]) : String = {
-        val allArgs = Seq("--Koutput", "string") ++ options ++ (program +: args)
-        val config = makeConfig(allArgs)
-        try {
-            Main.compileFile(program, config)
-        } catch {
-            case e : Exception =>
-                info("failed with an exception ")
-                throw (e)
-        }
-        config.stringEmitter.result
+    def runCompilerOnString(name : String, program : String, options : Seq[String], args : Seq[String]) : String = {
+        val allArgs = Seq("--Koutput", "string") ++ options ++ ("test.cooma" +: args)
+        runTest(name, Main.compileString(name, program, _), options, allArgs)
     }
+
+    def runCompilerOnFile(program : String, options : Seq[String], args : Seq[String]) : String = {
+        val allArgs = Seq("--Koutput", "string") ++ options ++ (program +: args)
+        runTest(name, Main.compileFile(program, _), options, allArgs)
+    }
+
+    def runREPLTest(name : String, cmd : String, input : String, options : Seq[String], args : Seq[String]) : String = {
+        val allArgs = Seq("--Koutput", "string") ++ options ++ args
+        val repl = new REPLDriver()
+        val replInput =
+            if (input.indexOf('\n') == -1)
+                input
+            else
+                s"$cmd\n$input\n:end"
+        val console = new StringConsole(replInput)
+        runTest(name, repl.processconsole(console, "dummy", _), options, allArgs)
+    }
+
+    def runREPLOnLine(name : String, input : String, options : Seq[String], args : Seq[String]) : String =
+        runREPLTest(name, ":paste", input, options, args)
+
+    def runREPLOnLines(name : String, input : String, options : Seq[String], args : Seq[String]) : String =
+        runREPLTest(name, ":lines", input, options, args)
 
 }

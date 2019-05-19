@@ -14,31 +14,10 @@ class Interpreter(config : Config) {
 
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.Util.{escape, fresh}
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
+    import org.bitbucket.inkytonik.cooma.Util.fresh
     import org.bitbucket.inkytonik.kiama.util.FileSource
 
-    // Runtime structures
-
-    sealed abstract class ValueR
-    case class ClsR(env : Env, f : String, x : String, e : Term) extends ValueR
-    case class ErrR(msg : String) extends ValueR
-    case class IntR(num : Int) extends ValueR
-    case class RowR(fields : Vector[FldR]) extends ValueR
-    case class StrR(str : String) extends ValueR
-
-    case class FldR(x : String, v : ValueR)
-
-    case class ClsC(env : Env, k : String, e : Term)
-
-    sealed abstract class Env
-    case class ConsCE(env : Env, x : String, v : ClsC) extends Env
-    case class ConsFE(env : Env, clsEnv : () => Env, ds : Vector[DefTerm]) extends Env
-    case class ConsVE(env : Env, x : String, v : ValueR) extends Env
-    case class NilE() extends Env
-
-    def interpret(term : Term, args : List[String]) {
+    def interpret(term : Term, env : Env, args : List[String]) : ValueR = {
 
         val unit = RowR(Vector())
 
@@ -182,18 +161,12 @@ class Interpreter(config : Config) {
 
         val initEnv =
             ConsCE(
-                NilE(),
+                env,
                 "halt",
                 ClsC(NilE(), "x", Halt("x"))
             )
 
-        interpretAux(initEnv, term) match {
-            case ErrR(msg) =>
-                config.output().emitln(s"cooma: $msg")
-            case v =>
-                if (config.resultPrint())
-                    config.output().emitln(showRuntimeValue(v))
-        }
+        interpretAux(initEnv, term)
     }
 
     def console(x : String, rho : Env) : ValueR =
@@ -289,32 +262,5 @@ class Interpreter(config : Config) {
             case NilE() =>
                 sys.error(s"lookupC: can't find $x")
         }
-
-    /*
-     * Pretty-printer for runtime result values.
-     */
-
-    def showRuntimeValue(v : ValueR, w : Width = defaultWidth) : String =
-        formatRuntimeValue(v, w).layout
-
-    def formatRuntimeValue(v : ValueR, w : Width = defaultWidth) : Document =
-        pretty(group(toDocRuntimeValue(v)), w)
-
-    def toDocRuntimeValue(v : ValueR) : Doc =
-        v match {
-            case ClsR(v1, v2, v3, v4) =>
-                text("<function>")
-            case ErrR(msg) =>
-                text(msg)
-            case IntR(i) =>
-                value(i)
-            case RowR(v1) =>
-                text("{") <> ssep(v1.map(toDocField), text(",") <> space) <> text("}")
-            case StrR(v1) =>
-                text("\"") <> value(escape(v1)) <> text("\"")
-        }
-
-    def toDocField(field : FldR) : Doc =
-        value(field.x) <> space <> text("=") <> space <> toDocRuntimeValue(field.v)
 
 }

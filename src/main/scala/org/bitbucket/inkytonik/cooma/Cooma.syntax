@@ -107,3 +107,16 @@ StringChar : String =
 
 OctDigit : String =
   [0-7].
+
+// Constructs used by REPL parsing
+
+Whitespace : Void =
+  Spacing EOF.
+
+REPLInput =
+  Spacing REPLEntry EOF.
+
+REPLEntry : REPLInput =
+    Expression            {REPLExpression}
+  | FunctionDefinition    {REPLDef}
+  | ValueDefinition       {REPLVal}.

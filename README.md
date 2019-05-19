@@ -52,8 +52,66 @@ Specification and reference implementation is under way.
 
 * clone this project
 * go to the cloned directory
-* run `sbt`
-* at the sbt prompt, run the Cooma implementation
+* run `sbt` to get cooma project prompt
+
+### Running interactively (REPL mode)
+
+```ml
+cooma 0.1.0 2.12.8> run
+[info] ... sbt messages ...
+cooma 0.1.0 REPL
+
+Enter definitions or expressions (:help for commands)
+
+cooma> :help
+
+exp                    evaluate exp, print value
+val x = exp            add new value definition
+def f(x : Int) = exp   add new function definition
+:help                  print this message
+:lines                 enter multiple separate input lines until :end
+:paste                 enter single multi-line input until :end
+:quit                  quit the REPL (also Control-D)
+
+cooma> 10
+res0 = 10
+
+cooma> res0
+res1 = 10
+
+cooma> val x = 20
+x = 20
+
+cooma> x
+res2 = 20
+
+cooma> def f(x : Int) = x
+f
+
+cooma> f(20)
+res3 = 20
+
+cooma> :lines
+val a = 1
+val b = 2
+:end
+a = 1
+b = 2
+
+cooma> a
+res4 = 1
+
+cooma> :paste
+{
+   val c = 1
+   val d = 2
+   c
+}
+:end
+res5 = 1
+```
+
+### Running on files (compiler mode)
 
 E.g., for the program `src/test/resources/basic/multiArgCall.cooma` which is a simple multiple argument function call:
 
@@ -64,11 +122,9 @@ E.g., for the program `src/test/resources/basic/multiArgCall.cooma` which is a s
 we get the following using the `-r` option to print the program result:
 
 ```ml
-$ sbt
-[info] Loading settings for project global-plugins from metals.sbt ...
-... more loading messages ...
+
 cooma 0.1.0 2.12.8> run -r src/test/resources/basic/multiArgCall.cooma`
-[info] Running (fork) org.bitbucket.inkytonik.cooma.Main -r src/test/resources/basic/multiArgCall.cooma
+[info] ... sbt messages ...
 [info] 10
 ```
 

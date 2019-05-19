@@ -18,6 +18,7 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
     import org.bitbucket.inkytonik.cooma.CoomaParser
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
+    import org.bitbucket.inkytonik.cooma.Runtime.showRuntimeValue
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.util.Source
     import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
@@ -26,6 +27,13 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
 
     def createConfig(args : Seq[String]) : Config =
         new Config(args)
+
+    override def run(config : Config) {
+        if (config.filenames().isEmpty)
+            (new REPLDriver).driver(config.args)
+        else
+            super.run(config)
+    }
 
     override def compileFiles(config : Config) {
         val args = config.filenames()
@@ -44,17 +52,23 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
 
     def process(source : Source, prog : Program, config : Config) {
         if (config.coomaASTPrint())
-            config.output().emitln(layout(any(prog)))
+            config.output().emitln(layout(any(prog), 5))
 
         val ir = Compiler.compile(prog)
         if (config.irPrint())
             config.output().emitln(PrettyPrinter.showTerm(ir, 5))
         if (config.irASTPrint())
-            config.output().emitln(layout(any(ir)))
+            config.output().emitln(layout(any(ir), 5))
 
         val args = config.filenames().tail
         val interpreter = new Interpreter(config)
-        interpreter.interpret(ir, args)
+        interpreter.interpret(ir, NilE(), args) match {
+            case ErrR(msg) =>
+                config.output().emitln(s"cooma: $msg")
+            case v =>
+                if (config.resultPrint())
+                    config.output().emitln(showRuntimeValue(v))
+        }
     }
 
     override def format(prog : Program) : Document =

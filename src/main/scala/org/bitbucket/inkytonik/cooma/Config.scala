@@ -10,7 +10,15 @@
 
 package org.bitbucket.inkytonik.cooma
 
-class Config(args : Seq[String]) extends org.bitbucket.inkytonik.kiama.util.Config(args) {
+import org.bitbucket.inkytonik.kiama.util.REPLConfig
+
+class Config(args : Seq[String]) extends REPLConfig(args) {
+
+    import org.bitbucket.inkytonik.cooma.BuildInfo
+
+    version(s"${BuildInfo.name} ${BuildInfo.version}\n")
+
+    banner("Options:\n")
 
     lazy val coomaASTPrint = opt[Boolean]("coomaASTPrint", short = 'C',
         descr = "Print the AST of the Cooma program (default: false)",
@@ -25,7 +33,7 @@ class Config(args : Seq[String]) extends org.bitbucket.inkytonik.kiama.util.Conf
         default = Some(false))
 
     lazy val resultPrint = opt[Boolean]("resultPrint", short = 'r',
-        descr = "Print the result value of source program (default: false)",
+        descr = "Print the result value in compiler mode (default: false)",
         default = Some(false))
 
 }

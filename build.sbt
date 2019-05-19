@@ -4,6 +4,10 @@ organization := "org.bitbucket.inkytonik.cooma"
 
 scalaVersion := "2.12.8"
 
+enablePlugins(BuildInfoPlugin)
+buildInfoKeys := Seq[BuildInfoKey](name, version)
+buildInfoPackage := organization.value
+
 scalacOptions :=
     Seq (
         "-deprecation",
@@ -39,6 +43,10 @@ resolvers ++=
     )
 
 fork := true
+
+connectInput in run := true
+
+outputStrategy in run := Some (StdoutOutput)
 
 // sbt-rats
 
