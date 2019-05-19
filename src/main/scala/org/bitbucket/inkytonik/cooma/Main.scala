@@ -28,6 +28,15 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
     def createConfig(args : Seq[String]) : Config =
         new Config(args)
 
+    override def driver(args : Seq[String]) {
+        createAndInitConfig(args) match {
+            case Left(message) =>
+                System.err.println(s"cooma: $message, use --help to see list")
+            case Right(config) =>
+                run(config)
+        }
+    }
+
     override def run(config : Config) {
         if (config.filenames().isEmpty)
             (new REPLDriver).driver(config.args)
