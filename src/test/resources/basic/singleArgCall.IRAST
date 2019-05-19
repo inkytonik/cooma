@@ -1,0 +1,16 @@
+LetV(
+    "f1",
+    FunV(
+        "k2",
+        "x",
+        AppC(
+            "k2",
+            "x")),
+    LetV(
+        "x3",
+        IntV(
+            10),
+        AppF(
+            "f1",
+            "halt",
+            "x3")))

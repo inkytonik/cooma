@@ -71,11 +71,11 @@ FieldValue =
   Identifier sp "=" Identifier.
 
 Term =
-    "letc" Identifier sp Identifier sp "=" Term sp "in"
+    "letc" Identifier sp Identifier sp "=" Term sp 'in'
       nestnl (Term)                                      {LetC}
-  | "letf" nestnl (DefTerm+) "in"
+  | "letf" nestnl (DefTerm+) 'in'
       nestnl (Term)                                      {LetF}
-  | "letv" Identifier sp "=" Value sp "in"
+  | "letv" Identifier sp "=" Value sp 'in'
       nestnl (Term)                                      {LetV}
   | Identifier sp Identifier sp Identifier               {AppF}
   | Identifier sp Identifier                             {AppC}

@@ -1,0 +1,3 @@
+letv f1 = fun k2 x => k2 x in
+    letv x3 = 10 in
+        f1 halt x3

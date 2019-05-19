@@ -414,8 +414,46 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         }
     }
 
-    filetests("compiler: file execution", "src/test/resources/basic", ".cooma", ".out",
-        argslist = List(List("-r")))
+    {
+        val basicPath = "src/test/resources/basic"
+
+        filetests("compiler: file execution", basicPath, ".cooma", ".out",
+            argslist = List(List("-r")))
+
+        case class OptionTest(
+            name : String,
+            option : String,
+            inputFilename : String,
+            expectedFilename : String
+        )
+
+        val optionTests =
+            List(
+                OptionTest(
+                    "Cooma AST print",
+                    "-C",
+                    "singleArgCall.cooma",
+                    "singleArgCall.coomaAST"
+                ),
+                OptionTest(
+                    "IR print",
+                    "-i",
+                    "singleArgCall.cooma",
+                    "singleArgCall.IR"
+                ),
+                OptionTest(
+                    "IR AST print",
+                    "-I",
+                    "singleArgCall.cooma",
+                    "singleArgCall.IRAST"
+                )
+            )
+
+        for (aTest <- optionTests)
+            filetest("compiler: file execution", basicPath, s"$basicPath/${aTest.expectedFilename}",
+                List(aTest.option, s"$basicPath/${aTest.inputFilename}"),
+                aTest.expectedFilename)
+    }
 
     // REPL tests
 

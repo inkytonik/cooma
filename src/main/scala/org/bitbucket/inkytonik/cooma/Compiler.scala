@@ -14,10 +14,12 @@ object Compiler {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.Util.{fresh, unescape}
+    import org.bitbucket.inkytonik.cooma.Util.{fresh, resetFresh, unescape}
 
-    def compile(prog : Program) : Term =
+    def compile(prog : Program) : Term = {
+        resetFresh()
         compileTop(prog.expression, 0)
+    }
 
     def compileTop(exp : Expression, arg : Int) : Term = {
 

@@ -1,0 +1,14 @@
+Program(
+    App(
+        Block(
+            Return(
+                Fun(
+                    Vector(
+                        Argument(
+                            "x",
+                            IntT())),
+                    IdnUse(
+                        "x")))),
+        Vector(
+            Num(
+                10))))

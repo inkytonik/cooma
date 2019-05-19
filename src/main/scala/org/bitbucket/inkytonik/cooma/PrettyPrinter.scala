@@ -27,13 +27,18 @@ object PrettyPrinter extends org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrin
 
     def toDocTerm(t : Term) : Doc =
         t match {
-            case LetV(v1, v2, v3) =>
-                text("letv") <> space <> value(v1) <> space <> text("=") <> space <> toDocValue(v2) <> space <> text("in") <> space <> nest(line <> toDocTerm(v3))
             case LetC(v1, v2, v3, v4) =>
-                text("letc") <> space <> value(v1) <> space <> value(v2) <> space <> text("=") <> space <> toDocTerm(v3) <> space <> text("in") <> space <> nest(line <> toDocTerm(v4))
+                text("letc") <> space <> value(v1) <> space <> value(v2) <> space <> text("=") <> space <> toDocTerm(v3) <> space <> text("in") <> nest(line <> toDocTerm(v4))
+            case v @ LetF(v1, v2) =>
+                text("letf") <> space <> nest(line <> ssep(v1.map(toDocDefTerm), emptyDoc)) <> text("in") <> nest(line <> toDocTerm(v2))
+            case LetV(v1, v2, v3) =>
+                text("letv") <> space <> value(v1) <> space <> text("=") <> space <> toDocValue(v2) <> space <> text("in") <> nest(line <> toDocTerm(v3))
             case _ =>
                 toDoc(t)
         }
+
+    def toDocDefTerm(v : DefTerm) : Doc =
+        value(v.identifier1) <> space <> value(v.identifier2) <> space <> value(v.identifier3) <> space <> text("=") <> space <> toDocTerm(v.term) <> line
 
     def toDocValue(v : Value) : Doc =
         v match {
