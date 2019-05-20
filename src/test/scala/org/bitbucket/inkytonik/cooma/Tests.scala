@@ -468,7 +468,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
     case class REPLTest(
         name : String,
         program : String,
-        expectedResult : String,
+        expectedResult : String
     )
 
     val replTests =
