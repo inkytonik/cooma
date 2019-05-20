@@ -57,7 +57,7 @@ FieldType =
 // Lexical syntax
 
 IntLit : Token =
-  Digits.
+  '-'? Digits.
 
 Digits : String =
   Digit+.

@@ -36,9 +36,14 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             // Primitive values
 
             BasicTest(
-                "integer",
+                "positive integer",
                 "42",
                 "42"
+            ),
+            BasicTest(
+                "negative integer",
+                "-182",
+                "-182"
             ),
             BasicTest(
                 "string",

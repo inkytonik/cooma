@@ -24,15 +24,14 @@ object Primitives {
     def primitive(interpreter : Interpreter, rho : Env, primitive : Primitive, args : Seq[String]) : ValueR =
         (primitive, args) match {
             case (ConsoleWrite(f), Vector(x)) =>
-                val s =
-                    interpreter.lookupR(rho, x) match {
-                        case IntR(i) =>
-                            i.toString
-                        case StrR(s) =>
-                            s
-                        case v =>
-                            sys.error(s"interpretValue: can't write $v")
-                    }
+                val s = interpreter.lookupR(rho, x) match {
+                    case IntR(i) =>
+                        i.toString
+                    case StrR(s) =>
+                        s
+                    case v =>
+                        sys.error(s"interpretValue: can't write $v")
+                }
                 Files.write(Paths.get(f), s.getBytes())
                 unit
 
