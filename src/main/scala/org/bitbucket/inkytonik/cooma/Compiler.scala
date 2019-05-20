@@ -16,9 +16,22 @@ object Compiler {
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.Util.{fresh, resetFresh, unescape}
 
-    def compile(prog : Program) : Term = {
+    /**
+     * Compile a program that will run as a command with
+     * user-supplied command-line arguments.
+     */
+    def compileCommand(prog : Program) : Term = {
         resetFresh()
         compileTop(prog.expression, 0)
+    }
+
+    /**
+     * Compile a program that is evaluated as an expression
+     * with no command-line arguments.
+     */
+    def compileStandalone(prog : Program) : Term = {
+        resetFresh()
+        tailCompile(prog.expression, "halt")
     }
 
     def compileTop(exp : Expression, arg : Int) : Term = {

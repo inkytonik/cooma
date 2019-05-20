@@ -64,7 +64,7 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
         if (config.coomaASTPrint())
             config.output().emitln(layout(any(prog), 5))
 
-        val ir = Compiler.compile(prog)
+        val ir = Compiler.compileCommand(prog)
         if (config.irPrint())
             config.output().emitln(showTerm(ir, 5))
         if (config.irASTPrint())

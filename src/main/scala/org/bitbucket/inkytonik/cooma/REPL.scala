@@ -155,7 +155,7 @@ class REPLDriver extends REPLBase[Config] {
             config.output().emitln(layout(any(program), 5))
 
         // Translate the source tree to IR
-        val ir = Compiler.compile(program)
+        val ir = Compiler.compileStandalone(program)
 
         // Pretty print the program's IR
         if (config.irPrint())

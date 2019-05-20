@@ -26,8 +26,9 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
     case class BasicTest(
         name : String,
         program : String,
-        expectedResult : String,
-        args : Seq[String] = Seq()
+        expectedCompiledResult : String,
+        args : Seq[String] = Seq(),
+        expectedREPLResult : Option[String] = None
     )
 
     val basicTests =
@@ -391,13 +392,15 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 "string command argument",
                 "fun (s : String) => s",
                 """"hello"""",
-                Seq("hello")
+                Seq("hello"),
+                Some("<function>")
             ),
             BasicTest(
                 "multiple string command arguments",
                 "fun (s : String, t : String) => t",
                 """"there"""",
-                Seq("hello", "there")
+                Seq("hello", "there"),
+                Some("<function>")
             )
         )
 
@@ -410,7 +413,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         }
         test(s"compiler: ${aTest.name}: result") {
             val result = runCompilerOnString(aTest.name, aTest.program, Seq("-r"), aTest.args)
-            result shouldBe s"${aTest.expectedResult}\n"
+            result shouldBe s"${aTest.expectedCompiledResult}\n"
         }
     }
 
@@ -461,7 +464,12 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
     for (aTest <- basicTests) {
         test(s"REPL: ${aTest.name}") {
             val result = runREPLOnLine(aTest.name, aTest.program, Seq(), aTest.args)
-            result shouldBe s"res0 = ${aTest.expectedResult}\n"
+            val expectedResult =
+                aTest.expectedREPLResult match {
+                    case Some(s) => s
+                    case _       => aTest.expectedCompiledResult
+                }
+            result shouldBe s"res0 = $expectedResult\n"
         }
     }
 
