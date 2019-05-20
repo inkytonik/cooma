@@ -1,0 +1,5 @@
+letf
+    f k1 x = k1 x
+    g k2 y = f k2 y
+letv x3 = 10
+g halt x3

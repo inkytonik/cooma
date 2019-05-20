@@ -1,0 +1,15 @@
+Program(
+    Fun(
+        Vector(
+            Argument(
+                "c",
+                IdnT(
+                    "Console"))),
+        App(
+            Sel(
+                IdnUse(
+                    "c"),
+                "write"),
+            Vector(
+                Str(
+                    ""Hello world!\n"")))))

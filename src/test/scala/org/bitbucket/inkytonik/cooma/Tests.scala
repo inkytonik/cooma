@@ -415,44 +415,45 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
     }
 
     {
-        val basicPath = "src/test/resources/basic"
+        val resourcesPath = "src/test/resources"
 
-        filetests("compiler: file execution", basicPath, ".cooma", ".out",
+        filetests("compiler: file execution", s"${resourcesPath}/basic", ".cooma", ".out",
             argslist = List(List("-r")))
 
         case class OptionTest(
             name : String,
             option : String,
-            inputFilename : String,
-            expectedFilename : String
+            inputBasename : String,
+            expectedExtension : String,
+            args : Seq[String] = Seq()
         )
 
         val optionTests =
             List(
-                OptionTest(
-                    "Cooma AST print",
-                    "-C",
-                    "singleArgCall.cooma",
-                    "singleArgCall.coomaAST"
-                ),
-                OptionTest(
-                    "IR print",
-                    "-i",
-                    "singleArgCall.cooma",
-                    "singleArgCall.IR"
-                ),
-                OptionTest(
-                    "IR AST print",
-                    "-I",
-                    "singleArgCall.cooma",
-                    "singleArgCall.IRAST"
-                )
+                OptionTest("Cooma AST print", "-C", "basic/singleArgCall", "coomaAST"),
+                OptionTest("IR print", "-i", "basic/singleArgCall", "IR"),
+                OptionTest("IR AST print", "-I", "basic/singleArgCall", "IRAST"),
+                OptionTest("Cooma AST print", "-C", "basic/multiArgCall", "coomaAST"),
+                OptionTest("IR print", "-i", "basic/multiArgCall", "IR"),
+                OptionTest("IR AST print", "-I", "basic/multiArgCall", "IRAST"),
+                OptionTest("Cooma AST print", "-C", "basic/blockVal", "coomaAST"),
+                OptionTest("IR print", "-i", "basic/blockVal", "IR"),
+                OptionTest("IR AST print", "-I", "basic/blockVal", "IRAST"),
+                OptionTest("Cooma AST print", "-C", "basic/blockDef", "coomaAST"),
+                OptionTest("IR print", "-i", "basic/blockDef", "IR"),
+                OptionTest("IR AST print", "-I", "basic/blockDef", "IRAST"),
+                OptionTest("Cooma AST print", "-C", "capability/consoleCmdArg", "coomaAST", Seq("/dev/null")),
+                OptionTest("IR print", "-i", "capability/consoleCmdArg", "IR", Seq("/dev/null")),
+                OptionTest("IR AST print", "-I", "capability/consoleCmdArg", "IRAST", Seq("/dev/null"))
             )
 
-        for (aTest <- optionTests)
-            filetest("compiler: file execution", basicPath, s"$basicPath/${aTest.expectedFilename}",
-                List(aTest.option, s"$basicPath/${aTest.inputFilename}"),
-                aTest.expectedFilename)
+        for (aTest <- optionTests) {
+            val inputFilename = s"${aTest.inputBasename}.cooma"
+            val expectedFilename = s"${aTest.inputBasename}.${aTest.expectedExtension}"
+            filetest("compiler: file execution", resourcesPath, s"$resourcesPath/$expectedFilename",
+                List(aTest.option, s"$resourcesPath/$inputFilename") ++ aTest.args,
+                expectedFilename)
+        }
     }
 
     // REPL tests

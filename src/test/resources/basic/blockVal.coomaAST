@@ -1,0 +1,15 @@
+Program(
+    Block(
+        LetVal(
+            Val(
+                "x",
+                Num(
+                    10)),
+            LetVal(
+                Val(
+                    "y",
+                    Num(
+                        20)),
+                Return(
+                    IdnUse(
+                        "y"))))))

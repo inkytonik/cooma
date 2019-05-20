@@ -1,0 +1,19 @@
+Program(
+    App(
+        Block(
+            Return(
+                Fun(
+                    Vector(
+                        Argument(
+                            "x",
+                            IntT()),
+                        Argument(
+                            "y",
+                            StrT())),
+                    IdnUse(
+                        "x")))),
+        Vector(
+            Num(
+                10),
+            Str(
+                ""hello""))))

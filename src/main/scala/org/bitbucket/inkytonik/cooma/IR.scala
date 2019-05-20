@@ -57,15 +57,18 @@ object IR {
             case Halt(x) =>
                 "halt" <+> text(x)
             case LetC(k, x, t, body) =>
-                "letc" <+> value(k) <+> value(x) <+> "=" <+> toDocTerm(t) <+> "in" <> nest(line <> toDocTerm(body))
+                "letc" <+> value(k) <+> value(x) <+> "=" <+> align(toDocTerm(t)) <@>
+                    toDocTerm(body)
             case v @ LetF(ds, body) =>
-                "letf" <+> nest(line <> ssep(ds.map(toDocDefTerm), emptyDoc)) <> "in" <> nest(line <> toDocTerm(body))
+                "letf" <+> nest(ssep(ds.map(toDocDefTerm), emptyDoc)) <@>
+                    toDocTerm(body)
             case LetV(x, v, body) =>
-                "letv" <+> value(x) <+> "=" <+> toDocValue(v) <+> "in" <> nest(line <> toDocTerm(body))
+                "letv" <+> value(x) <+> "=" <+> align(toDocValue(v)) <@>
+                    toDocTerm(body)
         }
 
     def toDocDefTerm(v : DefTerm) : Doc =
-        value(v.f) <+> value(v.k) <+> value(v.x) <+> text("=") <+> toDocTerm(v.body) <> line
+        line <> value(v.f) <+> value(v.k) <+> value(v.x) <+> text("=") <+> toDocTerm(v.body)
 
     def toDocValue(v : Value) : Doc =
         v match {
@@ -76,7 +79,7 @@ object IR {
             case CapV(c, x) =>
                 "cap" <+> c <+> x
             case FunV(v1, v2, v3) =>
-                "fun" <+> value(v1) <+> value(v2) <+> text("=>") <+> toDocTerm(v3)
+                "fun" <+> value(v1) <+> value(v2) <+> text("=>") <+> align(toDocTerm(v3))
             case IntV(i) =>
                 value(i)
             case PrmV(p, xs) =>

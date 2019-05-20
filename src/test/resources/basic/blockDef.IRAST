@@ -1,0 +1,25 @@
+LetF(
+    Vector(
+        DefTerm(
+            "f",
+            "k1",
+            "x",
+            AppC(
+                "k1",
+                "x")),
+        DefTerm(
+            "g",
+            "k2",
+            "y",
+            AppF(
+                "f",
+                "k2",
+                "y"))),
+    LetV(
+        "x3",
+        IntV(
+            10),
+        AppF(
+            "g",
+            "halt",
+            "x3")))

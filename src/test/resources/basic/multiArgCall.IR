@@ -1,0 +1,6 @@
+letv f3 = fun k4 x => letv f5 = fun j6 y => j6 x
+                      k4 f5
+letv x7 = 10
+letc k1 x2 = letv x8 = "hello"
+             x2 halt x8
+f3 k1 x7

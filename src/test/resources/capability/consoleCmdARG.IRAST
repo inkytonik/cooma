@@ -1,0 +1,23 @@
+LetV(
+    "x1",
+    ArgV(
+        0),
+    LetV(
+        "c",
+        CapV(
+            "Console",
+            "x1"),
+        LetV(
+            "x2",
+            SelV(
+                "c",
+                "write"),
+            LetV(
+                "x3",
+                StrV(
+                    "Hello world!
+"),
+                AppF(
+                    "x2",
+                    "halt",
+                    "x3")))))

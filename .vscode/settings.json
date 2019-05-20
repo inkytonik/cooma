@@ -30,6 +30,7 @@
         "idn",
         "implicits",
         "ir",
+        "irast",
         "irastprint",
         "irprint",
         "jfp",
