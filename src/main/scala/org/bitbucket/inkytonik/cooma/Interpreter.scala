@@ -12,13 +12,10 @@ package org.bitbucket.inkytonik.cooma
 
 class Interpreter(config : Config) {
 
-    import java.nio.file.{Files, Paths}
-    import org.bitbucket.inkytonik.cooma.Util.fresh
-    import org.bitbucket.inkytonik.kiama.util.FileSource
+    import org.bitbucket.inkytonik.cooma.Capabilities.capability
+    import org.bitbucket.inkytonik.cooma.Primitives.primitive
 
     def interpret(term : Term, env : Env, args : List[String]) : ValueR = {
-
-        val unit = RowR(Vector())
 
         def interpretAux(rho : Env, term : Term) : ValueR =
             term match {
@@ -88,7 +85,7 @@ class Interpreter(config : Config) {
                         StrR(args(i))
 
                 case CapV(p, x) =>
-                    interpretCap(p, x, rho)
+                    capability(this, rho, p, x)
 
                 case FunV(k, x, t) =>
                     ClsR(rho, k, x, t)
@@ -97,26 +94,7 @@ class Interpreter(config : Config) {
                     IntR(i)
 
                 case PrmV(name, args) =>
-                    (name, args) match {
-                        case ("console", Vector(f, x)) =>
-                            val s =
-                                lookupR(rho, x) match {
-                                    case IntR(i) =>
-                                        i.toString
-                                    case StrR(s) =>
-                                        s
-                                    case v =>
-                                        sys.error(s"interpretValue: can't write $v")
-                                }
-                            Files.write(Paths.get(f), s.getBytes())
-                            unit
-
-                        case ("reader", Vector(f)) =>
-                            StrR(FileSource(f).content)
-
-                        case (name, arg) =>
-                            sys.error(s"interpretValue: unknown primitive call $name $arg")
-                    }
+                    primitive(this, rho, name, args)
 
                 case RowV(fields) =>
                     RowR(fields.map {
@@ -148,16 +126,6 @@ class Interpreter(config : Config) {
                     StrR(s)
             }
 
-        def interpretCap(name : String, x : String, rho : Env) : ValueR =
-            name match {
-                case "Console" =>
-                    console(x, rho)
-                case "Reader" =>
-                    reader(x, rho)
-                case _ =>
-                    sys.error(s"interpretCap: unknown primitive $name")
-            }
-
         val initEnv =
             ConsCE(
                 env,
@@ -167,56 +135,6 @@ class Interpreter(config : Config) {
 
         interpretAux(initEnv, term)
     }
-
-    def console(x : String, rho : Env) : ValueR =
-        lookupR(rho, x) match {
-            case StrR(s) =>
-                if (Files.isWritable(Paths.get(s))) {
-                    val k = fresh("k")
-                    val y = fresh("y")
-                    val p = fresh("p")
-                    RowR(Vector(
-                        FldR(
-                            "write",
-                            ClsR(NilE(), k, y,
-                                LetV(p, PrmV("console", Vector(s, y)),
-                                    AppC(k, p)))
-                        )
-                    ))
-                } else
-                    ErrR(s"Console capability unavailable: can't write $s")
-
-            case err : ErrR =>
-                err
-
-            case v =>
-                sys.error(s"interpretPrim console: got non-String $v")
-        }
-
-    def reader(x : String, rho : Env) : ValueR =
-        lookupR(rho, x) match {
-            case StrR(s) =>
-                if (Files.isReadable(Paths.get(s))) {
-                    val k = fresh("k")
-                    val y = fresh("y")
-                    val p = fresh("p")
-                    RowR(Vector(
-                        FldR(
-                            "read",
-                            ClsR(NilE(), k, y,
-                                LetV(p, PrmV("reader", Vector(s)),
-                                    AppC(k, p)))
-                        )
-                    ))
-                } else
-                    ErrR(s"Reader capability unavailable: can't read $s")
-
-            case err : ErrR =>
-                err
-
-            case v =>
-                sys.error(s"interpretPrim reader: got non-String $v")
-        }
 
     def lookupR(rho : Env, x : String) : ValueR =
         rho match {

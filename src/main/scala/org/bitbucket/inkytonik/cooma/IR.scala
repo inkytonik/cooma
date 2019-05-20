@@ -16,7 +16,7 @@ case class ArgV(i : Int) extends Value
 case class CapV(c : String, x : String) extends Value
 case class FunV(f : String, k : String, body : Term) extends Value
 case class IntV(i : Int) extends Value
-case class PrmV(p : String, xs : Vector[String]) extends Value
+case class PrmV(p : Primitive, xs : Vector[String]) extends Value
 case class RowV(fs : Vector[FieldValue]) extends Value
 case class SelV(r : String, f : String) extends Value
 case class StrV(s : String) extends Value
@@ -83,7 +83,7 @@ object IR {
             case IntV(i) =>
                 value(i)
             case PrmV(p, xs) =>
-                "prm" <+> p <+> ssep(xs.map(text), space)
+                "prm" <+> value(p) <+> ssep(xs.map(text), space)
             case RowV(fs) =>
                 "{" <> ssep(fs.map(toDocFieldValue), "," <> space) <> text("}")
             case SelV(r, f) =>
