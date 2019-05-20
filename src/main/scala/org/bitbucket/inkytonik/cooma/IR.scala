@@ -60,7 +60,7 @@ object IR {
                 "letc" <+> value(k) <+> value(x) <+> "=" <+> align(toDocTerm(t)) <@>
                     toDocTerm(body)
             case v @ LetF(ds, body) =>
-                "letf" <+> nest(ssep(ds.map(toDocDefTerm), emptyDoc)) <@>
+                "letf" <> nest(ssep(ds.map(toDocDefTerm), emptyDoc)) <@>
                     toDocTerm(body)
             case LetV(x, v, body) =>
                 "letv" <+> value(x) <+> "=" <+> align(toDocValue(v)) <@>
