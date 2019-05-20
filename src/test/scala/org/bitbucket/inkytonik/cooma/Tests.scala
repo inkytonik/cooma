@@ -627,13 +627,72 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
     }
 
     {
+        val filename = "src/test/resources/capability/consoleInternalArg.cooma"
+        val name = s"console internal argument ($filename)"
+        val console = "/tmp/coomaTest.txt"
+        val content = "Internal!\n"
+
+        test(s"compiler: $name") {
+            createFile(console, "")
+            val result = runCompilerOnFile(filename, Seq(), Seq())
+            result shouldBe ""
+            FileSource(console).content shouldBe content
+            deleteFile(console)
+        }
+
+        test(s"compiler: $name: result") {
+            createFile(console, "")
+            val result = runCompilerOnFile(filename, Seq("-r"), Seq())
+            result shouldBe "{}\n"
+            FileSource(console).content shouldBe content
+            deleteFile(console)
+        }
+    }
+
+    {
+        val filename = "src/test/resources/capability/consoleInternalArgBad.cooma"
+        val name = s"bad console internal argument ($filename)"
+        val console = "/does/not/exist"
+
+        test(s"compiler: $name") {
+            val result = runCompilerOnFile(filename, Seq(), Seq())
+            result shouldBe s"cooma: Console capability unavailable: can't write $console\n"
+        }
+    }
+
+    {
+        val filename = "src/test/resources/capability/readerInternalArg.cooma"
+        val name = s"reader internal argument ($filename)"
+        val reader = "/tmp/coomaTest.txt"
+        val content = "Some reading stuff!\n"
+
+        test(s"compiler: $name") {
+            createFile(reader, content)
+            val result = runCompilerOnFile(filename, Seq(), Seq())
+            result shouldBe ""
+            FileSource(reader).content shouldBe content
+            deleteFile(reader)
+        }
+    }
+
+    {
+        val filename = "src/test/resources/capability/readerInternalArgBad.cooma"
+        val name = s"bad reader internal argument ($filename)"
+        val reader = "/does/not/exist.txt"
+
+        test(s"compiler: $name") {
+            val result = runCompilerOnFile(filename, Seq(), Seq())
+            result shouldBe s"cooma: Reader capability unavailable: can't read $reader\n"
+        }
+    }
+    {
         val filename = "src/test/resources/capability/consoleCmdArg.cooma"
         val name = s"console command argument ($filename)"
         val console = makeTempFilename(".txt")
         val args = Seq(console)
         val content = "Hello world!\n"
 
-        test(s"compiler: name") {
+        test(s"compiler: $name") {
             createFile(console, "")
             val result = runCompilerOnFile(filename, Seq(), args)
             result shouldBe ""

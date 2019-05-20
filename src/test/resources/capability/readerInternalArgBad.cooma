@@ -1,0 +1,1 @@
+{fun (r : Reader) => r.read({})}("/does/not/exist.txt")

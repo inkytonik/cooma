@@ -1,0 +1,1 @@
+{fun (c : Console) => c.write("Internal!\n")}("/tmp/coomaTest.txt")

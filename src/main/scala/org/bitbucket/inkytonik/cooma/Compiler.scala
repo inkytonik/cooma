@@ -36,7 +36,7 @@ object Compiler {
 
     def compileTop(exp : Expression, arg : Int) : Term = {
 
-        def compileArg(a : String, t : Type, e : Expression) : Term =
+        def compileTopArg(a : String, t : Type, e : Expression) : Term =
             t match {
                 case IdnT(n) if (n == "Console") || (n == "Reader") =>
                     val x = fresh("x")
@@ -49,14 +49,14 @@ object Compiler {
                         compileTop(e, arg + 1))
 
                 case _ =>
-                    sys.error(s"compileArg: ${show(t)} arguments not supported")
+                    sys.error(s"compileTopArg: ${show(t)} arguments not supported")
             }
 
         exp match {
             case Fun(Vector(Argument(a, t)), e) =>
-                compileArg(a, t, e)
+                compileTopArg(a, t, e)
             case Fun(Argument(a, t) +: as, e) =>
-                compileArg(a, t, Fun(as, e))
+                compileTopArg(a, t, Fun(as, e))
             case _ =>
                 tailCompile(exp, "halt")
         }
@@ -86,14 +86,11 @@ object Compiler {
             case Block(be) =>
                 compileBlockExp(be, kappa)
 
-            case Fun(Vector(Argument(x, _)), e) =>
-                val f = fresh("f")
-                val k = fresh("k")
-                LetV(f, FunV(k, x, tailCompile(e, k)),
-                    kappa(f))
+            case Fun(Vector(Argument(x, t)), e) =>
+                compileFun(x, t, e, kappa)
 
-            case Fun(a +: as, e) =>
-                compile(Fun(Vector(a), Fun(as, e)), kappa)
+            case Fun(Argument(x, t) +: as, e) =>
+                compileFun(x, t, Fun(as, e), kappa)
 
             case IdnUse(i) =>
                 kappa(i)
@@ -118,6 +115,22 @@ object Compiler {
                 LetV(x, StrV(unescape(s.tail.init)),
                     kappa(x))
 
+        }
+
+    def compileFun(x : String, t : Type, e : Expression, kappa : String => Term) : Term =
+        t match {
+            case IdnT(n) if (n == "Console") || (n == "Reader") =>
+                val f = fresh("f")
+                val j = fresh("j")
+                val y = fresh("y")
+                LetV(f, FunV(j, y, LetV(x, CapV(n, y), tailCompile(e, j))),
+                    kappa(f))
+
+            case _ =>
+                val f = fresh("f")
+                val k = fresh("k")
+                LetV(f, FunV(k, x, tailCompile(e, k)),
+                    kappa(f))
         }
 
     def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
@@ -179,14 +192,14 @@ object Compiler {
             case App(e, a +: as) =>
                 tailCompile(App(App(e, Vector(a)), as), k)
 
-            case Fun(Vector(Argument(x, _)), e) =>
-                val f = fresh("f")
-                val j = fresh("j")
-                LetV(f, FunV(j, x, tailCompile(e, j)),
-                    AppC(k, f))
-
             case Block(be) =>
                 tailCompileBlockExp(be, k)
+
+            case Fun(Vector(Argument(x, t)), e) =>
+                tailCompileFun(x, t, e, k)
+
+            case Fun(Argument(x, t) +: as, e) =>
+                tailCompileFun(x, t, Fun(as, e), k)
 
             case Fun(a +: as, e) =>
                 tailCompile(Fun(Vector(a), Fun(as, e)), k)
@@ -213,6 +226,22 @@ object Compiler {
                 val x = fresh("x")
                 LetV(x, StrV(unescape(s.tail.init)),
                     AppC(k, x))
+        }
+
+    def tailCompileFun(x : String, t : Type, e : Expression, k : String) : Term =
+        t match {
+            case IdnT(n) if (n == "Console") || (n == "Reader") =>
+                val f = fresh("f")
+                val j = fresh("j")
+                val y = fresh("y")
+                LetV(f, FunV(j, y, LetV(x, CapV(n, y), tailCompile(e, j))),
+                    AppC(k, f))
+
+            case _ =>
+                val f = fresh("f")
+                val j = fresh("j")
+                LetV(f, FunV(j, x, tailCompile(e, j)),
+                    AppC(k, f))
         }
 
     def tailCompileBlockExp(be : BlockExp, k : String) : Term =

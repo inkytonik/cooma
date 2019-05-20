@@ -212,6 +212,9 @@ there
 
 ### Console capability
 
+Capability arguments at the top-level are automatically linked with the command-line arguments and checked.
+E.g., a Console capability allows the program to write to the named file or device.
+
 ```ml
 fun (c : Console) => c.write("Hello world!\n")
 
@@ -245,4 +248,13 @@ A Reader capability is only provided if the designated file can be read.
 
 > run src/test/resources/capability/consoleReaderCmdArg.cooma /dev/tty /does/not/exist
 cooma: Reader capability unavailable: can't read /does/not/exist
+```
+
+### Internal capability
+
+Capabilities can also be used internally as the arguments to non-top-level functions.
+The value passed must be a string and the capability will be checked if and when the function is called.
+
+```ml
+{fun (c : Console) => c.write("Internal!\n")} ("/tmp/coomaTest.txt")
 ```

@@ -1,0 +1,1 @@
+{fun (r : Reader) => r.read({})}("/tmp/coomaTest.txt")
