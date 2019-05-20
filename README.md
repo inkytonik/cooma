@@ -150,28 +150,6 @@ Use the sbt command `test` to run the automated tests.
 
 NOTE: sbt `[info]` markers have been removed to simplify the output.
 
-### Row argument and field reference
-
-```ml
-{fun (r : {x : Int, y : Int, z : String}) => r.x} ({x = 20, y = 10, z = "Hi"})
-
-> run -r src/test/resources/basic/rowArg.cooma
-20
-```
-
-### Row concatenation
-
-```ml
-{
-    val r = {x = 10, y = 20}
-    val s = {a = "Hi"}
-    {r & s}.x
-}
-
-> run -r src/test/resources/basic/rowConcat.cooma
-10
-```
-
 ### Blocks (values and function definitions)
 
 ```ml
@@ -193,6 +171,28 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 }
 
 > run -r src/test/resources/basic/blockDef.cooma
+10
+```
+
+### Row argument and field reference
+
+```ml
+{fun (r : {x : Int, y : Int, z : String}) => r.x} ({x = 20, y = 10, z = "Hi"})
+
+> run -r src/test/resources/basic/rowArg.cooma
+20
+```
+
+### Row concatenation
+
+```ml
+{
+    val r = {x = 10, y = 20}
+    val s = {a = "Hi"}
+    {r & s}.x
+}
+
+> run -r src/test/resources/basic/rowConcat.cooma
 10
 ```
 
