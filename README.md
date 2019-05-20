@@ -125,7 +125,7 @@ we get the following using the `-r` option to print the program result:
 
 cooma 0.1.0 2.12.8> run -r src/test/resources/basic/multiArgCall.cooma`
 [info] ... sbt messages ...
-[info] 10
+10
 ```
 
 Use `--help` to see all of the options for printing the source AST, IR and IR AST. E.g., use `-i` to print the IR AST:
@@ -133,13 +133,13 @@ Use `--help` to see all of the options for printing the source AST, IR and IR AS
 ```ml
 cooma 0.1.0 2.12.8> run -i -r src/test/resources/basic/multiArgCall.cooma
 [info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r src/test/resources/basic/multiArgCall.cooma
-[info] letv f3 = fun k4 x => letv f5 = fun j6 y => j6 x in
-[info]     k4 f5 in
-[info]     letv x7 = 10 in
-[info]         letc k1 x2 = letv x8 = "hello" in
-[info]             x2 halt x8 in
-[info]             f3 k1 x7
-[info] 10
+letv f3 = fun k4 x => letv f5 = fun j6 y => j6 x
+                      k4 f5
+letv x7 = 10
+letc k1 x2 = letv x8 = "hello"
+             x2 halt x8
+f3 k1 x7
+10
 ```
 
 ### Testing
