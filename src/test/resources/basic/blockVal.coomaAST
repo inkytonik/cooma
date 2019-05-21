@@ -1,5 +1,5 @@
 Program(
-    Block(
+    Blk(
         LetVal(
             Val(
                 "x",
@@ -11,5 +11,5 @@ Program(
                     Num(
                         20)),
                 Return(
-                    IdnUse(
+                    Var(
                         "y"))))))

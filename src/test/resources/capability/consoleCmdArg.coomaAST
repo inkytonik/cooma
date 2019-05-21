@@ -7,7 +7,7 @@ Program(
                     "Console"))),
         App(
             Sel(
-                IdnUse(
+                Var(
                     "c"),
                 "write"),
             Vector(

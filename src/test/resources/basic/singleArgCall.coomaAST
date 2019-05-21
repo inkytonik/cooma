@@ -1,13 +1,13 @@
 Program(
     App(
-        Block(
+        Blk(
             Return(
                 Fun(
                     Vector(
                         Argument(
                             "x",
                             IntT())),
-                    IdnUse(
+                    Var(
                         "x")))),
         Vector(
             Num(

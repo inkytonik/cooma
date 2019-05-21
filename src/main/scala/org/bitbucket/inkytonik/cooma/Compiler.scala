@@ -83,7 +83,7 @@ object Compiler {
             case App(e, a +: as) =>
                 compile(App(App(e, Vector(a)), as), kappa)
 
-            case Block(be) =>
+            case Blk(be) =>
                 compileBlockExp(be, kappa)
 
             case Fun(Vector(Argument(x, t)), e) =>
@@ -92,7 +92,7 @@ object Compiler {
             case Fun(Argument(x, t) +: as, e) =>
                 compileFun(x, t, Fun(as, e), kappa)
 
-            case IdnUse(i) =>
+            case Var(i) =>
                 kappa(i)
 
             case Num(i) =>
@@ -192,7 +192,7 @@ object Compiler {
             case App(e, a +: as) =>
                 tailCompile(App(App(e, Vector(a)), as), k)
 
-            case Block(be) =>
+            case Blk(be) =>
                 tailCompileBlockExp(be, k)
 
             case Fun(Vector(Argument(x, t)), e) =>
@@ -204,7 +204,7 @@ object Compiler {
             case Fun(a +: as, e) =>
                 tailCompile(Fun(Vector(a), Fun(as, e)), k)
 
-            case IdnUse(x) =>
+            case Var(x) =>
                 AppC(k, x)
 
             case Num(i) =>

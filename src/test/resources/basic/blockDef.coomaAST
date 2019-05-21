@@ -1,5 +1,5 @@
 Program(
-    Block(
+    Blk(
         LetFun(
             Vector(
                 Def(
@@ -8,7 +8,7 @@ Program(
                         Argument(
                             "x",
                             IntT())),
-                    IdnUse(
+                    Var(
                         "x")),
                 Def(
                     "g",
@@ -17,14 +17,14 @@ Program(
                             "y",
                             IntT())),
                     App(
-                        IdnUse(
+                        Var(
                             "f"),
                         Vector(
-                            IdnUse(
+                            Var(
                                 "y"))))),
             Return(
                 App(
-                    IdnUse(
+                    Var(
                         "g"),
                     Vector(
                         Num(

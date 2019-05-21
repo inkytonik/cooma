@@ -103,7 +103,7 @@ class REPLDriver extends REPLBase[Config] {
 
                 case REPLDef(fd @ Def(i, _, _)) =>
                     process(
-                        Program(Block(LetFun(Vector(fd), Return(IdnUse(i))))),
+                        Program(Blk(LetFun(Vector(fd), Return(Var(i))))),
                         i, false, config
                     )
 

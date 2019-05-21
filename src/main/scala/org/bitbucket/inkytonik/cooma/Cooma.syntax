@@ -15,9 +15,9 @@ Expression {paren} =
   | Expression "&" Expression                       {And, left, 2}
   | Expression '.' Identifier                       {Sel, left, 1}
   | '{' Field ** "," '}'                            {Row}
-  | Block
+  | '{' nestnl (BlockExp) \n '}'                    {Blk}
   | IntLit                                          {Num, 1: Integer.parseInt : Int}
-  | Identifier                                      {IdnUse}
+  | Identifier                                      {Var}
   | StringLit                                       {Str}.
 
 Argument =
@@ -25,9 +25,6 @@ Argument =
 
 Field =
   Identifier sp "=" Expression.
-
-Block : Expression =
-  '{' nestnl (BlockExp) \n '}'.
 
 BlockExp =
     FunctionDefinition+ BlockExp   {LetFun}

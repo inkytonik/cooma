@@ -1,6 +1,6 @@
 Program(
     App(
-        Block(
+        Blk(
             Return(
                 Fun(
                     Vector(
@@ -10,7 +10,7 @@ Program(
                         Argument(
                             "y",
                             StrT())),
-                    IdnUse(
+                    Var(
                         "x")))),
         Vector(
             Num(
