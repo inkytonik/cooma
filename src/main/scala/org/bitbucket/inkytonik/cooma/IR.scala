@@ -14,7 +14,7 @@ sealed abstract class Value
 case class AndV(l : String, r : String) extends Value
 case class ArgV(i : Int) extends Value
 case class CapV(c : String, x : String) extends Value
-case class FunV(f : String, k : String, body : Term) extends Value
+case class FunV(f : String, x : String, body : Term) extends Value
 case class IntV(i : Int) extends Value
 case class PrmV(p : Primitive, xs : Vector[String]) extends Value
 case class RowV(fs : Vector[FieldValue]) extends Value
@@ -78,8 +78,8 @@ object IR {
                 "argv" <+> value(i)
             case CapV(c, x) =>
                 "cap" <+> c <+> x
-            case FunV(v1, v2, v3) =>
-                "fun" <+> value(v1) <+> value(v2) <+> text("=>") <+> align(toDocTerm(v3))
+            case FunV(f, x, t) =>
+                "fun" <+> f <+> x <+> text("=>") <+> align(toDocTerm(t))
             case IntV(i) =>
                 value(i)
             case PrmV(p, xs) =>
