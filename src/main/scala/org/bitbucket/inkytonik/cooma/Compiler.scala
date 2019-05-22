@@ -72,16 +72,16 @@ object Compiler {
                         LetV(x, AndV(y, z),
                             kappa(x))))
 
-            case App(e, Vector(a)) =>
+            case App(f, Vector(e)) =>
                 val k = fresh("k")
                 val x = fresh("x")
-                compile(e, y =>
-                    compile(a, z =>
+                compile(f, y =>
+                    compile(e, z =>
                         LetC(k, x, kappa(x),
                             AppF(y, k, z))))
 
-            case App(e, a +: as) =>
-                compile(App(App(e, Vector(a)), as), kappa)
+            case App(f, e +: es) =>
+                compile(App(App(f, Vector(e)), es), kappa)
 
             case Blk(be) =>
                 compileBlockExp(be, kappa)
@@ -104,9 +104,9 @@ object Compiler {
                 val x = fresh("x")
                 compileRow(fields, fvs => LetV(x, RowV(fvs), kappa(x)))
 
-            case Sel(e, f) =>
+            case Sel(r, f) =>
                 val x = fresh("x")
-                compile(e, z =>
+                compile(r, z =>
                     LetV(x, SelV(z, f),
                         kappa(x)))
 
