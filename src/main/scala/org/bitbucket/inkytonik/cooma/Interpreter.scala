@@ -12,10 +12,7 @@ package org.bitbucket.inkytonik.cooma
 
 class Interpreter(config : Config) {
 
-    import org.bitbucket.inkytonik.cooma.Capabilities.capability
-    import org.bitbucket.inkytonik.cooma.Primitives.primitive
-
-    def interpret(term : Term, env : Env, args : List[String]) : ValueR = {
+    def interpret(term : Term, env : Env, args : Seq[String]) : ValueR = {
 
         def interpretAux(rho : Env, term : Term) : ValueR =
             term match {
@@ -65,62 +62,20 @@ class Interpreter(config : Config) {
 
         def interpretValue(value : Value, rho : Env) : ValueR =
             value match {
-                case AndV(l, r) =>
-                    lookupR(rho, l) match {
-                        case RowR(lFields) =>
-                            lookupR(rho, r) match {
-                                case RowR(rFields) =>
-                                    RowR(lFields ++ rFields)
-                                case rv =>
-                                    sys.error(s"interpretValue: right argument $r of & is non-row $rv")
-                            }
-                        case lv =>
-                            sys.error(s"interpretValue: left argument $r of & is non-row $lv")
-                    }
-
-                case ArgV(i) =>
-                    if ((i < 0) || (i >= args.length))
-                        ErrR(s"command-line argument $i does not exist (arg count = ${args.length})")
-                    else
-                        StrR(args(i))
-
-                case CapV(p, x) =>
-                    capability(this, rho, p, x)
-
                 case FunV(k, x, t) =>
                     ClsR(rho, k, x, t)
 
                 case IntV(i) =>
                     IntR(i)
 
-                case PrmV(name, args) =>
-                    primitive(this, rho, name, args)
+                case PrmV(p, xs) =>
+                    p.eval(this, rho, xs, args)
 
                 case RowV(fields) =>
                     RowR(fields.map {
                         case FieldValue(f, v) =>
                             FldR(f, lookupR(rho, v))
                     })
-
-                case SelV(x, f1) =>
-                    lookupR(rho, x) match {
-                        case RowR(fields) =>
-                            fields.collectFirst {
-                                case FldR(f2, v) if f1 == f2 =>
-                                    v
-                            } match {
-                                case Some(v) =>
-                                    v
-                                case None =>
-                                    sys.error(s"interpret SelV: can't find field $f1 in $fields")
-                            }
-
-                        case err : ErrR =>
-                            err
-
-                        case v =>
-                            sys.error(s"interpret SelV: $x is $v, looking for field $f1")
-                    }
 
                 case StrV(s) =>
                     StrR(s)

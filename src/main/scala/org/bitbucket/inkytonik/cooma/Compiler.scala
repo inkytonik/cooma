@@ -40,12 +40,12 @@ object Compiler {
             t match {
                 case IdnT(n) if (n == "Console") || (n == "Reader") =>
                     val x = fresh("x")
-                    LetV(x, ArgV(arg),
-                        LetV(a, CapV(n, x),
+                    LetV(x, PrmV(ArgumentP(arg), Vector()),
+                        LetV(a, PrmV(CapabilityP(n), Vector(x)),
                             compileTop(e, arg + 1)))
 
                 case StrT() =>
-                    LetV(a, ArgV(arg),
+                    LetV(a, PrmV(ArgumentP(arg), Vector()),
                         compileTop(e, arg + 1))
 
                 case _ =>
@@ -69,7 +69,7 @@ object Compiler {
                 val x = fresh("x")
                 compile(l, y =>
                     compile(r, z =>
-                        LetV(x, AndV(y, z),
+                        LetV(x, PrmV(RowConcatP(), Vector(y, z)),
                             kappa(x))))
 
             case App(f, Vector(e)) =>
@@ -107,7 +107,7 @@ object Compiler {
             case Sel(r, f) =>
                 val x = fresh("x")
                 compile(r, z =>
-                    LetV(x, SelV(z, f),
+                    LetV(x, PrmV(RowSelectP(), Vector(z, f)),
                         kappa(x)))
 
             case Str(s) =>
@@ -123,7 +123,9 @@ object Compiler {
                 val f = fresh("f")
                 val j = fresh("j")
                 val y = fresh("y")
-                LetV(f, FunV(j, y, LetV(x, CapV(n, y), tailCompile(e, j))),
+                LetV(f, FunV(j, y,
+                    LetV(x, PrmV(CapabilityP(n), Vector(y)),
+                        tailCompile(e, j))),
                     kappa(f))
 
             case _ =>
@@ -181,7 +183,7 @@ object Compiler {
                 val x = fresh("x")
                 compile(l, y =>
                     compile(r, z =>
-                        LetV(x, AndV(y, z),
+                        LetV(x, PrmV(RowConcatP(), Vector(y, z)),
                             AppC(k, x))))
 
             case App(e, Vector(a)) =>
@@ -219,7 +221,7 @@ object Compiler {
             case Sel(e, f) =>
                 val x = fresh("x")
                 compile(e, z =>
-                    LetV(x, SelV(z, f),
+                    LetV(x, PrmV(RowSelectP(), Vector(z, f)),
                         AppC(k, x)))
 
             case Str(s) =>
@@ -234,7 +236,9 @@ object Compiler {
                 val f = fresh("f")
                 val j = fresh("j")
                 val y = fresh("y")
-                LetV(f, FunV(j, y, LetV(x, CapV(n, y), tailCompile(e, j))),
+                LetV(f, FunV(j, y,
+                    LetV(x, PrmV(CapabilityP(n), Vector(y)),
+                        tailCompile(e, j))),
                     AppC(k, f))
 
             case _ =>

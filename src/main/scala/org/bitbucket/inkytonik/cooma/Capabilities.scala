@@ -44,13 +44,13 @@ object Capabilities {
         name match {
             case "Console" =>
                 if (Files.isWritable(Paths.get(argument)))
-                    makeCapability("write", ConsoleWrite(argument))
+                    makeCapability("write", ConsoleWriteP(argument))
                 else
                     ErrR(s"Console capability unavailable: can't write $argument")
 
             case "Reader" =>
                 if (Files.isReadable(Paths.get(argument)))
-                    makeCapability("read", ReaderRead(argument))
+                    makeCapability("read", ReaderReadP(argument))
                 else
                     ErrR(s"Reader capability unavailable: can't read $argument")
 

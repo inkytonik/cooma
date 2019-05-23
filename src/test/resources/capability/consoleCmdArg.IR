@@ -1,5 +1,5 @@
-letv x1 = argv 0
+letv x1 = arg 0
 letv c = cap Console x1
-letv x2 = c.write
+letv x2 = select c write
 letv x3 = "Hello world!\n"
 x2 halt x3

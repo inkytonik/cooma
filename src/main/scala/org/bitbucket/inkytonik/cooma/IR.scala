@@ -11,14 +11,10 @@
 package org.bitbucket.inkytonik.cooma
 
 sealed abstract class Value
-case class AndV(l : String, r : String) extends Value
-case class ArgV(i : Int) extends Value
-case class CapV(c : String, x : String) extends Value
 case class FunV(f : String, x : String, body : Term) extends Value
 case class IntV(i : Int) extends Value
 case class PrmV(p : Primitive, xs : Vector[String]) extends Value
 case class RowV(fs : Vector[FieldValue]) extends Value
-case class SelV(r : String, f : String) extends Value
 case class StrV(s : String) extends Value
 
 case class FieldValue(f : String, x : String)
@@ -67,27 +63,20 @@ object IR {
                     toDocTerm(body)
         }
 
-    def toDocDefTerm(v : DefTerm) : Doc =
-        line <> value(v.f) <+> value(v.k) <+> value(v.x) <+> text("=") <+> toDocTerm(v.body)
+    def toDocDefTerm(defTerm : DefTerm) : Doc =
+        line <> value(defTerm.f) <+> value(defTerm.k) <+> value(defTerm.x) <+>
+            text("=") <+> toDocTerm(defTerm.body)
 
     def toDocValue(v : Value) : Doc =
         v match {
-            case AndV(l, r) =>
-                l <+> "&" <+> r
-            case ArgV(i) =>
-                "argv" <+> value(i)
-            case CapV(c, x) =>
-                "cap" <+> c <+> x
             case FunV(f, x, t) =>
                 "fun" <+> f <+> x <+> text("=>") <+> align(toDocTerm(t))
             case IntV(i) =>
                 value(i)
             case PrmV(p, xs) =>
-                "prm" <+> value(p) <+> ssep(xs.map(text), space)
+                p.show <> hcat(xs.map(x => space <> x))
             case RowV(fs) =>
                 "{" <> ssep(fs.map(toDocFieldValue), "," <> space) <> text("}")
-            case SelV(r, f) =>
-                r <> "." <> f
             case StrV(v1) =>
                 "\"" <> value(escape(v1)) <> text("\"")
         }

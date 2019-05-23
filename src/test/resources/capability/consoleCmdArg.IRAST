@@ -1,17 +1,23 @@
 LetV(
     "x1",
-    ArgV(
-        0),
+    PrmV(
+        ArgumentP(
+            0),
+        Vector()),
     LetV(
         "c",
-        CapV(
-            "Console",
-            "x1"),
+        PrmV(
+            CapabilityP(
+                "Console"),
+            Vector(
+                "x1")),
         LetV(
             "x2",
-            SelV(
-                "c",
-                "write"),
+            PrmV(
+                RowSelectP(),
+                Vector(
+                    "c",
+                    "write")),
             LetV(
                 "x3",
                 StrV(
