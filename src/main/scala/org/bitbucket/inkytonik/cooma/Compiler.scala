@@ -31,8 +31,15 @@ object Compiler {
      */
     def compileStandalone(prog : Program) : Term = {
         resetFresh()
-        tailCompile(prog.expression, "halt")
+        compileHalt(prog.expression)
     }
+
+    /**
+     * Compile an expression to produce its value via the halt
+     * continuation.
+     */
+    def compileHalt(exp : Expression) : Term =
+        compile(exp, z => AppC("$halt", z))
 
     def compileTop(exp : Expression, arg : Int) : Term = {
 
@@ -58,7 +65,7 @@ object Compiler {
             case Fun(Argument(a, t) +: as, e) =>
                 compileTopArg(a, t, Fun(as, e))
             case _ =>
-                tailCompile(exp, "halt")
+                compileHalt(exp)
         }
 
     }

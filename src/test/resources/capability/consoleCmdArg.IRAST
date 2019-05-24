@@ -12,18 +12,24 @@ LetV(
             Vector(
                 "x1")),
         LetV(
-            "x2",
+            "x4",
             PrmV(
                 RowSelectP(),
                 Vector(
                     "c",
                     "write")),
             LetV(
-                "x3",
+                "x5",
                 StrV(
                     "Hello world!
 "),
-                AppF(
-                    "x2",
-                    "halt",
-                    "x3")))))
+                LetC(
+                    "k2",
+                    "x3",
+                    AppC(
+                        "$halt",
+                        "x3"),
+                    AppF(
+                        "x4",
+                        "k2",
+                        "x5"))))))

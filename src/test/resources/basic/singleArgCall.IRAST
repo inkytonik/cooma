@@ -1,16 +1,22 @@
 LetV(
-    "f1",
+    "f3",
     FunV(
-        "k2",
+        "k4",
         "x",
         AppC(
-            "k2",
+            "k4",
             "x")),
     LetV(
-        "x3",
+        "x5",
         IntV(
             10),
-        AppF(
-            "f1",
-            "halt",
-            "x3")))
+        LetC(
+            "k1",
+            "x2",
+            AppC(
+                "$halt",
+                "x2"),
+            AppF(
+                "f3",
+                "k1",
+                "x5"))))

@@ -1,35 +1,41 @@
 LetV(
-    "f3",
+    "f5",
     FunV(
-        "k4",
+        "k6",
         "x",
         LetV(
-            "f5",
+            "f7",
             FunV(
-                "j6",
+                "j8",
                 "y",
                 AppC(
-                    "j6",
+                    "j8",
                     "x")),
             AppC(
-                "k4",
-                "f5"))),
+                "k6",
+                "f7"))),
     LetV(
-        "x7",
+        "x9",
         IntV(
             10),
         LetC(
-            "k1",
-            "x2",
+            "k3",
+            "x4",
             LetV(
-                "x8",
+                "x10",
                 StrV(
                     "hello"),
-                AppF(
+                LetC(
+                    "k1",
                     "x2",
-                    "halt",
-                    "x8")),
+                    AppC(
+                        "$halt",
+                        "x2"),
+                    AppF(
+                        "x4",
+                        "k1",
+                        "x10"))),
             AppF(
-                "f3",
-                "k1",
-                "x7"))))
+                "f5",
+                "k3",
+                "x9"))))

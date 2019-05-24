@@ -22,7 +22,6 @@ case class FieldValue(f : String, x : String)
 sealed abstract class Term
 case class AppC(k : String, x : String) extends Term
 case class AppF(f : String, k : String, x : String) extends Term
-case class Halt(x : String) extends Term
 case class LetC(k : String, x : String, t : Term, body : Term) extends Term
 case class LetF(ds : Vector[DefTerm], body : Term) extends Term
 case class LetV(x : String, v : Value, body : Term) extends Term
@@ -50,8 +49,6 @@ object IR {
                 k <+> x
             case AppF(f, k, x) =>
                 f <+> k <+> x
-            case Halt(x) =>
-                "halt" <+> text(x)
             case LetC(k, x, t, body) =>
                 "letc" <+> value(k) <+> value(x) <+> "=" <+> align(toDocTerm(t)) <@>
                     toDocTerm(body)

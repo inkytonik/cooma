@@ -16,10 +16,16 @@ LetF(
                 "k2",
                 "y"))),
     LetV(
-        "x3",
+        "x5",
         IntV(
             10),
-        AppF(
-            "g",
-            "halt",
-            "x3")))
+        LetC(
+            "k3",
+            "x4",
+            AppC(
+                "$halt",
+                "x4"),
+            AppF(
+                "g",
+                "k3",
+                "x5"))))

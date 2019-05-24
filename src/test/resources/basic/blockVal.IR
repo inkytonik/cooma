@@ -1,4 +1,4 @@
-letc j1 x = letc j2 y = halt y
+letc j1 x = letc j2 y = $halt y
             letv x3 = 20
             j2 x3
 letv x4 = 10

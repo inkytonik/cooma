@@ -5,7 +5,7 @@ LetC(
         "j2",
         "y",
         AppC(
-            "halt",
+            "$halt",
             "y"),
         LetV(
             "x3",

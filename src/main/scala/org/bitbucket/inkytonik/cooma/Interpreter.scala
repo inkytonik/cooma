@@ -16,6 +16,9 @@ class Interpreter(config : Config) {
 
         def interpretAux(rho : Env, term : Term) : ValueR =
             term match {
+                case AppC("$halt", x) =>
+                    lookupR(rho, x)
+
                 case AppC(k, x) =>
                     lookupC(rho, k) match {
                         case ClsC(rho2, y, t) =>
@@ -43,9 +46,6 @@ class Interpreter(config : Config) {
                         case v =>
                             sys.error(s"interpret AppF: $f is $v")
                     }
-
-                case Halt(x) =>
-                    lookupR(rho, x)
 
                 case LetC(k, x, t1, t2) =>
                     val rho2 = ConsCE(rho, k, ClsC(rho, x, t1))
@@ -81,14 +81,7 @@ class Interpreter(config : Config) {
                     StrR(s)
             }
 
-        val initEnv =
-            ConsCE(
-                env,
-                "halt",
-                ClsC(NilE(), "x", Halt("x"))
-            )
-
-        interpretAux(initEnv, term)
+        interpretAux(env, term)
     }
 
     def lookupR(rho : Env, x : String) : ValueR =
