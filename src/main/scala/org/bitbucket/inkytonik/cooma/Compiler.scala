@@ -41,19 +41,19 @@ object Compiler {
     def compileHalt(exp : Expression) : Term =
         compile(exp, z => AppC("$halt", z))
 
-    def compileTop(exp : Expression, arg : Int) : Term = {
+    def compileTop(exp : Expression, nArg : Int) : Term = {
 
         def compileTopArg(a : String, t : Type, e : Expression) : Term =
             t match {
                 case IdnT(n) if (n == "Console") || (n == "Reader") =>
                     val x = fresh("x")
-                    LetV(x, PrmV(ArgumentP(arg), Vector()),
+                    LetV(x, PrmV(ArgumentP(nArg), Vector()),
                         LetV(a, PrmV(CapabilityP(n), Vector(x)),
-                            compileTop(e, arg + 1)))
+                            compileTop(e, nArg + 1)))
 
                 case StrT() =>
-                    LetV(a, PrmV(ArgumentP(arg), Vector()),
-                        compileTop(e, arg + 1))
+                    LetV(a, PrmV(ArgumentP(nArg), Vector()),
+                        compileTop(e, nArg + 1))
 
                 case _ =>
                     sys.error(s"compileTopArg: ${show(t)} arguments not supported")

@@ -1,0 +1,584 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[T1]{fontenc}
+\usepackage{fullpage}
+\usepackage{semantic}
+\usepackage{stmaryrd}
+
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{3mm}
+
+\newcommand{\kw}[1]{\mathtt{#1}}
+
+\begin{document}
+
+\section{Notation}
+
+\newcommand{\fresh}[1]{\mathrm{fresh}\;#1}
+\newcommand{\cons}[2]{\mathit{#1 :: #2}}
+\newcommand{\map}[2]{\mathit{map}(#1, #2)}
+\newcommand{\rep}[1]{\overline{#1}}
+
+\newcommand{\arge}[2]{#1 : #2}
+\newcommand{\flde}[2]{#1 = #2}
+\newcommand{\flds}[2]{\rep{\flde{#1}{#2}}}
+
+\[
+\begin{array}{ll}
+\rep{x}          & \text{sequence of zero or more $x_0, x_1, \ldots, x_n$} \\
+x_h              & \text{head of $\rep{x}$} \\
+x_h, t_h         & \text{components of first element of $\rep{\arge{x}{t}}$} \\
+\rep{x}_t        & \text{tail elements of $\rep{x}$} \\
+\cons{h}{t}      & \text{sequence with head $h$ and tail $t$} \\
+\map{f}{\rep{x}} & \text{map operation $f$ over elements of $\rep{x}$} \\
+\fresh{x}        & \text{$x$ is a unique identifier} \\
+\end{array}
+\]
+
+\section{Cooma}
+
+\newcommand{\ande}[2]{#1\;\&\;#2}
+\newcommand{\appe}[2]{#1(#2)}
+\newcommand{\blke}[1]{\{ #1 \}}
+\newcommand{\fune}[2]{\kw{fun}\;#1\;.\;#2}
+\newcommand{\nume}[1]{#1}
+\newcommand{\rowe}[2]{\{ \flds{#1}{#2} \}}
+\newcommand{\sele}[2]{#1 . #2}
+\newcommand{\stre}[1]{#1}
+\newcommand{\vare}[1]{#1}
+
+\newcommand{\fd}[4]{#1(\rep{#2 : #3}) = #4}
+\newcommand{\fundef}[2]{\rep{\kw{def}\;#1}\;#2}
+\newcommand{\valdef}[3]{\kw{val}\;#1 = #2\;#3}
+\newcommand{\return}[1]{#1}
+
+\newcommand{\funty}[2]{#1 -> #2}
+\newcommand{\intty}{\kw{Int}}
+\newcommand{\rowty}[2]{\{ \rep{#1 : #2} \}}
+\newcommand{\strty}{\kw{String}}
+
+\[
+\begin{array}{lcl}
+n & \in & \text{integer} \\
+s & \in & \text{string} \\
+x & \in & \text{identifier} \\
+\end{array}
+\]
+\[
+\begin{array}{rlcll}
+\text{expression}
+  & e & ::= & \nume{n}                      & \text{integer constant} \\
+  &   & |   & \stre{s}                      & \text{string constant} \\
+  &   & |   & \vare{x}                      & \text{variable} \\
+  &   & |   & \fune{\rep{\arge{x}{t}}}{e}   & \text{function abstraction} \\
+  &   & |   & \appe{e}{\rep{e}}             & \text{function application} \\
+  &   & |   & \blke{b}                      & \text{block} \\
+  &   & |   & \rowe{x}{e}                   & \text{row} \\
+  &   & |   & \sele{e}{x}                   & \text{row selection} \\
+  &   & |   & \ande{e}{e}                   & \text{row concatenation} \\
+\\
+\text{block expression}
+  & b & ::= & \valdef{x}{e}{b}              & \text{value definition} \\
+  &   & |   & \fundef{\fd{x}{x}{t}{e}}{b}   & \text{function definitions} \\
+  &   & |   & \return{e}                    & \text{return} \\
+\\
+\text{type}
+  & t & ::= & \intty       & \text{integer} \\
+  &   & |   & \strty       & \text{string} \\
+  &   & |   & \funty{t}{t} & \text{function} \\
+  &   & |   & \rowty{x}{t} & \text{row} \\
+\end{array}
+\]
+
+Notes:
+\begin{itemize}
+\item Functions and function calls take one or more arguments.
+\item Blocks are ``lets'' that contain value definitions and sections of mutually-recursive function definitions.
+\item Rows are collections of named fields. Rows can be selected from and concatenated.
+\end{itemize}
+
+\newpage
+
+\section{Intermediate Representation}
+
+\newcommand{\appc}[2]{#1\;#2}
+\newcommand{\appf}[3]{#1\;#2\;#3}
+\newcommand{\letc}[4]{\kw{letc}\;#1\;#2 = #3\;\kw{in}\;#4}
+
+\newcommand{\defterm}[4]{#1\;#2\;#3 = #4}
+\newcommand{\letf}[2]{\kw{letf}\;\rep{#1}\;\kw{in}\;#2}
+\newcommand{\letff}[2]{\kw{letf}\;#1\;\kw{in}\;#2}
+
+\newcommand{\letv}[3]{\kw{letv}\;#1 = #2\;\kw{in}\;#3}
+
+\newcommand{\funv}[3]{\kw{fun}\;#1\;#2\;.\;#3}
+\newcommand{\intv}[1]{#1}
+\newcommand{\prmv}[2]{#1(#2)}
+\newcommand{\rowv}[2]{\{ \rep{#1 = #2} \}}
+\newcommand{\rowvs}[2]{\{ #1 \}}
+\newcommand{\strv}[1]{#1}
+
+\newcommand{\andv}[2]{\kw{concat}\;#1\;#2}
+\newcommand{\argv}[1]{\kw{argument}\;#1}
+\newcommand{\capv}[2]{\kw{capability}\;#1\;#2}
+\newcommand{\selv}[2]{\kw{select}\;#1\;#2}
+
+\[
+\begin{array}{lcl}
+n & \in & \text{integer} \\
+s & \in & \text{string} \\
+f, k, x & \in & \text{identifier} \\
+p & \in & \text{primitive} \\
+\end{array}
+\]
+
+\[
+\begin{array}{rlcll}
+\text{term}
+  & z & ::= & \letc{k}{x}{z}{z}              & \text{bind continuation} \\
+  &   & |   & \letf{\defterm{f}{k}{x}{z}}{z} & \text{bind functions} \\
+  &   & |   & \letv{x}{v}{z}                 & \text{bind value} \\
+  &   & |   & \appc{k}{x}                    & \text{apply continuation} \\
+  &   & |   & \appf{f}{k}{x}                 & \text{apply function} \\
+\\
+\text{value}
+  & v & ::= & \intv{n}           & \text{integer}  \\
+  &   & |   & \strv{s}           & \text{string} \\
+  &   & |   & \funv{k}{x}{z}     & \text{function} \\
+  &   & |   & \rowv{x}{x}        & \text{row} \\
+  &   & |   & \prmv{p}{\rep{x}}  & \text{primitive call} \\
+\end{array}
+\]
+
+Notes:
+\begin{itemize}
+\item Terms are from Kennedy ``Compiling with Continuations, Continued'', except $\kw{letf}$ binds multiple mutually-recursive functions, instead of a single function.
+\item Values are standard, plus rows and primitive calls.
+\item Primitives encode basic operations, including:
+\begin{itemize}
+\item row selection and concatenation
+\item get the n-th command-line argument as a string
+\item check a capability and, if the capability is available (e.g., the user has permission), return the capability value as a row that contains the available operations
+\item capability operations such as read or write a file
+\end{itemize}
+\end{itemize}
+
+\newpage
+
+\section{Compilation}
+
+\newcommand{\cmp}[2]{\llbracket #2 \rrbracket_#1}
+\newcommand{\cmpn}[1]{\cmp{#1}{\cdot}}
+\newcommand{\cmpin}[3]{\cmp{#1}{#2}\;#3}
+\newcommand{\cmpk}[2]{\cmp{#1}{#2}\;\kappa}
+
+\newcommand{\tcmp}[2]{\llparenthesis #2 \rrparenthesis_#1}
+\newcommand{\tcmpn}[1]{\tcmp{#1}{\cdot}}
+\newcommand{\tcmpin}[3]{\tcmp{#1}{#2}\;#3}
+\newcommand{\tcmpk}[2]{\tcmp{#1}{#2}\;k}
+
+The compilation scheme follows the lead of Kennedy ``Compiling with Continuations, Continued''.
+
+The compilation functions come in standard form $\cmpn{e}$ and sometimes also a tail-call form $\tcmpn{e}$, where the subscript $e$, $b$, etc denotes the form of the code being compiled: expression, block, etc.
+
+Apart from the code to compile, the standard form takes an argument $\kappa$ that is a function from an identifier to a compiled term.
+I.e., $\kappa$ is a code generation continuation that produces the rest of the code, given the name of the variable to which the result of the current compiled code has been bound.
+In other words, if the variable $x$ holds the result computed by the code we just compiled, then $\kappa(x)$ computes the complete code.
+
+The tail form is similar, except it is used when the continuation is known at compile time, so an efficient direct call can be generated.
+Thus, instead of $\kappa$, the extra argument to the tail form is the name of the relevant continuation variable $k$.
+We just generate a call to this continuation, instead of using $\kappa$ to generate the code.
+In other words, if the variable $x$ holds the result computed by the code we just compiled, then we can pass it directly to the continuation using $\appc{k}{x}$.
+
+\subsection*{Top-level}
+
+We distinguish two cases of top-level compilation: one for a whole program that is intended to be run from the command line, and one for an expression entered in the REPL.
+
+In the program case, $\cmpn{p}$ curries functions and compiles capability arguments to access the command line argument strings and create capabilities.
+The parameter $n$ keeps count of the current argument number, so we compile a program $e$ with $\cmpin{p}{e}{0}$.
+\[
+    \cmpn{p} : e -> n -> z
+\]
+\[
+\begin{array}{rcll}
+\cmpin{p}{\fune{\arge{a}{t}}{e}}{n} & = &
+  \letv{x}{\prmv{\kw{argument}}{n}}{\letv{a}{\prmv{\kw{capability}}{t,x}}{\cmpin{p}{e}{(n + 1)}}} \\
+  & &
+  \text{$t$ is a capability}, \fresh{x} \\
+\end{array}
+\]
+
+Other than capability arguments, string program arguments are passed through from the command line.
+\[
+\begin{array}{rcll}
+\cmpin{p}{\fune{\arge{a}{\kw{String}}}{e}}{n} & = &
+  \letv{a}{\prmv{\kw{argument}}{n}}{\cmpin{p}{e}{(n + 1)}}
+  \\
+\end{array}
+\]
+All other program argument types are in error.
+
+If the program is not a function, it is compiled in a normal fashion using the special continuation variable $\kw{halt}$ that terminates program execution when called.
+\[
+\begin{array}{rcll}
+\cmpin{p}{e}{n} & = &
+  \tcmpin{e}{e}{\kw{halt}} &
+  \text{otherwise}
+\end{array}
+\]
+In the REPL case, there is no special handling of command line arguments, so we compile each expression as in the final case of $\cmpn{p}$.
+
+\subsection*{Expressions}
+
+\[
+    \cmpn{e} : e -> (x -> z) -> z
+\]
+\[
+    \tcmpn{e} : e -> x -> z
+\]
+Constants compile into bound values in the current continuation (only numbers shown).
+\[
+\begin{array}{rcll}
+\cmpk{e}{\nume{n}} & = &
+  \letv{x}{n}{\kappa(x)}   & \fresh{x} \medskip \\
+
+\tcmpk{e}{\nume{n}} & = &
+  \letv{x}{n}{\appc{k}{x}} & \fresh{x} \\
+\end{array}
+\]
+Variables compile into their use in the current continuation.
+\[
+\begin{array}{rcll}
+\cmpk{e}{\vare{x}} & = &
+  \kappa(x) \medskip \\
+
+\tcmpk{e}{\vare{x}} & = &
+  \appc{k}{x} \\
+\end{array}
+\]
+Functions are curried and compiled one argument at a time by $\cmpn{f}$ or $\tcmpn{f}$.
+\[
+\begin{array}{rcll}
+\cmpk{e}{\fune{\arge{x}{t}}{e}} & = &
+  \cmpk{f}{x,t,e}
+  \\
+\cmpk{e}{\fune{\rep{\arge{x}{t}}}{e}} & = &
+  \cmpk{f}{x_h,t_h,\fune{\rep{\arge{x}{t}}_t}{e}} \medskip \\
+
+\tcmpk{e}{\fune{\arge{x}{t}}{e}} & = &
+  \tcmpk{f}{x,t,e}
+  \\
+\tcmpk{e}{\fune{\rep{\arge{x}{t}}}{e}} & = &
+  \tcmpk{f}{x_h,t_h,\fune{\rep{\arge{x}{t}}_t}{e}}
+\end{array}
+\]
+Applications are curried.
+An application to a single argument is compiled by compiling the function $f$ to $y$, the argument $e$ to $z$, capturing the current continuation in $k$ and generating the function call to continue with $k$.
+\[
+\begin{array}{rcll}
+\cmpk{e}{\appe{f}{e}} & = &
+  \cmpin{e}{f}{(y => \cmpin{e}{e}{(z => \letc{k}{x}{\kappa(x)}{\appf{y}{k}{z}})})} &
+  \fresh{k,x} \\
+\cmpk{e}{\appe{f}{\rep{e}}} & = &
+  \cmpk{e}{\appe{\appe{f}{e_h}}{\rep{e}_t}} \medskip \\
+
+\tcmpk{e}{\appe{f}{e}} & = &
+  \cmpin{e}{f}{(y => \cmpin{e}{e}{(z => \appf{y}{k}{z})})} \\
+\tcmpk{e}{\appe{f}{\rep{e}}} & = &
+  \tcmpk{e}{\appe{\appe{f}{e_h}}{\rep{e}_t}} \\
+\end{array}
+\]
+Block expressions are compiled by $\cmpn{b}$ or $\tcmpn{b}$.
+\[
+\begin{array}{rcll}
+\cmpk{e}{\blke{b}} & = &
+  \cmpin{b}{b}{\kappa} \medskip \\
+
+\tcmpk{e}{\blke{b}} & = &
+  \tcmpin{b}{b}{k} \\
+\end{array}
+\]
+Rows have their field definitions compiled by $\cmpn{r}$.
+The resulting sequence of field values $z$ is bound in a new row $x$ for use in the continuation.
+\[
+\begin{array}{rcll}
+\cmpk{e}{\rowe{f}{e}} & = &
+  \cmpin{r}{\flds{f}{e}}{(z => \letv{x}{\rowvs{z}}{\kappa(x)})} \medskip \\
+
+\tcmpk{e}{\rowe{f}{e}} & = &
+  \cmpin{r}{\flds{f}{e}}{(z => \letv{x}{\rowvs{z}}{\appc{k}{x}})} \\
+\end{array}
+\]
+Row operations compile into primitives that use the compiled row arguments $y$ and $z$.
+\[
+\begin{array}{rcll}
+\cmpk{e}{\sele{r}{f}} & = &
+  \cmpin{e}{r}{(z => \letv{x}{\selv{z}{f}}{\kappa(x)})} \\
+\cmpk{e}{\ande{l}{r}} & = &
+  \cmpin{e}{l}{(y => \cmpin{e}{r}{(z => \letv{x}{\andv{y}{z}}{\kappa(x)})})} \medskip \\
+
+\tcmpk{e}{\sele{r}{f}} & = &
+  \cmpin{e}{r}{(z => \letv{x}{\selv{z}{f}}{\appc{k}{x}})} \\
+\cmpk{e}{\ande{l}{r}} & = &
+  \cmpin{e}{l}{(y => \cmpin{e}{r}{(z => \letv{x}{\andv{y}{z}}{\appc{k}{x}})})} \\
+\end{array}
+\]
+
+\subsection*{Blocks}
+
+Blocks compile into nested lets that mirror the block expression structure.
+
+A function definition group turns into an analogous $\kw{letf}$ where each definition has been compiled by $\cmpn{d}$, and whose body is the compiled nested block expression.
+
+A value definition compiles into its constituent expression and a continuation $j$ to get to the nested block expression.
+We use the tail form of the compiler on $e$ since we know $j$ statically.
+
+A return expression is trivially compiled using $\cmpn{e}$ or $\tcmpn{e}$.
+\[
+    \cmpn{b} : b -> (x -> z) -> z
+\]
+\[
+\begin{array}{rcll}
+\cmpk{b}{\fundef{f}{b}} & = &
+  \letff{\map{\cmpn{d}}{\rep{f}}}{\cmpk{b}{b}} \\
+\cmpk{b}{\valdef{x}{e}{b}} & = &
+  \letc{j}{x}{\cmpk{b}{b}}{\tcmpin{e}{e}{j}} & \fresh{j} \\
+\cmpk{b}{\return{e}} & = &
+  \cmpk{e}{e} \medskip \\
+
+\tcmpk{b}{\fundef{f}{b}} & = &
+  \letff{\map{\cmpn{d}}{\rep{f}}}{\tcmpk{b}{b}} \\
+\tcmpk{b}{\valdef{x}{e}{b}} & = &
+  \letc{j}{x}{\tcmpk{b}{b}}{\tcmpin{e}{e}{j}} & \fresh{j} \\
+\cmpk{b}{\return{e}} & = &
+  \tcmpk{e}{e} \\
+\end{array}
+\]
+
+\subsection*{Function definitions}
+
+A function definition compiles into a binding for use in a $\kw{letf}$ where a continuation argument $k$ has been added and the body $e$ has been compiled to $z$.
+The body is either compiled directly if the function only has one argument, or compiled as a function that takes the remaining arguments otherwise.
+\[
+    \cmpn{d} : x -> \rep{\arge{x}{t}} -> e -> (x -> z) -> z
+\]
+\[
+\begin{array}{rcll}
+\cmpk{d}{\fd{f}{x}{t}{e}} & = &
+  \defterm{f}{k}{x}{z} &
+  \fresh{k} \\
+\text{where $z$} & = &
+  \tcmpk{e}{e} & \text{if $\rep{\arge{x}{t}}$ is a singleton} \\
+ & = &
+  \tcmpk{e}{\fune{\rep{\arge{x}{t}}_t}{e}} & \text{otherwise} \\
+\end{array}
+\]
+
+\subsection*{Functions}
+
+Functions that have a capability argument are compiled into an invocation of the appropriate capability primitive (here denoted $C$).
+The primitive is responsible for checking the capability permission and, if the check passes, returning a row that contains the capability operations.
+The capability row is bound to the function argument $x$ for use in the compiled function body $e$.
+
+Functions that have a non-capability argument are compiled to a simple $\kw{fun}$.
+\[
+    \cmpn{f} : x -> t -> e -> (x -> z) -> z
+\]
+\[
+\begin{array}{rclll}
+\cmpk{f}{x, t, e} & = &
+  \letv{f}{(\funv{j}{y}{\letv{x}{\prmv{C}{y}}{\tcmpin{e}{e}{j}}})}{\kappa(f)} &
+  \text{$t$ is a capability} \\
+  & & &  \fresh{f, j, y} \\
+\cmpk{f}{x, t, e} & = &
+  \letv{f}{\funv{j}{x}{\tcmpin{e}{e}{j}}}{\kappa(f)} & \text{otherwise}, \fresh{f, j} \medskip \\
+
+\tcmpk{f}{x, t, e} & = &
+  \letv{f}{(\funv{j}{y}{\letv{x}{\prmv{C}{y}}{\tcmpin{e}{e}{j}}})}{\appc{k}{f}} &
+  \text{$t$ is a capability type} \\
+  & & &  \fresh{f, j, y} \\
+\tcmpk{f}{x, t, e} & = &
+  \letv{f}{\funv{j}{x}{\tcmpin{e}{e}{j}}}{\appc{k}{f}} & \text{otherwise}, \fresh{f, j}
+\end{array}
+\]
+
+\subsection*{Field definitions}
+
+Field definitions $\flds{f}{e}$ are compiled by compiling their defining expressions and building up a sequence of corresponding field values $\flds{f}{v}$.
+\[
+    \cmpn{r} : \flds{f}{e} -> (\flds{f}{v} -> z) -> z
+\]
+\[
+\begin{array}{rcll}
+\cmpk{r}{\flds{f}{e}}
+  & = & \kappa([]) & \text{if $\flds{f}{e}$ is empty} \\
+  & = & \cmpin{e}{e_h}{(y =>
+          \cmpin{r}{\flds{f}{e}_t}{(z =>
+            \kappa(\cons{(\flde{f_h}{y})}{z}))})}
+      & \text{otherwise} \\
+\end{array}
+\]
+
+\newpage
+
+\section{Interpretation}
+
+\newcommand{\interp}[2]{#1 |- #2 \Downarrow}
+
+\newcommand{\conf}[3]{\lambda #1 #2 . #3}
+\newcommand{\conc}[2]{\lambda #1 . #2}
+
+\newcommand{\clsf}[4]{\langle #1, \conf{#2}{#3}{#4} \rangle}
+\newcommand{\clsc}[3]{\langle #1, \conc{#2}{#3} \rangle}
+\newcommand{\clsfs}[5]{\langle #1, \rep{\lambda #2 #3 #4 . #5} \rangle}
+\newcommand{\clsffs}[2]{\langle #1, \rep{#2} \rangle}
+
+\newcommand{\extv}[3]{#1, #2 \mapsto #3}
+\newcommand{\extc}[5]{\extv{#1}{#2}{\clsc{#3}{#4}{#5}}}
+\newcommand{\extf}[6]{#1, \clsfs{#2}{#3}{#4}{#5}{#6}}
+\newcommand{\extff}[2]{#1, \clsffs{#2}}
+
+We describe interpretation of the intermediate representation using the relation $\interp{\rho}{z}$ that computes a runtime value given an environment $\rho$.
+
+\subsection*{Runtime values}
+
+Runtime values are basic values, function closures and rows.
+\[
+\begin{array}{rlcll}
+\text{runtime value}
+  & r & ::= & \intv{n}              & \text{integer}  \\
+  &   & |   & \strv{s}              & \text{string} \\
+  &   & |   & \clsf{\rho}{k}{x}{z}  & \text{closure} \\
+  &   & |   & \rowv{x}{r}           & \text{row} \\
+\end{array}
+\]
+
+\subsection*{Environments}
+
+Environments record value bindings, continuation closures and function definitions  closures.
+The latter share a single captured environment in which all of the definitions are bound.
+\[
+\begin{array}{rlcll}
+\text{environment}
+  & \rho & ::= & \bullet                       & \text{empty} \\
+  &      & |   & \extv{\rho}{x}{r}             & \text{extend with value binding} \\
+  &      & |   & \extc{\rho}{k}{\rho}{x}{z}    & \text{extend with continuation closure} \\
+  &      & |   & \extf{\rho}{\rho}{f}{k}{x}{z} & \text{extend with function definitions closure}
+\end{array}
+\]
+Environment lookup is $\rho(x)$.
+In the function definitions case, the returned value is a single function closure $\clsf{\rho}{k}{x}{z}$ constructed from the function definition group closure.
+\[
+\begin{array}{rlll}
+(\extv{\rho}{x}{r})(y) & = &
+  r &
+  \text{if $x = y$} \\
+(\extc{\rho}{k}{\rho_1}{x}{z})(y) & = &
+  \clsc{\rho_1}{x}{z} &
+  \text{if $k = y$} \\
+(\extf{\rho}{\rho_1}{f}{k}{x}{z})(y) & = &
+  \clsf{\rho_1}{k_i}{x_i}{z_i} &
+  \text{if $f_i = y$} \\
+(\rho, \_)(y) & = &
+  \rho(y) &
+  \text{otherwise}
+\end{array}
+\]
+This definition doesn't type properly since the second case returns a continuation closure and all of the other cases return a runtime value.
+The lookup is two functions in the implementation.
+
+\subsection*{Value interpretation}
+
+\[
+    \cmpn{v} : v -> \rho -> r
+\]
+
+Constants are their own interpretation.
+\[
+\begin{array}{rlll}
+\cmp{v}{\intv{n}}{\rho} & = & n \\
+\cmp{v}{\strv{s}}{\rho} & = & s \\
+\end{array}
+\]
+
+A function value becomes a closure.
+\[
+\begin{array}{rlll}
+\cmp{v}{\funv{k}{x}{z}}{\rho} & = & \clsf{\rho}{k}{x}{z} \\
+\end{array}
+\]
+
+A row value becomes a runtime row value after the fields have been interpreted.
+\[
+\begin{array}{rlll}
+\cmp{v}{\rowv{x}{y}}{\rho} & = \rowv{x}{\rho(y)} &
+\end{array}
+\]
+
+Interpretation of primitives uses an external $\kw{eval}$ operation.
+\[
+\begin{array}{rlll}
+\cmp{v}{\prmv{p}{\rep{x}}}{\rho} & = & \kw{eval}(p, \rep{x}, \rho)
+\end{array}
+\]
+
+\subsection*{Rules (Lets)}
+
+The let forms extend the environment with bindings in one of the three ways, then evaluate their body in the updated environment.
+
+A $\kw{letv}$ updates the environment with a binding of the interpreted value.
+\[
+\inference[(LetV)]
+{\interp{\extv{\rho}{x}{\cmp{v}{v}{\rho}}}{z}}
+{\interp{\rho}{\letv{x}{v}{z}}}
+\]
+
+A $\kw{letc}$ updates the environment with a new continuation closure.
+\[
+\inference[(LetC)]
+{\interp{\extc{\rho}{k}{\rho}{x}{z_1}}{z_2}}
+{\interp{\rho}{\letc{k}{x}{z_1}{z_2}}}
+\]
+
+A $\kw{letf}$ updates the environment with a new function definitions closure.
+\[
+\inference[(LetF)]
+{\interp{\extff{\rho}{\rho}{d}}{z}}
+{\interp{\rho}{\letf{d}{z}}}
+\]
+
+\subsection*{Rules (Calls)}
+
+Evaluation terminates when the special $\kw{halt}$ continuation is called on $x$
+The result of the evaluation is $\rho(x)$.
+\[
+\inference[(Halt)]
+{}
+{\interp{\rho}{\appc{\kw{halt}}{x}}}
+\]
+
+Otherwise, a continuation call gets the continuation closure from the environment and invokes the closure function body in the saved environment extended with the argument binding.
+\[
+\begin{array}{cl}
+\inference[(AppC)]
+{\interp{\extv{\rho_1}{y}{\rho(x)}}{z}}
+{\interp{\rho}{\appc{k}{x}}}
+&
+\text{if $\rho(k) = \clsc{\rho_1}{y}{z}$}
+\end{array}
+\]
+
+A function call is similar, except using a function closure and also binding the continuation argument.
+\[
+\begin{array}{cl}
+\inference[(AppF)]
+{\interp{\extv{\extv{\rho_1}{j}{\rho(k)}}{y}{\rho(x)}}{z}}
+{\interp{\rho}{\appf{f}{k}{x}}}
+&
+\text{if $\rho(f) = \clsf{\rho_1}{j}{y}{z}$}
+\end{array}
+\]
+
+\end{document}

@@ -11,7 +11,7 @@
 package org.bitbucket.inkytonik.cooma
 
 sealed abstract class Value
-case class FunV(f : String, x : String, body : Term) extends Value
+case class FunV(k : String, x : String, body : Term) extends Value
 case class IntV(i : Int) extends Value
 case class PrmV(p : Primitive, xs : Vector[String]) extends Value
 case class RowV(fs : Vector[FieldValue]) extends Value
@@ -66,8 +66,8 @@ object IR {
 
     def toDocValue(v : Value) : Doc =
         v match {
-            case FunV(f, x, t) =>
-                "fun" <+> f <+> x <+> text("=>") <+> align(toDocTerm(t))
+            case FunV(k, x, t) =>
+                "fun" <+> k <+> x <+> text("=>") <+> align(toDocTerm(t))
             case IntV(i) =>
                 value(i)
             case PrmV(p, xs) =>
