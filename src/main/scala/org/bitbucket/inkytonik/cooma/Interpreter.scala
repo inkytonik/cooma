@@ -56,7 +56,7 @@ class Interpreter(config : Config) {
                     interpretAux(rho2, t)
 
                 case LetV(x, v, t) =>
-                    val rho2 = ConsVE(rho, x, interpretValue(v, rho))
+                    val rho2 : Env = ConsVE(rho, x, interpretValue(v, rho))
                     interpretAux(rho2, t)
             }
 

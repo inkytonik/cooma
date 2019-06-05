@@ -34,8 +34,18 @@ libraryDependencies ++=
         "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
         "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
         "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-        "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
+        "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+        "org.projectlombok" % "lombok" % "1.16.16",
+        "org.graalvm.truffle" % "truffle-api" %  "19.0.0",
+        "org.graalvm.truffle" % "truffle-dsl-processor" %  "19.0.0",
+        "junit" % "junit" % "4.12" % Test,
+        "com.novocode" % "junit-interface" % "0.11" % Test
     )
+
+unmanagedSourceDirectories in Compile += baseDirectory.value / "target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle/nodes/term"
+
+testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
+
 
 resolvers ++=
     Seq(
