@@ -545,7 +545,7 @@ A $\kw{letc}$ updates the environment with a new continuation closure.
 A $\kw{letf}$ updates the environment with a new function definitions closure.
 \[
 \inference[(LetF)]
-{\interp{\extff{\rho}{\rho}{d}}{z}}
+{\rho_2 = \extff{\rho}{\rho_2}{d} & \interp{\rho_2}{z}}
 {\interp{\rho}{\letf{d}{z}}}
 \]
 

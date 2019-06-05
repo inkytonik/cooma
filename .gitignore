@@ -2,3 +2,9 @@ target
 .bloop
 .metals
 .DS_Store
+doc/theory.synctex.gz
+doc/theory.aux
+doc/theory.fdb_latexmk
+doc/theory.fls
+doc/theory.log
+doc/theory.pdf
