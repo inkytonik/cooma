@@ -10,7 +10,9 @@
 
 package org.bitbucket.inkytonik.cooma
 
-object Compiler {
+trait Compiler {
+
+    self : Backend =>
 
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
@@ -39,7 +41,7 @@ object Compiler {
      * continuation.
      */
     def compileHalt(exp : Expression) : Term =
-        compile(exp, z => AppC("$halt", z))
+        compile(exp, z => appC("$halt", z))
 
     def compileTop(exp : Expression, nArg : Int) : Term = {
 
@@ -47,12 +49,12 @@ object Compiler {
             t match {
                 case IdnT(n) if (n == "Console") || (n == "Reader") =>
                     val x = fresh("x")
-                    LetV(x, PrmV(ArgumentP(nArg), Vector()),
-                        LetV(a, PrmV(CapabilityP(n), Vector(x)),
+                    letV(x, prmV(argumentP(nArg), Vector()),
+                        letV(a, prmV(capabilityP(n), Vector(x)),
                             compileTop(e, nArg + 1)))
 
                 case StrT() =>
-                    LetV(a, PrmV(ArgumentP(nArg), Vector()),
+                    letV(a, prmV(argumentP(nArg), Vector()),
                         compileTop(e, nArg + 1))
 
                 case _ =>
@@ -76,7 +78,7 @@ object Compiler {
                 val x = fresh("x")
                 compile(l, y =>
                     compile(r, z =>
-                        LetV(x, PrmV(RowConcatP(), Vector(y, z)),
+                        letV(x, prmV(rowConcatP(), Vector(y, z)),
                             kappa(x))))
 
             case App(f, Vector(e)) =>
@@ -84,8 +86,8 @@ object Compiler {
                 val x = fresh("x")
                 compile(f, y =>
                     compile(e, z =>
-                        LetC(k, x, kappa(x),
-                            AppF(y, k, z))))
+                        letC(k, x, kappa(x),
+                            appF(y, k, z))))
 
             case App(f, e +: es) =>
                 compile(App(App(f, Vector(e)), es), kappa)
@@ -104,22 +106,22 @@ object Compiler {
 
             case Num(i) =>
                 val x = fresh("x")
-                LetV(x, IntV(i),
+                letV(x, intV(i),
                     kappa(x))
 
             case Row(fields) =>
                 val x = fresh("x")
-                compileRow(fields, fvs => LetV(x, RowV(fvs), kappa(x)))
+                compileRow(fields, fvs => letV(x, rowV(fvs), kappa(x)))
 
             case Sel(r, f) =>
                 val x = fresh("x")
                 compile(r, z =>
-                    LetV(x, PrmV(RowSelectP(), Vector(z, f)),
+                    letV(x, prmV(rowSelectP(), Vector(z, f)),
                         kappa(x)))
 
             case Str(s) =>
                 val x = fresh("x")
-                LetV(x, StrV(unescape(s.tail.init)),
+                letV(x, strV(unescape(s.tail.init)),
                     kappa(x))
 
         }
@@ -130,29 +132,29 @@ object Compiler {
                 val f = fresh("f")
                 val j = fresh("j")
                 val y = fresh("y")
-                LetV(f, FunV(j, y,
-                    LetV(x, PrmV(CapabilityP(n), Vector(y)),
+                letV(f, funV(j, y,
+                    letV(x, prmV(capabilityP(n), Vector(y)),
                         tailCompile(e, j))),
                     kappa(f))
 
             case _ =>
                 val f = fresh("f")
                 val k = fresh("k")
-                LetV(f, FunV(k, x, tailCompile(e, k)),
+                letV(f, funV(k, x, tailCompile(e, k)),
                     kappa(f))
         }
 
     def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
         be match {
             case LetFun(ds, be2) =>
-                LetF(
+                letF(
                     ds.map(compileDef),
                     compileBlockExp(be2, kappa)
                 )
 
             case LetVal(Val(x, e), be2) =>
                 val j = fresh("j")
-                LetC(j, x, compileBlockExp(be2, kappa),
+                letC(j, x, compileBlockExp(be2, kappa),
                     tailCompile(e, j))
 
             case Return(e) =>
@@ -168,7 +170,7 @@ object Compiler {
                         tailCompile(e, k)
                     else
                         tailCompile(Fun(otherArgs, e), k)
-                DefTerm(f, k, x, body)
+                defTerm(f, k, x, body)
         }
 
     def compileRow(
@@ -178,7 +180,7 @@ object Compiler {
         fields match {
             case Field(f, e) +: t =>
                 compile(e, z =>
-                    compileRow(t, fvs => kappa(FieldValue(f, z) +: fvs)))
+                    compileRow(t, fvs => kappa(fieldValue(f, z) +: fvs)))
 
             case Vector() =>
                 kappa(Vector())
@@ -190,13 +192,13 @@ object Compiler {
                 val x = fresh("x")
                 compile(l, y =>
                     compile(r, z =>
-                        LetV(x, PrmV(RowConcatP(), Vector(y, z)),
-                            AppC(k, x))))
+                        letV(x, prmV(rowConcatP(), Vector(y, z)),
+                            appC(k, x))))
 
             case App(e, Vector(a)) =>
                 compile(e, x1 =>
                     compile(a, x2 =>
-                        AppF(x1, k, x2)))
+                        appF(x1, k, x2)))
 
             case App(e, a +: as) =>
                 tailCompile(App(App(e, Vector(a)), as), k)
@@ -214,27 +216,27 @@ object Compiler {
                 tailCompile(Fun(Vector(a), Fun(as, e)), k)
 
             case Var(x) =>
-                AppC(k, x)
+                appC(k, x)
 
             case Num(i) =>
                 val x = fresh("x")
-                LetV(x, IntV(i),
-                    AppC(k, x))
+                letV(x, intV(i),
+                    appC(k, x))
 
             case Row(fields) =>
                 val x = fresh("x")
-                compileRow(fields, fvs => LetV(x, RowV(fvs), AppC(k, x)))
+                compileRow(fields, fvs => letV(x, rowV(fvs), appC(k, x)))
 
             case Sel(e, f) =>
                 val x = fresh("x")
                 compile(e, z =>
-                    LetV(x, PrmV(RowSelectP(), Vector(z, f)),
-                        AppC(k, x)))
+                    letV(x, prmV(rowSelectP(), Vector(z, f)),
+                        appC(k, x)))
 
             case Str(s) =>
                 val x = fresh("x")
-                LetV(x, StrV(unescape(s.tail.init)),
-                    AppC(k, x))
+                letV(x, strV(unescape(s.tail.init)),
+                    appC(k, x))
         }
 
     def tailCompileFun(x : String, t : Type, e : Expression, k : String) : Term =
@@ -243,29 +245,29 @@ object Compiler {
                 val f = fresh("f")
                 val j = fresh("j")
                 val y = fresh("y")
-                LetV(f, FunV(j, y,
-                    LetV(x, PrmV(CapabilityP(n), Vector(y)),
+                letV(f, funV(j, y,
+                    letV(x, prmV(capabilityP(n), Vector(y)),
                         tailCompile(e, j))),
-                    AppC(k, f))
+                    appC(k, f))
 
             case _ =>
                 val f = fresh("f")
                 val j = fresh("j")
-                LetV(f, FunV(j, x, tailCompile(e, j)),
-                    AppC(k, f))
+                letV(f, funV(j, x, tailCompile(e, j)),
+                    appC(k, f))
         }
 
     def tailCompileBlockExp(be : BlockExp, k : String) : Term =
         be match {
             case LetFun(ds, be2) =>
-                LetF(
+                letF(
                     ds.map(compileDef),
                     tailCompileBlockExp(be2, k)
                 )
 
             case LetVal(Val(x, e), be2) =>
                 val j = fresh("j")
-                LetC(j, x, tailCompileBlockExp(be2, k),
+                letC(j, x, tailCompileBlockExp(be2, k),
                     tailCompile(e, j))
 
             case Return(e) =>

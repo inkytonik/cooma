@@ -24,6 +24,10 @@ class Config(args : Seq[String]) extends REPLConfig(args) {
         descr = "Print the AST of the Cooma program (default: false)",
         default = Some(false))
 
+    lazy val graalVM = opt[Boolean]("graallvm", short = 'g',
+        descr = "Use the Graal VM backend (default: false)",
+        default = Some(false))
+
     lazy val irPrint = opt[Boolean]("irPrint", short = 'i',
         descr = "Print the intermediate representation (default: false)",
         default = Some(false))

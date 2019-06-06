@@ -12,13 +12,13 @@ package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.kiama.util.REPLBase
 
-class REPLDriver extends REPLBase[Config] {
+class REPL extends REPLBase[Config] {
+
+    self : Compiler with Backend =>
 
     import org.bitbucket.inkytonik.cooma.BuildInfo
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.IR.showTerm
-    import org.bitbucket.inkytonik.cooma.Runtime.showRuntimeValue
     import org.bitbucket.inkytonik.kiama.util.{Console, StringConsole, Source}
 
     def createConfig(args : Seq[String]) : Config =
@@ -29,20 +29,20 @@ class REPLDriver extends REPLBase[Config] {
     override val prompt = "\ncooma> "
 
     /**
-     * Runtime environment that keeps track of previously bound values.
-     */
-    var currentDynamicEnv : Env = NilE()
-
-    /**
      * Counter of expression results.
      */
     var nResults = 0
 
     /**
+     * Runtime environment that keeps track of previously bound values.
+     */
+    var currentDynamicEnv : Env = emptyEnv
+
+    /**
      * Initialise REPL state.
      */
     def initialise() {
-        currentDynamicEnv = NilE()
+        currentDynamicEnv = emptyEnv
         nResults = 0
     }
 
@@ -63,6 +63,9 @@ class REPLDriver extends REPLBase[Config] {
         }
     }
 
+    /**
+     * Process a line of user input.
+     */
     override def processline(source : Source, console : Console, config : Config) : Option[Config] = {
 
         import org.bitbucket.inkytonik.kiama.util.StringSource
@@ -149,34 +152,25 @@ class REPLDriver extends REPLBase[Config] {
      * Process the AST from the user's entered text.
      */
     def process(program : Program, i : String, printValue : Boolean, config : Config) {
-
-        // Pretty print the abstract syntax tree
         if (config.coomaASTPrint())
             config.output().emitln(layout(any(program), 5))
 
-        // Translate the source tree to IR
-        val ir = Compiler.compileStandalone(program)
+        val term = compileStandalone(program)
 
-        // Pretty print the program's IR
         if (config.irPrint())
-            config.output().emitln(showTerm(ir, 5))
+            config.output().emitln(showTerm(term))
         if (config.irASTPrint())
-            config.output().emitln(layout(any(ir), 5))
+            config.output().emitln(layout(any(term), 5))
 
-        // Run the IR and collect result
         val args = config.filenames()
-        val interpreter = new Interpreter(config)
-        val result = interpreter.interpret(ir, currentDynamicEnv, args)
+        val result = interpret(term, currentDynamicEnv, args)
 
-        // Update the environments so the new result can be used later
-        currentDynamicEnv = ConsVE(currentDynamicEnv, i, result)
+        currentDynamicEnv = consEnv(currentDynamicEnv, i, result)
 
-        // Process the result value
         if (printValue)
             config.output().emitln(s"$i = ${showRuntimeValue(result)}")
         else
             config.output().emitln(i)
-
     }
 
 }

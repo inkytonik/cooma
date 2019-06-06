@@ -791,7 +791,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         // Set Scallop so that errors don't just exit the process
         val saveThrowError = throwError.value
         throwError.value = true
-        val config = Main.createConfig(args)
+        val config = createConfig(args)
         config.verify()
         throwError.value = saveThrowError
         config
@@ -811,17 +811,20 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
     def runCompilerOnString(name : String, program : String, options : Seq[String], args : Seq[String]) : String = {
         val allArgs = Seq("--Koutput", "string") ++ options ++ ("test.cooma" +: args)
-        runTest(name, Main.compileString(name, program, _), options, allArgs)
+        runTest(name, compileString(name, program, _), options, allArgs)
     }
 
     def runCompilerOnFile(program : String, options : Seq[String], args : Seq[String]) : String = {
         val allArgs = Seq("--Koutput", "string") ++ options ++ (program +: args)
-        runTest(name, Main.compileFile(program, _), options, allArgs)
+        runTest(name, compileFile(program, _), options, allArgs)
     }
 
     def runREPLTest(name : String, cmd : String, input : String, options : Seq[String], args : Seq[String]) : String = {
+        import org.bitbucket.inkytonik.cooma.reference.ReferenceBackend
+
         val allArgs = Seq("--Koutput", "string") ++ options ++ args
-        val repl = new REPLDriver()
+        // FIXME: GraalVM version
+        val repl = new REPL with Compiler with ReferenceBackend
         val replInput =
             if (input.indexOf('\n') == -1)
                 input
