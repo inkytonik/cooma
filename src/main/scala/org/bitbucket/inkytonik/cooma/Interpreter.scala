@@ -12,6 +12,9 @@ package org.bitbucket.inkytonik.cooma
 
 class Interpreter(config : Config) {
 
+    def interpret(term : Term, args : Seq[String]) : ValueR =
+        interpret(term, NilE(), args)
+
     def interpret(term : Term, env : Env, args : Seq[String]) : ValueR = {
 
         def interpretAux(rho : Env, term : Term) : ValueR =

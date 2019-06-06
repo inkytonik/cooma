@@ -72,7 +72,7 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
 
         val args = config.filenames().tail
         val interpreter = new Interpreter(config)
-        interpreter.interpret(ir, NilE(), args) match {
+        interpreter.interpret(ir, args) match {
             case ErrR(msg) =>
                 config.output().emitln(s"cooma: $msg")
             case v =>
