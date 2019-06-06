@@ -19,6 +19,11 @@ scalacOptions :=
         "-Xlint:-stars-align,_"
     )
 
+javacOptions :=
+    Seq (
+        "-Xlint:unchecked"
+    )
+
 logLevel := Level.Info
 
 shellPrompt := {
@@ -36,8 +41,8 @@ libraryDependencies ++=
         "org.scalatest" %% "scalatest" % "3.0.5" % "test",
         "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
         "org.projectlombok" % "lombok" % "1.16.16",
-        "org.graalvm.truffle" % "truffle-api" %  "19.0.0",
-        "org.graalvm.truffle" % "truffle-dsl-processor" %  "19.0.0",
+        "org.graalvm.truffle" % "truffle-api" % "19.0.0",
+        "org.graalvm.truffle" % "truffle-dsl-processor" % "19.0.0",
         "junit" % "junit" % "4.12" % Test,
         "com.novocode" % "junit-interface" % "0.11" % Test
     )
