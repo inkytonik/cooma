@@ -27,9 +27,7 @@ public class CoomaLetCTermNode extends CoomaTermNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-
-        RuntimeValue<ContinuationClosure> val = new RuntimeValue<ContinuationClosure>(
-                new ContinuationClosure(obtainRhoFromFrame(frame),this.parameter, this.t)) {};
+        ContinuationClosure val = new ContinuationClosure(obtainRhoFromFrame(frame),this.parameter, this.t);
         extendRho(frame, identifier, val);
         return body.executeGeneric(frame);
 

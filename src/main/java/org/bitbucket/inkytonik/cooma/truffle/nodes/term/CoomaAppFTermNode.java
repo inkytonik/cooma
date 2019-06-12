@@ -7,7 +7,6 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.FunctionClosure;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.FuntionClosureHolder;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 public abstract class CoomaAppFTermNode extends CoomaTermNode {
 
@@ -36,13 +35,12 @@ public abstract class CoomaAppFTermNode extends CoomaTermNode {
     @Specialization(guards = "isHalt()")
     Object executeHalt(VirtualFrame frame){
 
-        RuntimeValue<FuntionClosureHolder> value = obtainFromRho(frame, f);
-        FunctionClosure closure = value.getValue().get(f);
+        FuntionClosureHolder value = obtainFromRho(frame, f);
+        FunctionClosure closure = value.get(f);
         Rho p1 = closure.getRho()
                 .extend(closure.getK(),
-                    new RuntimeValue<ContinuationClosure>(new ContinuationClosure(obtainRhoFromFrame(frame),
-                            this.x, new CoomaHaltTermNode(this.x))) {
-                    })
+                    new ContinuationClosure(obtainRhoFromFrame(frame),
+                            this.x, new CoomaHaltTermNode(this.x)))
                 .extend(closure.getX(), obtainFromRho(frame, this.x));
         replaceRho(frame, p1);
         return closure.getZ().executeGeneric(frame);
@@ -51,8 +49,8 @@ public abstract class CoomaAppFTermNode extends CoomaTermNode {
 
     @Specialization
     Object execute(VirtualFrame frame) {
-        RuntimeValue<FuntionClosureHolder> value = obtainFromRho(frame, f);
-        FunctionClosure closure = value.getValue().get(f);
+        FuntionClosureHolder value = obtainFromRho(frame, f);
+        FunctionClosure closure = value.get(f);
         Rho p1 = closure.getRho()
                 .extend(closure.getK(), obtainFromRho(frame, this.k))
                 .extend(closure.getX(), obtainFromRho(frame, this.x));

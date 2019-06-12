@@ -26,11 +26,10 @@ public class CoomaLetFTermNode extends CoomaTermNode {
     public Object executeGeneric(VirtualFrame frame) {
         Rho p = obtainRhoFromFrame(frame);
         FuncDefs defs = new FuncDefs();
-        RuntimeValue<FuncDefs> defR = new RuntimeValue<FuncDefs>(defs) {};
 
         for (CoomaDefTerm tmp : defTerms) {
             defs.getDefs().put(tmp.getF(), tmp);
-            p = p.extend(tmp.getF(), defR);
+            p = p.extend(tmp.getF(), defs);
         }
 
         final Rho finalP = p;

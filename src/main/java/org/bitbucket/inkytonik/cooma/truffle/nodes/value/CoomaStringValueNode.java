@@ -2,8 +2,9 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.StringRuntimeValue;
 
-public class CoomaStringValueNode extends CoomaValueNode<RuntimeValue<String>> {
+public class CoomaStringValueNode extends CoomaValueNode {
 
     private final String value;
 
@@ -12,7 +13,7 @@ public class CoomaStringValueNode extends CoomaValueNode<RuntimeValue<String>> {
     }
 
     @Override
-    public RuntimeValue<String> evaluate(VirtualFrame frame) {
-        return new RuntimeValue<String>(value) {};
+    public StringRuntimeValue evaluate(VirtualFrame frame) {
+        return new StringRuntimeValue(value);
     }
 }

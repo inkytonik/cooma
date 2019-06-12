@@ -41,13 +41,14 @@ libraryDependencies ++=
         "org.scalatest" %% "scalatest" % "3.0.5" % "test",
         "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
         "org.projectlombok" % "lombok" % "1.16.16",
-        "org.graalvm.truffle" % "truffle-api" % "19.0.0",
-        "org.graalvm.truffle" % "truffle-dsl-processor" % "19.0.0",
+        "org.graalvm.truffle" % "truffle-api" %  "19.0.0",
+        "org.graalvm.truffle" % "truffle-dsl-processor" %  "19.0.0",
         "junit" % "junit" % "4.12" % Test,
-        "com.novocode" % "junit-interface" % "0.11" % Test
+        "com.novocode" % "junit-interface" % "0.11" % Test,
+        "com.thoughtworks.xstream" % "xstream" % "1.4.3"
     )
 
-unmanagedSourceDirectories in Compile += baseDirectory.value / "target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle/nodes/term"
+unmanagedSourceDirectories in Compile += baseDirectory.value / "target/scala-2.12/classes/generated"
 
 testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
 

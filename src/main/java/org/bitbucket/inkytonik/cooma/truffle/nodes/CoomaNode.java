@@ -19,8 +19,9 @@ public class CoomaNode extends Node {
         return (Rho) FrameUtil.getObjectSafe(frame, obtainRhoFrameSlot(frame));
     }
 
-    protected RuntimeValue obtainFromRho(VirtualFrame frame, String key) {
-        return obtainRhoFromFrame(frame).get(key);
+    @SuppressWarnings("unchecked")
+    protected <T extends RuntimeValue> T  obtainFromRho(VirtualFrame frame, String key) {
+        return (T) obtainRhoFromFrame(frame).get(key);
     }
 
     protected void extendRho(VirtualFrame frame, String key, RuntimeValue value) {

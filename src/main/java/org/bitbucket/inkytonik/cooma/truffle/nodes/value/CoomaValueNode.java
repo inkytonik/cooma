@@ -4,11 +4,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
-public abstract class CoomaValueNode<T extends RuntimeValue> extends CoomaNode {
+public abstract class CoomaValueNode extends CoomaNode {
 
     /**
      *
      */
-    public abstract T evaluate(VirtualFrame frame);
+    public abstract RuntimeValue evaluate(VirtualFrame frame);
 
 }

@@ -1,13 +1,14 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 
-@Value
+@Getter
 @RequiredArgsConstructor
-public final class FunctionClosure implements FuntionClosureHolder{
+public final class FunctionClosure extends FuntionClosureHolder {
     private final Rho rho;
     private final String k;
     private final String x;

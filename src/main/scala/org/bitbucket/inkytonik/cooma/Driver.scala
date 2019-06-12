@@ -11,6 +11,7 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
+import org.bitbucket.inkytonik.cooma.graalvm.GraalVMBackend
 import org.bitbucket.inkytonik.kiama.util.CompilerBase
 
 class Driver extends CompilerBase[ASTNode, Program, Config] {
@@ -66,7 +67,7 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
 
     def process(source : Source, prog : Program, config : Config) {
         // FIXME: GraalVM version
-        val system = new Compiler with ReferenceBackend
+        val system = if (config.graalVM()) new Compiler with ReferenceBackend else new Compiler with GraalVMBackend
 
         val term = system.compileCommand(prog)
         if (config.irPrint())
