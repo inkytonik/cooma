@@ -16,7 +16,8 @@ trait Interpreter {
     self : ReferenceBackend =>
 
     import java.nio.file.{Files, Paths}
-    import org.bitbucket.inkytonik.cooma.Util.{escape, fresh}
+    import org.bitbucket.inkytonik.cooma.Util.fresh
+    import org.bitbucket.inkytonik.cooma.Utils.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 

@@ -40,7 +40,7 @@ public abstract class CoomaAppFTermNode extends CoomaTermNode {
         Rho p1 = closure.getRho()
                 .extend(closure.getK(),
                     new ContinuationClosure(obtainRhoFromFrame(frame),
-                            this.x, new CoomaHaltTermNode(this.x)))
+                            this.x, CoomaAppCTermNodeGen.create(CoomaLanguage.HALT, this.x)))
                 .extend(closure.getX(), obtainFromRho(frame, this.x));
         replaceRho(frame, p1);
         return closure.getZ().executeGeneric(frame);

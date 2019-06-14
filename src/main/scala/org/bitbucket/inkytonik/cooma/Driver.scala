@@ -71,8 +71,8 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
     }
 
     def process(source : Source, prog : Program, config : Config) {
-        // FIXME: GraalVM version
-        val system = if (config.graalVM()) new Compiler with ReferenceBackend else new Compiler with GraalVMBackend
+
+        val system = if (config.graalVM()) new Compiler with GraalVMBackend else new Compiler with ReferenceBackend
 
         val term = system.compileCommand(prog)
         if (config.irPrint())

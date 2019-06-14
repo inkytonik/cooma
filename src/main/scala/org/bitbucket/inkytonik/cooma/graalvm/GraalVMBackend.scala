@@ -6,6 +6,7 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
+import org.graalvm.polyglot
 import org.graalvm.polyglot.Context
 
 trait GraalVMBackend extends Backend {
@@ -101,7 +102,7 @@ trait GraalVMBackend extends Backend {
 
     def showRuntimeValue(v : ValueR) : String = {
         //TODO: show better runtime value representations.
-        v.getValue.toString
+        v.toString
     }
 
     override type Env = Rho
@@ -115,11 +116,12 @@ trait GraalVMBackend extends Backend {
     }
 
     def interpret(term : Term, args : Seq[String], config : Config) = {
-        val context = Context.newBuilder("cooma")
-            .option("cooma.ast", CoomaNodeXmlSerializer.toXML(term))
-            .build()
+        val context = Context.newBuilder("cooma").build()
 
-        context.eval("cooma", "").asString()
+        val result: polyglot.Value = context.eval("cooma", CoomaNodeXmlSerializer.toXML(term))
+
+        if (config.resultPrint()) config.output().emitln(result)
+
         context.close()
     }
 

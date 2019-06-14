@@ -15,12 +15,11 @@ public final class CoomaNodeXmlSerializer {
 
     public static CoomaTermNode fromXML(String xml){
         return (CoomaTermNode) xstream.fromXML(xml);
-
     }
 
-    public static OptionType CoomaOptionType = new OptionType<CoomaTermNode>(
+    public static OptionType<CoomaTermNode> CoomaOptionType = new OptionType<>(
             "CoomaNode",
-            s -> CoomaNodeXmlSerializer.fromXML(s),
-            coomaNode -> CoomaNodeXmlSerializer.toXML(coomaNode) );
+            CoomaNodeXmlSerializer::fromXML,
+            CoomaNodeXmlSerializer::toXML);
 
 }

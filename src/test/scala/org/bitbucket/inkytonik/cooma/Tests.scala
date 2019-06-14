@@ -28,7 +28,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
     val backends =
         List(
-            Backend("Reference", Seq()),
+            //Backend("Reference", Seq()),
             Backend("GraalVM", Seq("-g"))
         )
 
