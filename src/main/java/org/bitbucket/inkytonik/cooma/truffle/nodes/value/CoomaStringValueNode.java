@@ -1,6 +1,8 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.thoughtworks.xstream.annotations.XStreamConverter;
+import com.thoughtworks.xstream.converters.basic.CharConverter;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.StringRuntimeValue;
 

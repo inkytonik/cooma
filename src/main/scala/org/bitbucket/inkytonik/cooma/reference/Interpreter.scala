@@ -338,6 +338,7 @@ trait Interpreter {
 
         def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val Vector(r, f1) = xs
+
             interp.lookupR(rho, r) match {
                 case interp.RowR(fields) =>
                     fields.collectFirst {

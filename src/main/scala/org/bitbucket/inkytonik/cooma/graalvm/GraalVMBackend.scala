@@ -3,6 +3,7 @@ package org.bitbucket.inkytonik.cooma.graalvm
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
+import org.bitbucket.inkytonik.cooma.truffle.primitives.RowSelectP
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
@@ -46,22 +47,18 @@ trait GraalVMBackend extends Backend {
         new CoomaIntValueNode(i)
 
     def prmV(p : Primitive, xs : Vector[String]) : Value =
-        //TODO: complete this
-        null
+        new CoomaPrimitiveValue(p, xs.toArray)
 
     def rowV(fs : Vector[FieldValue]) : Value =
-        //TODO: complete this
-        null
+        new CoomaRowValueNode(fs.toArray)
 
     def strV(s : String) : Value =
         new CoomaStringValueNode(s)
 
-    override type FieldValue = Value
+    override type FieldValue = org.bitbucket.inkytonik.cooma.truffle.nodes.value.FieldValue
 
     def fieldValue(f : String, x : String) : FieldValue =
-        //TODO: complete this
-        //FieldValue(f, x)
-        null
+        new FieldValue(f, x)
 
     /**
      * Custom IR pretty-printer that escapes string terms.
@@ -72,7 +69,7 @@ trait GraalVMBackend extends Backend {
     def showTerm(t : Term) : String =
         t.toString
 
-    override type Primitive = Null
+    override type Primitive = org.bitbucket.inkytonik.cooma.truffle.primitives.Primitive
 
     def argumentP(i : Int) : Primitive = {
         null
@@ -95,13 +92,13 @@ trait GraalVMBackend extends Backend {
     }
 
     def rowSelectP() : Primitive = {
-        null
+        new RowSelectP()
     }
 
     override type ValueR = RuntimeValue
 
     def showRuntimeValue(v : ValueR) : String = {
-        //TODO: show better runtime value representations.
+        //Runtime value prining is done at a TruffleLanguage level.
         v.toString
     }
 
@@ -118,7 +115,7 @@ trait GraalVMBackend extends Backend {
     def interpret(term : Term, args : Seq[String], config : Config) = {
         val context = Context.newBuilder("cooma").build()
 
-        val result: polyglot.Value = context.eval("cooma", CoomaNodeXmlSerializer.toXML(term))
+        val result : polyglot.Value = context.eval("cooma", CoomaNodeXmlSerializer.toXML(term))
 
         if (config.resultPrint()) config.output().emitln(result)
 
@@ -126,7 +123,7 @@ trait GraalVMBackend extends Backend {
     }
 
     def interpret(term : Term, env : Env, args : Seq[String]) : ValueR = {
-        //val evalMain = new CoomaRootNode(new CoomaLanguage(), term)
+        //TODO: fill in the gaps
         null
     }
 }

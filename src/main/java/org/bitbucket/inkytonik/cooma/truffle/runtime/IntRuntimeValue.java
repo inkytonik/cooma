@@ -11,11 +11,16 @@ public class IntRuntimeValue extends RuntimeValue implements TruffleObject, Comp
 
     @Override
     public String toString() {
-        return ""+ innerValue;
+        return String.valueOf(innerValue);
     }
 
     @Override
     public int compareTo(IntRuntimeValue intRuntimeValue) {
         return this.innerValue.compareTo(intRuntimeValue.getInnerValue());
+    }
+
+    @Override
+    public String print() {
+        return this.toString();
     }
 }

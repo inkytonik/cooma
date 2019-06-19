@@ -9,14 +9,14 @@ import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.Utils;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.IntRuntimeValue;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.StringRuntimeValue;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer;
 import org.graalvm.options.OptionCategory;
 import org.graalvm.options.OptionDescriptors;
 import org.graalvm.options.OptionKey;
 import org.graalvm.options.OptionStability;
+
+import java.util.Arrays;
 
 @TruffleLanguage.Registration(id = CoomaLanguage.ID, name = "cooma", defaultMimeType = CoomaLanguage.MIME_TYPE,
         characterMimeTypes = CoomaLanguage.MIME_TYPE, contextPolicy = TruffleLanguage.ContextPolicy.SHARED,
@@ -68,10 +68,8 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
                 return "NULL";
             } else if (interop.hasMembers(value)) {
                 return "Object";
-            } else if (value instanceof IntRuntimeValue) {
-                return value.toString();
-            } else if (value instanceof StringRuntimeValue) {
-                return String.format("\"%s\"",Utils.escape(value.toString()));
+            } else if (value instanceof RuntimeValue) {
+                return ((RuntimeValue) value).print();
             } else {
                 return "Unsupported";
             }
