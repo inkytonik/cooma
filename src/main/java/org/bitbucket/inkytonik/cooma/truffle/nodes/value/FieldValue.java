@@ -1,11 +1,5 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
-@Getter
-@RequiredArgsConstructor
-public class FieldValue {
-    private final String f;
-    private final String x;
-}
+@Value public class FieldValue { String f; String x; }

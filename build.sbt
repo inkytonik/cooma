@@ -46,8 +46,10 @@ libraryDependencies ++=
         "junit" % "junit" % "4.12" % Test,
         "com.novocode" % "junit-interface" % "0.11" % Test,
         "com.thoughtworks.xstream" % "xstream" % "1.4.3",
-        "org.codehaus.jettison" % "jettison" % "1.3.7"
+        "org.codehaus.jettison" % "jettison" % "1.3.7",
+        "org.apache.commons" % "commons-lang3" % "3.9"
     )
+
 
 unmanagedSourceDirectories in Compile += baseDirectory.value / "target/scala-2.12/classes/generated"
 

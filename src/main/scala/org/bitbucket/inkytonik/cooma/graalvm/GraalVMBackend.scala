@@ -3,7 +3,7 @@ package org.bitbucket.inkytonik.cooma.graalvm
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
-import org.bitbucket.inkytonik.cooma.truffle.primitives.RowSelectP
+import org.bitbucket.inkytonik.cooma.truffle.primitives.{RowConcatP, RowSelectP}
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
@@ -88,7 +88,7 @@ trait GraalVMBackend extends Backend {
     }
 
     def rowConcatP() : Primitive = {
-        null
+        new RowConcatP()
     }
 
     def rowSelectP() : Primitive = {

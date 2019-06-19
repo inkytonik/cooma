@@ -34,33 +34,7 @@ public class RowSelectP extends Primitive {
                 throw new Exception(String.format("%s: can't find field %s in %s", getShow(), fieldId, Arrays.toString(((RowRuntimeValue) row).getFields())));
             }
         }
-
         //TODO: add the cases for ErrR and when other thing is found.
-
-        /*
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            val Vector(r, f1) = xs
-
-            interp.lookupR(rho, r) match {
-                case interp.RowR(fields) =>
-                    fields.collectFirst {
-                        case interp.FldR(f2, v) if f1 == f2 =>
-                            v
-                    } match {
-                        case Some(v) =>
-                            v
-                        case None =>
-                            sys.error(s"$show: can't find field $f1 in $fields")
-                    }
-
-                case err : interp.ErrR =>
-                    err
-
-                case v =>
-                    sys.error(s"$show: $r is $v, looking for field $f1")
-            }
-        }
-         */
 
         return null;
     }
