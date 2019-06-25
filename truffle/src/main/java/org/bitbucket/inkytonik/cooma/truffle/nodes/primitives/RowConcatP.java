@@ -1,4 +1,4 @@
-package org.bitbucket.inkytonik.cooma.truffle.primitives;
+package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
@@ -12,7 +12,7 @@ public class RowConcatP extends Primitive {
     }
 
     @Override
-    public RuntimeValue run(Rho rho, String[] xs) throws Exception {
+    public RuntimeValue run(Rho rho, String[] xs, String[] args) throws Exception {
 
         String left = xs[0];
         String right = xs[1];
@@ -34,7 +34,6 @@ public class RowConcatP extends Primitive {
             //TODO: Fix this kind of exception
             throw new Exception(String.format("%s: left argument %s of & is non-row %s", getShow(), left, rowl.print()));
         }
-
     }
 
     @Override

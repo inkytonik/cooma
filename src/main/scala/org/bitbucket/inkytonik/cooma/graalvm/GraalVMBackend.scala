@@ -1,9 +1,10 @@
 package org.bitbucket.inkytonik.cooma.graalvm
 
+import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
-import org.bitbucket.inkytonik.cooma.truffle.primitives.{RowConcatP, RowSelectP}
+import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives.{ArgumentP, RowConcatP, RowSelectP}
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
@@ -67,12 +68,13 @@ trait GraalVMBackend extends Backend {
      * @return
      */
     def showTerm(t : Term) : String =
+        //TODO: print Term properly
         t.toString
 
-    override type Primitive = org.bitbucket.inkytonik.cooma.truffle.primitives.Primitive
+    override type Primitive = org.bitbucket.inkytonik.cooma.truffle.nodes.primitives.Primitive
 
     def argumentP(i : Int) : Primitive = {
-        null
+        new ArgumentP(i)
     }
 
     def capabilityP(cap : String) : Primitive = {
@@ -113,9 +115,11 @@ trait GraalVMBackend extends Backend {
     }
 
     def interpret(term : Term, args : Seq[String], config : Config) = {
-        val context = Context.newBuilder("cooma").build()
+        val context = Context.newBuilder(CoomaLanguage.ID)
+            .arguments(CoomaLanguage.ID, args.toArray)
+            .build()
 
-        val result : polyglot.Value = context.eval("cooma", CoomaNodeXmlSerializer.toXML(term))
+        val result : polyglot.Value = context.eval(CoomaLanguage.ID, CoomaNodeXmlSerializer.toXML(term))
 
         if (config.resultPrint()) config.output().emitln(result)
 

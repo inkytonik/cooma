@@ -1,10 +1,12 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
 import com.oracle.truffle.api.interop.TruffleObject;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 
 @Value
+@EqualsAndHashCode(callSuper=false)
 public class RowRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<RowRuntimeValue> {
 
     private final FieldValueRuntime[] fields;

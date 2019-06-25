@@ -1,4 +1,4 @@
-package org.bitbucket.inkytonik.cooma.truffle.primitives;
+package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.FieldValueRuntime;
@@ -16,7 +16,7 @@ public class RowSelectP extends Primitive {
     }
 
     @Override
-    public RuntimeValue run(Rho rho, String[] xs) throws Exception {
+    public RuntimeValue run(Rho rho, String[] xs, String[] args) throws Exception {
 
         String rowId = xs[0];
         String fieldId = xs[1];

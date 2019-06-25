@@ -1,5 +1,6 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes;
 
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameUtil;
@@ -7,6 +8,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 public class CoomaNode extends Node {
@@ -30,5 +32,13 @@ public class CoomaNode extends Node {
 
     protected void replaceRho(VirtualFrame frame, Rho newRho) {
         frame.setObject(obtainRhoFrameSlot(frame), newRho);
+    }
+
+    protected TruffleLanguage.ContextReference<CoomaContext> getContext(){
+        return super.lookupContextReference(CoomaLanguage.class);
+    }
+
+    protected String[] getArgs(){
+        return getContext().get().getEnv().getApplicationArguments();
     }
 }

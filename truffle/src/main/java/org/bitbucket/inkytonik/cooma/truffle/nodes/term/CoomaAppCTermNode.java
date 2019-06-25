@@ -1,11 +1,13 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.term;
 
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 @NodeInfo(shortName = "AppC", description = "Continuation application")
@@ -29,6 +31,7 @@ public abstract class CoomaAppCTermNode extends CoomaCAppNode  {
 
     @Specialization(guards = "isHalt()")
     public Object executeHalt(VirtualFrame frame) {
+
         return obtainFromRho(frame, this.x).getValue();
     }
 

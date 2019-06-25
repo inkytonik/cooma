@@ -8,6 +8,8 @@ enablePlugins(BuildInfoPlugin)
 buildInfoKeys := Seq[BuildInfoKey](name, version)
 buildInfoPackage := organization.value
 
+unmanagedSourceDirectories in Compile += baseDirectory.value / "target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle/"
+
 scalacOptions :=
     Seq (
         "-deprecation",
@@ -19,10 +21,6 @@ scalacOptions :=
         "-Xlint:-stars-align,_"
     )
 
-javacOptions :=
-    Seq (
-        "-Xlint:unchecked"
-    )
 
 logLevel := Level.Info
 
@@ -40,18 +38,10 @@ libraryDependencies ++=
         "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
         "org.scalatest" %% "scalatest" % "3.0.5" % "test",
         "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
-        "org.projectlombok" % "lombok" % "1.16.16",
-        "org.graalvm.truffle" % "truffle-api" %  "19.0.0",
-        "org.graalvm.truffle" % "truffle-dsl-processor" %  "19.0.0",
-        "junit" % "junit" % "4.12" % Test,
-        "com.novocode" % "junit-interface" % "0.11" % Test,
-        "com.thoughtworks.xstream" % "xstream" % "1.4.3",
-        "org.codehaus.jettison" % "jettison" % "1.3.7",
-        "org.apache.commons" % "commons-lang3" % "3.9"
     )
 
 
-unmanagedSourceDirectories in Compile += baseDirectory.value / "target/scala-2.12/classes/generated"
+
 
 testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
 
@@ -78,7 +68,9 @@ ratsUseKiama := 2
 
 // ScalariForm
 
+import sbt.Keys.unmanagedSourceDirectories
 import scalariform.formatter.preferences._
+import xsbti.compile
 
 scalariformPreferences := scalariformPreferences.value
     .setPreference(AlignSingleLineCaseStatements, true)
@@ -105,3 +97,19 @@ headerLicense := Some(HeaderLicense.Custom(
       |file, You can obtain one at http://mozilla.org/MPL/2.0/.
       |""".stripMargin
 ))
+
+lazy val truffle = (project in file("truffle"))
+  .settings(
+    libraryDependencies ++=
+      Seq (
+        "org.projectlombok" % "lombok" % "1.16.16",
+        "org.graalvm.truffle" % "truffle-api" %  "19.0.0",
+        "org.graalvm.truffle" % "truffle-dsl-processor" %  "19.0.0",
+        "com.thoughtworks.xstream" % "xstream" % "1.4.3",
+        "org.codehaus.jettison" % "jettison" % "1.3.7",
+        "org.apache.commons" % "commons-lang3" % "3.9"
+      )
+  )
+
+
+lazy val root = project in file(".") dependsOn truffle
