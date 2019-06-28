@@ -4,7 +4,7 @@ import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
-import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives.{ArgumentP, RowConcatP, RowSelectP}
+import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives.{ArgumentP, ConsoleWriteP, ReaderReadP, RowConcatP, RowSelectP}
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
@@ -82,11 +82,11 @@ trait GraalVMBackend extends Backend {
     }
 
     def consoleWriteP(filename : String) : Primitive = {
-        null
+        new ConsoleWriteP(filename)
     }
 
     def readerReadP(filename : String) : Primitive = {
-        null
+        new ReaderReadP(filename)
     }
 
     def rowConcatP() : Primitive = {
@@ -121,14 +121,19 @@ trait GraalVMBackend extends Backend {
 
         val result : polyglot.Value = context.eval(CoomaLanguage.ID, CoomaNodeXmlSerializer.toXML(term))
 
+
+
+        if (CoomaLanguage.Type.Error.getValue == result.getMetaObject.toString) {
+            config.output().emitln(result)
+        }
         if (config.resultPrint()) config.output().emitln(result)
 
         context.close()
     }
 
-    def interpret(term : Term, env : Env, args : Seq[String]) : ValueR = {
-        //TODO: fill in the gaps
-        null
+    def interpret(term : Term, env : Env, args : Seq[String]) : Env = {
+
+        env
     }
 }
 

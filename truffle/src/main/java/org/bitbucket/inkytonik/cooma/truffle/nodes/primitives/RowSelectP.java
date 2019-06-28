@@ -1,6 +1,8 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 
+import org.bitbucket.inkytonik.cooma.truffle.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.ErrorRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.FieldValueRuntime;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RowRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
@@ -16,7 +18,7 @@ public class RowSelectP extends Primitive {
     }
 
     @Override
-    public RuntimeValue run(Rho rho, String[] xs, String[] args) throws Exception {
+    public RuntimeValue run(Rho rho, String[] xs, String[] args) {
 
         String rowId = xs[0];
         String fieldId = xs[1];
@@ -30,13 +32,12 @@ public class RowSelectP extends Primitive {
             if (opV.isPresent()){
                 return opV.get().getV();
             }else{
-                //TODO: Fix this exception, avoid using generic exceptions
-                throw new Exception(String.format("%s: can't find field %s in %s", getShow(), fieldId, Arrays.toString(((RowRuntimeValue) row).getFields())));
+                throw new CoomaException(String.format("%s: can't find field %s in %s", getShow(), fieldId, Arrays.toString(((RowRuntimeValue) row).getFields())), this);
             }
+        }else if (row instanceof ErrorRuntimeValue){
+            return row;
         }
-        //TODO: add the cases for ErrR and when other thing is found.
-
-        return null;
+        throw new CoomaException(String.format("%s: %s is %s, looking for field %s", getShow(), rowId, row, fieldId ), this);
     }
 
     @Override

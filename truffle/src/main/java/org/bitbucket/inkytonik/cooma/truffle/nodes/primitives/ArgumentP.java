@@ -3,6 +3,7 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.ErrorRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.StringRuntimeValue;
 
@@ -18,11 +19,10 @@ public class ArgumentP extends Primitive {
     }
 
     @Override
-    public RuntimeValue run(Rho rho, String[] xs, String[] args) throws Exception {
+    public RuntimeValue run(Rho rho, String[] xs, String[] args) {
 
         if (getIndex() < 0 || getIndex() >= args.length){
-            //TODO: replace this exception by the ErrR runtime value
-            throw new Exception(String.format("command-line argument %d does not exist (arg count = %d)",getIndex(), args.length));
+            return new ErrorRuntimeValue(String.format("command-line argument %d does not exist (arg count = %d)",getIndex(), args.length));
         }
 
         return new StringRuntimeValue(String.valueOf(args[getIndex()]));

@@ -1,6 +1,7 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.bitbucket.inkytonik.cooma.truffle.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RowRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
@@ -12,7 +13,7 @@ public class RowConcatP extends Primitive {
     }
 
     @Override
-    public RuntimeValue run(Rho rho, String[] xs, String[] args) throws Exception {
+    public RuntimeValue run(Rho rho, String[] xs, String[] args) {
 
         String left = xs[0];
         String right = xs[1];
@@ -26,13 +27,11 @@ public class RowConcatP extends Primitive {
                 RowRuntimeValue rowlR = (RowRuntimeValue) rowR;
                 return new RowRuntimeValue(ArrayUtils.addAll(rowlL.getFields(),rowlR.getFields()));
             } else {
-                //TODO: Fix this kind of exception
-                throw new Exception(String.format("%s: left argument %s of & is non-row %s", getShow(), right, rowR.print()));
+                throw new CoomaException(String.format("%s: left argument %s of & is non-row %s", getShow(), right, rowR.print()), this);
             }
 
         } else {
-            //TODO: Fix this kind of exception
-            throw new Exception(String.format("%s: left argument %s of & is non-row %s", getShow(), left, rowl.print()));
+            throw new CoomaException(String.format("%s: left argument %s of & is non-row %s", getShow(), left, rowl.print()), this);
         }
     }
 

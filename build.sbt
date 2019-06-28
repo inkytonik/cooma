@@ -8,7 +8,7 @@ enablePlugins(BuildInfoPlugin)
 buildInfoKeys := Seq[BuildInfoKey](name, version)
 buildInfoPackage := organization.value
 
-unmanagedSourceDirectories in Compile += baseDirectory.value / "target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle/"
+
 
 scalacOptions :=
     Seq (
@@ -39,9 +39,6 @@ libraryDependencies ++=
         "org.scalatest" %% "scalatest" % "3.0.5" % "test",
         "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
     )
-
-
-
 
 testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
 
@@ -108,7 +105,8 @@ lazy val truffle = (project in file("truffle"))
         "com.thoughtworks.xstream" % "xstream" % "1.4.3",
         "org.codehaus.jettison" % "jettison" % "1.3.7",
         "org.apache.commons" % "commons-lang3" % "3.9"
-      )
+      ),
+    unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle/"
   )
 
 

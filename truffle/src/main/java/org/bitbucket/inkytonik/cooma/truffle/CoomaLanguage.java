@@ -9,13 +9,9 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.IntRuntimeValue;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.StringRuntimeValue;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer;
 
-import java.util.List;
 
 @TruffleLanguage.Registration(id = CoomaLanguage.ID, name = "cooma", defaultMimeType = CoomaLanguage.MIME_TYPE,
         characterMimeTypes = CoomaLanguage.MIME_TYPE, contextPolicy = TruffleLanguage.ContextPolicy.SHARED,
@@ -26,10 +22,6 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
     public static final String MIME_TYPE = "application/x-cooma";
     public static final String RHO = "rho";
     public static final String HALT = "$halt";
-
-//    @Option(help = "AST root node.", category = OptionCategory.USER,
-//            stability = OptionStability.STABLE)
-//    static OptionKey<CoomaTermNode> ast = new OptionKey<>(null, CoomaNodeXmlSerializer.CoomaOptionType);
 
     public static String toString(Object value) {
         try {
@@ -67,7 +59,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
     protected boolean isObjectOfLanguage(Object object) {
         if (!(object instanceof TruffleObject)) {
             return false;
-        } else return object instanceof IntRuntimeValue || object instanceof StringRuntimeValue;
+        } else return object instanceof IntRuntimeValue || object instanceof StringRuntimeValue || RuntimeValue.class.isAssignableFrom(object.getClass());
         //TODO: add the rest of the checks as seen in SLLanguage
     }
 
@@ -83,5 +75,48 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
         return Truffle.getRuntime().createCallTarget(evalMain);
     }
 
+
+    @Override
+    protected Object findMetaObject(CoomaContext context, Object value) {
+        return getMetaObject(value);
+    }
+
+    public static String getMetaObject(Object value) {
+        if (value == null) {
+            return "ANY";
+        }
+        InteropLibrary interop = InteropLibrary.getFactory().getUncached(value);
+        if ( value instanceof IntRuntimeValue || interop.isNumber(value)) {
+            return Type.INT.value;
+        } else if (value instanceof StringRuntimeValue) {
+            return Type.String.value;
+        } else if (value instanceof ErrorRuntimeValue) {
+            return Type.Error.value;
+        } else if (interop.isNull(value)) {
+            return "NULL";
+        } else if (interop.isExecutable(value)) {
+            return "Function";
+        } else if (interop.hasMembers(value)) {
+            return "Object";
+        } else {
+            return "Unsupported";
+        }
+    }
+
+    public enum Type{
+        INT("Number"),
+        String("String"),
+        Error("Error");
+
+        final String value;
+
+        Type(java.lang.String msg) {
+            this.value = msg;
+        }
+
+        public java.lang.String getValue() {
+            return value;
+        }
+    }
 
 }

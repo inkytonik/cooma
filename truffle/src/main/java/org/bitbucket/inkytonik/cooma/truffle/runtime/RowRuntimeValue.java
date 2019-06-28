@@ -17,7 +17,7 @@ public class RowRuntimeValue extends RuntimeValue implements TruffleObject, Comp
 
     @Override
     public int compareTo(RowRuntimeValue rowRuntimeValue) {
-        //TODO: fixme
+        //TODO: fix this comparison
         return 0;
     }
 
@@ -38,5 +38,9 @@ public class RowRuntimeValue extends RuntimeValue implements TruffleObject, Comp
     public String print() {
         //text("{") <> ssep(v1.map(toDocField), text(",") <> space) <> text("}")
         return String.format("{%s}", this.toString()) ;
+    }
+
+    public static RowRuntimeValue empty(){
+        return new RowRuntimeValue(new FieldValueRuntime[]{});
     }
 }
