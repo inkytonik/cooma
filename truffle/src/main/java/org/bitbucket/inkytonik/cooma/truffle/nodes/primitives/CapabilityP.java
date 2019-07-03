@@ -26,8 +26,7 @@ public abstract class CapabilityP extends Primitive {
         return String.format("cap %s", cap);
     }
 
-    @Specialization(guards = "isHalt()")
-    public Object executeHalt(VirtualFrame frame) {
+    public Object execute(VirtualFrame frame) {
         return null;
     }
 

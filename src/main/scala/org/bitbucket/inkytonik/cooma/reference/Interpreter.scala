@@ -11,6 +11,7 @@
 package org.bitbucket.inkytonik.cooma
 package reference
 
+
 trait Interpreter {
 
     self : ReferenceBackend =>
@@ -362,4 +363,20 @@ trait Interpreter {
         def show = "select"
     }
 
+
+    def repl(env: Env, i: String, printValue: Boolean, config: Config, term: Term): Env = {
+        if (config.irPrint())
+            config.output().emitln(showTerm(term))
+        if (config.irASTPrint())
+            config.output().emitln(layout(any(term), 5))
+
+        val args = config.filenames()
+        val result = interpret(term, env, args)
+
+        if (printValue)
+            config.output().emitln(s"$i = ${showRuntimeValue(result)}")
+        else
+            config.output().emitln(i)
+        consEnv(env, i, result)
+    }
 }

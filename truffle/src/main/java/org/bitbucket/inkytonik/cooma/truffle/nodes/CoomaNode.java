@@ -6,32 +6,34 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
+import org.bitbucket.inkytonik.cooma.Utils;
 import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
+import org.graalvm.polyglot.Value;
 
 public class CoomaNode extends Node {
 
     private FrameSlot obtainRhoFrameSlot(VirtualFrame frame) {
-        return frame.getFrameDescriptor().findOrAddFrameSlot(CoomaLanguage.RHO, null, FrameSlotKind.Object);
+        return Utils.obtainRhoFrameSlot(frame);
     }
 
     protected Rho obtainRhoFromFrame(VirtualFrame frame) {
-        return (Rho) FrameUtil.getObjectSafe(frame, obtainRhoFrameSlot(frame));
+        return Utils.obtainRhoFromFrame(frame);
     }
 
     @SuppressWarnings("unchecked")
     protected <T extends RuntimeValue> T  obtainFromRho(VirtualFrame frame, String key) {
-        return (T) obtainRhoFromFrame(frame).get(key);
+        return Utils.obtainFromRho(frame, key);
     }
 
     protected void extendRho(VirtualFrame frame, String key, RuntimeValue value) {
-        replaceRho(frame, obtainRhoFromFrame(frame).extend(key, value));
+        Utils.extendRho(frame, key, value);
     }
 
     protected void replaceRho(VirtualFrame frame, Rho newRho) {
-        frame.setObject(obtainRhoFrameSlot(frame), newRho);
+        Utils.replaceRho(frame, newRho);
     }
 
     protected TruffleLanguage.ContextReference<CoomaContext> getContext(){

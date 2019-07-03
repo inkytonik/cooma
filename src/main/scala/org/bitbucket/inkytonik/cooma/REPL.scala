@@ -154,23 +154,9 @@ class REPL extends REPLBase[Config] {
     def process(program : Program, i : String, printValue : Boolean, config : Config) {
         if (config.coomaASTPrint())
             config.output().emitln(layout(any(program), 5))
-
         val term = compileStandalone(program)
 
-        if (config.irPrint())
-            config.output().emitln(showTerm(term))
-        if (config.irASTPrint())
-            config.output().emitln(layout(any(term), 5))
-
-        val args = config.filenames()
-        val result = interpret(term, currentDynamicEnv, args)
-
-        currentDynamicEnv = consEnv(currentDynamicEnv, i, result)
-
-        if (printValue)
-            config.output().emitln(s"$i = ${showRuntimeValue(result)}")
-        else
-            config.output().emitln(i)
+        currentDynamicEnv = repl(currentDynamicEnv, i, printValue, config, term)
     }
 
 }

@@ -11,11 +11,12 @@ import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer;
+import org.graalvm.polyglot.Source;
 
 
 @TruffleLanguage.Registration(id = CoomaLanguage.ID, name = "cooma", defaultMimeType = CoomaLanguage.MIME_TYPE,
         characterMimeTypes = CoomaLanguage.MIME_TYPE, contextPolicy = TruffleLanguage.ContextPolicy.SHARED,
-        fileTypeDetectors = CoomaFileDetector.class)
+        fileTypeDetectors = CoomaFileDetector.class, interactive = true)
 public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
     public static final String ID = "cooma";
@@ -87,11 +88,15 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
         }
         InteropLibrary interop = InteropLibrary.getFactory().getUncached(value);
         if ( value instanceof IntRuntimeValue || interop.isNumber(value)) {
-            return Type.INT.value;
+            return Type.Int.value;
         } else if (value instanceof StringRuntimeValue) {
             return Type.String.value;
         } else if (value instanceof ErrorRuntimeValue) {
             return Type.Error.value;
+        } else if (value instanceof ContinuationClosure) {
+            return Type.Closure.value;
+        } else if (value instanceof RowRuntimeValue) {
+            return Type.Row.value;
         } else if (interop.isNull(value)) {
             return "NULL";
         } else if (interop.isExecutable(value)) {
@@ -104,9 +109,11 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
     }
 
     public enum Type{
-        INT("Number"),
+        Int("Number"),
         String("String"),
-        Error("Error");
+        Error("Error"),
+        Row("Row"),
+        Closure("Closure");
 
         final String value;
 

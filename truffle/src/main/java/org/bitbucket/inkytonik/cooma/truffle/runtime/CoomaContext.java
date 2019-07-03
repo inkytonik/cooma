@@ -2,6 +2,7 @@ package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
 import com.oracle.truffle.api.TruffleLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
+import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 
 
 /**
@@ -14,9 +15,11 @@ import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 public final class CoomaContext {
 
     private final TruffleLanguage.Env env;
+    private final Rho rho;
 
     public CoomaContext(TruffleLanguage.Env env) {
         this.env = env;
+        rho = new Rho();
     }
 
     /**
@@ -24,5 +27,9 @@ public final class CoomaContext {
      */
     public TruffleLanguage.Env getEnv() {
         return env;
+    }
+
+    public Rho getRho() {
+        return rho;
     }
 }
