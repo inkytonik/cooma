@@ -40,7 +40,7 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
 
     def createREPL(config : Config) : REPL with Compiler with Backend =
         if (config.graalVM())
-             new REPL with Compiler with GraalVMBackend
+            new REPL with Compiler with GraalVMBackend
         else
             new REPL with Compiler with ReferenceBackend
 
