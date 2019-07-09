@@ -442,9 +442,11 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             for (aTest <- optionTests) {
                 val inputFilename = s"${aTest.inputBasename}.cooma"
                 val expectedFilename = s"${aTest.inputBasename}.${aTest.expectedExtension}"
-                filetest(s"${backend.name} file", resourcesPath, s"$resourcesPath/$expectedFilename",
-                    backend.options ++ List(aTest.option, s"$resourcesPath/$inputFilename") ++ aTest.args,
-                    expectedFilename)
+                val execute = !aTest.name.startsWith("IR") || backend.name == "Reference"
+                if (execute)
+                    filetest(s"${backend.name} file", resourcesPath, s"$resourcesPath/$expectedFilename",
+                        backend.options ++ List(aTest.option, s"$resourcesPath/$inputFilename") ++ aTest.args,
+                        expectedFilename)
             }
         }
 
