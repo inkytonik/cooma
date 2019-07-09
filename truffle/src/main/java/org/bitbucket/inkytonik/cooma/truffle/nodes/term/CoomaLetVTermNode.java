@@ -23,7 +23,7 @@ public final class CoomaLetVTermNode extends CoomaTermNode {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         RuntimeValue val = value.evaluate(frame);
-        extendRho(frame, identifier, val);
+        extendRho(identifier, val);
         return body.executeGeneric(frame);
     }
 }

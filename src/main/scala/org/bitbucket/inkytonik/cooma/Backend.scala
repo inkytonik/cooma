@@ -49,7 +49,6 @@ trait Backend {
     def emptyEnv : Env
 
     def interpret(term : Term, args : Seq[String], config : Config)
-    def repl(env: Env, i: String, printValue: Boolean, config: Config, term: Term): Env
-
+    def repl(env : Env, i : String, printValue : Boolean, config : Config, term : Term) : Env
 
 }

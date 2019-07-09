@@ -27,6 +27,6 @@ public class CoomaFunctionValueNode extends CoomaValueNode {
 
     @Override
     public FunctionClosure evaluate(VirtualFrame frame) {
-        return new FunctionClosure(obtainRhoFromFrame(frame), k, x, body);
+        return new FunctionClosure(obtainRho(), k, x, body);
     }
 }

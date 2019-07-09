@@ -561,6 +561,14 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                         g(1)
                     """,
                     "f\ng\nres0 = 10"
+                ),
+                REPLTest(
+                    "single expression",
+                    """
+                        10
+                        res0
+                    """,
+                    "res0 = 10\nres1 = 10"
                 )
 
             )

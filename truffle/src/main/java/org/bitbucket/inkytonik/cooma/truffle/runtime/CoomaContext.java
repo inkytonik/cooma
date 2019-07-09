@@ -15,7 +15,7 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 public final class CoomaContext {
 
     private final TruffleLanguage.Env env;
-    private final Rho rho;
+    private Rho rho;
 
     public CoomaContext(TruffleLanguage.Env env) {
         this.env = env;
@@ -31,5 +31,9 @@ public final class CoomaContext {
 
     public Rho getRho() {
         return rho;
+    }
+
+    public void setRho(Rho rho) {
+        this.rho = rho;
     }
 }

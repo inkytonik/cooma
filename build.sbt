@@ -8,8 +8,6 @@ enablePlugins(BuildInfoPlugin)
 buildInfoKeys := Seq[BuildInfoKey](name, version)
 buildInfoPackage := organization.value
 
-
-
 scalacOptions :=
     Seq (
         "-deprecation",
@@ -21,6 +19,7 @@ scalacOptions :=
         "-Xlint:-stars-align,_"
     )
 
+compileOrder := CompileOrder.Mixed
 
 logLevel := Level.Info
 
@@ -37,7 +36,7 @@ libraryDependencies ++=
         "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
         "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
         "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-        "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+        "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
     )
 
 testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
@@ -65,7 +64,7 @@ ratsUseKiama := 2
 
 // ScalariForm
 
-import sbt.Keys.unmanagedSourceDirectories
+import sbt.Keys.{resolvers, unmanagedSourceDirectories}
 import scalariform.formatter.preferences._
 import xsbti.compile
 
@@ -95,6 +94,11 @@ headerLicense := Some(HeaderLicense.Custom(
       |""".stripMargin
 ))
 
+
+lazy val root = project in file(".") dependsOn truffle
+
+lazy val utils = project in file ("utils")
+
 lazy val truffle = (project in file("truffle"))
   .settings(
     libraryDependencies ++=
@@ -106,8 +110,6 @@ lazy val truffle = (project in file("truffle"))
         "org.codehaus.jettison" % "jettison" % "1.3.7",
         "org.apache.commons" % "commons-lang3" % "3.9"
       ),
-    unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle/"
-  )
+    unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.12/classes/generated/org/bitbucket/inkytonik/cooma/truffle/"
+  ) dependsOn utils
 
-
-lazy val root = project in file(".") dependsOn truffle

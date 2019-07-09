@@ -102,7 +102,7 @@ class REPL extends REPLBase[Config] {
                 case REPLExpression(e) =>
                     val i = s"res$nResults"
                     nResults = nResults + 1
-                    process(Program(e), i, true, config)
+                    process(Program(Blk(LetVal(Val(i, e), Return(Var(i))))), i, true, config)
 
                 case REPLDef(fd @ Def(i, _, _)) =>
                     process(
@@ -111,7 +111,7 @@ class REPL extends REPLBase[Config] {
                     )
 
                 case REPLVal(Val(i, e)) =>
-                    process(Program(e), i, true, config)
+                    process(Program(Blk(LetVal(Val(i, e), Return(Var(i))))), i, true, config)
 
             }
 

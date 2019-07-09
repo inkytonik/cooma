@@ -29,18 +29,18 @@ public abstract class CoomaAppCTermNode extends CoomaCAppNode {
 
     @Specialization(guards = "isHalt()")
     public Object executeHalt(VirtualFrame frame) {
-        return obtainFromRho(frame, this.x).getValue();
+        return obtainFromRho(this.x).getValue();
     }
 
     @Specialization
     public Object execute(VirtualFrame frame) {
 
-        RuntimeValue value = obtainFromRho(frame, k);
+        RuntimeValue value = obtainFromRho(k);
         if (value instanceof ContinuationClosure) {
             ContinuationClosure closure = (ContinuationClosure) value;
             Rho p1 = closure.getRho()
-                    .extend(closure.getX(), obtainFromRho(frame, this.x));
-            replaceRho(frame, p1);
+                    .extend(closure.getX(), obtainFromRho(this.x));
+            replaceRho(p1);
             return closure.getZ().executeGeneric(frame);
         } else {
             throw new CoomaException(String.format("interpret AppC: %s is %s", k, value.print()), this);

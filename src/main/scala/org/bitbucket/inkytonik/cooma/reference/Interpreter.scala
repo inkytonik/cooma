@@ -11,14 +11,13 @@
 package org.bitbucket.inkytonik.cooma
 package reference
 
-
 trait Interpreter {
 
     self : ReferenceBackend =>
 
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.cooma.Util.fresh
-    import org.bitbucket.inkytonik.cooma.Utils.escape
+    import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 
@@ -363,8 +362,7 @@ trait Interpreter {
         def show = "select"
     }
 
-
-    def repl(env: Env, i: String, printValue: Boolean, config: Config, term: Term): Env = {
+    def repl(env : Env, i : String, printValue : Boolean, config : Config, term : Term) : Env = {
         if (config.irPrint())
             config.output().emitln(showTerm(term))
         if (config.irASTPrint())

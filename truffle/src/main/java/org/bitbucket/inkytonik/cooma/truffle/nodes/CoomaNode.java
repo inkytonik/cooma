@@ -15,25 +15,21 @@ import org.graalvm.polyglot.Value;
 
 public class CoomaNode extends Node {
 
-    private FrameSlot obtainRhoFrameSlot(VirtualFrame frame) {
-        return Utils.obtainRhoFrameSlot(frame);
-    }
-
-    protected Rho obtainRhoFromFrame(VirtualFrame frame) {
-        return Utils.obtainRhoFromFrame(frame);
+    protected Rho obtainRho(){
+        return getContext().get().getRho();
     }
 
     @SuppressWarnings("unchecked")
-    protected <T extends RuntimeValue> T  obtainFromRho(VirtualFrame frame, String key) {
-        return Utils.obtainFromRho(frame, key);
+    protected <T extends RuntimeValue> T  obtainFromRho(String key) {
+        return Utils.obtainFromRho(getContext().get(), key);
     }
 
-    protected void extendRho(VirtualFrame frame, String key, RuntimeValue value) {
-        Utils.extendRho(frame, key, value);
+    protected void extendRho(String key, RuntimeValue value) {
+        Utils.extendRho(getContext().get(), key, value);
     }
 
-    protected void replaceRho(VirtualFrame frame, Rho newRho) {
-        Utils.replaceRho(frame, newRho);
+    protected void replaceRho(Rho newRho) {
+        Utils.replaceRho(getContext().get(), newRho);
     }
 
     protected TruffleLanguage.ContextReference<CoomaContext> getContext(){

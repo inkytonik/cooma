@@ -10,6 +10,11 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 @NodeInfo(shortName = "PrimV", description = "Primitive value node")
 public class CoomaPrimitiveValue extends CoomaValueNode {
 
+    @Override
+    public boolean isAdoptable() {
+        return true;
+    }
+
     private final String[] xs;
     @Child
     private Primitive p;
@@ -21,11 +26,6 @@ public class CoomaPrimitiveValue extends CoomaValueNode {
 
     @Override
     public RuntimeValue evaluate(VirtualFrame frame) {
-        try {
-            return p.eval(obtainRhoFromFrame(frame), xs, getArgs());
-        } catch (Exception e) {
-            //TODO: Fix this exception
-            return null;
-        }
+        return p.eval(obtainRho(), xs, getArgs());
     }
 }

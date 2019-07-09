@@ -11,7 +11,6 @@ import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer;
-import org.graalvm.polyglot.Source;
 
 
 @TruffleLanguage.Registration(id = CoomaLanguage.ID, name = "cooma", defaultMimeType = CoomaLanguage.MIME_TYPE,

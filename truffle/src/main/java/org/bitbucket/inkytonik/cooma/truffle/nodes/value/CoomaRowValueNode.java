@@ -20,7 +20,7 @@ public class CoomaRowValueNode extends CoomaValueNode{
 
     @Override
     public RuntimeValue evaluate(VirtualFrame frame) {
-        List<FieldValueRuntime> fieldRL =  Arrays.stream(fs).map((FieldValue fs) -> new FieldValueRuntime(fs.getF(), obtainFromRho(frame, fs.getX()))).collect(Collectors.toList());
+        List<FieldValueRuntime> fieldRL =  Arrays.stream(fs).map((FieldValue fs) -> new FieldValueRuntime(fs.getF(), obtainFromRho(fs.getX()))).collect(Collectors.toList());
         return new RowRuntimeValue(fieldRL.toArray(new FieldValueRuntime[fs.length]));
     }
 }

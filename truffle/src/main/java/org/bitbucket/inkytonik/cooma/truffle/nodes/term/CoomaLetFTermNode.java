@@ -24,7 +24,7 @@ public class CoomaLetFTermNode extends CoomaTermNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
-        Rho p = obtainRhoFromFrame(frame);
+        Rho p = obtainRho();
         FuncDefs defs = new FuncDefs();
 
         for (CoomaDefTerm tmp : defTerms) {
@@ -34,7 +34,7 @@ public class CoomaLetFTermNode extends CoomaTermNode {
 
         final Rho finalP = p;
         defs.setP2(Lazy.of(()-> finalP));
-        replaceRho(frame, finalP);
+        replaceRho(finalP);
 
         return body.executeGeneric(frame);
     }

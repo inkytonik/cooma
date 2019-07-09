@@ -13,7 +13,7 @@ package reference
 
 trait ReferenceBackend extends Backend with Interpreter {
 
-    import org.bitbucket.inkytonik.cooma.Utils.escape
+    import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 

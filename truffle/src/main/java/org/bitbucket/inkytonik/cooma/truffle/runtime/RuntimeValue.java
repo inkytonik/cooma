@@ -1,6 +1,8 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
-public abstract class RuntimeValue  {
+import com.oracle.truffle.api.interop.TruffleObject;
+
+public abstract class RuntimeValue implements TruffleObject {
 
     public RuntimeValue getValue(){
         return this;
