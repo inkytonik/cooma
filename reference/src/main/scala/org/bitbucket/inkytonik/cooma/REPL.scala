@@ -16,10 +16,9 @@ class REPL extends REPLBase[Config] {
 
     self : Compiler with Backend =>
 
-    import org.bitbucket.inkytonik.cooma.BuildInfo
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.kiama.util.{Console, StringConsole, Source}
+    import org.bitbucket.inkytonik.kiama.util.{Console, Source, StringConsole}
 
     def createConfig(args : Seq[String]) : Config =
         new Config(args)
@@ -69,6 +68,7 @@ class REPL extends REPLBase[Config] {
     override def processline(source : Source, console : Console, config : Config) : Option[Config] = {
 
         import org.bitbucket.inkytonik.kiama.util.StringSource
+
         import scala.collection.mutable.ListBuffer
 
         def help() {

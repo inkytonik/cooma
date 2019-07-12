@@ -16,9 +16,10 @@ import org.bitbucket.inkytonik.kiama.util.TestCompilerWithConfig
 class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
 
     import java.nio.file.{Files, Paths}
+
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
-    import org.bitbucket.inkytonik.kiama.util.{FileSource, StringConsole}
     import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
+    import org.bitbucket.inkytonik.kiama.util.{FileSource, StringConsole}
     import org.rogach.scallop.throwError
 
     case class Backend(

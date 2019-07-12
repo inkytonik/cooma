@@ -1,9 +1,9 @@
 package org.bitbucket.inkytonik.cooma.graalvm
 
 import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage
+import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
-import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives.{ArgumentP, CapabilityP, ConsoleWriteP, ReaderReadP, RowConcatP, RowSelectP}
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer
 import org.bitbucket.inkytonik.cooma.{Backend, Config}

@@ -14,8 +14,6 @@ import org.bitbucket.inkytonik.kiama.util.REPLConfig
 
 class Config(args : Seq[String]) extends REPLConfig(args) {
 
-    import org.bitbucket.inkytonik.cooma.BuildInfo
-
     version(s"${BuildInfo.name} ${BuildInfo.version}\n")
 
     banner("Options:\n")

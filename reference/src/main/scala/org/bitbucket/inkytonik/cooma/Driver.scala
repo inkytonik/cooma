@@ -16,8 +16,6 @@ import org.bitbucket.inkytonik.kiama.util.CompilerBase
 
 class Driver extends CompilerBase[ASTNode, Program, Config] {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParser
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
     import org.bitbucket.inkytonik.cooma.reference.ReferenceBackend
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
