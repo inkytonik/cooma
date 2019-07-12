@@ -2,11 +2,12 @@ package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
 import com.oracle.truffle.api.interop.TruffleObject;
 
-public abstract class RuntimeValue implements TruffleObject {
+public abstract class RuntimeValue<T extends RuntimeValue<T>> implements Comparable<T>, TruffleObject  {
 
-    public RuntimeValue getValue(){
-        return this;
+    public T getValue(){
+        return (T) this;
     }
+
 
     public abstract String print();
 }

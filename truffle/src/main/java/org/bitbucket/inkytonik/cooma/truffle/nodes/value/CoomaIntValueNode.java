@@ -2,7 +2,6 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.IntRuntimeValue;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 public class CoomaIntValueNode extends CoomaValueNode {
 

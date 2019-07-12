@@ -67,7 +67,6 @@ trait GraalVMBackend extends Backend {
      * @return
      */
     def showTerm(t : Term) : String =
-        //TODO: print Term properly
         t.toString
 
     override type Primitive = org.bitbucket.inkytonik.cooma.truffle.nodes.primitives.Primitive
@@ -96,7 +95,7 @@ trait GraalVMBackend extends Backend {
         new RowSelectP()
     }
 
-    override type ValueR = RuntimeValue
+    override type ValueR = RuntimeValue[_]
 
     def showRuntimeValue(v : ValueR) : String = {
         //Runtime value prining is done at a TruffleLanguage level.
@@ -106,13 +105,17 @@ trait GraalVMBackend extends Backend {
     override type Env = Context
 
     def emptyEnv : Env = {
-        Context.newBuilder(CoomaLanguage.ID).build()
+        val context = Context.newBuilder(CoomaLanguage.ID).build()
+        println(s"== running on ${context.getEngine.getImplementationName} - ${context.getEngine.getVersion} - ${context.getEngine.getLanguages}")
+        context
     }
 
     def interpret(term : Term, args : Seq[String], config : Config) = {
         val context = Context.newBuilder(CoomaLanguage.ID)
             .arguments(CoomaLanguage.ID, args.toArray)
             .build()
+
+        println(s"== running on ${context.getEngine.getImplementationName} - ${context.getEngine.getVersion} - ${context.getEngine.getLanguages}")
 
         val result : polyglot.Value = context.eval(CoomaLanguage.ID, CoomaNodeXmlSerializer.toXML(term))
 

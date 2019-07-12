@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 @ExportLibrary(InteropLibrary.class)
-public class IntRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<IntRuntimeValue> {
+public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements TruffleObject{
     private final Integer innerValue;
 
     @Override

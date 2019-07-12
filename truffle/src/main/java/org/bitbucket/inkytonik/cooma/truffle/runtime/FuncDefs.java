@@ -8,7 +8,7 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.value.CoomaDefTerm;
 
 import java.util.HashMap;
 
-public class FuncDefs  extends FuntionClosureHolder{
+public class FuncDefs  extends FunctionClosureHolder<FuncDefs> {
 
     @Setter
     private Lazy<Rho> p2;
@@ -21,5 +21,10 @@ public class FuncDefs  extends FuntionClosureHolder{
     public FunctionClosure get(String key) {
         CoomaDefTerm def = defs.get(key);
         return new FunctionClosure(p2.get(), def.getK(), def.getX(), def.getBody());
+    }
+
+    @Override
+    public int compareTo(FuncDefs funcDefs) {
+        return defs.entrySet().containsAll(funcDefs.getDefs().entrySet()) ? 0 : -1;
     }
 }

@@ -10,11 +10,6 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 @NodeInfo(shortName = "PrimV", description = "Primitive value node")
 public class CoomaPrimitiveValue extends CoomaValueNode {
 
-    @Override
-    public boolean isAdoptable() {
-        return true;
-    }
-
     private final String[] xs;
     @Child
     private Primitive p;

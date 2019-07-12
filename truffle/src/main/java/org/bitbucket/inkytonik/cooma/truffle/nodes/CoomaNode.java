@@ -1,17 +1,12 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes;
 
 import com.oracle.truffle.api.TruffleLanguage;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotKind;
-import com.oracle.truffle.api.frame.FrameUtil;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import org.bitbucket.inkytonik.cooma.Utils;
 import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
-import org.graalvm.polyglot.Value;
 
 public class CoomaNode extends Node {
 

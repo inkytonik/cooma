@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class ErrorRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<ErrorRuntimeValue>  {
+public class ErrorRuntimeValue extends RuntimeValue<ErrorRuntimeValue> implements TruffleObject {
 
     private final String message;
 

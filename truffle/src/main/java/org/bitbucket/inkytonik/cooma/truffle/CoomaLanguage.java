@@ -59,8 +59,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
     protected boolean isObjectOfLanguage(Object object) {
         if (!(object instanceof TruffleObject)) {
             return false;
-        } else return object instanceof IntRuntimeValue || object instanceof StringRuntimeValue || RuntimeValue.class.isAssignableFrom(object.getClass());
-        //TODO: add the rest of the checks as seen in SLLanguage
+        } else return RuntimeValue.class.isAssignableFrom(object.getClass());
     }
 
     @Override

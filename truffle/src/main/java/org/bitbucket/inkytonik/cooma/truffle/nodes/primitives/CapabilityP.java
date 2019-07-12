@@ -1,20 +1,18 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.bitbucket.inkytonik.cooma.Util;
 import org.bitbucket.inkytonik.cooma.truffle.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
+import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaAppCTermNodeGen;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaLetVTermNode;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value.CoomaPrimitiveValue;
-import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaAppCTermNodeGen;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
-
-
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import static org.bitbucket.inkytonik.cooma.Util.fresh;
 
 @RequiredArgsConstructor
 public class CapabilityP extends Primitive {
@@ -55,10 +53,10 @@ public class CapabilityP extends Primitive {
                 }
                 break;
 
-            case "Reader" :
-                if (Files.isReadable(Paths.get(argument))){
+            case "Reader":
+                if (Files.isReadable(Paths.get(argument))) {
                     result = makeCapability("read", new ReaderReadP(argument));
-                }else{
+                } else {
                     result = new ErrorRuntimeValue(String.format("Reader capability unavailable: can't read %s", argument));
                 }
                 break;
@@ -70,9 +68,9 @@ public class CapabilityP extends Primitive {
     }
 
     private RowRuntimeValue makeCapability(String field, Primitive primitive) {
-        val k = Util.fresh("k");
-        val y = Util.fresh("y");
-        val p = Util.fresh("p");
+        val k = fresh("k");
+        val y = fresh("y");
+        val p = fresh("p");
 
         val term = new CoomaLetVTermNode(p, new CoomaPrimitiveValue(primitive, new String[]{y}),
                 CoomaAppCTermNodeGen.create(k, p));
@@ -82,12 +80,8 @@ public class CapabilityP extends Primitive {
 
         return new RowRuntimeValue(
                 new FieldValueRuntime[]{
-                        new FieldValueRuntime(
-                                field,
-                                new FunctionClosure(
-                                        new Rho(), k, y, term)
-                                )
-                        });
+                        new FieldValueRuntime(field, new FunctionClosure(new Rho(), k, y, term))
+                });
     }
 
 

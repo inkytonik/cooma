@@ -8,7 +8,7 @@ import lombok.val;
 
 @Value
 @EqualsAndHashCode(callSuper=false)
-public class RowRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<RowRuntimeValue> {
+public class RowRuntimeValue extends RuntimeValue<RowRuntimeValue> implements TruffleObject {
 
     private final FieldValueRuntime[] fields;
 
@@ -18,8 +18,21 @@ public class RowRuntimeValue extends RuntimeValue implements TruffleObject, Comp
 
     @Override
     public int compareTo(RowRuntimeValue rowRuntimeValue) {
-        //TODO: fix this comparison
-        return 0;
+
+        if (this.getFields().length == rowRuntimeValue.getFields().length){
+
+            for (int i = 0; i < this.getFields().length ; i++) {
+                FieldValueRuntime local = this.getFields()[i];
+                FieldValueRuntime theirs = rowRuntimeValue.getFields()[i];
+                if (local.compareTo(theirs) != 0) {
+                    return -1;
+                }
+            }
+            return 0;
+        } else{
+            return -1;
+        }
+
     }
 
 
