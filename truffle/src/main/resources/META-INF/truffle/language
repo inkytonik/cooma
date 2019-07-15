@@ -1,0 +1,12 @@
+#Manually created
+language1.characterMimeType.0=application/x-cooma
+language1.className=org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage
+language1.defaultMimeType=application/x-cooma
+language1.fileTypeDetector0=org.bitbucket.inkytonik.cooma.truffle.CoomaFileDetector
+language1.id=cooma
+language1.implementationName=
+language1.interactive=true
+language1.internal=false
+language1.name=cooma
+language1.version=inherit
+

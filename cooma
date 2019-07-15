@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+MAIN_CLASS="org.bitbucket.inkytonik.cooma.CoomaIRTruffleMain"
+SCRIPT_HOME="$(cd "$(dirname "$0")" && pwd -P)"
+
+VERSION="19.0.0"
+GRAALVM_VERSION=$(grep "GRAALVM_VERSION" "$SCRIPT_HOME/../release" 2> /dev/null)
+
+#######################################################################
+# This first code determines GraalVM version.
+#
+# Locations of the language and launcher jars as well as the java command are
+# different if I'm running from the repository or as a component in GraalVM
+#######################################################################
+if [[ "$GRAALVM_VERSION" != "" ]]; then
+    LANGUAGE_PATH="$SCRIPT_HOME/../jre/languages/cooma/truffle.jar"
+    LAUNCHER_PATH="$SCRIPT_HOME/../jre/languages/cooma/launcher/trufflelauncher.jar"
+    JAVACMD="$SCRIPT_HOME/java"
+    GRAALVM_VERSION=$(echo "$GRAALVM_VERSION" | awk 'BEGIN {FS="="} {print $2}')
+    if [[ "$GRAALVM_VERSION" != "$VERSION" ]]; then
+        echo "Installed in wrong version of GraalVM. Expected: $VERSION, found $GRAALVM_VERSION"
+        exit 1
+    fi
+else
+    LANGUAGE_PATH="$SCRIPT_HOME/truffle/target/scala-2.12/truffle.jar"
+    LAUNCHER_PATH="$SCRIPT_HOME/truffle-launcher/target/scala-2.12/trufflelauncher.jar"
+
+    # Check the GraalVM version in JAVA_HOME
+    if [[ "$JAVA_HOME" != "" ]]; then
+        GRAALVM_VERSION=$(grep "GRAALVM_VERSION" "$JAVA_HOME"/release)
+        if [[ "$GRAALVM_VERSION" != "" ]]; then
+            GRAALVM_VERSION=$(echo "$GRAALVM_VERSION" | awk 'BEGIN {FS="="} {print $2}')
+            if [[ "$GRAALVM_VERSION" != "$VERSION" ]]; then
+                echo "Wrong version of GraalVM in \$JAVA_HOME. Expected: $VERSION, found $GRAALVM_VERSION"
+                exit 1
+            fi
+        fi
+        JAVACMD=${JAVACMD:=$JAVA_HOME/bin/java}
+        if [[ ! -f $LANGUAGE_PATH ]]; then
+            echo "Could not find language on $LANGUAGE_PATH. Did you run mvn package?"
+            exit 1
+        fi
+        if [[ ! -f $LAUNCHER_PATH ]]; then
+            echo "Could not find launcher on $LAUNCHER_PATH. Did you run mvn package?"
+            exit 1
+        fi
+    else
+        echo "JAVA_HOME is not set"
+        exit 1
+    fi
+fi
+
+echo "GraalVM version $GRAALVM_VERSION"
+echo "Java command $JAVACMD"
+echo "Language path $LANGUAGE_PATH"
+
+#######################################################################
+# Parse arguments, prepare Java command and execute
+#######################################################################
+if [[ "$GRAALVM_VERSION" != "" ]]; then
+    echo "Running on GraalVM"
+    PROGRAM_ARGS=()
+    JAVA_ARGS=()
+
+    "$JAVACMD" "${JAVA_ARGS[@]}" -Dtruffle.class.path.append="$LANGUAGE_PATH" -cp "$LAUNCHER_PATH" "$MAIN_CLASS" "${PROGRAM_ARGS[@]}"
+else
+    echo "Warning: Could not find GraalVM on $JAVA_HOME. Running on JDK without support for compilation."
+    echo
+    PROGRAM_ARGS=()
+    JAVA_ARGS=()
+
+    if [[ ! -d $HOME/.m2 ]]; then
+        echo "Could not find mvn cache at $HOME/.m2"
+        exit 1
+    fi
+    GRAAL_SDK_PATH="$HOME/.m2/repository/org/graalvm/sdk/graal-sdk/$VERSION/graal-sdk-$VERSION.jar"
+    TRUFFLE_API_PATH="$HOME/.m2/repository/org/graalvm/truffle/truffle-api/$VERSION/truffle-api-$VERSION.jar"
+    "$JAVACMD" "${JAVA_ARGS[@]}" -cp "$GRAAL_SDK_PATH":"$LAUNCHER_PATH":"$LANGUAGE_PATH":"$TRUFFLE_API_PATH" "$MAIN_CLASS" "${PROGRAM_ARGS[@]}"
+fi
+
+

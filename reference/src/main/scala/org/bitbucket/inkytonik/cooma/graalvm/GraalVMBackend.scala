@@ -105,17 +105,13 @@ trait GraalVMBackend extends Backend {
     override type Env = Context
 
     def emptyEnv : Env = {
-        val context = Context.newBuilder(CoomaLanguage.ID).build()
-        println(s"== running on ${context.getEngine.getImplementationName} - ${context.getEngine.getVersion} - ${context.getEngine.getLanguages}")
-        context
+        Context.newBuilder(CoomaLanguage.ID).build()
     }
 
     def interpret(term : Term, args : Seq[String], config : Config) = {
         val context = Context.newBuilder(CoomaLanguage.ID)
             .arguments(CoomaLanguage.ID, args.toArray)
             .build()
-
-        println(s"== running on ${context.getEngine.getImplementationName} - ${context.getEngine.getVersion} - ${context.getEngine.getLanguages}")
 
         val result : polyglot.Value = context.eval(CoomaLanguage.ID, CoomaNodeXmlSerializer.toXML(term))
 

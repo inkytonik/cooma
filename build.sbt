@@ -1,5 +1,8 @@
-import sbt.Keys.unmanagedSourceDirectories
+import sbt.Keys.{name, unmanagedSourceDirectories}
+import sbtassembly.AssemblyPlugin.autoImport._
 import scalariform.formatter.preferences._
+
+import scala.sys.process._
 
 name := "cooma"
 version := "0.1.0"
@@ -64,46 +67,45 @@ lazy val commonsettings = Seq(
        |License, v. 2.0. If a copy of the MPL was not distributed with this
        |file, You can obtain one at http://mozilla.org/MPL/2.0/.
        |""".stripMargin
-  ))
-
+  )),
 )
 
-
-//run / javaOptions ++=  Seq(
-//  "-Dgraal.Dump",
-//  "-Dgraal.TruffleBackgroundCompilation=false",
-//  "-Dgraal.TraceTruffleCompilation=true",
-//  "-Dgraal.TraceTruffleCompilationDetails=true")
-//run / javaHome := Some(file("/home/diego/dev/graalvm"))
-
 // Assembly
-
-
-// Modules
-
 lazy val assemblySettings = Seq(
   assemblyJarName in assembly := name.value + ".jar",
   assemblyMergeStrategy in assembly := {
-    case PathList("META-INF", xs@_*) => MergeStrategy.discard
-    case _ => MergeStrategy.first
-  }
+    case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+    case PathList("META-INF", xs@_*) => MergeStrategy.first
+    case x => MergeStrategy.first
+  },
+  test in assembly := {},
+
 )
 
+// Modules
 lazy val root = (project in file("."))
-  .enablePlugins(BuildInfoPlugin)
-  .settings(commonsettings)
-  .aggregate(
+  .disablePlugins(sbtassembly.AssemblyPlugin)
+  .settings(
+    commonsettings,
+    mainClass in Compile := (mainClass in Compile in reference).value
+  )
+  .dependsOn(
     reference,
     truffle,
+    trufflelauncher,
+    trufflecomponent,
     utils
   )
-
+  .aggregate(
+    reference
+  )
 
 lazy val reference = (project in file("reference"))
   .enablePlugins(BuildInfoPlugin)
+  .disablePlugins(sbtassembly.AssemblyPlugin)
   .settings(
-    assemblySettings,
     commonsettings,
+    mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main"),
     libraryDependencies ++=
       Seq(
         "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
@@ -121,7 +123,7 @@ lazy val truffle = (project in file("truffle"))
     libraryDependencies ++=
       Seq(
         "org.projectlombok" % "lombok" % "1.16.16",
-        "org.graalvm.truffle" % "truffle-api" % "19.0.0",
+        "org.graalvm.truffle" % "truffle-api" % "19.0.0" ,
         "org.graalvm.truffle" % "truffle-dsl-processor" % "19.0.0",
         "com.thoughtworks.xstream" % "xstream" % "1.4.3",
         "org.codehaus.jettison" % "jettison" % "1.3.7",
@@ -129,7 +131,26 @@ lazy val truffle = (project in file("truffle"))
       )
   ) dependsOn utils
 
-lazy val utils = project in file("utils")
+lazy val utils = (project in file("utils"))
+  .disablePlugins(sbtassembly.AssemblyPlugin)
+
+lazy val trufflelauncher = (project in file("truffle-launcher"))
+  .settings(
+    assemblySettings,
+    libraryDependencies ++=
+      Seq("org.graalvm.sdk" % "graal-sdk" % "19.0.0")
+  )
+
+lazy val buildComponent = taskKey[Unit]("Generates the component jar for GraalVM installation.")
+
+lazy val trufflecomponent = (project in file("truffle-component"))
+  .disablePlugins(sbtassembly.AssemblyPlugin)
+  .settings(
+    buildComponent := {
+      baseDirectory.value + "/make_component.sh" !
+    },
+    Compile / compile := (Compile / compile).dependsOn(buildComponent).value,
+  )
 
 
 
