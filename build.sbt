@@ -74,12 +74,12 @@ lazy val commonsettings = Seq(
 lazy val assemblySettings = Seq(
   assemblyJarName in assembly := name.value + ".jar",
   assemblyMergeStrategy in assembly := {
+    case PathList("META-INF", "truffle",  "language" ) => MergeStrategy.first
     case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
     case PathList("META-INF", xs@_*) => MergeStrategy.first
     case x => MergeStrategy.first
   },
   test in assembly := {},
-
 )
 
 // Modules
@@ -97,7 +97,10 @@ lazy val root = (project in file("."))
     utils
   )
   .aggregate(
-    reference
+    reference,
+    truffle,
+    trufflelauncher,
+    trufflecomponent
   )
 
 lazy val reference = (project in file("reference"))
@@ -143,13 +146,21 @@ lazy val trufflelauncher = (project in file("truffle-launcher"))
 
 lazy val buildComponent = taskKey[Unit]("Generates the component jar for GraalVM installation.")
 
+lazy val installGraalVMComponent = taskKey[Unit]("Installs the generated component in the GraalVM")
+
+
 lazy val trufflecomponent = (project in file("truffle-component"))
-  .disablePlugins(sbtassembly.AssemblyPlugin)
   .settings(
     buildComponent := {
+      val files = assembly.all(ScopeFilter(inProjects(truffle, trufflelauncher))).value
       baseDirectory.value + "/make_component.sh" !
     },
-    Compile / compile := (Compile / compile).dependsOn(buildComponent).value,
+    installGraalVMComponent := {
+      buildComponent.value
+      baseDirectory.value + "/install_component.sh" !
+    }
+
+
   )
 
 
