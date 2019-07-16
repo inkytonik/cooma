@@ -17,6 +17,8 @@ trait ReferenceBackend extends Backend with Interpreter {
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 
+    override def backendName : String = "Reference"
+
     sealed abstract class Value
     case class FunV(k : String, x : String, body : Term) extends Value
     case class IntV(i : Int) extends Value

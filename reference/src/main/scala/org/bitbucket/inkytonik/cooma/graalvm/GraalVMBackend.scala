@@ -13,6 +13,8 @@ import org.graalvm.polyglot.Context
 
 trait GraalVMBackend extends Backend {
 
+    override def backendName : String = "Graal"
+
     // Terms
     override type Term = CoomaTermNode
 

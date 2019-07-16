@@ -23,7 +23,7 @@ class REPL extends REPLBase[Config] {
     def createConfig(args : Seq[String]) : Config =
         new Config(args)
 
-    val banner = s"${BuildInfo.name} ${BuildInfo.version} REPL \n\nEnter definitions or expressions (:help for commands)"
+    val banner = s"Cooma ${BuildInfo.version} REPL - ${this.backendName} backend \n\nEnter definitions or expressions (:help for commands)"
 
     override val prompt = "\ncooma> "
 
