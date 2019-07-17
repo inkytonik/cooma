@@ -16,6 +16,7 @@ public final class ConsoleWriteP extends Primitive {
     private final String filename;
 
     public ConsoleWriteP(String filename) {
+        //TODO: change this for a IO stream
         this.filename = filename;
     }
 

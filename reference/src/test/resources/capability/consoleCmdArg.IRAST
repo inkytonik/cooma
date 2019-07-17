@@ -5,10 +5,10 @@ LetV(
             0),
         Vector()),
     LetV(
-        "c",
+        "w",
         PrmV(
             CapabilityP(
-                "Console"),
+                "Writer"),
             Vector(
                 "x1")),
         LetV(
@@ -16,7 +16,7 @@ LetV(
             PrmV(
                 RowSelectP(),
                 Vector(
-                    "c",
+                    "w",
                     "write")),
             LetV(
                 "x5",

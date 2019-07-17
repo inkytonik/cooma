@@ -182,32 +182,44 @@ trait Interpreter {
                     sys.error(s"interpretPrim console: got non-String $v")
             }
 
-        def makeCapability(field : String, primitive : Primitive) : RowR = {
-            val k = fresh("k")
-            val y = fresh("y")
-            val p = fresh("p")
-            RowR(Vector(
-                FldR(
-                    field,
-                    ClsR(NilE(), k, y,
-                        LetV(p, PrmV(primitive, Vector(y)),
-                            AppC(k, p)))
-                )
-            ))
+        def makeCapability(pairs : Vector[(String, Primitive)]) : RowR = {
+            RowR(
+                pairs.map(pair => {
+                    val k = fresh("k")
+                    val y = fresh("y")
+                    val p = fresh("p")
+
+                    FldR(
+                        pair._1,
+                        ClsR(NilE(), k, y,
+                            LetV(p, PrmV(pair._2, Vector(y)),
+                                AppC(k, p)))
+                    )
+                })
+            )
         }
 
         name match {
-            case "Console" =>
+            case "Writer" =>
                 if (Files.isWritable(Paths.get(argument)))
-                    makeCapability("write", ConsoleWriteP(argument))
+                    makeCapability(Vector(("write", ConsoleWriteP(argument))))
                 else
-                    ErrR(s"Console capability unavailable: can't write $argument")
+                    ErrR(s"$name capability unavailable: can't write $argument")
 
             case "Reader" =>
                 if (Files.isReadable(Paths.get(argument)))
-                    makeCapability("read", ReaderReadP(argument))
+                    makeCapability(Vector(("read", ReaderReadP(argument))))
                 else
-                    ErrR(s"Reader capability unavailable: can't read $argument")
+                    ErrR(s"$name capability unavailable: can't read $argument")
+
+            case "ReaderWriter" =>
+                if (Files.isReadable(Paths.get(argument)) && Files.isWritable(Paths.get(argument)))
+                    makeCapability(Vector(
+                        ("read", ReaderReadP(argument)),
+                        ("write", ConsoleWriteP(argument))
+                    ))
+                else
+                    ErrR(s"$name capability unavailable: can't read & write $argument")
 
             case _ =>
                 sys.error(s"capability: unknown primitive $name")

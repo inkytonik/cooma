@@ -29,7 +29,7 @@ public abstract class CoomaAppCTermNode extends CoomaCAppNode {
 
     @Specialization(guards = "isHalt()")
     public Object executeHalt(VirtualFrame frame) {
-        return obtainFromRho(this.x).getValue();
+        return obtainFromRho(this.x);
     }
 
     @Specialization

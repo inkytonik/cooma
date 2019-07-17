@@ -70,6 +70,7 @@ lazy val commonsettings = Seq(
   )),
 )
 
+
 // Assembly
 lazy val assemblySettings = Seq(
   assemblyJarName in assembly := name.value + ".jar",
@@ -159,7 +160,6 @@ lazy val trufflecomponent = (project in file("truffle-component"))
       buildComponent.value
       baseDirectory.value + "/install_component.sh" !
     }
-
 
   )
 

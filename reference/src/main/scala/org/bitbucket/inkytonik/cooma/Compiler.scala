@@ -47,7 +47,7 @@ trait Compiler {
 
         def compileTopArg(a : String, t : Type, e : Expression) : Term =
             t match {
-                case IdnT(n) if (n == "Console") || (n == "Reader") =>
+                case IdnT(n) if (n == "Writer") || (n == "Reader") || (n == "ReaderWriter") =>
                     val x = fresh("x")
                     letV(x, prmV(argumentP(nArg), Vector()),
                         letV(a, prmV(capabilityP(n), Vector(x)),
@@ -69,7 +69,6 @@ trait Compiler {
             case _ =>
                 compileHalt(exp)
         }
-
     }
 
     def compile(exp : Expression, kappa : String => Term) : Term =
@@ -128,7 +127,7 @@ trait Compiler {
 
     def compileFun(x : String, t : Type, e : Expression, kappa : String => Term) : Term =
         t match {
-            case IdnT(n) if (n == "Console") || (n == "Reader") =>
+            case IdnT(n) if (n == "Writer") || (n == "Reader") || (n == "ReaderWriter") =>
                 val f = fresh("f")
                 val j = fresh("j")
                 val y = fresh("y")

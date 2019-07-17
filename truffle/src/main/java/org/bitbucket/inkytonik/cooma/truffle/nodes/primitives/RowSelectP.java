@@ -25,7 +25,8 @@ public class RowSelectP extends Primitive {
 
         RuntimeValue row = rho.get(rowId);
         if (row instanceof RowRuntimeValue){
-            Optional<FieldValueRuntime> opV = Arrays.stream(((RowRuntimeValue) row).getFields())
+            Optional<FieldValueRuntime> opV = Arrays
+                    .stream(((RowRuntimeValue) row).getFields())
                     .filter( (FieldValueRuntime fieldR) -> fieldR.getX().equals(fieldId) )
                     .findFirst();
 

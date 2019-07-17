@@ -656,7 +656,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             test(s"${backend.name} run: $name") {
                 val result = runFile(filename, backend.options, Seq())
-                result shouldBe s"cooma: Console capability unavailable: can't write $console\n"
+                result shouldBe s"cooma: Writer capability unavailable: can't write $console\n"
             }
         }
 
@@ -712,7 +712,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             test(s"${backend.name} run: $name: non-existent console") {
                 val console = "notThere.txt"
                 val result = runFile(filename, backend.options, Seq(console))
-                result shouldBe s"cooma: Console capability unavailable: can't write $console\n"
+                result shouldBe s"cooma: Writer capability unavailable: can't write $console\n"
                 Files.exists(Paths.get(console)) shouldBe false
             }
 
@@ -756,7 +756,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 createFile(reader, "")
                 val console = "notThere.txt"
                 val result = runFile(filename, backend.options, Seq(console, reader))
-                result shouldBe s"cooma: Console capability unavailable: can't write $console\n"
+                result shouldBe s"cooma: Writer capability unavailable: can't write $console\n"
                 Files.exists(Paths.get(console)) shouldBe false
                 deleteFile(console)
             }
@@ -779,6 +779,29 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 createFile(console, "")
                 val result = runFile(filename, backend.options, Seq(console))
                 result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 1)\n"
+                deleteFile(console)
+            }
+        }
+
+        {
+            val filename = "src/test/resources/capability/consoleReaderWriterInternalArg.cooma"
+            val name = s"console internal argument reader writer ($filename)"
+            val console = "/tmp/coomaTest.txt"
+            val content = "Internal reader writer!\n"
+
+            test(s"${backend.name} run: $name") {
+                createFile(console, "")
+                val result = runFile(filename, backend.options, Seq())
+                result shouldBe ""
+                FileSource(console).content shouldBe content
+                deleteFile(console)
+            }
+
+            test(s"${backend.name} run: $name: result") {
+                createFile(console, "")
+                val result = runFile(filename, backend.options ++ Seq("-r"), Seq())
+                result shouldBe "{}\n"
+                FileSource(console).content shouldBe content
                 deleteFile(console)
             }
         }

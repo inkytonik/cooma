@@ -2,13 +2,13 @@ Program(
     Fun(
         Vector(
             Argument(
-                "c",
+                "w",
                 IdnT(
-                    "Console"))),
+                    "Writer"))),
         App(
             Sel(
                 Var(
-                    "c"),
+                    "w"),
                 "write"),
             Vector(
                 Str(
