@@ -125,7 +125,7 @@ trait ReferenceBackend extends Backend with Interpreter {
 
     def toDocDefTerm(defTerm : DefTerm) : Doc =
         line <> value(defTerm.f) <+> value(defTerm.k) <+> value(defTerm.x) <+>
-            text("=") <+> toDocTerm(defTerm.body)
+            text("=") <+> align(toDocTerm(defTerm.body))
 
     def toDocValue(v : Value) : Doc =
         v match {
