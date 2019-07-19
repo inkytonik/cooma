@@ -1,0 +1,4 @@
+{
+  def fr (w : Writer) = w.write("Internal!\n")
+  fr("/tmp/coomaTest.txt")
+}

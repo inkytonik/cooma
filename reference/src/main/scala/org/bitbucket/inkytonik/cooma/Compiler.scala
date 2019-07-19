@@ -37,6 +37,12 @@ trait Compiler {
     }
 
     /**
+     * Name of capability type?
+     */
+    def isCapabilityName(n : String) : Boolean =
+        (n == "Writer") || (n == "Reader") || (n == "ReaderWriter")
+
+    /**
      * Compile an expression to produce its value via the halt
      * continuation.
      */
@@ -47,7 +53,7 @@ trait Compiler {
 
         def compileTopArg(a : String, t : Type, e : Expression) : Term =
             t match {
-                case IdnT(n) if (n == "Writer") || (n == "Reader") || (n == "ReaderWriter") =>
+                case IdnT(n) if isCapabilityName(n) =>
                     val x = fresh("x")
                     letV(x, prmV(argumentP(nArg), Vector()),
                         letV(a, prmV(capabilityP(n), Vector(x)),
@@ -125,16 +131,20 @@ trait Compiler {
 
         }
 
+    def compileCapFun(n : String, x : String, e : Expression, kappa : String => Term) : Term = {
+        val f = fresh("f")
+        val j = fresh("j")
+        val y = fresh("y")
+        letV(f, funV(j, y,
+            letV(x, prmV(capabilityP(n), Vector(y)),
+                tailCompile(e, j))),
+            kappa(f))
+    }
+
     def compileFun(x : String, t : Type, e : Expression, kappa : String => Term) : Term =
         t match {
-            case IdnT(n) if (n == "Writer") || (n == "Reader") || (n == "ReaderWriter") =>
-                val f = fresh("f")
-                val j = fresh("j")
-                val y = fresh("y")
-                letV(f, funV(j, y,
-                    letV(x, prmV(capabilityP(n), Vector(y)),
-                        tailCompile(e, j))),
-                    kappa(f))
+            case IdnT(n) if isCapabilityName(n) =>
+                compileCapFun(n, x, e, kappa)
 
             case _ =>
                 val f = fresh("f")
@@ -160,17 +170,24 @@ trait Compiler {
                 compile(e, kappa)
         }
 
-    def compileDef(fd : FunctionDefinition) : DefTerm =
+    def compileDefBody(args : Vector[Argument], e : Expression, k : String) : Term =
+        if (args.isEmpty)
+            tailCompile(e, k)
+        else
+            tailCompile(Fun(args, e), k)
+
+    def compileDef(fd : FunctionDefinition) : DefTerm = {
+        val k = fresh("k")
         fd match {
+            case Def(f, Argument(x, IdnT(n)) +: otherArgs, e) if isCapabilityName(n) =>
+                val y = fresh("y")
+                defTerm(f, k, y, letV(x, prmV(capabilityP(n), Vector(y)),
+                    compileDefBody(otherArgs, e, k)))
+
             case Def(f, Argument(x, _) +: otherArgs, e) =>
-                val k = fresh("k")
-                val body =
-                    if (otherArgs.isEmpty)
-                        tailCompile(e, k)
-                    else
-                        tailCompile(Fun(otherArgs, e), k)
-                defTerm(f, k, x, body)
+                defTerm(f, k, x, compileDefBody(otherArgs, e, k))
         }
+    }
 
     def compileRow(
         fields : Vector[Field],
@@ -238,16 +255,20 @@ trait Compiler {
                     appC(k, x))
         }
 
+    def tailCompileCapFun(n : String, x : String, e : Expression, k : String) : Term = {
+        val f = fresh("f")
+        val j = fresh("j")
+        val y = fresh("y")
+        letV(f, funV(j, y,
+            letV(x, prmV(capabilityP(n), Vector(y)),
+                tailCompile(e, j))),
+            appC(k, x))
+    }
+
     def tailCompileFun(x : String, t : Type, e : Expression, k : String) : Term =
         t match {
-            case IdnT(n) if (n == "Console") || (n == "Reader") =>
-                val f = fresh("f")
-                val j = fresh("j")
-                val y = fresh("y")
-                letV(f, funV(j, y,
-                    letV(x, prmV(capabilityP(n), Vector(y)),
-                        tailCompile(e, j))),
-                    appC(k, f))
+            case IdnT(n) if isCapabilityName(n) =>
+                tailCompileCapFun(n, x, e, k)
 
             case _ =>
                 val f = fresh("f")

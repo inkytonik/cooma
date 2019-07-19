@@ -45,6 +45,7 @@
         "letv",
         "liu",
         "lv",
+        "macquarie",
         "makeast",
         "mantirosian",
         "mc",
@@ -75,5 +76,8 @@
         "xms",
         "xmx",
         "xs"
-    ]
+    ],
+    "atlascode.jira.workingSite": {
+        "baseUrlSuffix": "atlassian.net"
+    }
 }
