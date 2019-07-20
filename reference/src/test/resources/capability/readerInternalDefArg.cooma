@@ -1,0 +1,4 @@
+{
+    def fr (r : Reader) = r.read({})
+    fr("/tmp/coomaTest.txt")
+}
