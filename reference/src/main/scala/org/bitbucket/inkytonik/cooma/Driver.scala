@@ -38,9 +38,9 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
 
     def createREPL(config : Config) : REPL with Compiler with Backend =
         if (config.graalVM())
-            new REPL with Compiler with GraalVMBackend
+            new GraalVMBackend(config) with REPL with Compiler
         else
-            new REPL with Compiler with ReferenceBackend
+            new ReferenceBackend(config) with REPL with Compiler
 
     override def run(config : Config) {
         if (config.filenames().isEmpty) {
@@ -70,7 +70,7 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
 
     def process(source : Source, prog : Program, config : Config) {
 
-        val system = if (config.graalVM()) new Compiler with GraalVMBackend else new Compiler with ReferenceBackend
+        val system = if (config.graalVM()) new GraalVMBackend(config) with Compiler else new ReferenceBackend(config) with Compiler
 
         val term = system.compileCommand(prog)
         if (config.irPrint())

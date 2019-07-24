@@ -1,4 +1,4 @@
-package org.bitbucket.inkytonik.cooma.truffle;
+package org.bitbucket.inkytonik.cooma.truffle.exceptions;
 
 import com.oracle.truffle.api.TruffleException;
 import com.oracle.truffle.api.nodes.Node;

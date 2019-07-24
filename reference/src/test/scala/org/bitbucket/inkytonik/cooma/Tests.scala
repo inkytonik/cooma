@@ -17,9 +17,9 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
     import java.nio.file.{Files, Paths}
 
+    import org.bitbucket.inkytonik.kiama.util.FileSource
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
     import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
-    import org.bitbucket.inkytonik.kiama.util.{FileSource, StringConsole}
     import org.rogach.scallop.throwError
 
     case class Backend(
@@ -409,7 +409,6 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
         {
             val resourcesPath = "src/test/resources"
-
             filetests(s"${backend.name} file", s"${resourcesPath}/basic", ".cooma", ".out",
                 argslist = List(backend.options ++ List("-r")))
 
@@ -690,6 +689,29 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         }
 
         {
+            val filename = "src/test/resources/capability/readerCmdArg.cooma"
+            val name = s"reader external argument ($filename)"
+            val reader = makeTempFilename(".txt")
+            val content = "Contents to be read\n"
+            val expectedResult = "\"" + s"${Util.escape(content)}" + "\"" + "\n"
+            val args = Seq(reader)
+
+            test(s"${backend.name} run: $name") {
+                createFile(reader, content)
+                val result = runFile(filename, backend.options, args)
+                result shouldBe ""
+                deleteFile(reader)
+            }
+
+            test(s"${backend.name} run: $name: result") {
+                createFile(reader, content)
+                val result = runFile(filename, backend.options ++ Seq("-r"), args)
+                result shouldBe expectedResult
+                deleteFile(reader)
+            }
+        }
+
+        {
             val filename = "src/test/resources/capability/readerInternalArgBad.cooma"
             val name = s"bad reader internal argument ($filename)"
             val reader = "/does/not/exist.txt"
@@ -734,6 +756,12 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 val result = runFile(filename, backend.options, Seq())
                 result shouldBe s"cooma: command-line argument 0 does not exist (arg count = 0)\n"
             }
+
+            test(s"${backend.name} run: $name: standard out") {
+                val result = runFile(filename, backend.options, Seq("-"))
+                result shouldBe content
+            }
+
         }
 
         {
@@ -741,6 +769,8 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             val name = s"writer and reader command arguments ($filename)"
             val writer = makeTempFilename(".txt")
             val reader = makeTempFilename(".txt")
+            println(s"writer file $writer")
+            println(s"reader file $reader")
             val args = Seq(writer, reader)
             val content = "The file contents"
 

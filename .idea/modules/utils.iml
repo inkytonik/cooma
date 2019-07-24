@@ -8,12 +8,13 @@
       <sourceFolder url="file://$MODULE_DIR$/../../utils/src/main/scala" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../utils/target/scala-2.12/src_managed/main" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../utils/target/scala-2.12/src_managed/test" isTestSource="true" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../utils/src/main/java" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../../utils/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="sbt: junit:junit:4.8.2:jar" level="project" />
-    <orderEntry type="library" name="sbt: xtc:rats:2.3.1:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.12.8:jar" level="project" />
+    <orderEntry type="library" name="sbt: xtc:rats:2.3.1:jar" level="project" />
   </component>
 </module>

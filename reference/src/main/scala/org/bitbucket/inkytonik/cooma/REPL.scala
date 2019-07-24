@@ -12,7 +12,7 @@ package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.kiama.util.REPLBase
 
-class REPL extends REPLBase[Config] {
+trait REPL extends REPLBase[Config] {
 
     self : Compiler with Backend =>
 

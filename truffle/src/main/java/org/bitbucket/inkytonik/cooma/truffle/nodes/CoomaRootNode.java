@@ -5,6 +5,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.RootNode;
+import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants;
 import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
@@ -34,7 +35,7 @@ public class CoomaRootNode extends RootNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        FrameSlot frameSlot = frame.getFrameDescriptor().findOrAddFrameSlot( CoomaLanguage.RHO,null, FrameSlotKind.Object);
+        FrameSlot frameSlot = frame.getFrameDescriptor().findOrAddFrameSlot( CoomaConstants.RHO,null, FrameSlotKind.Object);
         frame.setObject(frameSlot, context.getRho());
         return termNode.executeGeneric(frame);
     }

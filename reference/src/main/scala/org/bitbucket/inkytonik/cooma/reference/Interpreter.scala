@@ -11,7 +11,13 @@
 package org.bitbucket.inkytonik.cooma
 package reference
 
-trait Interpreter {
+import java.io._
+
+import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
+import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants
+import org.bitbucket.inkytonik.cooma.truffle.exceptions.CapabilityException
+
+class Interpreter(config : Config) {
 
     self : ReferenceBackend =>
 
@@ -45,7 +51,7 @@ trait Interpreter {
         ConsVE(env, i, v)
 
     def interpret(term : Term, args : Seq[String], config : Config) {
-        interpret(term, NilE(), args) match {
+        interpret(term, NilE(), args, config) match {
             case ErrR(msg) =>
                 config.output().emitln(s"cooma: $msg")
             case v =>
@@ -54,7 +60,7 @@ trait Interpreter {
         }
     }
 
-    def interpret(term : Term, env : Env, args : Seq[String]) : ValueR = {
+    def interpret(term : Term, env : Env, args : Seq[String], config : Config) : ValueR = {
 
         def interpretAux(rho : Env, term : Term) : ValueR =
             term match {
@@ -188,7 +194,6 @@ trait Interpreter {
                     val k = fresh("k")
                     val y = fresh("y")
                     val p = fresh("p")
-
                     FldR(
                         pair._1,
                         ClsR(NilE(), k, y,
@@ -201,30 +206,29 @@ trait Interpreter {
 
         name match {
             case "Writer" =>
-                if (Files.isWritable(Paths.get(argument)))
-                    makeCapability(Vector(("write", ConsoleWriteP(argument))))
-                else
-                    ErrR(s"$name capability unavailable: can't write $argument")
-
+                try {
+                    makeCapability(Vector(("write", WriterWriteP(argument))))
+                } catch {
+                    case capE : CapabilityException => ErrR(capE.getMessage)
+                }
             case "Reader" =>
-                if (Files.isReadable(Paths.get(argument)))
+                try {
                     makeCapability(Vector(("read", ReaderReadP(argument))))
-                else
-                    ErrR(s"$name capability unavailable: can't read $argument")
-
+                } catch {
+                    case capE : CapabilityException => ErrR(capE.getMessage)
+                }
             case "ReaderWriter" =>
-                if (Files.isReadable(Paths.get(argument)) && Files.isWritable(Paths.get(argument)))
+                try {
                     makeCapability(Vector(
                         ("read", ReaderReadP(argument)),
-                        ("write", ConsoleWriteP(argument))
+                        ("write", WriterWriteP(argument))
                     ))
-                else
-                    ErrR(s"$name capability unavailable: can't read & write $argument")
-
+                } catch {
+                    case capE : CapabilityException => ErrR(capE.getMessage)
+                }
             case _ =>
                 sys.error(s"capability: unknown primitive $name")
         }
-
     }
 
     /*
@@ -291,12 +295,22 @@ trait Interpreter {
         def show = s"cap $cap"
     }
 
-    case class ConsoleWriteP(filename : String) extends Primitive {
+    case class WriterWriteP(filename : String) extends Primitive {
         import java.nio.file.{Files, Paths}
 
         val numArgs = 1
 
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+        if (CoomaConstants.CONSOLEIO != filename &&
+            !Files.isWritable(Paths.get(filename))) throw new CapabilityException(s"Writer capability unavailable: can't write $filename")
+
+        lazy val out : Writer = filename match {
+            case CoomaConstants.CONSOLEIO => new StringWriter() {
+                override def write(s : String) : Unit = config.output().emit(s)
+            }
+            case _ => new BufferedWriter(new FileWriter(filename))
+        }
+
+        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) = {
             val x = xs(0)
             val s = interp.lookupR(rho, x) match {
                 case interp.IntR(i) =>
@@ -306,7 +320,11 @@ trait Interpreter {
                 case v =>
                     sys.error(s"$show: can't write $v")
             }
-            Files.write(Paths.get(filename), s.getBytes())
+            try {
+                out.write(s)
+            } finally {
+                out.close()
+            }
             interp.RowR(Vector())
         }
 
@@ -314,12 +332,25 @@ trait Interpreter {
     }
 
     case class ReaderReadP(filename : String) extends Primitive {
-        import org.bitbucket.inkytonik.kiama.util.FileSource
 
         val numArgs = 1
 
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
-            interp.StrR(FileSource(filename).content)
+        if (CoomaConstants.CONSOLEIO != filename && !Files.isReadable(Paths.get(filename)))
+            throw new CapabilityException(s"Reader capability unavailable: can't read $filename")
+
+        lazy val in : Reader =
+            new BufferedReader(filename match {
+                case CoomaConstants.CONSOLEIO => new InputStreamReader(System.in)
+                case _                        => new BufferedReader(new FileReader(filename))
+            })
+
+        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            try {
+                interp.StrR(readReaderContents(in))
+            } catch {
+                case e : IOException => sys.error(e.getMessage)
+            }
+        }
 
         def show = s"readerRead $filename"
     }
@@ -381,7 +412,7 @@ trait Interpreter {
             config.output().emitln(layout(any(term), 5))
 
         val args = config.filenames()
-        val result = interpret(term, env, args)
+        val result = interpret(term, env, args, config)
 
         if (printValue)
             config.output().emitln(s"$i = ${showRuntimeValue(result)}")

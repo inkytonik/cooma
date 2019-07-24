@@ -1,17 +1,17 @@
 package org.bitbucket.inkytonik.cooma.graalvm
 
-import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage
 import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer
+import org.bitbucket.inkytonik.cooma.truffle.{CoomaConstants, CoomaLanguage}
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter.{any, layout}
 import org.graalvm.polyglot
 import org.graalvm.polyglot.Context
 
-trait GraalVMBackend extends Backend {
+class GraalVMBackend(config : Config) extends Backend {
 
     override def backendName : String = "Graal"
 
@@ -82,7 +82,7 @@ trait GraalVMBackend extends Backend {
     }
 
     def consoleWriteP(filename : String) : Primitive = {
-        new ConsoleWriteP(filename)
+        new WriterWriteP(filename)
     }
 
     def readerReadP(filename : String) : Primitive = {
@@ -107,15 +107,15 @@ trait GraalVMBackend extends Backend {
     override type Env = Context
 
     def emptyEnv : Env = {
-        Context.newBuilder(CoomaLanguage.ID).build()
+        Context.newBuilder(CoomaConstants.ID).build()
     }
 
     def interpret(term : Term, args : Seq[String], config : Config) = {
-        val context = Context.newBuilder(CoomaLanguage.ID)
-            .arguments(CoomaLanguage.ID, args.toArray)
+        val context = Context.newBuilder(CoomaConstants.ID)
+            .arguments(CoomaConstants.ID, args.toArray)
             .build()
 
-        val result : polyglot.Value = context.eval(CoomaLanguage.ID, CoomaNodeXmlSerializer.toXML(term))
+        val result : polyglot.Value = context.eval(CoomaConstants.ID, CoomaNodeXmlSerializer.toXML(term))
 
         if (CoomaLanguage.Type.Error.getValue == result.getMetaObject.toString) {
             config.output().emitln(result)
@@ -131,7 +131,7 @@ trait GraalVMBackend extends Backend {
         if (config.irASTPrint())
             config.output().emitln(layout(any(term), 5))
 
-        val result : polyglot.Value = env.eval(CoomaLanguage.ID, CoomaNodeXmlSerializer.toXML(term))
+        val result : polyglot.Value = env.eval(CoomaConstants.ID, CoomaNodeXmlSerializer.toXML(term))
 
         if (printValue)
             config.output().emitln(s"$i = $result")

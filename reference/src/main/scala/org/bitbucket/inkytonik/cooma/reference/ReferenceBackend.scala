@@ -11,7 +11,7 @@
 package org.bitbucket.inkytonik.cooma
 package reference
 
-trait ReferenceBackend extends Backend with Interpreter {
+class ReferenceBackend(config : Config) extends Interpreter(config) with Backend {
 
     import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
@@ -86,7 +86,7 @@ trait ReferenceBackend extends Backend with Interpreter {
         CapabilityP(cap)
 
     def consoleWriteP(filename : String) : Primitive =
-        ConsoleWriteP(filename)
+        WriterWriteP(filename)
 
     def readerReadP(filename : String) : Primitive =
         ReaderReadP(filename)

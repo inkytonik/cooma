@@ -133,7 +133,8 @@ lazy val truffle = (project in file("truffle"))
         "org.codehaus.jettison" % "jettison" % "1.3.7",
         "org.apache.commons" % "commons-lang3" % "3.9"
       )
-  ) dependsOn utils
+  )
+  .dependsOn(utils)
 
 lazy val utils = (project in file("utils"))
   .disablePlugins(sbtassembly.AssemblyPlugin)

@@ -13,15 +13,12 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
 import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer;
 
 
-@TruffleLanguage.Registration(id = CoomaLanguage.ID, name = "cooma", defaultMimeType = CoomaLanguage.MIME_TYPE,
-        characterMimeTypes = CoomaLanguage.MIME_TYPE, contextPolicy = TruffleLanguage.ContextPolicy.SHARED,
+@TruffleLanguage.Registration(id = CoomaConstants.ID, name = "cooma", defaultMimeType = CoomaConstants.MIME_TYPE,
+        characterMimeTypes = CoomaConstants.MIME_TYPE, contextPolicy = TruffleLanguage.ContextPolicy.SHARED,
         fileTypeDetectors = CoomaFileDetector.class, interactive = true)
 public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
-    public static final String ID = "cooma";
-    public static final String MIME_TYPE = "application/x-cooma";
-    public static final String RHO = "rho";
-    public static final String HALT = "$halt";
+
 
     public static String toString(Object value) {
         try {
@@ -70,6 +67,9 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
         String[] args = getCurrentContext(this.getClass()).getEnv().getApplicationArguments();
+
+        //Config config = new Config(args);
+
         RootNode evalMain = new CoomaRootNode(this, CoomaNodeXmlSerializer.fromXML(request.getSource().getCharacters().toString()));
         return Truffle.getRuntime().createCallTarget(evalMain);
     }

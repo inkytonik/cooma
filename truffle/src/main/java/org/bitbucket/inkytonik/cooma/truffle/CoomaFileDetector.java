@@ -10,7 +10,7 @@ public class CoomaFileDetector implements TruffleFile.FileTypeDetector {
     public String findMimeType(TruffleFile file) {
         String name = file.getName();
         if (name != null && name.endsWith(".cooma")) {
-            return CoomaLanguage.MIME_TYPE;
+            return CoomaConstants.MIME_TYPE;
         }
         return null;
     }

@@ -3,8 +3,8 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.term;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
-import org.bitbucket.inkytonik.cooma.truffle.CoomaException;
-import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
+import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants;
+import org.bitbucket.inkytonik.cooma.truffle.exceptions.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
@@ -48,6 +48,6 @@ public abstract class CoomaAppCTermNode extends CoomaCAppNode {
     }
 
     boolean isHalt() {
-        return CoomaLanguage.HALT.equals(this.k);
+        return CoomaConstants.HALT.equals(this.k);
     }
 }
