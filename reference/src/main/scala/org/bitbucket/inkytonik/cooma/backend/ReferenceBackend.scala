@@ -9,7 +9,7 @@
  */
 
 package org.bitbucket.inkytonik.cooma
-package reference
+package backend
 
 class ReferenceBackend(config : Config) extends Interpreter(config) with Backend {
 

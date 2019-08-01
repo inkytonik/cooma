@@ -11,7 +11,7 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.kiama.util.TestCompilerWithConfig
+import org.bitbucket.inkytonik.kiama.util.{StringConsole, TestCompilerWithConfig}
 
 class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
 

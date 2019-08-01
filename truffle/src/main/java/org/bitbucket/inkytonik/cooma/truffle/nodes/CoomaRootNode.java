@@ -1,12 +1,12 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes;
 
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants;
-import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 
@@ -20,12 +20,15 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 public class CoomaRootNode extends RootNode {
 
     @Child private CoomaTermNode termNode;
-    private CoomaContext context;
+    private TruffleLanguage.ContextReference<CoomaContext> context;
 
+    public TruffleLanguage.ContextReference<CoomaContext> getContext() {
+        return context;
+    }
 
-    public CoomaRootNode(CoomaLanguage language, CoomaTermNode termNode) {
+    public CoomaRootNode(TruffleLanguage language, CoomaTermNode termNode) {
         super(language);
-        this.context = language.getContextReference().get();
+        this.context = language.getContextReference();
         this.termNode = termNode;
     }
 
@@ -36,7 +39,7 @@ public class CoomaRootNode extends RootNode {
     @Override
     public Object execute(VirtualFrame frame) {
         FrameSlot frameSlot = frame.getFrameDescriptor().findOrAddFrameSlot( CoomaConstants.RHO,null, FrameSlotKind.Object);
-        frame.setObject(frameSlot, context.getRho());
+        frame.setObject(frameSlot, context.get().getRho());
         return termNode.executeGeneric(frame);
     }
 }

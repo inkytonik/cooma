@@ -1,6 +1,7 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.term;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
 
@@ -11,10 +12,10 @@ public class CoomaLetCTermNode extends CoomaTermNode {
 
     private final String parameter;
 
-    @Child
+    @Node.Child
     private CoomaTermNode t;
 
-    @Child
+    @Node.Child
     private CoomaTermNode body;
 
     public CoomaLetCTermNode(String identifier, String parameter, CoomaTermNode t, CoomaTermNode body) {

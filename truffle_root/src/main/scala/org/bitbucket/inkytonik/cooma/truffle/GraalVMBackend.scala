@@ -1,14 +1,11 @@
-package org.bitbucket.inkytonik.cooma.graalvm
+package org.bitbucket.inkytonik.cooma.truffle.scala
 
+import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants
 import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
-import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer
-import org.bitbucket.inkytonik.cooma.truffle.{CoomaConstants, CoomaLanguage}
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
-import org.bitbucket.inkytonik.kiama.output.PrettyPrinter.{any, layout}
-import org.graalvm.polyglot
 import org.graalvm.polyglot.Context
 
 class GraalVMBackend(config : Config) extends Backend {
@@ -20,11 +17,9 @@ class GraalVMBackend(config : Config) extends Backend {
 
     override type Value = CoomaValueNode
 
-    def appC(k : String, x : String) : CoomaTermNode =
-        CoomaAppCTermNodeGen.create(k, x)
+    def appC(k : String, x : String) : CoomaTermNode = CoomaAppCTermNodeGen.create(k, x)
 
-    def appF(f : String, k : String, x : String) : CoomaTermNode =
-        CoomaAppFTermNodeGen.create(f, k, x)
+    def appF(f : String, k : String, x : String) : CoomaTermNode = CoomaAppFTermNodeGen.create(f, k, x)
 
     def letC(k : String, x : String, t : Term, body : Term) : CoomaTermNode =
         new CoomaLetCTermNode(k, x, t, body)
@@ -111,32 +106,32 @@ class GraalVMBackend(config : Config) extends Backend {
     }
 
     def interpret(term : Term, args : Seq[String], config : Config) = {
-        val context = Context.newBuilder(CoomaConstants.ID)
-            .arguments(CoomaConstants.ID, args.toArray)
-            .build()
-
-        val result : polyglot.Value = context.eval(CoomaConstants.ID, CoomaNodeXmlSerializer.toXML(term))
-
-        if (CoomaLanguage.Type.Error.getValue == result.getMetaObject.toString) {
-            config.output().emitln(result)
-        }
-        if (config.resultPrint()) config.output().emitln(result)
-
-        context.close()
+        //        val context = Context.newBuilder(CoomaConstants.ID)
+        //            .arguments(CoomaConstants.ID, args.toArray)
+        //            .build()
+        //
+        //        val result : polyglot.Value = context.eval(CoomaConstants.ID, CoomaNodeXmlSerializer.toXML(term))
+        //
+        //        if (CoomaLanguage.Type.Error.getValue == result.getMetaObject.toString) {
+        //            config.output().emitln(result)
+        //        }
+        //        if (config.resultPrint()) config.output().emitln(result)
+        //
+        //        context.close()
     }
 
     def repl(env : Env, i : String, printValue : Boolean, config : Config, term : Term) : Env = {
-        if (config.irPrint())
-            config.output().emitln(showTerm(term))
-        if (config.irASTPrint())
-            config.output().emitln(layout(any(term), 5))
-
-        val result : polyglot.Value = env.eval(CoomaConstants.ID, CoomaNodeXmlSerializer.toXML(term))
-
-        if (printValue)
-            config.output().emitln(s"$i = $result")
-        else
-            config.output().emitln(i)
+        //        if (config.irPrint())
+        //            config.output().emitln(showTerm(term))
+        //        if (config.irASTPrint())
+        //            config.output().emitln(layout(any(term), 5))
+        //
+        //        val result : polyglot.Value = env.eval(CoomaConstants.ID, CoomaNodeXmlSerializer.toXML(term))
+        //
+        //        if (printValue)
+        //            config.output().emitln(s"$i = $result")
+        //        else
+        //            config.output().emitln(i)
         env
     }
 

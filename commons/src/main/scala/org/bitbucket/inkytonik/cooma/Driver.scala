@@ -11,13 +11,11 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.cooma.graalvm.GraalVMBackend
 import org.bitbucket.inkytonik.kiama.util.CompilerBase
 
-class Driver extends CompilerBase[ASTNode, Program, Config] {
+abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
-    import org.bitbucket.inkytonik.cooma.reference.ReferenceBackend
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
     import org.bitbucket.inkytonik.kiama.util.Source
@@ -36,11 +34,11 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
         }
     }
 
-    def createREPL(config : Config) : REPL with Compiler with Backend =
-        if (config.graalVM())
-            new GraalVMBackend(config) with REPL with Compiler
-        else
-            new ReferenceBackend(config) with REPL with Compiler
+    def createREPL(config : Config) : REPL with Compiler with Backend
+    //        if (config.graalVM())
+    //            new GraalVMBackend(config) with REPL with Compiler
+    //        else
+    //            new ReferenceBackend(config) with REPL with Compiler
 
     override def run(config : Config) {
         if (config.filenames().isEmpty) {
@@ -68,19 +66,25 @@ class Driver extends CompilerBase[ASTNode, Program, Config] {
             Right(Vector(p.errorToMessage(pr.parseError)))
     }
 
-    def process(source : Source, prog : Program, config : Config) {
-
-        val system = if (config.graalVM()) new GraalVMBackend(config) with Compiler else new ReferenceBackend(config) with Compiler
-
-        val term = system.compileCommand(prog)
-        if (config.irPrint())
-            config.output().emitln(system.showTerm(term))
-        if (config.irASTPrint())
-            config.output().emitln(layout(any(term), 5))
-
-        val args = config.filenames().tail
-        system.interpret(term, args, config)
-    }
+    /**
+     *
+     * @param source The original cooma Source
+     * @param prog   The cooma source AST.
+     * @param config
+     */
+    def process(source : Source, prog : Program, config : Config)
+    //super.process(source, prog, config)
+    //        val system = if (config.graalVM()) new GraalVMBackend(config) with Compiler else new ReferenceBackend(config) with Compiler
+    //
+    //        val term = system.compileCommand(prog)
+    //        if (config.irPrint())
+    //            config.output().emitln(system.showTerm(term))
+    //        if (config.irASTPrint())
+    //            config.output().emitln(layout(any(term), 5))
+    //
+    //        val args = config.filenames().tail
+    //        system.interpret(term, args, config)
+    //}
 
     override def format(prog : Program) : Document =
         CoomaParserPrettyPrinter.format(prog, 5)

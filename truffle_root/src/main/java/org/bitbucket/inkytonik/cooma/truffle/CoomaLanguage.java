@@ -8,9 +8,17 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
+import org.bitbucket.inkytonik.cooma.Config;
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax;
+import org.bitbucket.inkytonik.cooma.Driver;
+import org.bitbucket.inkytonik.cooma.REPL;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
+import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
-import org.bitbucket.inkytonik.cooma.truffle.serialization.CoomaNodeXmlSerializer;
+import org.bitbucket.inkytonik.cooma.truffle.scala.GraalVMCompiler;
+import org.bitbucket.inkytonik.kiama.util.Source;
+
+import java.util.Arrays;
 
 
 @TruffleLanguage.Registration(id = CoomaConstants.ID, name = "cooma", defaultMimeType = CoomaConstants.MIME_TYPE,
@@ -67,10 +75,34 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
         String[] args = getCurrentContext(this.getClass()).getEnv().getApplicationArguments();
+        Config config = new Config(scala.collection.JavaConverters.collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
+        config.verify();
+        final CoomaTermNode[] main = new CoomaTermNode[1];
 
-        //Config config = new Config(args);
+        Driver driver = new Driver(){
 
-        RootNode evalMain = new CoomaRootNode(this, CoomaNodeXmlSerializer.fromXML(request.getSource().getCharacters().toString()));
+            @Override
+            public REPL createREPL(Config config) {
+                //TODO: resolve this
+                return null;
+            }
+
+            @Override
+            public void process(Source source, CoomaParserSyntax.Program prog, Config config) {
+                GraalVMCompiler compiler = new GraalVMCompiler(config);
+                main[0] = compiler.compileCommand(prog);
+                if (config.irPrint().isDefined())
+                    config.output().apply().emitln(compiler.showTerm(main[0]));
+                if (config.irASTPrint().isDefined())
+                    config.output().apply().emitln(
+                            JavaCoomaParserPrettyPrinter.getInstance().layout
+                            (JavaCoomaParserPrettyPrinter.getInstance().any( main[0]), 5));
+            }
+        };
+
+        driver.run(config);
+
+        RootNode evalMain = new CoomaRootNode(this, main[0]);
         return Truffle.getRuntime().createCallTarget(evalMain);
     }
 

@@ -9,7 +9,7 @@
  */
 
 package org.bitbucket.inkytonik.cooma
-package reference
+package backend
 
 import java.io._
 

@@ -10,4 +10,14 @@
 
 package org.bitbucket.inkytonik.cooma
 
-object Main extends Driver
+import org.bitbucket.inkytonik.cooma.truffle.TruffleFrontend
+
+object Main {
+    def main(args : Array[String]) {
+        val config = new Config(args)
+        config.verify()
+        val frontend = if (config.graalVM()) new TruffleFrontend else new ReferenceFrontend
+        frontend.interpret(config)
+    }
+
+}

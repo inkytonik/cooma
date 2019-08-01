@@ -1,7 +1,6 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
 import com.oracle.truffle.api.TruffleLanguage;
-import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 
 

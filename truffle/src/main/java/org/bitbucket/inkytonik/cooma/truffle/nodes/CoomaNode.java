@@ -3,7 +3,6 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.nodes.Node;
 import org.bitbucket.inkytonik.cooma.Utils;
-import org.bitbucket.inkytonik.cooma.truffle.CoomaLanguage;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
@@ -28,7 +27,7 @@ public class CoomaNode extends Node {
     }
 
     protected TruffleLanguage.ContextReference<CoomaContext> getContext(){
-        return super.lookupContextReference(CoomaLanguage.class);
+        return ((CoomaRootNode) getRootNode()).getContext();
     }
 
     protected String[] getArgs(){
