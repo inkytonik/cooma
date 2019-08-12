@@ -10,7 +10,9 @@
 
 package org.bitbucket.inkytonik.cooma
 
+import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
 import org.bitbucket.inkytonik.cooma.truffle.TruffleFrontend
+import org.bitbucket.inkytonik.kiama.util.Source
 
 object Main {
     def main(args : Array[String]) {
@@ -20,4 +22,38 @@ object Main {
         frontend.interpret(config)
     }
 
+}
+
+class ReferenceFrontend extends Frontend {
+    override def interpret(config : Config) : Unit = {
+        new ReferenceDriver(config)
+    }
+}
+
+class ReferenceDriver(config : Config) extends Driver {
+
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
+
+    super.driver(config.args)
+
+    override def createREPL(config : Config) : REPL with Compiler with Backend = {
+        new ReferenceBackend(config) with REPL with Compiler
+    }
+
+    /**
+     *
+     * @param source The original cooma Source
+     * @param prog   The cooma source AST.
+     * @param config
+     */
+    override def process(source : Source, prog : CoomaParserSyntax.Program, config : Config) : Unit = {
+        val system = new ReferenceBackend(config) with Compiler
+        val term = system.compileCommand(prog)
+        if (config.irPrint())
+            config.output().emitln(system.showTerm(term))
+        if (config.irASTPrint())
+            config.output().emitln(layout(any(term), 5))
+        val args = config.filenames().tail
+        system.interpret(term, args, config)
+    }
 }

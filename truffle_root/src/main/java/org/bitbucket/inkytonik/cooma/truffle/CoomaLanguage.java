@@ -83,8 +83,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
             @Override
             public REPL createREPL(Config config) {
-                //TODO: resolve this
-                return null;
+                return TruffleRepl.repl(config);
             }
 
             @Override

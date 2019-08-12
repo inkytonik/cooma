@@ -132,6 +132,7 @@ class GraalVMBackend(config : Config) extends Backend {
         //            config.output().emitln(s"$i = $result")
         //        else
         //            config.output().emitln(i)
+        println("from repl")
         env
     }
 
