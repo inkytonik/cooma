@@ -1,4 +1,4 @@
-package org.bitbucket.inkytonik.cooma.truffle.scala
+package org.bitbucket.inkytonik.cooma.truffle
 
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode
 import org.bitbucket.inkytonik.cooma.{Config, CoomaParserSyntax}

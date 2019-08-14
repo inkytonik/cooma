@@ -34,20 +34,6 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
         }
     }
 
-    def createREPL(config : Config) : REPL with Compiler with Backend
-    //        if (config.graalVM())
-    //            new GraalVMBackend(config) with REPL with Compiler
-    //        else
-    //            new ReferenceBackend(config) with REPL with Compiler
-
-    override def run(config : Config) {
-        if (config.filenames().isEmpty) {
-            val repl = createREPL(config)
-            repl.driver(config.args)
-        } else
-            super.run(config)
-    }
-
     override def compileFiles(config : Config) {
         val args = config.filenames()
         if (args.length >= 1)
@@ -66,27 +52,10 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
             Right(Vector(p.errorToMessage(pr.parseError)))
     }
 
-    /**
-     *
-     * @param source The original cooma Source
-     * @param prog   The cooma source AST.
-     * @param config
-     */
-    def process(source : Source, prog : Program, config : Config)
-    //super.process(source, prog, config)
-    //        val system = if (config.graalVM()) new GraalVMBackend(config) with Compiler else new ReferenceBackend(config) with Compiler
-    //
-    //        val term = system.compileCommand(prog)
-    //        if (config.irPrint())
-    //            config.output().emitln(system.showTerm(term))
-    //        if (config.irASTPrint())
-    //            config.output().emitln(layout(any(term), 5))
-    //
-    //        val args = config.filenames().tail
-    //        system.interpret(term, args, config)
-    //}
-
     override def format(prog : Program) : Document =
         CoomaParserPrettyPrinter.format(prog, 5)
 
+    def process(source : Source, prog : Program, config : Config)
+
+    def createREPL(config : Config) : REPL with Compiler with Backend
 }

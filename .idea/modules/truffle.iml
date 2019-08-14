@@ -9,6 +9,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../truffle/target/scala-2.12/src_managed/test" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../truffle/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../truffle/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../truffle/src/main/scala" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../../truffle/target" />
     </content>
     <orderEntry type="inheritedJdk" />

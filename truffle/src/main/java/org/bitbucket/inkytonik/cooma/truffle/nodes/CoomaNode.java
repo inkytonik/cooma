@@ -31,6 +31,6 @@ public class CoomaNode extends Node {
     }
 
     protected String[] getArgs(){
-        return getContext().get().getEnv().getApplicationArguments();
+        return getContext().get().getApplicationArguments();
     }
 }

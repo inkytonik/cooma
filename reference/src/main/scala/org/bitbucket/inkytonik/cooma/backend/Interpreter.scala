@@ -55,6 +55,7 @@ class Interpreter(config : Config) {
             case ErrR(msg) =>
                 config.output().emitln(s"cooma: $msg")
             case v =>
+
                 if (config.resultPrint())
                     config.output().emitln(showRuntimeValue(v))
         }

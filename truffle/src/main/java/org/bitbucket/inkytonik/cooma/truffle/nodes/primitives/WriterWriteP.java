@@ -19,8 +19,9 @@ public final class WriterWriteP extends Primitive {
 	private final Lazy<Writer> out;
 
 	public WriterWriteP(String filename) throws CapabilityException {
+
 		if (CoomaConstants.CONSOLEIO.equals(filename)) {
-			this.out = Lazy.of(() -> new PrintWriter(System.out));
+			this.out = Lazy.of(() -> new PrintWriter(getContext().get().getEnv().out()));
 		} else {
 			//TODO: the filename argument should be any resource, including a file on the web or a URI.
 			if (!Files.isWritable(Paths.get(filename))) {

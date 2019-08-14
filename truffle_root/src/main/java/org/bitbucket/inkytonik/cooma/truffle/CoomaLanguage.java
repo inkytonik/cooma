@@ -9,16 +9,13 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.Config;
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax;
-import org.bitbucket.inkytonik.cooma.Driver;
-import org.bitbucket.inkytonik.cooma.REPL;
+import org.bitbucket.inkytonik.cooma.Util;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
-import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
-import org.bitbucket.inkytonik.cooma.truffle.scala.GraalVMCompiler;
-import org.bitbucket.inkytonik.kiama.util.Source;
 
 import java.util.Arrays;
+
+import static scala.collection.JavaConverters.collectionAsScalaIterableConverter;
 
 
 @TruffleLanguage.Registration(id = CoomaConstants.ID, name = "cooma", defaultMimeType = CoomaConstants.MIME_TYPE,
@@ -26,6 +23,7 @@ import java.util.Arrays;
         fileTypeDetectors = CoomaFileDetector.class, interactive = true)
 public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
+    private TruffleDriver truffleDriver = new TruffleDriver();
 
 
     public static String toString(Object value) {
@@ -75,33 +73,19 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
         String[] args = getCurrentContext(this.getClass()).getEnv().getApplicationArguments();
-        Config config = new Config(scala.collection.JavaConverters.collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
+        Config config = new Config(collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
         config.verify();
-        final CoomaTermNode[] main = new CoomaTermNode[1];
 
-        Driver driver = new Driver(){
+        if (request.getSource().getCharacters().length() == 0){
+            truffleDriver.run(config);
+        } else {
+            truffleDriver.compileString("string source", request.getSource().getCharacters().toString(), config);
+        }
 
-            @Override
-            public REPL createREPL(Config config) {
-                return TruffleRepl.repl(config);
-            }
-
-            @Override
-            public void process(Source source, CoomaParserSyntax.Program prog, Config config) {
-                GraalVMCompiler compiler = new GraalVMCompiler(config);
-                main[0] = compiler.compileCommand(prog);
-                if (config.irPrint().isDefined())
-                    config.output().apply().emitln(compiler.showTerm(main[0]));
-                if (config.irASTPrint().isDefined())
-                    config.output().apply().emitln(
-                            JavaCoomaParserPrettyPrinter.getInstance().layout
-                            (JavaCoomaParserPrettyPrinter.getInstance().any( main[0]), 5));
-            }
-        };
-
-        driver.run(config);
-
-        RootNode evalMain = new CoomaRootNode(this, main[0]);
+        //Here we get the entire config, including the internal one with the K prefix. We need to
+        //update the args for evaluation and get rid of those.
+        getContextReference().get().setApplicationArguments(Util.getConfigFilenamesTail(config));
+        RootNode evalMain = new CoomaRootNode(this, truffleDriver.getCurrentCompiledNode());
         return Truffle.getRuntime().createCallTarget(evalMain);
     }
 

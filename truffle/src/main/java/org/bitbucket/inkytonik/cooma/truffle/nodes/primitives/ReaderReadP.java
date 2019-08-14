@@ -19,7 +19,7 @@ public class ReaderReadP extends Primitive {
 
     public ReaderReadP(String filename) throws CapabilityException {
         if (CoomaConstants.CONSOLEIO.equals(filename)) {
-            this.in = new BufferedReader( new InputStreamReader(System.in));
+            this.in = new BufferedReader( new InputStreamReader(getContext().get().getEnv().in()));
         } else {
             //TODO: the filename argument should be any resource, including a file on the web or a URI.
             if (!Files.isReadable(Paths.get(filename))) {

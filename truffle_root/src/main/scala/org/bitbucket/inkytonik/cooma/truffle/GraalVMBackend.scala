@@ -1,6 +1,5 @@
-package org.bitbucket.inkytonik.cooma.truffle.scala
+package org.bitbucket.inkytonik.cooma.truffle
 
-import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants
 import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
@@ -103,21 +102,6 @@ class GraalVMBackend(config : Config) extends Backend {
 
     def emptyEnv : Env = {
         Context.newBuilder(CoomaConstants.ID).build()
-    }
-
-    def interpret(term : Term, args : Seq[String], config : Config) = {
-        //        val context = Context.newBuilder(CoomaConstants.ID)
-        //            .arguments(CoomaConstants.ID, args.toArray)
-        //            .build()
-        //
-        //        val result : polyglot.Value = context.eval(CoomaConstants.ID, CoomaNodeXmlSerializer.toXML(term))
-        //
-        //        if (CoomaLanguage.Type.Error.getValue == result.getMetaObject.toString) {
-        //            config.output().emitln(result)
-        //        }
-        //        if (config.resultPrint()) config.output().emitln(result)
-        //
-        //        context.close()
     }
 
     def repl(env : Env, i : String, printValue : Boolean, config : Config, term : Term) : Env = {

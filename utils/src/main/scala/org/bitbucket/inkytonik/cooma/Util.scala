@@ -33,4 +33,9 @@ object Util {
             else String.valueOf(ch)
         }
 
+    def getConfigFilenamesTail(config : Config) : Array[String] = {
+        import scala.collection.JavaConverters._
+        val tail = config.filenames().tail.asJava
+        tail.toArray(new Array[String](tail.size()))
+    }
 }

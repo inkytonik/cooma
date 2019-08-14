@@ -10,8 +10,12 @@
 
 package org.bitbucket.inkytonik.cooma
 
+import java.io.{ByteArrayOutputStream, PrintStream}
+
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.kiama.util.{StringConsole, TestCompilerWithConfig}
+import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
+import org.bitbucket.inkytonik.cooma.truffle.{GraalVMBackend, TruffleDriver, TruffleFrontend}
+import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole, TestCompilerWithConfig}
 
 class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
 
@@ -24,13 +28,17 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
     case class Backend(
         name : String,
-        options : Seq[String]
+        options : Seq[String],
+        frontend : Frontend
+
     )
+
+    val truffleOutContent = new ByteArrayOutputStream()
 
     val backends =
         List(
-            Backend("Reference", Seq()),
-            Backend("GraalVM", Seq("-g"))
+            //Backend("Reference", Seq(), new ReferenceFrontend),
+            Backend("GraalVM", Seq("-g"), new TruffleFrontend(out = new PrintStream(truffleOutContent)))
         )
 
     for (backend <- backends) {
@@ -398,11 +406,11 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
         for (aTest <- basicTests) {
             test(s"${backend.name} run: ${aTest.name}") {
-                val result = runString(aTest.name, aTest.program, backend.options, aTest.args)
+                val result = runString(aTest.name, aTest.program, backend.options, backend, aTest.args)
                 result shouldBe ""
             }
             test(s"${backend.name} run: ${aTest.name}: result") {
-                val result = runString(aTest.name, aTest.program, Seq("-r") ++ backend.options, aTest.args)
+                val result = runString(aTest.name, aTest.program, Seq("-r") ++ backend.options, backend, aTest.args)
                 result shouldBe s"${aTest.expectedCompiledResult}\n"
             }
         }
@@ -442,7 +450,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             for (aTest <- optionTests) {
                 val inputFilename = s"${aTest.inputBasename}.cooma"
                 val expectedFilename = s"${aTest.inputBasename}.${aTest.expectedExtension}"
-                val execute = !aTest.name.startsWith("IR") || backend.name == "Reference"
+                val execute = backend.name == "Reference"
                 if (execute)
                     filetest(s"${backend.name} file", resourcesPath, s"$resourcesPath/$expectedFilename",
                         backend.options ++ List(aTest.option, s"$resourcesPath/$inputFilename") ++ aTest.args,
@@ -451,7 +459,6 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         }
 
         // REPL tests
-
         for (aTest <- basicTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
                 val result = runREPLOnLine(aTest.name, aTest.program, backend.options, aTest.args)
@@ -612,15 +619,15 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
         for (aTest <- cmdLineTests) {
             test(s"${backend.name} run: ${aTest.name} (${aTest.filename})") {
-                val result = runFile(aTest.filename, backend.options, aTest.args)
+                val result = runFile(aTest.filename, backend.options, backend, aTest.args)
                 result shouldBe ""
             }
             test(s"${backend.name} run: ${aTest.name} (${aTest.filename}): result") {
-                val result = runFile(aTest.filename, backend.options ++ Seq("-r"), aTest.args)
+                val result = runFile(aTest.filename, backend.options ++ Seq("-r"), backend, aTest.args)
                 result shouldBe s"${aTest.expectedResult}\n"
             }
             test(s"${backend.name} run: ${aTest.name} (${aTest.filename}): no args") {
-                val result = runFile(aTest.filename, backend.options, Seq())
+                val result = runFile(aTest.filename, backend.options, backend, Seq())
                 result shouldBe s"cooma: command-line argument ${aTest.usedArg} does not exist (arg count = 0)\n"
             }
         }
@@ -639,7 +646,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
                 test(s"${backend.name} run: $name") {
                     createFile(writer, "")
-                    val result = runFile(filename, backend.options, Seq())
+                    val result = runFile(filename, backend.options, backend, Seq())
                     result shouldBe ""
                     FileSource(writer).content shouldBe content
                     deleteFile(writer)
@@ -647,7 +654,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
                 test(s"${backend.name} run: $name: result") {
                     createFile(writer, "")
-                    val result = runFile(filename, backend.options ++ Seq("-r"), Seq())
+                    val result = runFile(filename, backend.options ++ Seq("-r"), backend, Seq())
                     result shouldBe "{}\n"
                     FileSource(writer).content shouldBe content
                     deleteFile(writer)
@@ -661,7 +668,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             val writer = "/does/not/exist"
 
             test(s"${backend.name} run: $name") {
-                val result = runFile(filename, backend.options, Seq())
+                val result = runFile(filename, backend.options, backend, Seq())
                 result shouldBe s"cooma: Writer capability unavailable: can't write $writer\n"
             }
         }
@@ -680,7 +687,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
                 test(s"${backend.name} run: $name") {
                     createFile(reader, content)
-                    val result = runFile(filename, backend.options, Seq())
+                    val result = runFile(filename, backend.options, backend, Seq())
                     result shouldBe ""
                     FileSource(reader).content shouldBe content
                     deleteFile(reader)
@@ -698,14 +705,14 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             test(s"${backend.name} run: $name") {
                 createFile(reader, content)
-                val result = runFile(filename, backend.options, args)
+                val result = runFile(filename, backend.options, backend, args)
                 result shouldBe ""
                 deleteFile(reader)
             }
 
             test(s"${backend.name} run: $name: result") {
                 createFile(reader, content)
-                val result = runFile(filename, backend.options ++ Seq("-r"), args)
+                val result = runFile(filename, backend.options ++ Seq("-r"), backend, args)
                 result shouldBe expectedResult
                 deleteFile(reader)
             }
@@ -717,7 +724,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             val reader = "/does/not/exist.txt"
 
             test(s"${backend.name} run: $name") {
-                val result = runFile(filename, backend.options, Seq())
+                val result = runFile(filename, backend.options, backend, Seq())
                 result shouldBe s"cooma: Reader capability unavailable: can't read $reader\n"
             }
         }
@@ -731,7 +738,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             test(s"${backend.name} run: $name") {
                 createFile(writer, "")
-                val result = runFile(filename, backend.options, args)
+                val result = runFile(filename, backend.options, backend, args)
                 result shouldBe ""
                 FileSource(writer).content shouldBe content
                 deleteFile(writer)
@@ -739,7 +746,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             test(s"${backend.name} run: $name: result") {
                 createFile(writer, "")
-                val result = runFile(filename, backend.options ++ Seq("-r"), args)
+                val result = runFile(filename, backend.options ++ Seq("-r"), backend, args)
                 result shouldBe "{}\n"
                 FileSource(writer).content shouldBe content
                 deleteFile(writer)
@@ -747,18 +754,18 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             test(s"${backend.name} run: $name: non-existent writer") {
                 val writer = "notThere.txt"
-                val result = runFile(filename, backend.options, Seq(writer))
+                val result = runFile(filename, backend.options, backend, Seq(writer))
                 result shouldBe s"cooma: Writer capability unavailable: can't write $writer\n"
                 Files.exists(Paths.get(writer)) shouldBe false
             }
 
             test(s"${backend.name} run: $name: no args") {
-                val result = runFile(filename, backend.options, Seq())
+                val result = runFile(filename, backend.options, backend, Seq())
                 result shouldBe s"cooma: command-line argument 0 does not exist (arg count = 0)\n"
             }
 
             test(s"${backend.name} run: $name: standard out") {
-                val result = runFile(filename, backend.options, Seq("-"))
+                val result = runFile(filename, backend.options, backend, Seq("-"))
                 result shouldBe content
             }
 
@@ -777,7 +784,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             test(s"${backend.name} run: $name") {
                 createFile(writer, "")
                 createFile(reader, content)
-                val result = runFile(filename, backend.options, args)
+                val result = runFile(filename, backend.options, backend, args)
                 result shouldBe ""
                 FileSource(writer).content shouldBe content
                 FileSource(reader).content shouldBe content
@@ -788,7 +795,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             test(s"${backend.name} run: $name: result") {
                 createFile(writer, "")
                 createFile(reader, content)
-                val result = runFile(filename, backend.options ++ Seq("-r"), args)
+                val result = runFile(filename, backend.options ++ Seq("-r"), backend, args)
                 result shouldBe "{}\n"
                 FileSource(writer).content shouldBe content
                 FileSource(reader).content shouldBe content
@@ -799,7 +806,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             test(s"${backend.name} run: $name: non-existent writer") {
                 createFile(reader, "")
                 val writer = "notThere.txt"
-                val result = runFile(filename, backend.options, Seq(writer, reader))
+                val result = runFile(filename, backend.options, backend, Seq(writer, reader))
                 result shouldBe s"cooma: Writer capability unavailable: can't write $writer\n"
                 Files.exists(Paths.get(writer)) shouldBe false
                 deleteFile(writer)
@@ -808,20 +815,20 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             test(s"${backend.name} run: $name: non-existent reader") {
                 createFile(writer, "")
                 val reader = "notThere.txt"
-                val result = runFile(filename, backend.options, Seq(writer, reader))
+                val result = runFile(filename, backend.options, backend, Seq(writer, reader))
                 result shouldBe s"cooma: Reader capability unavailable: can't read $reader\n"
                 Files.exists(Paths.get(reader)) shouldBe false
                 deleteFile(writer)
             }
 
             test(s"${backend.name} run: $name: no args") {
-                val result = runFile(filename, backend.options, Seq())
+                val result = runFile(filename, backend.options, backend, Seq())
                 result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 0)\n"
             }
 
             test(s"${backend.name} run: $name: one arg") {
                 createFile(writer, "")
-                val result = runFile(filename, backend.options, Seq(writer))
+                val result = runFile(filename, backend.options, backend, Seq(writer))
                 result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 1)\n"
                 deleteFile(writer)
             }
@@ -835,7 +842,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             test(s"${backend.name} run: $name") {
                 createFile(readerWriter, "")
-                val result = runFile(filename, backend.options, Seq())
+                val result = runFile(filename, backend.options, backend, Seq())
                 result shouldBe ""
                 FileSource(readerWriter).content shouldBe content
                 deleteFile(readerWriter)
@@ -843,7 +850,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
             test(s"${backend.name} run: $name: result") {
                 createFile(readerWriter, "")
-                val result = runFile(filename, backend.options ++ Seq("-r"), Seq())
+                val result = runFile(filename, backend.options ++ Seq("-r"), backend, Seq())
                 result shouldBe "{}\n"
                 FileSource(readerWriter).content shouldBe content
                 deleteFile(readerWriter)
@@ -870,17 +877,24 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                 info("failed with an exception ")
                 throw (e)
         }
-        config.stringEmitter.result
+
+        if (config.graalVM() && truffleOutContent.size() > 0) {
+            val result = truffleOutContent.toString
+            truffleOutContent.reset()
+            result
+        } else {
+            config.stringEmitter.result
+        }
     }
 
-    def runString(name : String, program : String, options : Seq[String], args : Seq[String]) : String = {
+    def runString(name : String, program : String, options : Seq[String], backend : Backend, args : Seq[String]) : String = {
         val allArgs = Seq("--Koutput", "string") ++ options ++ ("test.cooma" +: args)
-        runTest(name, compileString(name, program, _), options, allArgs)
+        runTest(name, backend.frontend.interpret(name, program, _), options, allArgs)
     }
 
-    def runFile(program : String, options : Seq[String], args : Seq[String]) : String = {
+    def runFile(program : String, options : Seq[String], backend : Backend, args : Seq[String]) : String = {
         val allArgs = Seq("--Koutput", "string") ++ options ++ (program +: args)
-        runTest(name, compileFile(program, _), options, allArgs)
+        runTest(name, backend.frontend.interpret, options, allArgs)
     }
 
     def runREPLTest(name : String, cmd : String, input : String, options : Seq[String], args : Seq[String]) : String = {
@@ -902,4 +916,22 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
     def runREPLOnLines(name : String, input : String, options : Seq[String], args : Seq[String]) : String =
         runREPLTest(name, ":lines", input, options, args)
 
+    override def createREPL(config : Config) : REPL with Compiler with org.bitbucket.inkytonik.cooma.Backend = {
+        if (config.graalVM()) new GraalVMBackend(config) with REPL with Compiler else new ReferenceBackend(config) with REPL with Compiler
+    }
+
+    /**
+     *
+     * @param source The original cooma Source
+     * @param prog   The cooma source AST.
+     * @param config
+     */
+    override def process(source : Source, prog : Program, config : Config) : Unit = {
+        val frontend = if (config.graalVM()) new TruffleDriver else new ReferenceDriver
+        frontend.process(source, prog, config)
+    }
+
+    override def testdriver(config : Config) : Unit = {
+        if (config.graalVM()) new TruffleFrontend().interpret(config) else super.testdriver(config)
+    }
 }

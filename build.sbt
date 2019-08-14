@@ -38,7 +38,7 @@ lazy val commonsettings = Seq(
 				" " + scalaVersion.value + "> "
 	},
 	testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
-	//fork := true,
+	fork := true,
 	connectInput in run := true,
 	outputStrategy in run := Some(StdoutOutput),
 	// sbt-rats

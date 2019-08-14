@@ -18,23 +18,33 @@ object Main {
     def main(args : Array[String]) {
         val config = new Config(args)
         config.verify()
-        val frontend = if (config.graalVM()) new TruffleFrontend else new ReferenceFrontend
-        frontend.interpret(config)
+        if (config.graalVM()) new TruffleFrontend().interpret(config) else new ReferenceFrontend().interpret(config)
     }
-
 }
 
 class ReferenceFrontend extends Frontend {
+    val driver = new ReferenceDriver()
     override def interpret(config : Config) : Unit = {
-        new ReferenceDriver(config)
+        driver.run(config)
     }
+
+    override def interpret(programName : String, program : String, config : Config) : Unit = {
+        driver.compileString(programName, program, config)
+    }
+
 }
 
-class ReferenceDriver(config : Config) extends Driver {
+class ReferenceDriver extends Driver {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
 
-    super.driver(config.args)
+    override def run(config : Config) {
+        if (config.filenames().isEmpty) {
+            val repl = createREPL(config)
+            repl.driver(config.args)
+        } else
+            super.run(config)
+    }
 
     override def createREPL(config : Config) : REPL with Compiler with Backend = {
         new ReferenceBackend(config) with REPL with Compiler
