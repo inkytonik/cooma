@@ -16,6 +16,9 @@ class GraalVMBackend(config : Config) extends Backend {
 
     override type Value = CoomaValueNode
 
+    var truffleNode : Term = _
+    def setRepl(term : Term) = truffleNode = term
+
     def appC(k : String, x : String) : CoomaTermNode = CoomaAppCTermNodeGen.create(k, x)
 
     def appF(f : String, k : String, x : String) : CoomaTermNode = CoomaAppFTermNodeGen.create(f, k, x)
@@ -105,18 +108,7 @@ class GraalVMBackend(config : Config) extends Backend {
     }
 
     def repl(env : Env, i : String, printValue : Boolean, config : Config, term : Term) : Env = {
-        //        if (config.irPrint())
-        //            config.output().emitln(showTerm(term))
-        //        if (config.irASTPrint())
-        //            config.output().emitln(layout(any(term), 5))
-        //
-        //        val result : polyglot.Value = env.eval(CoomaConstants.ID, CoomaNodeXmlSerializer.toXML(term))
-        //
-        //        if (printValue)
-        //            config.output().emitln(s"$i = $result")
-        //        else
-        //            config.output().emitln(i)
-        println("from repl")
+        setRepl(term)
         env
     }
 

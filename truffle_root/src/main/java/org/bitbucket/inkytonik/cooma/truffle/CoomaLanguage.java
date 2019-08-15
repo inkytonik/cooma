@@ -76,10 +76,18 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
         Config config = new Config(collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
         config.verify();
 
-        if (request.getSource().getCharacters().length() == 0){
-            truffleDriver.run(config);
+        String source = request.getSource().getCharacters().toString();
+        if (config.filenames().apply().length() != 0){
+            if (source.isEmpty()){
+                truffleDriver.run(config);
+            }else{
+                truffleDriver.compileString("string source", source, config);
+            }
         } else {
-            truffleDriver.compileString("string source", request.getSource().getCharacters().toString(), config);
+            //Config may not have a file
+            TruffleREPL repl = (TruffleREPL) truffleDriver.createREPL(config);
+            repl.enterline(config, source);
+            truffleDriver.setCurrentCompiledNode(repl.compiledRepl());
         }
 
         //Here we get the entire config, including the internal one with the K prefix. We need to

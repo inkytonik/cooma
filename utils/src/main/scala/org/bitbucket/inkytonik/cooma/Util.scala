@@ -35,7 +35,11 @@ object Util {
 
     def getConfigFilenamesTail(config : Config) : Array[String] = {
         import scala.collection.JavaConverters._
-        val tail = config.filenames().tail.asJava
-        tail.toArray(new Array[String](tail.size()))
+        if (!config.filenames().isEmpty) {
+            val tail = config.filenames().tail.asJava
+            tail.toArray(new Array[String](tail.size()))
+        } else {
+            config.filenames().toArray
+        }
     }
 }

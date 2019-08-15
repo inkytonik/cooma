@@ -10,9 +10,10 @@ import org.bitbucket.inkytonik.kiama.util.Source;
 public class TruffleDriver extends Driver {
 
     private CoomaTermNode currentCompiledNode;
+
     @Override
     public REPL createREPL(Config config) {
-        return TruffleRepl.repl(config);
+        return TruffleReplHolder.repl(config);
     }
 
 
@@ -20,12 +21,6 @@ public class TruffleDriver extends Driver {
     public void process(Source source, CoomaParserSyntax.Program prog, Config config) {
         GraalVMCompiler compiler = new GraalVMCompiler(config);
         currentCompiledNode  = compiler.compileCommand(prog);
-//        if (config.irPrint().isDefined())
-//            config.output().apply().emitln(compiler.showTerm(currentCompiledNode));
-//        if (config.irASTPrint().isDefined())
-//            config.output().apply().emitln(
-//                    JavaCoomaParserPrettyPrinter.getInstance().layout
-//                            (JavaCoomaParserPrettyPrinter.getInstance().any(currentCompiledNode), 5));
     }
 
     public CoomaTermNode getCurrentCompiledNode() {
