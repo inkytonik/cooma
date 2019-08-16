@@ -11,7 +11,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents;
+import static PrimitiveUtils.readReaderContents;
 
 public class ReaderReadP extends Primitive {
 

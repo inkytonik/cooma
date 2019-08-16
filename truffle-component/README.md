@@ -1,4 +1,4 @@
-# The simple language component for GraalVM
+# Cooma language component for the GraalVM
 
 Truffle languages can be packaged as components which can be installed into
 GraalVM using the [Graal

@@ -1,5 +1,3 @@
-package org.bitbucket.inkytonik.cooma;
-
 import java.io.IOException;
 import java.io.Reader;
 
