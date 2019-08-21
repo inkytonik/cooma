@@ -13,7 +13,6 @@ package backend
 
 import java.io._
 
-import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
 import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants
 import org.bitbucket.inkytonik.cooma.truffle.exceptions.CapabilityException
 

@@ -3,7 +3,6 @@ package org.bitbucket.inkytonik.cooma.truffle
 import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
-import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
 import org.graalvm.polyglot.Context
 
@@ -94,10 +93,9 @@ class GraalVMBackend(config : Config) extends Backend {
         new RowSelectP()
     }
 
-    override type ValueR = RuntimeValue[_]
+    override type ValueR = org.graalvm.polyglot.Value
 
     def showRuntimeValue(v : ValueR) : String = {
-        //Runtime value prining is done at a TruffleLanguage level.
         v.toString
     }
 
