@@ -7,9 +7,9 @@ import org.graalvm.polyglot.{Context, Value}
 class TruffleFrontend(in : InputStream = System.in, out : PrintStream = System.out) extends Frontend {
 
     /**
-      * Main entry point, where a cooma file is provided to run in the config or, if empty
-       * @param config
-      */
+     * Main entry point, where a cooma file is provided to run in the config or, if empty
+     * @param config
+     */
     override def interpret(config : Config) : Unit = {
         if (config.filenames().isEmpty) {
             val repl = new TruffleDriver().createREPL(config)

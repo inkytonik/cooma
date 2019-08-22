@@ -15,9 +15,6 @@ class GraalVMBackend(config : Config) extends Backend {
 
     override type Value = CoomaValueNode
 
-    var truffleNode : Term = _
-    def setRepl(term : Term) = truffleNode = term
-
     def appC(k : String, x : String) : CoomaTermNode = CoomaAppCTermNodeGen.create(k, x)
 
     def appF(f : String, k : String, x : String) : CoomaTermNode = CoomaAppFTermNodeGen.create(f, k, x)
@@ -106,7 +103,6 @@ class GraalVMBackend(config : Config) extends Backend {
     }
 
     def repl(env : Env, i : String, printValue : Boolean, config : Config, term : Term) : Env = {
-        setRepl(term)
         env
     }
 

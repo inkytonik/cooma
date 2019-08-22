@@ -1,24 +1,49 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
-import org.bitbucket.inkytonik.cooma.{Backend, Config, REPLFrontend}
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, CoomaParserPrettyPrinter, REPL}
 
-trait TruffleREPLFrontend extends REPLFrontend {
+trait TruffleREPL extends REPL {
 
-	self: GraalVMBackend =>
+    self : Compiler with GraalVMBackend =>
 
-	def processProgram(config: Config, line: String, i: String, printValue: Boolean): Unit = {
-		val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
-		if (printValue)
-			config.output().emitln(s"$i = ${showRuntimeValue(result)}")
-		else
-			config.output().emitln(i)
-		config.output().emitln(result)
-	}
+    /*
+	* Embed an entry in a program and process it.
+	*/
+    override def processEntry(config : Config, input : REPLInput) = {
+        val res = s"res$nResults"
+        input match {
+            case REPLExpression(e) =>
+                nResults = nResults + 1
+                processProgram(config, CoomaParserPrettyPrinter.format(
+                    Program(Blk(LetVal(Val(res, e), Return(Var(res))))),
+                    5
+                ).layout, res, printValue = true)
 
-	def compiledRepl(): Term = truffleNode
+            case REPLDef(fd @ Def(i, _, _)) =>
+                processProgram(config, CoomaParserPrettyPrinter.format(
+                    Program(Blk(LetFun(Vector(fd), Return(Var(i))))),
+                    5
+                ).layout, i, printValue = false)
+
+            case REPLVal(Val(i, e)) =>
+                processProgram(config, CoomaParserPrettyPrinter.format(
+                    Program(Blk(LetVal(Val(i, e), Return(Var(i))))),
+                    5
+                ).layout, i, printValue = true)
+        }
+    }
+
+    def processProgram(config : Config, line : String, i : String, printValue : Boolean) : Unit = {
+        val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
+        if (printValue)
+            config.output().emitln(s"$i = ${showRuntimeValue(result)}")
+        else
+            config.output().emitln(i)
+    }
 
 }
 
 object TruffleReplFrontendHolder {
-	def repl(config: Config): REPLFrontend with Backend = new GraalVMBackend(config) with TruffleREPLFrontend
+    def repl(config : Config) : REPL with Compiler with Backend = new GraalVMBackend(config) with TruffleREPL with Compiler
 }

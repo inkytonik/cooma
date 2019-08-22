@@ -13,7 +13,7 @@ public class TruffleDriver extends Driver {
 
     @Override
     public REPL createREPL(Config config) {
-        return TruffleReplHolder.repl(config);
+        return TruffleReplFrontendHolder.repl(config);
     }
 
 

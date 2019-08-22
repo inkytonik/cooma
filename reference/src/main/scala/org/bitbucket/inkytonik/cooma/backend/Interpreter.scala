@@ -333,6 +333,8 @@ class Interpreter(config : Config) {
 
     case class ReaderReadP(filename : String) extends Primitive {
 
+        import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
+
         val numArgs = 1
 
         if (CoomaConstants.CONSOLEIO != filename && !Files.isReadable(Paths.get(filename)))

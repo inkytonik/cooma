@@ -28,14 +28,13 @@ class ReferenceFrontend extends Frontend {
         driver.run(config)
     }
 
-
     /**
-      * This method is mainly built for the tests that execute cooma strings instead of
-      * cooma files.
-      * @param programName
-      * @param program
-      * @param config
-      */
+     * This method is mainly built for the tests that execute cooma strings instead of
+     * cooma files.
+     * @param programName
+     * @param program
+     * @param config
+     */
     override def interpret(programName : String, program : String, config : Config) : Unit = {
         driver.compileString(programName, program, config)
     }

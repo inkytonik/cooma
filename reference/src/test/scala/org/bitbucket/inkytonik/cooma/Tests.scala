@@ -37,7 +37,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
 
     val backends =
         List(
-            //Backend("Reference", Seq(), new ReferenceFrontend),
+            Backend("Reference", Seq(), new ReferenceFrontend),
             Backend("GraalVM", Seq("-g"), new TruffleFrontend(out = new PrintStream(truffleOutContent)))
         )
 
