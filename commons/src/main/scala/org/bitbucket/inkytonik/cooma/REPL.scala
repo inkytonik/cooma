@@ -8,6 +8,7 @@ trait REPL extends REPLBase[Config] {
 
     self : Compiler with Backend =>
 
+    import org.bitbucket.inkytonik.cooma.BuildInfo
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.kiama.util.{Console, Source, StringConsole}

@@ -5,33 +5,17 @@
     <output-test url="file://$MODULE_DIR$/../../reference/target/scala-2.12/test-classes" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../reference">
-      <sourceFolder url="file://$MODULE_DIR$/../../reference/target/scala-2.12/src_managed/main" isTestSource="false" generated="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../reference/target/scala-2.12/src_managed/test" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../reference/src/main/scala" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../reference/src/test/scala" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../reference/src/test/resources" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/../../reference/target/scala-2.12/src_managed/main" isTestSource="false" generated="true" />
       <excludeFolder url="file://$MODULE_DIR$/../../reference/target" />
-      <excludeFolder url="file://$MODULE_DIR$/../../reference/target/sbt-rats" />
       <excludeFolder url="file://$MODULE_DIR$/../../reference/target/streams" />
-      <excludeFolder url="file://$MODULE_DIR$/../../reference/target/test-reports" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="commons" exported="" />
     <orderEntry type="module" module-name="truffle_root" exported="" />
-    <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.12.8:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.12.8:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="sbt: org.bitbucket.inkytonik.kiama:kiama_2.12:2.3.0-SNAPSHOT:tests:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="sbt: org.bitbucket.inkytonik.kiama:kiama-extras_2.12:2.3.0-SNAPSHOT:tests:jar" level="project" />
-    <orderEntry type="library" name="sbt: xtc:rats:2.3.1:jar" level="project" />
-    <orderEntry type="library" name="sbt: xpp3:xpp3_min:1.1.4c:jar" level="project" />
-    <orderEntry type="library" name="sbt: xmlpull:xmlpull:1.1.3.1:jar" level="project" />
-    <orderEntry type="library" name="sbt: stax:stax-api:1.0.1:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.projectlombok:lombok:1.16.16:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.codehaus.jettison:jettison:1.3.7:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.apache.commons:commons-lang3:3.9:jar" level="project" />
-    <orderEntry type="library" name="sbt: junit:junit:4.8.2:jar" level="project" />
-    <orderEntry type="library" name="sbt: com.thoughtworks.xstream:xstream:1.4.3:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.code.findbugs:jsr305:3.0.2:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.code.gson:gson:2.8.5:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.errorprone:error_prone_annotations:2.2.0:jar" level="project" />
@@ -39,12 +23,18 @@
     <orderEntry type="library" name="sbt: com.google.guava:guava:27.0-jre:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.j2objc:j2objc-annotations:1.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.thoughtworks.xstream:xstream:1.4.3:jar" level="project" />
     <orderEntry type="library" name="sbt: jline:jline:2.14.6:jar" level="project" />
+    <orderEntry type="library" name="sbt: junit:junit:4.8.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.commons:commons-lang3:3.9:jar" level="project" />
     <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.dsinfo:dsinfo_2.12:0.4.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.dsprofile:dsprofile_2.12:0.4.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.kiama:kiama-extras_2.12:2.3.0-SNAPSHOT:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="sbt: org.bitbucket.inkytonik.kiama:kiama-extras_2.12:2.3.0-SNAPSHOT:tests:jar" level="project" />
     <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.kiama:kiama_2.12:2.3.0-SNAPSHOT:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="sbt: org.bitbucket.inkytonik.kiama:kiama_2.12:2.3.0-SNAPSHOT:tests:jar" level="project" />
     <orderEntry type="library" name="sbt: org.checkerframework:checker-qual:2.5.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.codehaus.jettison:jettison:1.3.7:jar" level="project" />
     <orderEntry type="library" name="sbt: org.codehaus.mojo:animal-sniffer-annotations:1.17:jar" level="project" />
     <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j:0.7.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.7.0:jar" level="project" />
@@ -52,14 +42,21 @@
     <orderEntry type="library" name="sbt: org.eclipse.xtend:org.eclipse.xtend.lib:2.16.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.16.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.16.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.graalvm.sdk:graal-sdk:19.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.graalvm.truffle:truffle-api:19.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.graalvm.truffle:truffle-dsl-processor:19.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.projectlombok:lombok:1.16.16:jar" level="project" />
     <orderEntry type="library" name="sbt: org.rogach:scallop_2.12:3.1.3:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.12.8:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.12.8:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scala-lang.modules:scala-xml_2.12:1.0.6:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scala-sbt:test-interface:1.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scalacheck:scalacheck_2.12:1.14.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scalactic:scalactic_2.12:3.0.5:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scalatest:scalatest_2.12:3.0.5:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.graalvm.sdk:graal-sdk:19.0.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.graalvm.truffle:truffle-api:19.0.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.graalvm.truffle:truffle-dsl-processor:19.0.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: stax:stax-api:1.0.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: xmlpull:xmlpull:1.1.3.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: xpp3:xpp3_min:1.1.4c:jar" level="project" />
+    <orderEntry type="library" name="sbt: xtc:rats:2.3.1:jar" level="project" />
   </component>
 </module>

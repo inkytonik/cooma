@@ -9,6 +9,12 @@ version := "0.1.0"
 organization in ThisBuild := "org.bitbucket.inkytonik.cooma"
 scalaVersion in ThisBuild := "2.12.8"
 
+lazy val kiamaDependencies = Seq(
+	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
+	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
+	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
+	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests")
+)
 
 lazy val commonsettings = Seq(
 	
@@ -72,7 +78,6 @@ lazy val commonsettings = Seq(
 	)),
 )
 
-
 // Assembly
 lazy val assemblySettings = Seq(
 	assemblyJarName in assembly := name.value + ".jar",
@@ -82,7 +87,7 @@ lazy val assemblySettings = Seq(
 		case PathList("META-INF", xs@_*) => MergeStrategy.first
 		case x => MergeStrategy.first
 	},
-	test in assembly := {},
+	test in assembly := {}
 )
 
 // Modules
@@ -101,34 +106,27 @@ lazy val root = (project in file("."))
 		truffle,
 		truffle_root,
 		trufflelauncher,
-		trufflecomponent,
+		trufflecomponent
 	)
 	.aggregate(
+		commons,
 		reference,
 		truffle,
 		truffle_root,
 		trufflelauncher,
 		trufflecomponent,
-		utils
 	)
 
 lazy val reference = (project in file("reference"))
-	.enablePlugins(BuildInfoPlugin)
 	.disablePlugins(sbtassembly.AssemblyPlugin)
 	.settings(
 		commonsettings,
 		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main"),
-		libraryDependencies ++=
-			Seq(
-				"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
-				"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
-				"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
-				"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
+		libraryDependencies ++= kiamaDependencies ++ Seq(
 				"org.scalatest" %% "scalatest" % "3.0.5" % "test",
 				"org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
-			)) dependsOn (commons, utils, truffle_root)
-
-
+			)
+	) dependsOn (commons, truffle_root)
 
 lazy val truffle_root = (project in file("truffle_root"))
 	.settings(
@@ -143,12 +141,7 @@ lazy val truffle = (project in file("truffle"))
 		assemblySettings,
 		commonsettings,
 		compileOrder := CompileOrder.Mixed,
-		libraryDependencies ++=
-			Seq(
-				"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
-				"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
-				"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
-				"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
+		libraryDependencies ++= kiamaDependencies ++ Seq(
 				"org.projectlombok" % "lombok" % "1.16.16",
 				"org.graalvm.truffle" % "truffle-api" % "19.0.0",
 				"org.graalvm.truffle" % "truffle-dsl-processor" % "19.0.0",
@@ -156,24 +149,13 @@ lazy val truffle = (project in file("truffle"))
 				"org.codehaus.jettison" % "jettison" % "1.3.7",
 				"org.apache.commons" % "commons-lang3" % "3.9"
 			)
-	)
-	.dependsOn(commons, utils)
+	).dependsOn(commons)
 
-lazy val utils = (project in file("utils"))
+lazy val commons = (project in file("commons"))
 	.enablePlugins(BuildInfoPlugin)
-	.disablePlugins(sbtassembly.AssemblyPlugin)
 	.settings(
 		commonsettings,
-		libraryDependencies ++=
-			Seq(
-				"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
-				"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
-				"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
-				"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
-			))
-
-
-lazy val commons = (project in file("commons")).settings(commonsettings).dependsOn(utils)
+		libraryDependencies ++= kiamaDependencies)
 
 lazy val trufflelauncher = (project in file("truffle-launcher"))
 	.settings(
@@ -197,7 +179,3 @@ lazy val trufflecomponent = (project in file("truffle-component"))
 			baseDirectory.value + "/install_component.sh" !
 		}
 	)
-
-
-
-

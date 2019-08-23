@@ -82,9 +82,6 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
         } else {
             truffleDriver.compileString("string source", source, config);
         }
-
-        //Here we get the entire config, including the internal one with the K prefix. We need to
-        //update the args for evaluation and get rid of those.
         getContextReference().get().setApplicationArguments(Util.getConfigFilenamesTail(config));
         RootNode evalMain = new CoomaRootNode(this, truffleDriver.getCurrentCompiledNode());
         return Truffle.getRuntime().createCallTarget(evalMain);
