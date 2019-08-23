@@ -6,7 +6,7 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
 import org.graalvm.polyglot.Context
 
-class GraalVMBackend(config : Config) extends Backend {
+class TruffleBackend(config : Config) extends Backend {
 
     override def backendName : String = "Graal"
 

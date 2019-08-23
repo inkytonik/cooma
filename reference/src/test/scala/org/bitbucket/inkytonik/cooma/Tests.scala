@@ -14,7 +14,7 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
 import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
-import org.bitbucket.inkytonik.cooma.truffle.{GraalVMBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
+import org.bitbucket.inkytonik.cooma.truffle.{TruffleBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
 import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole, TestCompilerWithConfig}
 
 class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
@@ -917,7 +917,7 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         runREPLTest(name, ":lines", input, options, args)
 
     override def createREPL(config : Config) : REPL with Compiler with org.bitbucket.inkytonik.cooma.Backend = {
-        if (config.graalVM()) new GraalVMBackend(config) with TruffleREPL with Compiler else new ReferenceBackend(config) with REPL with Compiler
+        if (config.graalVM()) new TruffleBackend(config) with TruffleREPL with Compiler else new ReferenceBackend(config) with REPL with Compiler
     }
 
     /**

@@ -19,7 +19,7 @@ public class TruffleDriver extends Driver {
 
     @Override
     public void process(Source source, CoomaParserSyntax.Program prog, Config config) {
-        GraalVMCompiler compiler = new GraalVMCompiler(config);
+        TruffleCompiler compiler = new TruffleCompiler(config);
         currentCompiledNode  = compiler.compileCommand(prog);
     }
 

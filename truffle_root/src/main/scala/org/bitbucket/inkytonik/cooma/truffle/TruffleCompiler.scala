@@ -3,10 +3,10 @@ package org.bitbucket.inkytonik.cooma.truffle
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode
 import org.bitbucket.inkytonik.cooma.{Config, CoomaParserSyntax}
 
-class GraalVMCompiler(val config : Config) {
+class TruffleCompiler(val config : Config) {
     import org.bitbucket.inkytonik.cooma.Compiler
 
-    val backendMixin = new GraalVMBackend(config) with Compiler
+    val backendMixin = new TruffleBackend(config) with Compiler
 
     /**
      * Compile a program that will run as a command with

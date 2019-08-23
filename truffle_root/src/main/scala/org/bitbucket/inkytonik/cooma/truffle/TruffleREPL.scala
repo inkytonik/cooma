@@ -5,7 +5,7 @@ import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, CoomaParserPret
 
 trait TruffleREPL extends REPL {
 
-    self : Compiler with GraalVMBackend =>
+    self : Compiler with TruffleBackend =>
 
     /*
 	* Embed an entry in a program and process it.
@@ -45,5 +45,5 @@ trait TruffleREPL extends REPL {
 }
 
 object TruffleReplFrontendHolder {
-    def repl(config : Config) : REPL with Compiler with Backend = new GraalVMBackend(config) with TruffleREPL with Compiler
+    def repl(config : Config) : REPL with Compiler with Backend = new TruffleBackend(config) with TruffleREPL with Compiler
 }

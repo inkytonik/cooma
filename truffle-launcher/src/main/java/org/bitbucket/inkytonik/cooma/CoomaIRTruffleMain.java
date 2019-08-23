@@ -18,6 +18,5 @@ public class CoomaIRTruffleMain {
             System.out.println("Cooma language truffle implementation cannot be used standalone but only as a backend for the moment.");
             System.exit(-1);
         }
-
     }
 }
