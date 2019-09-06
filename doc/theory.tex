@@ -196,13 +196,13 @@ The compilation scheme follows the lead of Kennedy ``Compiling with Continuation
 The compilation functions come in standard form $\cmpn{e}$ and sometimes also a tail-call form $\tcmpn{e}$, where the subscript $e$, $b$, etc denotes the form of the code being compiled: expression, block, etc.
 
 Apart from the code to compile, the standard form takes an argument $\kappa$ that is a function from an identifier to a compiled term.
-I.e., $\kappa$ is a code generation continuation that produces the rest of the code, given the name of the variable to which the result of the current compiled code has been bound.
-In other words, if the variable $x$ holds the result computed by the code we just compiled, then $\kappa(x)$ computes the complete code.
+$\kappa$ is a code generation continuation that produces the rest of the code, given the name of the variable to which the result of the current compiled code has been bound.
+E.g., if the variable named $x$ holds the result computed by the code we just compiled, then $\kappa(x)$ computes the complete code.
 
 The tail form is similar, except it is used when the continuation is known at compile time, so an efficient direct call can be generated.
 Thus, instead of $\kappa$, the extra argument to the tail form is the name of the relevant continuation variable $k$.
 We just generate a call to this continuation, instead of using $\kappa$ to generate the code.
-In other words, if the variable $x$ holds the result computed by the code we just compiled, then we can pass it directly to the continuation using $\appc{k}{x}$.
+E.g., if the variable $x$ holds the result computed by the code we just compiled, then we can pass it directly to the continuation using $\appc{k}{x}$.
 
 \subsection*{Top-level}
 
@@ -218,7 +218,7 @@ The parameter $n$ keeps count of the current argument number, so we compile a pr
 \cmpin{p}{\fune{\arge{a}{t}}{e}}{n} & = &
   \letv{x}{\prmv{\kw{argument}}{n}}{\letv{a}{\prmv{\kw{capability}}{t,x}}{\cmpin{p}{e}{(n + 1)}}} \\
   & &
-  \text{$t$ is a capability}, \fresh{x} \\
+  \text{if $t$ is a capability type}, \fresh{x} \\
 \end{array}
 \]
 
@@ -230,7 +230,7 @@ Other than capability arguments, string program arguments are passed through fro
   \\
 \end{array}
 \]
-All other program argument types are in error.
+All other program argument types are in error at the moment.
 
 If the program is not a function, it is compiled in a normal fashion using the special continuation variable $\kw{halt}$ that terminates program execution when called.
 \[
