@@ -14,6 +14,16 @@
 
 \begin{document}
 
+\title{Cooma Theory}
+
+\author{
+Anthony Sloane \\
+Programming Languages and Verification Group \\
+Macquarie University
+}
+
+\maketitle
+
 \section{Notation}
 
 \newcommand{\fresh}[1]{\mathrm{fresh}\;#1}
@@ -28,16 +38,18 @@
 \[
 \begin{array}{ll}
 \rep{x}          & \text{sequence of zero or more $x_0, x_1, \ldots, x_n$} \\
-x_h              & \text{head of $\rep{x}$} \\
-x_h, t_h         & \text{components of first element of $\rep{\arge{x}{t}}$} \\
-\rep{x}_t        & \text{tail elements of $\rep{x}$} \\
 \cons{h}{t}      & \text{sequence with head $h$ and tail $t$} \\
-\map{f}{\rep{x}} & \text{map operation $f$ over elements of $\rep{x}$} \\
-\fresh{x}        & \text{$x$ is a unique identifier} \\
+x_h              & \text{head of $\rep{x}$} \\
+\rep{x}_t        & \text{tail elements of $\rep{x}$} \\
+x_h, t_h         & \text{components of first element of $\rep{\arge{x}{t}}$} \\
+\map{f}{\rep{x}} & \text{map function $f$ over elements of $\rep{x}$} \\
+\fresh{x}        & \text{$x$ is a new identifier not used elsewhere} \\
 \end{array}
 \]
 
-\section{Cooma}
+\newpage
+
+\section{Abstract Syntax}
 
 \newcommand{\ande}[2]{#1\;\&\;#2}
 \newcommand{\appe}[2]{#1(#2)}
