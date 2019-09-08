@@ -28,22 +28,30 @@ Macquarie University
 
 \newcommand{\fresh}[1]{\mathrm{fresh}\;#1}
 \newcommand{\cons}[2]{\mathit{#1 :: #2}}
+\newcommand{\len}[1]{\lvert #1 \rvert}
 \newcommand{\map}[2]{\mathit{map}(#1, #2)}
-\newcommand{\rep}[1]{\overline{#1}}
+\newcommand{\repo}[1]{\overline{#1}}
+\newcommand{\repz}[1]{[\ \repo{#1}\ ]}
+\newcommand{\sub}[3]{#1_{#2,#3}}
+\newcommand{\subs}[2]{#1 \subset #2}
 
 \newcommand{\arge}[2]{#1 : #2}
 \newcommand{\flde}[2]{#1 = #2}
-\newcommand{\flds}[2]{\rep{\flde{#1}{#2}}}
+\newcommand{\flds}[2]{\repz{\flde{#1}{#2}}}
 
 \[
 \begin{array}{ll}
-\rep{x}          & \text{sequence of zero or more $x_0, x_1, \ldots, x_n$} \\
-\cons{h}{t}      & \text{sequence with head $h$ and tail $t$} \\
-x_h              & \text{head of $\rep{x}$} \\
-\rep{x}_t        & \text{tail elements of $\rep{x}$} \\
-x_h, t_h         & \text{components of first element of $\rep{\arge{x}{t}}$} \\
-\map{f}{\rep{x}} & \text{map function $f$ over elements of $\rep{x}$} \\
-\fresh{x}        & \text{$x$ is a new identifier not used elsewhere} \\
+\repo{x}                 & \text{sequence of one or more $x_0, x_1, \ldots, x_n$} \\
+\repz{x}                 & \text{sequence of zero or more $x_0, x_1, \ldots, x_n$} \\
+\sub{\repo{x}}{i}{j}     & \text{sub-sequence of elements $i$ (inclusive) to $j$ (exclusive) of $\repo{x}$} \\
+\len{\repo{x}}           & \text{length of sequence $\repo{x}$} \\
+\cons{h}{t}              & \text{sequence with head $h$ and tail $t$} \\
+x_h                      & \text{head of $\repo{x}$} \\
+\repo{x}_t               & \text{tail elements of $\repo{x}$} \\
+x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{t}}$} \\
+\subs{\repo{x}}{\repo{y}} & \text{all $x_i$ are in $\repo{y}$} \\
+\map{f}{\repo{x}}         & \text{map function $f$ over elements of $\repo{x}$} \\
+\fresh{x}                 & \text{$x$ is a new identifier not used elsewhere} \\
 \end{array}
 \]
 
@@ -61,21 +69,28 @@ x_h, t_h         & \text{components of first element of $\rep{\arge{x}{t}}$} \\
 \newcommand{\stre}[1]{#1}
 \newcommand{\vare}[1]{#1}
 
-\newcommand{\fd}[4]{#1(\rep{#2 : #3}) = #4}
-\newcommand{\fundef}[2]{\rep{\kw{def}\;#1}\;#2}
+\newcommand{\fd}[5]{#1(\repz{#2 : #3}) : #4 = #5}
+\newcommand{\fundef}[2]{\repo{\kw{def}\;#1}\;#2}
 \newcommand{\valdef}[3]{\kw{val}\;#1 = #2\;#3}
 \newcommand{\return}[1]{#1}
 
-\newcommand{\funty}[2]{#1 -> #2}
+\newcommand{\funty}[2]{(#1) -> #2}
 \newcommand{\intty}{\kw{Int}}
-\newcommand{\rowty}[2]{\{ \rep{#1 : #2} \}}
+\newcommand{\namty}{x}
+\newcommand{\recty}[1]{\Pi\ #1}
 \newcommand{\strty}{\kw{String}}
+\newcommand{\typty}{\kw{Type}}
+\newcommand{\varty}[1]{\Sigma\ #1}
+
+\newcommand{\rowty}[2]{\{ \repz{#1 : #2} \}}
+\newcommand{\rowety}{\{\}}
+\newcommand{\catr}[2]{#1 \odot #2}
 
 \[
 \begin{array}{lcl}
 n & \in & \text{integer} \\
 s & \in & \text{string} \\
-x & \in & \text{identifier} \\
+x, y & \in & \text{variable} \\
 \end{array}
 \]
 \[
@@ -84,23 +99,28 @@ x & \in & \text{identifier} \\
   & e & ::= & \nume{n}                      & \text{integer constant} \\
   &   & |   & \stre{s}                      & \text{string constant} \\
   &   & |   & \vare{x}                      & \text{variable} \\
-  &   & |   & \fune{\rep{\arge{x}{t}}}{e}   & \text{function abstraction} \\
-  &   & |   & \appe{e}{\rep{e}}             & \text{function application} \\
+  &   & |   & \fune{\repz{\arge{x}{t}}}{e}   & \text{function abstraction ($x_i$ distinct)} \\
+  &   & |   & \appe{e}{\repo{e}}             & \text{function application} \\
   &   & |   & \blke{b}                      & \text{block} \\
-  &   & |   & \rowe{x}{e}                   & \text{row} \\
+  &   & |   & \rowe{x}{e}                   & \text{row ($x_i$ distinct)} \\
   &   & |   & \sele{e}{x}                   & \text{row selection} \\
   &   & |   & \ande{e}{e}                   & \text{row concatenation} \\
 \\
 \text{block expression}
-  & b & ::= & \valdef{x}{e}{b}              & \text{value definition} \\
-  &   & |   & \fundef{\fd{x}{x}{t}{e}}{b}   & \text{function definitions} \\
-  &   & |   & \return{e}                    & \text{return} \\
+  & b & ::= & \valdef{x}{e}{b}                 & \text{value definition} \\
+  &   & |   & \fundef{\fd{x}{x}{t}{t}{e}}{b}   & \text{function definitions ($x_i$ distinct)} \\
+  &   & |   & \return{e}                       & \text{return} \\
 \\
 \text{type}
-  & t & ::= & \intty       & \text{integer} \\
-  &   & |   & \strty       & \text{string} \\
-  &   & |   & \funty{t}{t} & \text{function} \\
-  &   & |   & \rowty{x}{t} & \text{row} \\
+  & t, u & ::=  & \namty             & \text{named type} \\
+  % &     & |   & \typty             & \text{type} \\
+  &      & |   & \funty{\repz{t}}{t} & \text{function} \\
+  &      & |   & \recty{r}          & \text{record} \\
+  % &     & |   & \varty{r}          & \text{variant} \\
+  % &     & |   & \rowty{x}{t}       & \text{row} \\
+\\
+\text{row}
+  & r & ::= & \rowty{x}{t}       & \text{($x_i$ distinct)}
 \end{array}
 \]
 
@@ -113,6 +133,277 @@ Notes:
 
 \newpage
 
+\section{Type System}
+
+\newcommand{\inft}[4]{#2 |-_#1 #3 \Uparrow #4}
+\newcommand{\infe}[3]{\inft{e}{#1}{#2}{#3}}
+\newcommand{\infb}[3]{\inft{b}{#1}{#2}{#3}}
+
+\newcommand{\chkt}[4]{#2 |-_#1 #3 \Downarrow #4}
+\newcommand{\chke}[3]{\chkt{e}{#1}{#2}{#3}}
+
+\newcommand{\rulename}[1]{{\footnotesize #1}}
+
+\newenvironment{rules}[1]
+    {\begin{center}\begin{tabular}{#1}}
+    {\end{tabular}\end{center}}
+
+Type inference judgement $\infe{\Gamma}{e}{t}$ says that expression $e$ is inferred to have type $t$ in context $\Gamma$.
+Block types use analogous judgement $\infb{\Gamma}{e}{t}$.
+
+Type checking judgement $\chke{\Gamma}{e}{t}$ says that expression $e$ is checked to have type $t$ in context $\Gamma$.
+
+Overloaded notation expresses simultaneous inference or checking of multiple expressions: $\infe{\Gamma}{\repo{e}}{\repo{t}}$ and $\chke{\Gamma}{\repo{e}}{\repo{t}}$.
+
+\subsection{Subtyping}
+
+\newcommand{\subtype}[2]{#1 <: #2}
+
+Subtyping $\subtype{t}{u}$ allows values of type $t$ to be used where values of type $u$ are expected.
+Overloaded notation supports pairwise subtyping of type sequences $\subtype{\repo{t}}{\repo{u}}$.
+
+We support subtyping of records where more fields are present and extend that to the usual subtyping for functions.
+
+\begin{rules}{cc}
+
+\inference[T-REC]{
+  \subs{\rowty{x}{t}}{\rowty{y}{u}}
+}{
+  \subtype{\recty{\rowty{x}{t}}}{\recty{\rowty{y}{u}}}
+}
+
+&
+
+\inference[T-FUN]{
+  \subtype{\repo{t_2}}{\repo{t_1}} & \subtype{u_1}{u_2}
+}{
+  \subtype{\funty{\repo{t_1}}{u_1}}{\funty{\repo{t_2}}{u_2}}
+}
+
+\end{rules}
+
+Named types for built-in capabilities are related to record types that provide the capability operations.
+
+\begin{rules}{c}
+
+\inference[T-RD]{
+  \
+}{
+  \subtype{\kw{Reader}}{\recty{\{ \kw{read} :\funty{}{String} \}}}
+}
+
+\end{rules}
+
+\begin{rules}{c}
+
+\inference[T-WR]{
+  \
+}{
+  \subtype{\kw{Writer}}{\recty{\{ \kw{write} :\funty{String}{\recty{\rowety}} \}}}
+}
+
+\end{rules}
+
+\begin{rules}{c}
+
+\inference[T-RDWR]{
+  \
+}{
+  \subtype{\kw{ReaderWriter}}{\recty{\{ \kw{read} :\funty{}{String}, \kw{write} :\funty{String}{\recty{\rowety} \}}}}
+}
+
+\end{rules}
+
+\subsection{Contexts}
+
+\newcommand{\bnd}[2]{#1 : #2}
+\newcommand{\bnds}[2]{\repo{#1 : #2}}
+\newcommand{\nilc}{\bullet}
+\newcommand{\consc}[2]{#1,#2}
+
+Typing contexts $\Gamma$ are lists of variable-type pairs:
+\[
+\begin{array}{rlcll}
+\text{context}
+  & \Gamma & ::= & \nilc                      & \text{empty} \\
+  &        & |   & \consc{\Gamma}{\bnd{x}{t}} & \text{add binding $x:t$ to $\Gamma$} \\
+\end{array}
+\]
+
+Adding multiple bindings to context $\consc{\Gamma}{\bnds{x}{t}}$ adds the pairs from $\bnds{x}{t}$ in first-to-last order.
+
+Context operations:
+\[
+\begin{array}{rrcll}
+\text{context membership}
+  & y \in \nilc                      & = & \text{false} \\
+  & y \in \consc{\Gamma}{\bnd{x}{t}} & = & \text{if $x = y$ then true else $y \in \Gamma$} \\
+\\
+\text{context lookup (defined if $y \in \Gamma$)}
+  & (\consc{\Gamma}{\bnd{x}{t}})(y) & = & \text{if $x = y$ then t else $\Gamma(y)$} \\
+\end{array}
+\]
+
+\subsection{Type rules}
+
+For now we support built-in type names for integers, strings and capabilities.
+The latter have no literal form.
+
+\begin{rules}{ccc}
+
+\inference[T-INT]{
+  \
+}{
+  \infe{\Gamma}{\nume{n}}{\intty}
+}
+
+&
+
+\inference[T-STR]{
+  \
+}{
+  \infe{\Gamma}{\stre{s}}{\strty}
+}
+
+\end{rules}
+
+Typing of variables is standard.
+
+\begin{rules}{ccc}
+
+\inference[T-VAR]{
+  x \in \Gamma
+}{
+  \infe{\Gamma}{\vare{x}}{\Gamma(x)}
+}
+
+\end{rules}
+
+Function typing is also standard, except that multiple arguments are dealt with at the same time.
+Applications can be fully applied (\rulename{T-APP-F}) or partial (\rulename{T-APP-P}).
+
+\begin{rules}{cc}
+
+\inference[T-FUN]{
+  \infe{\consc{\Gamma}{\bnds{x}{t}}}{e}{t}
+}{
+  \infe{\Gamma}{\fune{\repo{\arge{x}{t}}}{e}}{\funty{\repo{t}}{t}}
+}
+
+&
+
+\inference[T-APP-F]{
+  \infe{\Gamma}{e}{\funty{\repo{t}}{t}} & \len{e} = \len{t} &
+  \chke{\Gamma}{\repo{e}}{\repo{t}}
+}{
+  \infe{\Gamma}{\appe{e}{\repo{e}}}{t}
+}
+
+\end{rules}
+
+\begin{rules}{c}
+
+\inference[T-APP-P]{
+  \infe{\Gamma}{e}{\funty{\repo{t}}{t}} & \len{e} < \len{t} &
+  \chke{\Gamma}{\sub{\repo{e}}{0}{\len{e}}}{\sub{\repo{t}}{0}{\len{e}}}
+}{
+  \infe{\Gamma}{\appe{e}{\repo{e}}}{\funty{\sub{\repo{t}}{\len{e}}{\len{t}}}{t}}
+}
+
+\end{rules}
+
+Blocks are typed as let expressions.
+
+\begin{rules}{cc}
+
+\inference[T-BLK]{
+  \infb{\Gamma}{\blke{b}}{t}
+}{
+  \infe{\Gamma}{\blke{b}}{t}
+}
+
+&
+
+\inference[T-VAL]{
+  \infe{\Gamma}{e}{t} & \infb{\consc{\Gamma}{\bnd{x}{t}}}{b}{u}
+}{
+  \infb{\Gamma}{\valdef{x}{e}{b}}{u}
+}
+
+\end{rules}
+
+\begin{rules}{cc}
+
+\inference[T-DEF]{
+  \infb{\consc{\Gamma}{\repo{\bnd{x_i}{\funty{\repo{t_i}}{u_i}}}}}{b}{t}
+}{
+  \infb{\Gamma}{\fundef{\fd{x}{y}{t}{u}{e}}{b}}{t}
+}
+
+&
+
+\inference[T-RET]{
+  \infe{\Gamma}{e}{t}
+}{
+  \infb{\Gamma}{\return{e}}{t}
+}
+
+\end{rules}
+
+Records are typed according to rows that define their fields and the field types.
+
+\begin{rules}{c}
+
+\inference[T-REC]{
+  \infe{\Gamma}{\repo{e}}{\repo{t}}
+}{
+  \infe{\Gamma}{\rowe{x}{e}}{\recty{\rowty{x}{t}}}
+}
+
+\end{rules}
+
+Typing of record concatenation uses an auxiliary operation $\catr{r_1}{r_2}$ on rows that returns the union of the row fields, but is only defined if the fields of $r_1$ and $r_2$ are disjoint.
+
+\begin{rules}{cc}
+
+\inference[T-SEL]{
+  \infe{\Gamma}{e}{\recty{\rowty{x}{t}}}
+}{
+  \infe{\Gamma}{\sele{e}{x_i}}{t_i}
+}
+
+&
+
+\inference[T-CON]{
+  \infe{\Gamma}{e_1}{\recty{r_1}} & \infe{\Gamma}{e_2}{\recty{r_2}}
+}{
+  \infe{\Gamma}{\ande{e_1}{e_2}}{\recty{(\catr{r_1}{r_2})}}
+}
+
+\end{rules}
+
+A type check can be resolved by a type inference of that type or a subtype.
+
+\begin{rules}{cc}
+
+\inference[T-SWP]{
+  \infe{\Gamma}{e}{t}
+}{
+  \chke{\Gamma}{e}{t}
+}
+
+&
+
+\inference[T-WID]{
+  \infe{\Gamma}{e}{u} & \subtype{u}{t}
+}{
+  \chke{\Gamma}{e}{t}
+}
+
+\end{rules}
+
+\newpage
+
 \section{Intermediate Representation}
 
 \newcommand{\appc}[2]{#1\;#2}
@@ -120,7 +411,7 @@ Notes:
 \newcommand{\letc}[4]{\kw{letc}\;#1\;#2 = #3\;\kw{in}\;#4}
 
 \newcommand{\defterm}[4]{#1\;#2\;#3 = #4}
-\newcommand{\letf}[2]{\kw{letf}\;\rep{#1}\;\kw{in}\;#2}
+\newcommand{\letf}[2]{\kw{letf}\;\repo{#1}\;\kw{in}\;#2}
 \newcommand{\letff}[2]{\kw{letf}\;#1\;\kw{in}\;#2}
 
 \newcommand{\letv}[3]{\kw{letv}\;#1 = #2\;\kw{in}\;#3}
@@ -128,7 +419,7 @@ Notes:
 \newcommand{\funv}[3]{\kw{fun}\;#1\;#2\;.\;#3}
 \newcommand{\intv}[1]{#1}
 \newcommand{\prmv}[2]{#1(#2)}
-\newcommand{\rowv}[2]{\{ \rep{#1 = #2} \}}
+\newcommand{\rowv}[2]{\{ \repo{#1 = #2} \}}
 \newcommand{\rowvs}[2]{\{ #1 \}}
 \newcommand{\strv}[1]{#1}
 
@@ -160,7 +451,7 @@ p & \in & \text{primitive} \\
   &   & |   & \strv{s}           & \text{string} \\
   &   & |   & \funv{k}{x}{z}     & \text{function} \\
   &   & |   & \rowv{x}{x}        & \text{row} \\
-  &   & |   & \prmv{p}{\rep{x}}  & \text{primitive call} \\
+  &   & |   & \prmv{p}{\repo{x}}  & \text{primitive call} \\
 \end{array}
 \]
 
@@ -208,7 +499,7 @@ E.g., if the variable $x$ holds the result computed by the code we just compiled
 
 We distinguish two cases of top-level compilation: one for a whole program that is intended to be run from the command line, and one for an expression entered in the REPL.
 
-In the program case, $\cmpn{p}$ curries functions and compiles capability arguments to access the command line argument strings and create capabilities.
+In the program case, $\cmpn{p}$ curries functions and compiles capability arguments to access the command line argument strings via the $\kw{argument}$ primitive and create capabilities via the $\kw{capability}$ primitive.
 The parameter $n$ keeps count of the current argument number, so we compile a program $e$ with $\cmpin{p}{e}{0}$.
 \[
     \cmpn{p} : e -> n -> z
@@ -221,6 +512,8 @@ The parameter $n$ keeps count of the current argument number, so we compile a pr
   \text{if $t$ is a capability type}, \fresh{x} \\
 \end{array}
 \]
+
+The current capability types are $\kw{Reader}$, $\kw{Writer}$, and $\kw{ReaderWriter}$.
 
 Other than capability arguments, string program arguments are passed through from the command line.
 \[
@@ -276,14 +569,14 @@ Functions are curried and compiled one argument at a time by $\cmpn{f}$ or $\tcm
 \cmpk{e}{\fune{\arge{x}{t}}{e}} & = &
   \cmpk{f}{x,t,e}
   \\
-\cmpk{e}{\fune{\rep{\arge{x}{t}}}{e}} & = &
-  \cmpk{f}{x_h,t_h,\fune{\rep{\arge{x}{t}}_t}{e}} \medskip \\
+\cmpk{e}{\fune{\repo{\arge{x}{t}}}{e}} & = &
+  \cmpk{f}{x_h,t_h,\fune{\repo{\arge{x}{t}}_t}{e}} \medskip \\
 
 \tcmpk{e}{\fune{\arge{x}{t}}{e}} & = &
   \tcmpk{f}{x,t,e}
   \\
-\tcmpk{e}{\fune{\rep{\arge{x}{t}}}{e}} & = &
-  \tcmpk{f}{x_h,t_h,\fune{\rep{\arge{x}{t}}_t}{e}}
+\tcmpk{e}{\fune{\repo{\arge{x}{t}}}{e}} & = &
+  \tcmpk{f}{x_h,t_h,\fune{\repo{\arge{x}{t}}_t}{e}}
 \end{array}
 \]
 Applications are curried.
@@ -293,13 +586,13 @@ An application to a single argument is compiled by compiling the function $f$ to
 \cmpk{e}{\appe{f}{e}} & = &
   \cmpin{e}{f}{(y => \cmpin{e}{e}{(z => \letc{k}{x}{\kappa(x)}{\appf{y}{k}{z}})})} &
   \fresh{k,x} \\
-\cmpk{e}{\appe{f}{\rep{e}}} & = &
-  \cmpk{e}{\appe{\appe{f}{e_h}}{\rep{e}_t}} \medskip \\
+\cmpk{e}{\appe{f}{\repo{e}}} & = &
+  \cmpk{e}{\appe{\appe{f}{e_h}}{\repo{e}_t}} \medskip \\
 
 \tcmpk{e}{\appe{f}{e}} & = &
   \cmpin{e}{f}{(y => \cmpin{e}{e}{(z => \appf{y}{k}{z})})} \\
-\tcmpk{e}{\appe{f}{\rep{e}}} & = &
-  \tcmpk{e}{\appe{\appe{f}{e_h}}{\rep{e}_t}} \\
+\tcmpk{e}{\appe{f}{\repo{e}}} & = &
+  \tcmpk{e}{\appe{\appe{f}{e_h}}{\repo{e}_t}} \\
 \end{array}
 \]
 Block expressions are compiled by $\cmpn{b}$ or $\tcmpn{b}$.
@@ -354,14 +647,14 @@ A return expression is trivially compiled using $\cmpn{e}$ or $\tcmpn{e}$.
 \[
 \begin{array}{rcll}
 \cmpk{b}{\fundef{f}{b}} & = &
-  \letff{\map{\cmpn{d}}{\rep{f}}}{\cmpk{b}{b}} \\
+  \letff{\map{\cmpn{d}}{\repo{f}}}{\cmpk{b}{b}} \\
 \cmpk{b}{\valdef{x}{e}{b}} & = &
   \letc{j}{x}{\cmpk{b}{b}}{\tcmpin{e}{e}{j}} & \fresh{j} \\
 \cmpk{b}{\return{e}} & = &
   \cmpk{e}{e} \medskip \\
 
 \tcmpk{b}{\fundef{f}{b}} & = &
-  \letff{\map{\cmpn{d}}{\rep{f}}}{\tcmpk{b}{b}} \\
+  \letff{\map{\cmpn{d}}{\repo{f}}}{\tcmpk{b}{b}} \\
 \tcmpk{b}{\valdef{x}{e}{b}} & = &
   \letc{j}{x}{\tcmpk{b}{b}}{\tcmpin{e}{e}{j}} & \fresh{j} \\
 \cmpk{b}{\return{e}} & = &
@@ -374,17 +667,17 @@ A return expression is trivially compiled using $\cmpn{e}$ or $\tcmpn{e}$.
 A function definition compiles into a binding for use in a $\kw{letf}$ where a continuation argument $k$ has been added and the body $e$ has been compiled to $z$.
 The body is either compiled directly if the function only has one argument, or compiled as a function that takes the remaining arguments otherwise.
 \[
-    \cmpn{d} : x -> \rep{\arge{x}{t}} -> e -> (x -> z) -> z
+    \cmpn{d} : x -> \repo{\arge{x}{t}} -> t -> e -> (x -> z) -> z
 \]
 \[
 \begin{array}{rcll}
-\cmpk{d}{\fd{f}{x}{t}{e}} & = &
+\cmpk{d}{\fd{f}{x}{t}{u}{e}} & = &
   \defterm{f}{k}{x}{z} &
   \fresh{k} \\
 \text{where $z$} & = &
-  \tcmpk{e}{e} & \text{if $\rep{\arge{x}{t}}$ is a singleton} \\
+  \tcmpk{e}{e} & \text{if $\repo{\arge{x}{t}}$ is a singleton} \\
  & = &
-  \tcmpk{e}{\fune{\rep{\arge{x}{t}}_t}{e}} & \text{otherwise} \\
+  \tcmpk{e}{\fune{\repo{\arge{x}{t}}_t}{e}} & \text{otherwise} \\
 \end{array}
 \]
 
@@ -444,8 +737,8 @@ Field definitions $\flds{f}{e}$ are compiled by compiling their defining express
 
 \newcommand{\clsf}[4]{\langle #1, \conf{#2}{#3}{#4} \rangle}
 \newcommand{\clsc}[3]{\langle #1, \conc{#2}{#3} \rangle}
-\newcommand{\clsfs}[5]{\langle #1, \rep{\lambda #2 #3 #4 . #5} \rangle}
-\newcommand{\clsffs}[2]{\langle #1, \rep{#2} \rangle}
+\newcommand{\clsfs}[5]{\langle #1, \repo{\lambda #2 #3 #4 . #5} \rangle}
+\newcommand{\clsffs}[2]{\langle #1, \repo{#2} \rangle}
 
 \newcommand{\extv}[3]{#1, #2 \mapsto #3}
 \newcommand{\extc}[5]{\extv{#1}{#2}{\clsc{#3}{#4}{#5}}}
@@ -532,7 +825,7 @@ A row value becomes a runtime row value after the fields have been interpreted.
 Interpretation of primitives uses an external $\kw{eval}$ operation.
 \[
 \begin{array}{rlll}
-\cmp{v}{\prmv{p}{\rep{x}}}{\rho} & = & \kw{eval}(p, \rep{x}, \rho)
+\cmp{v}{\prmv{p}{\repo{x}}}{\rho} & = & \kw{eval}(p, \repo{x}, \rho)
 \end{array}
 \]
 
