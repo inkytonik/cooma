@@ -796,8 +796,6 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
             val name = s"writer and reader command arguments ($filename)"
             val writer = makeTempFilename(".txt")
             val reader = makeTempFilename(".txt")
-            println(s"writer file $writer")
-            println(s"reader file $reader")
             val args = Seq(writer, reader)
             val content = "The file contents"
 
