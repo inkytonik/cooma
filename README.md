@@ -7,9 +7,9 @@ The Cooma project at Macquarie University is investigating secure programming la
 ## Participants
 
 * Anthony Sloane (Anthony.Sloane@mq.edu.au)
+* Franck Cassez
 * Diego Ocampo Herrera
 * Scott Buckley
-* Cameron Pappas
 
 ## Sponsors
 
@@ -34,7 +34,7 @@ Specification and reference implementation is under way.
 * Functional core (tail call optimisation, but no polymorphism)
 * Row-based data types (literals, selection, concatenation, no variants)
 * Object capabilities via rows
-* Runtime-provided resource capabilities (Console and Reader only)
+* Runtime-provided resource capabilities (Reader, Writer and ReaderWriter only)
 * Implicit argument resolution (not started)
 
 ### Related projects
@@ -113,7 +113,7 @@ res5 = 1
 
 ### Running on files (compiler mode)
 
-E.g., for the program `src/test/resources/basic/multiArgCall.cooma` which is a simple multiple argument function call:
+E.g., for the program `reference/src/test/resources/basic/multiArgCall.cooma` which is a simple multiple argument function call:
 
 ```ml
 {fun (x : Int, y : String) => x} (10, "hello")
@@ -123,7 +123,7 @@ we get the following using the `-r` option to print the program result:
 
 ```ml
 
-cooma 0.1.0 2.12.8> run -r src/test/resources/basic/multiArgCall.cooma`
+cooma 0.1.0 2.12.8> run -r reference/src/test/resources/basic/multiArgCall.cooma`
 [info] ... sbt messages ...
 10
 ```
@@ -131,8 +131,8 @@ cooma 0.1.0 2.12.8> run -r src/test/resources/basic/multiArgCall.cooma`
 Use `--help` to see all of the options for printing the source AST, IR and IR AST. E.g., use `-i` to print the IR AST:
 
 ```ml
-cooma 0.1.0 2.12.8> run -i -r src/test/resources/basic/multiArgCall.cooma
-[info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r src/test/resources/basic/multiArgCall.cooma
+cooma 0.1.0 2.12.8> run -i -r reference/src/test/resources/basic/multiArgCall.cooma
+[info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r reference/src/test/resources/basic/multiArgCall.cooma
 letv f5 = fun k6 x => letv f7 = fun j8 y => j8 x
                       k6 f7
 letv x9 = 10
@@ -160,7 +160,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     y
 }
 
-> run -r src/test/resources/basic/blockVal.cooma
+> run -r reference/src/test/resources/basic/blockVal.cooma
 20
 ```
 
@@ -171,7 +171,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     g(10)
 }
 
-> run -r src/test/resources/basic/blockDef.cooma
+> run -r reference/src/test/resources/basic/blockDef.cooma
 10
 ```
 
@@ -180,7 +180,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ```ml
 {fun (r : {x : Int, y : Int, z : String}) => r.x} ({x = 20, y = 10, z = "Hi"})
 
-> run -r src/test/resources/basic/rowArg.cooma
+> run -r reference/src/test/resources/basic/rowArg.cooma
 20
 ```
 
@@ -193,7 +193,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     {r & s}.x
 }
 
-> run -r src/test/resources/basic/rowConcat.cooma
+> run -r reference/src/test/resources/basic/rowConcat.cooma
 10
 ```
 
@@ -202,24 +202,24 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ```ml
 fun (s : String) => s
 
-> run -r src/test/resources/capability/stringCmdArg.cooma hello
+> run -r reference/src/test/resources/capability/stringCmdArg.cooma hello
 hello
 
 fun (s : String, t : String) => t
 
-> run -r src/test/resources/capability/multiStringCmdArg.cooma hello there
+> run -r reference/src/test/resources/capability/multiStringCmdArg.cooma hello there
 there
 ```
 
-### Console capability
+### Writer capability
 
 Capability arguments at the top-level are automatically linked with the command-line arguments and checked.
-E.g., a Console capability allows the program to write to the named file or device.
+E.g., a Writer capability allows the program to write to the named file or device.
 
 ```ml
-fun (c : Console) => c.write("Hello world!\n")
+fun (w : Writer) => w.write("Hello world!\n")
 
-> run -r src/test/resources/capability/consoleCmdArg.cooma /dev/tty
+> run -r reference/src/test/resources/capability/writerCmdArg.cooma /dev/tty
 Hello world!
 {}
 ```
@@ -229,16 +229,16 @@ Hello world!
 If the specified file name is not writeable, the runtime system causes the execution to fail.
 
 ```ml
-> run src/test/resources/capability/consoleCmdArg.cooma /does/not/exist
-cooma: Console capability unavailable: can't write /does/not/exist
+> run reference/src/test/resources/capability/writerCmdArg.cooma /does/not/exist
+cooma: Writer capability unavailable: can't write /does/not/exist
 ```
 
-### Console and Reader capabilities
+### Writer and Reader capabilities
 
 ```ml
-fun (c : Console, r : Reader) => c.write(r.read({}))
+fun (w : Writer, r : Reader) => w.write(r.read({}))
 
-> run -r src/test/resources/capability/consoleReaderCmdArg.cooma /dev/tty src/test/resources/basic/multiArgCall.cooma
+> run -r reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty reference/src/test/resources/basic/multiArgCall.cooma
 (fun (x : Int, y : String) => x) (10, "hello")
 {}
 ```
@@ -247,15 +247,18 @@ A Reader capability is only provided if the designated file can be read.
 
 ```ml
 
-> run src/test/resources/capability/consoleReaderCmdArg.cooma /dev/tty /does/not/exist
+> run reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty /does/not/exist
 cooma: Reader capability unavailable: can't read /does/not/exist
 ```
+
+A `ReaderWriter` capability combines the operations of `Reader` and `Writer`.
 
 ### Internal capability
 
 Capabilities can also be used internally as the arguments to non-top-level functions.
 The value passed must be a string and the capability will be checked if and when the function is called.
+NOTE: this check is not currently implemented.
 
 ```ml
-{fun (c : Console) => c.write("Internal!\n")} ("/tmp/coomaTest.txt")
+{fun (c : Writer) => c.write("Internal!\n")} ("/tmp/coomaTest.txt")
 ```
