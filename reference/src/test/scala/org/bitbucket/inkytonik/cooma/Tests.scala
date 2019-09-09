@@ -63,9 +63,29 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
                     "42"
                 ),
                 BasicTest(
+                    "positive integer larger than 32 bits",
+                    "4294967296123",
+                    "4294967296123"
+                ),
+                BasicTest(
+                    "positive integer larger than 64 bits",
+                    "123456789123456789123456789123456789",
+                    "123456789123456789123456789123456789"
+                ),
+                BasicTest(
                     "negative integer",
                     "-182",
                     "-182"
+                ),
+                BasicTest(
+                    "negative integer larger than 32 bits",
+                    "-4294967296123",
+                    "-4294967296123"
+                ),
+                BasicTest(
+                    "negative integer larger than 64 bits",
+                    "-123456789123456789123456789123456789",
+                    "-123456789123456789123456789123456789"
                 ),
                 BasicTest(
                     "string",

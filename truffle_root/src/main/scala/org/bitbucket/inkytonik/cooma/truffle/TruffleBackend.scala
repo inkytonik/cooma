@@ -8,6 +8,8 @@ import org.graalvm.polyglot.Context
 
 class TruffleBackend(config : Config) extends Backend {
 
+    import scala.math.BigInt;
+
     override def backendName : String = "Graal"
 
     // Terms
@@ -38,8 +40,8 @@ class TruffleBackend(config : Config) extends Backend {
     def funV(k : String, x : String, body : Term) : Value =
         new CoomaFunctionValueNode(k, x, body)
 
-    def intV(i : Int) : Value =
-        new CoomaIntValueNode(i)
+    def intV(i : BigInt) : Value =
+        new CoomaIntValueNode(i.bigInteger)
 
     def prmV(p : Primitive, xs : Vector[String]) : Value =
         new CoomaPrimitiveValue(p, xs.toArray)
@@ -107,4 +109,3 @@ class TruffleBackend(config : Config) extends Backend {
     }
 
 }
-

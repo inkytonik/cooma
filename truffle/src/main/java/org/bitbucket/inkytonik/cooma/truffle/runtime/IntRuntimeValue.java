@@ -3,6 +3,7 @@ package org.bitbucket.inkytonik.cooma.truffle.runtime;
 import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import java.math.BigInteger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -11,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @ExportLibrary(InteropLibrary.class)
 public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements TruffleObject{
-    private final Integer innerValue;
+    private final BigInteger innerValue;
 
     @Override
     public String toString() {
@@ -31,42 +32,42 @@ public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements Tr
     @SuppressWarnings("static-method")
     @ExportMessage
     boolean isNumber() {
-        return fitsInLong();
+        return true;
     }
 
     @ExportMessage
     boolean fitsInByte() {
-        return true;
+        return innerValue.bitLength() < 8;
     }
 
     @ExportMessage
     boolean fitsInShort() {
-        return true;
+        return innerValue.bitLength() < 16;
     }
 
     @ExportMessage
     boolean fitsInFloat() {
-        return true;
+        return false;
     }
 
     @ExportMessage
     boolean fitsInLong() {
-        return true;
+        return innerValue.bitLength() < 64;
     }
 
     @ExportMessage
     boolean fitsInInt() {
-        return true;
+        return innerValue.bitLength() < 32;
     }
 
     @ExportMessage
     boolean fitsInDouble() {
-        return true;
+        return false;
     }
 
     @ExportMessage
     double asDouble() throws UnsupportedMessageException {
-        return innerValue.doubleValue();
+        throw UnsupportedMessageException.create();
     }
 
     @ExportMessage
@@ -81,12 +82,12 @@ public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements Tr
 
     @ExportMessage
     int asInt() throws UnsupportedMessageException {
-        return innerValue;
+        return innerValue.intValue();
     }
 
     @ExportMessage
     float asFloat() throws UnsupportedMessageException {
-        return innerValue.floatValue();
+        throw UnsupportedMessageException.create();
     }
 
     @ExportMessage
@@ -104,5 +105,3 @@ public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements Tr
     }
 
 }
-
-

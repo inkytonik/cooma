@@ -2,6 +2,7 @@ module org.bitbucket.inkytonik.cooma.CoomaParser;
 
 header {
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.*;
+    import scala.math.BigInt;
 }
 
 // Cooma source language
@@ -16,7 +17,7 @@ Expression {paren} =
   | Expression '.' Identifier                       {Sel, left, 1}
   | '{' Field ** "," '}'                            {Row}
   | '{' nestnl (BlockExp) \n '}'                    {Blk}
-  | IntLit                                          {Num, 1: Integer.parseInt : Int}
+  | IntLit                                          {Num, 1: BigInt.apply : BigInt}
   | Identifier                                      {Var}
   | StringLit                                       {Str}.
 

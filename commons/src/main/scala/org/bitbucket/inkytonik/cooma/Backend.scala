@@ -14,7 +14,7 @@ trait Backend {
 
     type Value
     def funV(k : String, x : String, body : Term) : Value
-    def intV(i : Int) : Value
+    def intV(i : BigInt) : Value
     def prmV(p : Primitive, xs : Vector[String]) : Value
     def rowV(fs : Vector[FieldValue]) : Value
     def strV(s : String) : Value

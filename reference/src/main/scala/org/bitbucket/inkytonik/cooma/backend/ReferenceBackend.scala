@@ -21,7 +21,7 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
 
     sealed abstract class Value
     case class FunV(k : String, x : String, body : Term) extends Value
-    case class IntV(i : Int) extends Value
+    case class IntV(i : BigInt) extends Value
     case class PrmV(p : Primitive, xs : Vector[String]) extends Value
     case class RowV(fs : Vector[FieldValue]) extends Value
     case class StrV(s : String) extends Value
@@ -62,7 +62,7 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
     def funV(k : String, x : String, body : Term) : Value =
         FunV(k, x, body)
 
-    def intV(i : Int) : Value =
+    def intV(i : BigInt) : Value =
         IntV(i)
 
     def prmV(p : Primitive, xs : Vector[String]) : Value =

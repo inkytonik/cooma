@@ -1,13 +1,14 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import java.math.BigInteger;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.IntRuntimeValue;
 
 public class CoomaIntValueNode extends CoomaValueNode {
 
-    private final int value;
+    private final BigInteger value;
 
-    public CoomaIntValueNode(int value) {
+    public CoomaIntValueNode(BigInteger value) {
         this.value = value;
     }
 

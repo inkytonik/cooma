@@ -29,7 +29,7 @@ class Interpreter(config : Config) {
     sealed abstract class ValueR
     case class ClsR(env : Env, f : String, x : String, e : Term) extends ValueR
     case class ErrR(msg : String) extends ValueR
-    case class IntR(num : Int) extends ValueR
+    case class IntR(num : BigInt) extends ValueR
     case class RowR(fields : Vector[FldR]) extends ValueR
     case class StrR(str : String) extends ValueR
 
