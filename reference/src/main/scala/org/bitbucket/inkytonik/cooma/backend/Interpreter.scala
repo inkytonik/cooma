@@ -185,7 +185,7 @@ class Interpreter(config : Config) {
                 case err : ErrR =>
                     return err
                 case v =>
-                    sys.error(s"interpretPrim console: got non-String $v")
+                    sys.error(s"interpretPrim: got non-String argument $v")
             }
 
         def makeCapability(pairs : Vector[(String, Primitive)]) : RowR = {

@@ -43,7 +43,7 @@ public class CapabilityP extends Primitive {
 		} else if (val instanceof ErrorRuntimeValue) {
 			return val;
 		} else {
-			throw new CoomaException(String.format("interpretPrim console: got non-String %s", String.valueOf(val)), this);
+			throw new CoomaException(String.format("interpretPrim: got non-String argument %s", String.valueOf(val)), this);
 		}
 
 		RuntimeValue result;
