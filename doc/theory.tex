@@ -62,7 +62,7 @@ x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{
 \newcommand{\ande}[2]{#1\;\&\;#2}
 \newcommand{\appe}[2]{#1(#2)}
 \newcommand{\blke}[1]{\{ #1 \}}
-\newcommand{\fune}[2]{\kw{fun}\;#1\;.\;#2}
+\newcommand{\fune}[2]{\kw{fun}\;(#1)\;.\;#2}
 \newcommand{\nume}[1]{#1}
 \newcommand{\rowe}[2]{\{ \flds{#1}{#2} \}}
 \newcommand{\sele}[2]{#1 . #2}
@@ -102,9 +102,9 @@ x, y & \in & \text{variable} \\
   &   & |   & \fune{\repz{\arge{x}{t}}}{e}   & \text{function abstraction ($x_i$ distinct)} \\
   &   & |   & \appe{e}{\repo{e}}             & \text{function application} \\
   &   & |   & \blke{b}                      & \text{block} \\
-  &   & |   & \rowe{x}{e}                   & \text{row ($x_i$ distinct)} \\
-  &   & |   & \sele{e}{x}                   & \text{row selection} \\
-  &   & |   & \ande{e}{e}                   & \text{row concatenation} \\
+  &   & |   & \rowe{x}{e}                   & \text{record ($x_i$ distinct)} \\
+  &   & |   & \sele{e}{x}                   & \text{field selection} \\
+  &   & |   & \ande{e}{e}                   & \text{record concatenation} \\
 \\
 \text{block expression}
   & b & ::= & \valdef{x}{e}{b}                 & \text{value definition} \\
@@ -167,7 +167,7 @@ We support subtyping of records where more fields are present and extend that to
 \begin{rules}{cc}
 
 \inference[T-REC]{
-  \subs{\rowty{x}{t}}{\rowty{y}{u}}
+  \subs{\rowty{y}{u}}{\rowty{x}{t}}
 }{
   \subtype{\recty{\rowty{x}{t}}}{\recty{\rowty{y}{u}}}
 }
@@ -282,21 +282,22 @@ Typing of variables is standard.
 Function typing is also standard, except that multiple arguments are dealt with at the same time.
 Applications can be fully applied (\rulename{T-APP-F}) or partial (\rulename{T-APP-P}).
 
-\begin{rules}{cc}
+\begin{rules}{c}
 
 \inference[T-FUN]{
   \infe{\consc{\Gamma}{\bnds{x}{t}}}{e}{t}
 }{
-  \infe{\Gamma}{\fune{\repo{\arge{x}{t}}}{e}}{\funty{\repo{t}}{t}}
+  \infe{\Gamma}{\fune{\repz{\arge{x}{t}}}{e}}{\funty{\repz{t}}{t}}
 }
 
-&
+\end{rules}
 
+\begin{rules}{c}
 \inference[T-APP-F]{
-  \infe{\Gamma}{e}{\funty{\repo{t}}{t}} & \len{e} = \len{t} &
-  \chke{\Gamma}{\repo{e}}{\repo{t}}
+  \infe{\Gamma}{e}{\funty{\repz{t}}{t}} & \len{\repz{e}} = \len{\repz{t}} &
+  \chke{\Gamma}{\repz{e}}{\repz{t}}
 }{
-  \infe{\Gamma}{\appe{e}{\repo{e}}}{t}
+  \infe{\Gamma}{\appe{e}{\repz{e}}}{t}
 }
 
 \end{rules}
@@ -304,10 +305,10 @@ Applications can be fully applied (\rulename{T-APP-F}) or partial (\rulename{T-A
 \begin{rules}{c}
 
 \inference[T-APP-P]{
-  \infe{\Gamma}{e}{\funty{\repo{t}}{t}} & \len{e} < \len{t} &
-  \chke{\Gamma}{\sub{\repo{e}}{0}{\len{e}}}{\sub{\repo{t}}{0}{\len{e}}}
+  \infe{\Gamma}{e}{\funty{\repz{t}}{t}} & \len{\repz{e}} < \len{\repz{t}} &
+  \chke{\Gamma}{\repz{e}}{\sub{\repz{t}}{0}{\len{e}}}
 }{
-  \infe{\Gamma}{\appe{e}{\repo{e}}}{\funty{\sub{\repo{t}}{\len{e}}{\len{t}}}{t}}
+  \infe{\Gamma}{\appe{e}{\repz{e}}}{\funty{\sub{\repz{t}}{\len{e}}{\len{t}}}{t}}
 }
 
 \end{rules}
