@@ -17,7 +17,7 @@ import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
 import org.bitbucket.inkytonik.cooma.truffle.{TruffleBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
 import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole, TestCompilerWithConfig}
 
-class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
+class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
 
     import java.nio.file.{Files, Paths}
 
@@ -30,7 +30,6 @@ class Tests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
         name : String,
         options : Seq[String],
         frontend : Frontend
-
     )
 
     val truffleOutContent = new ByteArrayOutputStream()
