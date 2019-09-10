@@ -108,16 +108,16 @@ trait REPL extends REPLBase[Config] {
             case REPLExpression(e) =>
                 val i = s"res$nResults"
                 nResults = nResults + 1
-                process(Program(Blk(LetVal(Val(i, e), Return(Var(i))))), i, true, config)
+                process(Program(Blk(LetVal(Val(IdnDef(i), e), Return(Var(IdnUse(i)))))), i, true, config)
 
-            case REPLDef(fd @ Def(i, _, _)) =>
+            case REPLDef(fd @ Def(IdnDef(i), _, _)) =>
                 process(
-                    Program(Blk(LetFun(Vector(fd), Return(Var(i))))),
+                    Program(Blk(LetFun(Vector(fd), Return(Var(IdnUse(i)))))),
                     i, false, config
                 )
 
-            case REPLVal(Val(i, e)) =>
-                process(Program(Blk(LetVal(Val(i, e), Return(Var(i))))), i, true, config)
+            case REPLVal(Val(IdnDef(i), e)) =>
+                process(Program(Blk(LetVal(Val(IdnDef(i), e), Return(Var(IdnUse(i)))))), i, true, config)
 
         }
 

@@ -43,7 +43,7 @@ trait Compiler {
 
         def compileTopArg(a : String, t : Type, e : Expression) : Term =
             t match {
-                case IdnT(n) if isCapabilityName(n) =>
+                case IdnT(IdnUse(n)) if isCapabilityName(n) =>
                     val x = fresh("x")
                     letV(x, prmV(argumentP(nArg), Vector()),
                         letV(a, prmV(capabilityP(n), Vector(x)),
@@ -58,9 +58,9 @@ trait Compiler {
             }
 
         exp match {
-            case Fun(Vector(Argument(a, t)), e) =>
+            case Fun(Vector(Argument(IdnDef(a), t)), e) =>
                 compileTopArg(a, t, e)
-            case Fun(Argument(a, t) +: as, e) =>
+            case Fun(Argument(IdnDef(a), t) +: as, e) =>
                 compileTopArg(a, t, Fun(as, e))
             case _ =>
                 compileHalt(exp)
@@ -90,13 +90,13 @@ trait Compiler {
             case Blk(be) =>
                 compileBlockExp(be, kappa)
 
-            case Fun(Vector(Argument(x, t)), e) =>
+            case Fun(Vector(Argument(IdnDef(x), t)), e) =>
                 compileFun(x, t, e, kappa)
 
-            case Fun(Argument(x, t) +: as, e) =>
+            case Fun(Argument(IdnDef(x), t) +: as, e) =>
                 compileFun(x, t, Fun(as, e), kappa)
 
-            case Var(i) =>
+            case Var(IdnUse(i)) =>
                 kappa(i)
 
             case Num(i) =>
@@ -133,7 +133,7 @@ trait Compiler {
 
     def compileFun(x : String, t : Type, e : Expression, kappa : String => Term) : Term =
         t match {
-            case IdnT(n) if isCapabilityName(n) =>
+            case IdnT(IdnUse(n)) if isCapabilityName(n) =>
                 compileCapFun(n, x, e, kappa)
 
             case _ =>
@@ -151,7 +151,7 @@ trait Compiler {
                     compileBlockExp(be2, kappa)
                 )
 
-            case LetVal(Val(x, e), be2) =>
+            case LetVal(Val(IdnDef(x), e), be2) =>
                 val j = fresh("j")
                 letC(j, x, compileBlockExp(be2, kappa),
                     tailCompile(e, j))
@@ -169,12 +169,12 @@ trait Compiler {
     def compileDef(fd : FunctionDefinition) : DefTerm = {
         val k = fresh("k")
         fd match {
-            case Def(f, Argument(x, IdnT(n)) +: otherArgs, e) if isCapabilityName(n) =>
+            case Def(IdnDef(f), Argument(IdnDef(x), IdnT(IdnUse(n))) +: otherArgs, e) if isCapabilityName(n) =>
                 val y = fresh("y")
                 defTerm(f, k, y, letV(x, prmV(capabilityP(n), Vector(y)),
                     compileDefBody(otherArgs, e, k)))
 
-            case Def(f, Argument(x, _) +: otherArgs, e) =>
+            case Def(IdnDef(f), Argument(IdnDef(x), _) +: otherArgs, e) =>
                 defTerm(f, k, x, compileDefBody(otherArgs, e, k))
         }
     }
@@ -212,16 +212,16 @@ trait Compiler {
             case Blk(be) =>
                 tailCompileBlockExp(be, k)
 
-            case Fun(Vector(Argument(x, t)), e) =>
+            case Fun(Vector(Argument(IdnDef(x), t)), e) =>
                 tailCompileFun(x, t, e, k)
 
-            case Fun(Argument(x, t) +: as, e) =>
+            case Fun(Argument(IdnDef(x), t) +: as, e) =>
                 tailCompileFun(x, t, Fun(as, e), k)
 
             case Fun(a +: as, e) =>
                 tailCompile(Fun(Vector(a), Fun(as, e)), k)
 
-            case Var(x) =>
+            case Var(IdnUse(x)) =>
                 appC(k, x)
 
             case Num(i) =>
@@ -257,7 +257,7 @@ trait Compiler {
 
     def tailCompileFun(x : String, t : Type, e : Expression, k : String) : Term =
         t match {
-            case IdnT(n) if isCapabilityName(n) =>
+            case IdnT(IdnUse(n)) if isCapabilityName(n) =>
                 tailCompileCapFun(n, x, e, k)
 
             case _ =>
@@ -275,7 +275,7 @@ trait Compiler {
                     tailCompileBlockExp(be2, k)
                 )
 
-            case LetVal(Val(x, e), be2) =>
+            case LetVal(Val(IdnDef(x), e), be2) =>
                 val j = fresh("j")
                 letC(j, x, tailCompileBlockExp(be2, k),
                     tailCompile(e, j))

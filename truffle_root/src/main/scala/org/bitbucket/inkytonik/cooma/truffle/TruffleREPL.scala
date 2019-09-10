@@ -16,19 +16,19 @@ trait TruffleREPL extends REPL {
             case REPLExpression(e) =>
                 nResults = nResults + 1
                 processProgram(config, CoomaParserPrettyPrinter.format(
-                    Program(Blk(LetVal(Val(res, e), Return(Var(res))))),
+                    Program(Blk(LetVal(Val(IdnDef(res), e), Return(Var(IdnUse(res)))))),
                     5
                 ).layout, res, printValue = true)
 
-            case REPLDef(fd @ Def(i, _, _)) =>
+            case REPLDef(fd @ Def(IdnDef(i), _, _)) =>
                 processProgram(config, CoomaParserPrettyPrinter.format(
-                    Program(Blk(LetFun(Vector(fd), Return(Var(i))))),
+                    Program(Blk(LetFun(Vector(fd), Return(Var(IdnUse(i)))))),
                     5
                 ).layout, i, printValue = false)
 
-            case REPLVal(Val(i, e)) =>
+            case REPLVal(Val(IdnDef(i), e)) =>
                 processProgram(config, CoomaParserPrettyPrinter.format(
-                    Program(Blk(LetVal(Val(i, e), Return(Var(i))))),
+                    Program(Blk(LetVal(Val(IdnDef(i), e), Return(Var(IdnUse(i)))))),
                     5
                 ).layout, i, printValue = true)
         }

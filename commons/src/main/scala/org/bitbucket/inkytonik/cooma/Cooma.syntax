@@ -18,11 +18,11 @@ Expression {paren} =
   | '{' Field ** "," '}'                            {Row}
   | '{' nestnl (BlockExp) \n '}'                    {Blk}
   | IntLit                                          {Num, 1: BigInt.apply : BigInt}
-  | Identifier                                      {Var}
+  | IdnUse                                          {Var}
   | StringLit                                       {Str}.
 
 Argument =
-  Identifier sp ":" Type.
+  IdnDef sp ":" Type.
 
 Field =
   Identifier sp "=" Expression.
@@ -33,18 +33,18 @@ BlockExp =
   | Expression                     {Return}.
 
 FunctionDefinition =
-  "def" Identifier sp '(' Argument ++ "," ")" '='
+  "def" IdnDef sp '(' Argument ++ "," ")" '='
     nestnl (Expression) \n                {Def}.
 
 ValueDefinition =
-  "val" Identifier sp "=" Expression \n   {Val}.
+  "val" IdnDef sp "=" Expression \n   {Val}.
 
 Type =
-    Type sp "=>" Type         {FunT, right, 1}
-  | RowType                   {PiT}
-  | 'Int'                     {IntT}
-  | 'String'                  {StrT}
-  | Identifier                {IdnT}.
+    Type sp "=>" Type  {FunT, right, 1}
+  | RowType            {PiT}
+  | 'Int'              {IntT}
+  | 'String'           {StrT}
+  | IdnUse             {IdnT}.
 
 RowType =
   '{' FieldType ** "," '}'.
@@ -53,6 +53,12 @@ FieldType =
   Identifier sp ":" Type.
 
 // Lexical syntax
+
+IdnDef =
+  Identifier.
+
+IdnUse =
+  Identifier.
 
 IntLit : Token =
   '-'? Digits.

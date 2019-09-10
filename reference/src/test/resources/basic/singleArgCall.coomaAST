@@ -5,10 +5,12 @@ Program(
                 Fun(
                     Vector(
                         Argument(
-                            "x",
+                            IdnDef(
+                                "x"),
                             IntT())),
                     Var(
-                        "x")))),
+                        IdnUse(
+                            "x"))))),
         Vector(
             Num(
                 10))))

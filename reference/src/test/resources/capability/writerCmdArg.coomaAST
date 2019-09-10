@@ -2,13 +2,16 @@ Program(
     Fun(
         Vector(
             Argument(
-                "w",
+                IdnDef(
+                    "w"),
                 IdnT(
-                    "Writer"))),
+                    IdnUse(
+                        "Writer")))),
         App(
             Sel(
                 Var(
-                    "w"),
+                    IdnUse(
+                        "w")),
                 "write"),
             Vector(
                 Str(

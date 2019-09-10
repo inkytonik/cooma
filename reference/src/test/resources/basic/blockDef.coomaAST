@@ -3,29 +3,37 @@ Program(
         LetFun(
             Vector(
                 Def(
-                    "f",
+                    IdnDef(
+                        "f"),
                     Vector(
                         Argument(
-                            "x",
+                            IdnDef(
+                                "x"),
                             IntT())),
                     Var(
-                        "x")),
+                        IdnUse(
+                            "x"))),
                 Def(
-                    "g",
+                    IdnDef(
+                        "g"),
                     Vector(
                         Argument(
-                            "y",
+                            IdnDef(
+                                "y"),
                             IntT())),
                     App(
                         Var(
-                            "f"),
+                            IdnUse(
+                                "f")),
                         Vector(
                             Var(
-                                "y"))))),
+                                IdnUse(
+                                    "y")))))),
             Return(
                 App(
                     Var(
-                        "g"),
+                        IdnUse(
+                            "g")),
                     Vector(
                         Num(
                             10)))))))
