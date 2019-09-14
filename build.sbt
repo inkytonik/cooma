@@ -17,7 +17,6 @@ lazy val kiamaDependencies = Seq(
 )
 
 lazy val commonsettings = Seq(
-	
 	unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle",
 	scalacOptions ++=
 		Seq(
@@ -44,9 +43,11 @@ lazy val commonsettings = Seq(
 				" " + scalaVersion.value + "> "
 	},
 	testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
+	logBuffered in Test := false,
 	fork := true,
 	connectInput in run := true,
 	outputStrategy in run := Some(StdoutOutput),
+
 	// sbt-rats
 	ratsScalaRepetitionType := Some(VectorType),
 	ratsUseScalaOptions := true,
@@ -54,6 +55,7 @@ lazy val commonsettings = Seq(
 	ratsDefineASTClasses := true,
 	ratsDefinePrettyPrinter := true,
 	ratsUseKiama := 2,
+
 	// ScalariForm
 	scalariformPreferences := scalariformPreferences.value
 		.setPreference(AlignSingleLineCaseStatements, true)
@@ -61,6 +63,7 @@ lazy val commonsettings = Seq(
 		.setPreference(IndentSpaces, 4)
 		.setPreference(SpaceBeforeColon, true)
 		.setPreference(SpacesAroundMultiImports, false),
+
 	// License
 	// File headers
 	//  Use headerCheck to check which files need new headers
