@@ -55,7 +55,5 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
     override def format(prog : Program) : Document =
         CoomaParserPrettyPrinter.format(prog, 5)
 
-    def process(source : Source, prog : Program, config : Config)
-
     def createREPL(config : Config) : REPL with Compiler with Backend
 }

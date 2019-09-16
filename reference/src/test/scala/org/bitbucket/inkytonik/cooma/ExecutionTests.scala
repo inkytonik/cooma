@@ -10,18 +10,16 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import java.io.{ByteArrayOutputStream, PrintStream}
-
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
-import org.bitbucket.inkytonik.cooma.truffle.{TruffleBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
-import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole, TestCompilerWithConfig}
+import org.bitbucket.inkytonik.kiama.util.TestCompilerWithConfig
 
 class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
 
+    import java.io.{ByteArrayOutputStream, PrintStream}
     import java.nio.file.{Files, Paths}
-
-    import org.bitbucket.inkytonik.kiama.util.FileSource
+    import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
+    import org.bitbucket.inkytonik.cooma.truffle.{TruffleBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
+    import org.bitbucket.inkytonik.kiama.util.{FileSource, Source, StringConsole}
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
     import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
     import org.rogach.scallop.throwError
@@ -37,7 +35,10 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
     val backends =
         List(
             Backend("Reference", Seq(), new ReferenceFrontend),
-            Backend("GraalVM", Seq("-g"), new TruffleFrontend(out = new PrintStream(truffleOutContent)))
+            Backend(
+                "GraalVM", Seq("-g"),
+                new TruffleFrontend(out = new PrintStream(truffleOutContent))
+            )
         )
 
     for (backend <- backends) {
@@ -48,8 +49,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             name : String,
             program : String,
             expectedCompiledResult : String,
-            args : Seq[String] = Seq(),
-            expectedREPLResult : Option[String] = None
+            expectedREPLType : String
         )
 
         val basicTests =
@@ -59,52 +59,68 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 BasicTest(
                     "positive integer",
                     "42",
-                    "42"
+                    "42",
+                    "Int"
+                ),
+                BasicTest(
+                    "parenthesised expression",
+                    "(10)",
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "positive integer larger than 32 bits",
                     "4294967296123",
-                    "4294967296123"
+                    "4294967296123",
+                    "Int"
                 ),
                 BasicTest(
                     "positive integer larger than 64 bits",
                     "123456789123456789123456789123456789",
-                    "123456789123456789123456789123456789"
+                    "123456789123456789123456789123456789",
+                    "Int"
                 ),
                 BasicTest(
                     "negative integer",
                     "-182",
-                    "-182"
+                    "-182",
+                    "Int"
                 ),
                 BasicTest(
                     "negative integer larger than 32 bits",
                     "-4294967296123",
-                    "-4294967296123"
+                    "-4294967296123",
+                    "Int"
                 ),
                 BasicTest(
                     "negative integer larger than 64 bits",
                     "-123456789123456789123456789123456789",
-                    "-123456789123456789123456789123456789"
+                    "-123456789123456789123456789123456789",
+                    "Int"
                 ),
                 BasicTest(
                     "string",
                     """"hello"""",
-                    """"hello""""
+                    """"hello"""",
+                    "String"
                 ),
                 BasicTest(
                     "string with quote",
                     """"hel\"lo"""",
-                    """"hel\"lo""""
+                    """"hel\"lo"""",
+                    "String"
                 ),
                 BasicTest(
                     "string with newline",
                     """"hello\n"""",
-                    """"hello\n""""
+                    """"hello\n"""",
+                    "String"
                 ),
                 BasicTest(
                     "string with escape sequences",
                     """"\b\t\n\f\t\7\15\167"""",
-                    """"\b\t\n\f\t\7\rw""""
+                    """"\b\t\n\f\t\7\rw"""",
+                    "String"
                 ),
 
                 // Rows
@@ -112,27 +128,32 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 BasicTest(
                     "unit",
                     "{}",
+                    "{}",
                     "{}"
                 ),
                 BasicTest(
                     "row (single int field)",
                     "{x = 65}",
-                    "{x = 65}"
+                    "{x = 65}",
+                    "{x : Int}"
                 ),
                 BasicTest(
                     "row (single string field)",
                     """{name = "Harold"}""",
-                    """{name = "Harold"}"""
+                    """{name = "Harold"}""",
+                    "{name : String}"
                 ),
                 BasicTest(
                     "row (two fields)",
                     "{a = 1, b = 2}",
-                    "{a = 1, b = 2}"
+                    "{a = 1, b = 2}",
+                    "{a : Int, b : Int}"
                 ),
                 BasicTest(
                     "row (many fields)",
                     """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
-                    """{name = "Bob", age = 24, year = 1998, sex = "F"}"""
+                    """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
+                    "{name : String, age : Int, year : Int, sex : String}"
                 ),
                 BasicTest(
                     "multi-line row",
@@ -140,32 +161,38 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         name = "Bob",
                         age = 24
                     }""",
-                    """{name = "Bob", age = 24}"""
+                    """{name = "Bob", age = 24}""",
+                    "{name : String, age : Int}"
                 ),
                 BasicTest(
                     "field select (first of one)",
                     """{s = "Hi"}.s""",
-                    """"Hi""""
+                    """"Hi"""",
+                    "String"
                 ),
                 BasicTest(
                     "field select (first of two)",
                     """{s = "Hi", t = 10}.s""",
-                    """"Hi""""
+                    """"Hi"""",
+                    "String"
                 ),
                 BasicTest(
                     "field select (second of two)",
                     """{s = "Hi", t = 10}.t""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "field select (many fields)",
                     """{name = "Bob", age = 24, year = 1998, sex = "F"}.sex""",
-                    """"F""""
+                    """"F"""",
+                    "String"
                 ),
                 BasicTest(
                     "nested field select",
                     "{r = {y = 42}}.r.y",
-                    "42"
+                    "42",
+                    "Int"
                 ),
                 BasicTest(
                     "row concatenation",
@@ -174,7 +201,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val s = {a = "Hi"}
                         r & s
                     }""",
-                    """{x = 10, y = 20, a = "Hi"}"""
+                    """{x = 10, y = 20, a = "Hi"}""",
+                    "{x : Int, y : Int, a : String}"
                 ),
                 BasicTest(
                     "select from row concatenation (left)",
@@ -183,7 +211,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val s = {a = "Hi"}
                        {r & s}.x
                    }""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "select from row concatenation (right)",
@@ -192,61 +221,78 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        val s = {a = "Hi"}
                         {r & s}.a
                    }""",
-                    """"Hi""""
+                    """"Hi"""",
+                    "String"
                 ),
 
                 // Functions
 
                 BasicTest(
+                    "no arguments",
+                    "(fun () = 100)()",
+                    "100",
+                    "Int"
+                ),
+                BasicTest(
                     "unit argument",
-                    "{fun (x : {}) => 100}({})",
-                    "100"
+                    "(fun (x : {}) = 100)({})",
+                    "100",
+                    "Int"
                 ),
                 BasicTest(
                     "single integer argument",
-                    """{fun (x : Int) => x}(10)""",
-                    "10"
+                    """(fun (x : Int) = x)(10)""",
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "multiple arguments - first",
-                    """{fun (x : Int, y : String) => x}(10, "hello")""",
-                    "10"
+                    """(fun (x : Int, y : String) = x)(10, "hello")""",
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "multiple arguments - second",
-                    """{fun (x : Int, y : String) => y}(10, "hello")""",
-                    """"hello""""
+                    """(fun (x : Int, y : String) = y)(10, "hello")""",
+                    """"hello"""",
+                    "String"
                 ),
                 BasicTest(
                     "multi-line function",
-                    """{fun (x : Int) =>
-                      x}(10)""",
-                    "10"
+                    """(fun (x : Int) =
+                      x)(10)""",
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "row argument",
-                    "{fun (r : {x : Int}) => r.x}({x = 20})",
-                    "20"
+                    "(fun (r : {x : Int}) = r.x)({x = 20})",
+                    "20",
+                    "Int"
                 ),
                 BasicTest(
                     "single field row return",
-                    "{fun (x : Int) => {a = x}}(9)",
-                    "{a = 9}"
+                    "(fun (x : Int) = {a = x})(9)",
+                    "{a = 9}",
+                    "{a : Int}"
                 ),
                 BasicTest(
                     "function argument",
-                    """{fun (f : Int => String) => f(10)}(fun (x : Int) => "yes")""",
-                    """"yes""""
+                    """(fun (f : (Int) => String) = f(10))(fun (x : Int) = "yes")""",
+                    """"yes"""",
+                    "String"
                 ),
                 BasicTest(
                     "function return then call",
-                    "{fun (x : Int) => {fun (y : Int) => x}}(10)(15)",
-                    "10"
+                    "(fun (x : Int) = (fun (y : Int) = x))(10)(15)",
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "function program result",
-                    "{fun (f : Int => Int) => f}(fun (x : Int) => x)",
-                    "<function>"
+                    "(fun (f : (Int) => Int) = f)(fun (x : Int) = x)",
+                    "<function>",
+                    "(Int) => Int"
                 ),
 
                 // Blocks
@@ -254,7 +300,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 BasicTest(
                     "trivial block",
                     "{ 10 }",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "val block",
@@ -262,7 +309,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        val x = 10
                        x
                     }""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "val block (inner ref)",
@@ -271,7 +319,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val y = 20
                         y
                     }""",
-                    "20"
+                    "20",
+                    "Int"
                 ),
                 BasicTest(
                     "val block (outer ref)",
@@ -280,61 +329,77 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val y = 20
                         x
                     }""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "val block with functions",
                     """{
-                        val f = fun (x : Int) => x
-                        val g = fun (y : Int) => f(y)
+                        val f = fun (x : Int) = x
+                        val g = fun (y : Int) = f(y)
                         g(10)
                     }""",
-                    "10"
+                    "10",
+                    "Int"
+                ),
+                BasicTest(
+                    "def block no arguments",
+                    """{
+                        def f() : Int = 10
+                        f()
+                    }""",
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "def block (single)",
                     """{
-                        def f(x : Int) = x
+                        def f(x : Int) : Int = x
                         f(10)
                     }""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "def block (multi inner)",
                     """{
-                        def f(x : Int) = x
-                        def g(y : Int) = f(y)
+                        def f(x : Int) : Int = x
+                        def g(y : Int) : Int = f(y)
                         g(10)
                     }""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "def block (multi outer)",
                     """{
-                        def f(x : Int) = x
-                        def g(y : Int) = f(y)
+                        def f(x : Int) : Int = x
+                        def g(y : Int) : Int = f(y)
                         f(10)
                     }""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "block (val and def)",
                     """{
                         val a = 20
-                        def f(x : Int) = a
+                        def f(x : Int) : Int = a
                         f(10)
                     }""",
-                    "20"
+                    "20",
+                    "Int"
                 ),
                 BasicTest(
                     "def redefinition",
                     """{
-                        def f(x : Int) = 10
+                        def f(x : Int) : Int = 10
                         val a = 20
-                        def f(y : Int) = 30
+                        def f(y : Int) : Int = 30
                         f(0)
                     }""",
-                    "30"
+                    "30",
+                    "Int"
                 ),
                 BasicTest(
                     "nested val block (inner)",
@@ -345,7 +410,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             b
                         }
                     }""",
-                    "20"
+                    "20",
+                    "Int"
                 ),
                 BasicTest(
                     "nested val block (outer)",
@@ -356,7 +422,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             a
                         }
                     }""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "nested val block (redefinition)",
@@ -367,57 +434,44 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             a
                         }
                     }""",
-                    "20"
+                    "20",
+                    "Int"
                 ),
                 BasicTest(
                     "nested def block (outer)",
                     """{
-                        def f(x : Int) = 10
+                        def f(x : Int) : Int = 10
                         {
-                            def g(y : Int) = 20
+                            def g(y : Int) : Int = 20
                             f(0)
                         }
                     }""",
-                    "10"
+                    "10",
+                    "Int"
                 ),
                 BasicTest(
                     "nested def block (inner)",
                     """{
-                        def f(x : Int) = 10
+                        def f(x : Int) : Int = 10
                         {
-                            def g(y : Int) = 20
+                            def g(y : Int) : Int = 20
                             g(0)
                         }
                     }""",
-                    "20"
+                    "20",
+                    "Int"
                 ),
                 BasicTest(
                     "nested def block (redefinition)",
                     """{
-                        def f(x : Int) = 10
+                        def f(x : Int) : Int = 10
                         {
-                            def f(y : Int) = 20
+                            def f(y : Int) : Int = 20
                             f(0)
                         }
                     }""",
-                    "20"
-                ),
-
-                // Command-line arguments
-
-                BasicTest(
-                    "string command argument",
-                    "fun (s : String) => s",
-                    """"hello"""",
-                    Seq("hello"),
-                    Some("<function>")
-                ),
-                BasicTest(
-                    "multiple string command arguments",
-                    "fun (s : String, t : String) => t",
-                    """"there"""",
-                    Seq("hello", "there"),
-                    Some("<function>")
+                    "20",
+                    "Int"
                 )
             )
 
@@ -425,11 +479,11 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
         for (aTest <- basicTests) {
             test(s"${backend.name} run: ${aTest.name}") {
-                val result = runString(aTest.name, aTest.program, backend.options, backend, aTest.args)
+                val result = runString(aTest.name, aTest.program, backend.options, backend)
                 result shouldBe ""
             }
             test(s"${backend.name} run: ${aTest.name}: result") {
-                val result = runString(aTest.name, aTest.program, Seq("-r") ++ backend.options, backend, aTest.args)
+                val result = runString(aTest.name, aTest.program, Seq("-r") ++ backend.options, backend)
                 result shouldBe s"${aTest.expectedCompiledResult}\n"
             }
         }
@@ -480,13 +534,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         // REPL tests
         for (aTest <- basicTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
-                val result = runREPLOnLine(aTest.name, aTest.program, backend.options, aTest.args)
-                val expectedResult =
-                    aTest.expectedREPLResult match {
-                        case Some(s) => s
-                        case _       => aTest.expectedCompiledResult
-                    }
-                result shouldBe s"res0 = $expectedResult\n"
+                val result = runREPLOnLine(aTest.name, aTest.program, backend.options)
+                val expectedResult = s"res0 : ${aTest.expectedREPLType} = ${aTest.expectedCompiledResult}\n"
+                result shouldBe expectedResult
             }
         }
 
@@ -503,14 +553,14 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """
                         10
                     """,
-                    "res0 = 10"
+                    "res0 : Int = 10"
                 ),
                 REPLTest(
                     "single evaluation (string)",
                     """
                         "Hello"
                     """,
-                    """res0 = "Hello""""
+                    """res0 : String = "Hello""""
                 ),
                 REPLTest(
                     "multiple evaluations",
@@ -518,7 +568,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         10
                         20
                     """,
-                    "res0 = 10\nres1 = 20"
+                    "res0 : Int = 10\nres1 : Int = 20"
                 ),
                 REPLTest(
                     "single value definition",
@@ -526,7 +576,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val x = 1
                     x
                     """,
-                    "x = 1\nres0 = 1"
+                    "x : Int = 1\nres0 : Int = 1"
                 ),
                 REPLTest(
                     "multiple value definitions (upper)",
@@ -535,7 +585,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val y = 2
                         x
                     """,
-                    "x = 1\ny = 2\nres0 = 1"
+                    "x : Int = 1\ny : Int = 2\nres0 : Int = 1"
                 ),
                 REPLTest(
                     "multiple value definitions (lower)",
@@ -544,66 +594,76 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val y = 2
                         y
                     """,
-                    "x = 1\ny = 2\nres0 = 2"
+                    "x : Int = 1\ny : Int = 2\nres0 : Int = 2"
                 ),
                 REPLTest(
                     "single function definition",
                     """
-                        def f(x : Int) = x
+                        def f(x : Int) : Int = x
                         f(10)
                     """,
-                    "f\nres0 = 10"
+                    "f : (Int) => Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "value and function definition",
                     """
                         val x = 10
-                        def f(y : Int) = x
+                        def f(y : Int) : Int = x
                         f(20)
                     """,
-                    "x = 10\nf\nres0 = 10"
+                    "x : Int = 10\nf : (Int) => Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "multiple function definitions (upper)",
                     """
-                        def f(x : Int) = 10
-                        def g(y : Int) = 20
+                        def f(x : Int) : Int = 10
+                        def g(y : Int) : Int = 20
                         f(1)
                     """,
-                    "f\ng\nres0 = 10"
+                    "f : (Int) => Int = <function>\ng : (Int) => Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "multiple function definitions (lower)",
                     """
-                        def f(x : Int) = 10
-                        def g(y : Int) = 20
+                        def f(x : Int) : Int = 10
+                        def g(y : Int) : Int = 20
                         g(1)
                     """,
-                    "f\ng\nres0 = 20"
+                    "f : (Int) => Int = <function>\ng : (Int) => Int = <function>\nres0 : Int = 20"
                 ),
                 REPLTest(
                     "multiple function definitions (chain)",
                     """
-                        def f(x : Int) = 10
-                        def g(y : Int) = f(y)
+                        def f(x : Int) : Int = 10
+                        def g(y : Int) : Int = f(y)
                         g(1)
                     """,
-                    "f\ng\nres0 = 10"
+                    "f : (Int) => Int = <function>\ng : (Int) => Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
-                    "single expression",
+                    "single result name binding",
                     """
                         10
                         res0
                     """,
-                    "res0 = 10\nres1 = 10"
+                    "res0 : Int = 10\nres1 : Int = 10"
+                ),
+                REPLTest(
+                    "multiple result name binding",
+                    """
+                        10
+                        20
+                        30
+                        res2
+                    """,
+                    "res0 : Int = 10\nres1 : Int = 20\nres2 : Int = 30\nres3 : Int = 30"
                 )
 
             )
 
         for (aTest <- replTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
-                val result = runREPLOnLines(aTest.name, aTest.program, backend.options, Seq())
+                val result = runREPLOnLines(aTest.name, aTest.program, backend.options)
                 result shouldBe s"${aTest.expectedResult}\n"
             }
         }
@@ -652,69 +712,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         {
-            val writerInternalArgTests =
-                Vector(
-                    "src/test/resources/capability/writerInternalDefArg.cooma",
-                    "src/test/resources/capability/writerInternalFunArg.cooma"
-                )
-
-            for (filename <- writerInternalArgTests) {
-                val name = s"writer internal function argument ($filename)"
-                val writer = "/tmp/coomaTest.txt"
-                val content = "Internal!\n"
-
-                test(s"${backend.name} run: $name") {
-                    createFile(writer, "")
-                    val result = runFile(filename, backend.options, backend, Seq())
-                    result shouldBe ""
-                    FileSource(writer).content shouldBe content
-                    deleteFile(writer)
-                }
-
-                test(s"${backend.name} run: $name: result") {
-                    createFile(writer, "")
-                    val result = runFile(filename, backend.options ++ Seq("-r"), backend, Seq())
-                    result shouldBe "{}\n"
-                    FileSource(writer).content shouldBe content
-                    deleteFile(writer)
-                }
-            }
-        }
-
-        {
-            val filename = "src/test/resources/capability/writerInternalArgBad.cooma"
-            val name = s"bad writer internal argument ($filename)"
-            val writer = "/does/not/exist"
-
-            test(s"${backend.name} run: $name") {
-                val result = runFile(filename, backend.options, backend, Seq())
-                result shouldBe s"cooma: Writer capability unavailable: can't write $writer\n"
-            }
-        }
-
-        {
-            val readerInternalArgTests =
-                Vector(
-                    "src/test/resources/capability/readerInternalDefArg.cooma",
-                    "src/test/resources/capability/readerInternalFunArg.cooma"
-                )
-
-            for (filename <- readerInternalArgTests) {
-                val name = s"reader internal argument ($filename)"
-                val reader = "/tmp/coomaTest.txt"
-                val content = "Some reading stuff!\n"
-
-                test(s"${backend.name} run: $name") {
-                    createFile(reader, content)
-                    val result = runFile(filename, backend.options, backend, Seq())
-                    result shouldBe ""
-                    FileSource(reader).content shouldBe content
-                    deleteFile(reader)
-                }
-            }
-        }
-
-        {
             val filename = "src/test/resources/capability/readerCmdArg.cooma"
             val name = s"reader external argument ($filename)"
             val reader = makeTempFilename(".txt")
@@ -734,17 +731,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 val result = runFile(filename, backend.options ++ Seq("-r"), backend, args)
                 result shouldBe expectedResult
                 deleteFile(reader)
-            }
-        }
-
-        {
-            val filename = "src/test/resources/capability/readerInternalArgBad.cooma"
-            val name = s"bad reader internal argument ($filename)"
-            val reader = "/does/not/exist.txt"
-
-            test(s"${backend.name} run: $name") {
-                val result = runFile(filename, backend.options, backend, Seq())
-                result shouldBe s"cooma: Reader capability unavailable: can't read $reader\n"
             }
         }
 
@@ -850,29 +836,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 deleteFile(writer)
             }
         }
-
-        {
-            val filename = "src/test/resources/capability/readerWriterInternalArg.cooma"
-            val name = s"internal argument reader writer ($filename)"
-            val readerWriter = "/tmp/coomaTest.txt"
-            val content = "Internal reader writer!\n"
-
-            test(s"${backend.name} run: $name") {
-                createFile(readerWriter, "")
-                val result = runFile(filename, backend.options, backend, Seq())
-                result shouldBe ""
-                FileSource(readerWriter).content shouldBe content
-                deleteFile(readerWriter)
-            }
-
-            test(s"${backend.name} run: $name: result") {
-                createFile(readerWriter, "")
-                val result = runFile(filename, backend.options ++ Seq("-r"), backend, Seq())
-                result shouldBe "{}\n"
-                FileSource(readerWriter).content shouldBe content
-                deleteFile(readerWriter)
-            }
-        }
     }
 
     def makeConfig(args : Seq[String]) : Config = {
@@ -904,8 +867,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
     }
 
-    def runString(name : String, program : String, options : Seq[String], backend : Backend, args : Seq[String]) : String = {
-        val allArgs = Seq("--Koutput", "string") ++ options ++ ("test.cooma" +: args)
+    def runString(name : String, program : String, options : Seq[String], backend : Backend) : String = {
+        val allArgs = Seq("--Koutput", "string") ++ options :+ "test.cooma"
         runTest(name, backend.frontend.interpret(name, program, _), options, allArgs)
     }
 
@@ -914,8 +877,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         runTest(name, backend.frontend.interpret, options, allArgs)
     }
 
-    def runREPLTest(name : String, cmd : String, input : String, options : Seq[String], args : Seq[String]) : String = {
-        val allArgs = Seq("--Koutput", "string") ++ options ++ args
+    def runREPLTest(name : String, cmd : String, input : String, options : Seq[String]) : String = {
+        val allArgs = Seq("--Koutput", "string") ++ options
         val config = makeConfig(allArgs)
         val replInput =
             if (input.indexOf('\n') == -1)
@@ -927,14 +890,17 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         runTest(name, repl.processconsole(console, "dummy", _), options, allArgs)
     }
 
-    def runREPLOnLine(name : String, input : String, options : Seq[String], args : Seq[String]) : String =
-        runREPLTest(name, ":paste", input, options, args)
+    def runREPLOnLine(name : String, input : String, options : Seq[String]) : String =
+        runREPLTest(name, ":paste", input, options)
 
-    def runREPLOnLines(name : String, input : String, options : Seq[String], args : Seq[String]) : String =
-        runREPLTest(name, ":lines", input, options, args)
+    def runREPLOnLines(name : String, input : String, options : Seq[String]) : String =
+        runREPLTest(name, ":lines", input, options)
 
     override def createREPL(config : Config) : REPL with Compiler with org.bitbucket.inkytonik.cooma.Backend = {
-        if (config.graalVM()) new TruffleBackend(config) with TruffleREPL with Compiler else new ReferenceBackend(config) with REPL with Compiler
+        if (config.graalVM())
+            new TruffleBackend(config) with TruffleREPL with Compiler
+        else
+            new ReferenceBackend(config) with REPL with Compiler
     }
 
     /**

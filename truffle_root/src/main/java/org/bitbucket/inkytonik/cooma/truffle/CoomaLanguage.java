@@ -25,7 +25,6 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
     private TruffleDriver truffleDriver = new TruffleDriver();
 
-
     public static String toString(Object value) {
         try {
             if (value == null) {

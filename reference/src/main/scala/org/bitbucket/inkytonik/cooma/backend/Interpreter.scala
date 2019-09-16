@@ -21,7 +21,8 @@ class Interpreter(config : Config) {
     self : ReferenceBackend =>
 
     import java.nio.file.{Files, Paths}
-
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Type
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
@@ -54,7 +55,6 @@ class Interpreter(config : Config) {
             case ErrR(msg) =>
                 config.output().emitln(s"cooma: $msg")
             case v =>
-
                 if (config.resultPrint())
                     config.output().emitln(showRuntimeValue(v))
         }
@@ -407,7 +407,10 @@ class Interpreter(config : Config) {
         def show = "select"
     }
 
-    def repl(env : Env, i : String, printValue : Boolean, config : Config, term : Term) : Env = {
+    def repl(
+        env : Env, i : String, tipe : Type,
+        config : Config, term : Term
+    ) : Env = {
         if (config.irPrint())
             config.output().emitln(showTerm(term))
         if (config.irASTPrint())
@@ -416,10 +419,8 @@ class Interpreter(config : Config) {
         val args = config.filenames()
         val result = interpret(term, env, args, config)
 
-        if (printValue)
-            config.output().emitln(s"$i = ${showRuntimeValue(result)}")
-        else
-            config.output().emitln(i)
+        config.output().emitln(s"$i : ${show(tipe)} = ${showRuntimeValue(result)}")
         consEnv(env, i, result)
     }
+
 }
