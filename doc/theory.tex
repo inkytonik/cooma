@@ -70,6 +70,8 @@ x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{
 \newcommand{\vare}[1]{#1}
 
 \newcommand{\fd}[5]{#1(\repz{#2 : #3}) : #4 = #5}
+\newcommand{\fdo}[5]{#1(\repo{#2 : #3}) : #4 = #5}
+\newcommand{\fde}[4]{#1(#2) : #3 = #4}
 \newcommand{\fundef}[2]{\repo{\kw{def}\;#1}\;#2}
 \newcommand{\valdef}[3]{\kw{val}\;#1 = #2\;#3}
 \newcommand{\return}[1]{#1}
@@ -85,6 +87,9 @@ x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{
 \newcommand{\rowty}[2]{\{ \repz{#1 : #2} \}}
 \newcommand{\rowety}{\{\}}
 \newcommand{\catr}[2]{#1 \odot #2}
+
+\newcommand{\unit}{\blke{}}
+\newcommand{\unitty}{\recty{\rowety}}
 
 \[
 \begin{array}{lcl}
@@ -166,13 +171,23 @@ We support subtyping of records where more fields are present and extend that to
 
 \begin{rules}{cc}
 
+\inference[T-REF]{
+  \
+}{
+  \subtype{t}{t}
+}
+
+&
+
 \inference[T-REC]{
   \subs{\rowty{y}{u}}{\rowty{x}{t}}
 }{
   \subtype{\recty{\rowty{x}{t}}}{\recty{\rowty{y}{u}}}
 }
 
-&
+\end{rules}
+
+\begin{rules}{c}
 
 \inference[T-FUN]{
   \subtype{\repo{t_2}}{\repo{t_1}} & \subtype{u_1}{u_2}
@@ -182,37 +197,21 @@ We support subtyping of records where more fields are present and extend that to
 
 \end{rules}
 
-Named types for built-in capabilities are related to record types that provide the capability operations.
+\subsection{Pre-defined names}
 
-\begin{rules}{c}
+Named types for built-in capabilities are aliases for record types that provide the capability operations.
+\[
+\begin{array}{rcl}
+\kw{Reader} & = &
+\recty{\{ \kw{read} :\funty{}{String} \}} \\
 
-\inference[T-RD]{
-  \
-}{
-  \subtype{\kw{Reader}}{\recty{\{ \kw{read} :\funty{}{String} \}}}
-}
+\kw{Writer} & = &
+\recty{\{ \kw{write} :\funty{String}{\recty{\rowety}} \}} \\
 
-\end{rules}
-
-\begin{rules}{c}
-
-\inference[T-WR]{
-  \
-}{
-  \subtype{\kw{Writer}}{\recty{\{ \kw{write} :\funty{String}{\recty{\rowety}} \}}}
-}
-
-\end{rules}
-
-\begin{rules}{c}
-
-\inference[T-RDWR]{
-  \
-}{
-  \subtype{\kw{ReaderWriter}}{\recty{\{ \kw{read} :\funty{}{String}, \kw{write} :\funty{String}{\recty{\rowety} \}}}}
-}
-
-\end{rules}
+\kw{ReaderWriter} & = &
+\recty{\{ \kw{read} :\funty{}{String}, \kw{write} :\funty{String}{\recty{\rowety} \}}}
+\end{array}
+\]
 
 \subsection{Contexts}
 
@@ -336,6 +335,7 @@ Blocks are typed as let expressions.
 \begin{rules}{cc}
 
 \inference[T-DEF]{
+  \chke{\Gamma}{e_i}{u_i} &
   \infb{\consc{\Gamma}{\repo{\bnd{x_i}{\funty{\repo{t_i}}{u_i}}}}}{b}{t}
 }{
   \infb{\Gamma}{\fundef{\fd{x}{y}{t}{u}{e}}{b}}{t}
@@ -364,6 +364,7 @@ Records are typed according to rows that define their fields and the field types
 \end{rules}
 
 Typing of record concatenation uses an auxiliary operation $\catr{r_1}{r_2}$ on rows that returns the union of the row fields, but is only defined if the fields of $r_1$ and $r_2$ are disjoint.
+Based on ``Abstracting extensible data types'' by Morris and McKinna from POPL 2019.
 
 \begin{rules}{cc}
 
@@ -383,17 +384,9 @@ Typing of record concatenation uses an auxiliary operation $\catr{r_1}{r_2}$ on 
 
 \end{rules}
 
-A type check can be resolved by a type inference of that type or a subtype.
+A type check can be resolved by a type inference of a subtype.
 
 \begin{rules}{cc}
-
-\inference[T-SWP]{
-  \infe{\Gamma}{e}{t}
-}{
-  \chke{\Gamma}{e}{t}
-}
-
-&
 
 \inference[T-WID]{
   \infe{\Gamma}{e}{u} & \subtype{u}{t}
@@ -565,35 +558,48 @@ Variables compile into their use in the current continuation.
 \end{array}
 \]
 Functions are curried and compiled one argument at a time by $\cmpn{f}$ or $\tcmpn{f}$.
+Functions with no arguments are compiled with an anonymous unit argument.
 \[
 \begin{array}{rcll}
 \cmpk{e}{\fune{\arge{x}{t}}{e}} & = &
   \cmpk{f}{x,t,e}
   \\
 \cmpk{e}{\fune{\repo{\arge{x}{t}}}{e}} & = &
-  \cmpk{f}{x_h,t_h,\fune{\repo{\arge{x}{t}}_t}{e}} \medskip \\
-
+  \cmpk{f}{x_h,t_h,\fune{\repo{\arge{x}{t}}_t}{e}}
+  \\
+\cmpk{e}{\fune{}{e}} & = &
+  \cmpk{f}{\_,\unitty,e} \medskip
+  \\
 \tcmpk{e}{\fune{\arge{x}{t}}{e}} & = &
   \tcmpk{f}{x,t,e}
   \\
 \tcmpk{e}{\fune{\repo{\arge{x}{t}}}{e}} & = &
   \tcmpk{f}{x_h,t_h,\fune{\repo{\arge{x}{t}}_t}{e}}
+  \\
+\tcmpk{e}{\fune{}{e}} & = &
+  \tcmpk{f}{\_,\unitty,e}
+  \\
 \end{array}
 \]
 Applications are curried.
 An application to a single argument is compiled by compiling the function $f$ to $y$, the argument $e$ to $z$, capturing the current continuation in $k$ and generating the function call to continue with $k$.
+Applications with no arguments are compiled to pass unit.
 \[
 \begin{array}{rcll}
 \cmpk{e}{\appe{f}{e}} & = &
   \cmpin{e}{f}{(y => \cmpin{e}{e}{(z => \letc{k}{x}{\kappa(x)}{\appf{y}{k}{z}})})} &
   \fresh{k,x} \\
 \cmpk{e}{\appe{f}{\repo{e}}} & = &
-  \cmpk{e}{\appe{\appe{f}{e_h}}{\repo{e}_t}} \medskip \\
-
+  \cmpk{e}{\appe{\appe{f}{e_h}}{\repo{e}_t}} \\
+\cmpk{e}{\appe{f}{}} & = &
+  \cmpk{e}{\appe{f}{\unit}} \medskip
+  \\
 \tcmpk{e}{\appe{f}{e}} & = &
   \cmpin{e}{f}{(y => \cmpin{e}{e}{(z => \appf{y}{k}{z})})} \\
 \tcmpk{e}{\appe{f}{\repo{e}}} & = &
   \tcmpk{e}{\appe{\appe{f}{e_h}}{\repo{e}_t}} \\
+\tcmpk{e}{\appe{f}{}} & = &
+  \tcmpk{e}{\appe{f}{\unit}}
 \end{array}
 \]
 Block expressions are compiled by $\cmpn{b}$ or $\tcmpn{b}$.
@@ -672,13 +678,15 @@ The body is either compiled directly if the function only has one argument, or c
 \]
 \[
 \begin{array}{rcll}
-\cmpk{d}{\fd{f}{x}{t}{u}{e}} & = &
+\cmpk{d}{\fdo{f}{x}{t}{u}{e}} & = &
   \defterm{f}{k}{x}{z} &
   \fresh{k} \\
 \text{where $z$} & = &
   \tcmpk{e}{e} & \text{if $\repo{\arge{x}{t}}$ is a singleton} \\
  & = &
   \tcmpk{e}{\fune{\repo{\arge{x}{t}}_t}{e}} & \text{otherwise} \\
+\cmpk{d}{\fde{f}{}{u}{e}} & = &
+  \cmpk{d}{\fde{f}{\_ : \unitty}{u}{e}}
 \end{array}
 \]
 
