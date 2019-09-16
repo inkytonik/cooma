@@ -1,18 +1,20 @@
 Program(
     Fun(
-        Vector(
-            Argument(
-                IdnDef(
-                    "w"),
-                IdnT(
-                    IdnUse(
-                        "Writer")))),
+        Arguments(
+            Vector(
+                Argument(
+                    IdnDef(
+                        "w"),
+                    IdnT(
+                        IdnUse(
+                            "Writer"))))),
         App(
             Sel(
                 Var(
                     IdnUse(
                         "w")),
-                "write"),
+                FieldUse(
+                    "write")),
             Vector(
                 Str(
                     ""Hello world!\n"")))))

@@ -1,1 +1,1 @@
-fun (r : Reader) => r.read({})
+fun (r : Reader) = r.read()

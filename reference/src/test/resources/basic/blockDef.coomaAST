@@ -5,30 +5,36 @@ Program(
                 Def(
                     IdnDef(
                         "f"),
-                    Vector(
-                        Argument(
-                            IdnDef(
-                                "x"),
-                            IntT())),
-                    Var(
-                        IdnUse(
-                            "x"))),
+                    Body(
+                        Arguments(
+                            Vector(
+                                Argument(
+                                    IdnDef(
+                                        "x"),
+                                    IntT()))),
+                        IntT(),
+                        Var(
+                            IdnUse(
+                                "x")))),
                 Def(
                     IdnDef(
                         "g"),
-                    Vector(
-                        Argument(
-                            IdnDef(
-                                "y"),
-                            IntT())),
-                    App(
-                        Var(
-                            IdnUse(
-                                "f")),
-                        Vector(
+                    Body(
+                        Arguments(
+                            Vector(
+                                Argument(
+                                    IdnDef(
+                                        "y"),
+                                    IntT()))),
+                        IntT(),
+                        App(
                             Var(
                                 IdnUse(
-                                    "y")))))),
+                                    "f")),
+                            Vector(
+                                Var(
+                                    IdnUse(
+                                        "y"))))))),
             Return(
                 App(
                     Var(

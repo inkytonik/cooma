@@ -1,1 +1,1 @@
-fun (w : Writer, r : Reader) => w.write(r.read({}))
+fun (w : Writer, r : Reader) = w.write(r.read())
