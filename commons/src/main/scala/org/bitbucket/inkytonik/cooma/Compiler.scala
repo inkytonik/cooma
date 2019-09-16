@@ -6,6 +6,7 @@ trait Compiler {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.SymbolTable.{unit, unitType}
     import org.bitbucket.inkytonik.cooma.Util.{fresh, resetFresh, unescape}
 
     /**
@@ -58,10 +59,10 @@ trait Compiler {
             }
 
         exp match {
-            case Fun(Vector(Argument(IdnDef(a), t)), e) =>
+            case Fun(Arguments(Vector(Argument(IdnDef(a), t))), e) =>
                 compileTopArg(a, t, e)
-            case Fun(Argument(IdnDef(a), t) +: as, e) =>
-                compileTopArg(a, t, Fun(as, e))
+            case Fun(Arguments(Argument(IdnDef(a), t) +: as), e) =>
+                compileTopArg(a, t, Fun(Arguments(as), e))
             case _ =>
                 compileHalt(exp)
         }
@@ -69,12 +70,8 @@ trait Compiler {
 
     def compile(exp : Expression, kappa : String => Term) : Term =
         exp match {
-            case And(l, r) =>
-                val x = fresh("x")
-                compile(l, y =>
-                    compile(r, z =>
-                        letV(x, prmV(rowConcatP(), Vector(y, z)),
-                            kappa(x))))
+            case App(f, Vector()) =>
+                compile(App(f, Vector(unit)), kappa)
 
             case App(f, Vector(e)) =>
                 val k = fresh("k")
@@ -90,11 +87,21 @@ trait Compiler {
             case Blk(be) =>
                 compileBlockExp(be, kappa)
 
-            case Fun(Vector(Argument(IdnDef(x), t)), e) =>
+            case Cat(l, r) =>
+                val x = fresh("x")
+                compile(l, y =>
+                    compile(r, z =>
+                        letV(x, prmV(rowConcatP(), Vector(y, z)),
+                            kappa(x))))
+
+            case Fun(Arguments(Vector()), e) =>
+                compileFun("_", unitType, e, kappa)
+
+            case Fun(Arguments(Vector(Argument(IdnDef(x), t))), e) =>
                 compileFun(x, t, e, kappa)
 
-            case Fun(Argument(IdnDef(x), t) +: as, e) =>
-                compileFun(x, t, Fun(as, e), kappa)
+            case Fun(Arguments(Argument(IdnDef(x), t) +: as), e) =>
+                compileFun(x, t, Fun(Arguments(as), e), kappa)
 
             case Var(IdnUse(i)) =>
                 kappa(i)
@@ -104,11 +111,11 @@ trait Compiler {
                 letV(x, intV(i),
                     kappa(x))
 
-            case Row(fields) =>
+            case Rec(fields) =>
                 val x = fresh("x")
                 compileRow(fields, fvs => letV(x, rowV(fvs), kappa(x)))
 
-            case Sel(r, f) =>
+            case Sel(r, FieldUse(f)) =>
                 val x = fresh("x")
                 compile(r, z =>
                     letV(x, prmV(rowSelectP(), Vector(z, f)),
@@ -156,6 +163,9 @@ trait Compiler {
                 letC(j, x, compileBlockExp(be2, kappa),
                     tailCompile(e, j))
 
+            case LetTyp(_, be2) =>
+                compileBlockExp(be2, kappa)
+
             case Return(e) =>
                 compile(e, kappa)
         }
@@ -164,17 +174,20 @@ trait Compiler {
         if (args.isEmpty)
             tailCompile(e, k)
         else
-            tailCompile(Fun(args, e), k)
+            tailCompile(Fun(Arguments(args), e), k)
 
-    def compileDef(fd : FunctionDefinition) : DefTerm = {
+    def compileDef(fd : Def) : DefTerm = {
         val k = fresh("k")
         fd match {
-            case Def(IdnDef(f), Argument(IdnDef(x), IdnT(IdnUse(n))) +: otherArgs, e) if isCapabilityName(n) =>
+            case Def(IdnDef(f), Body(Arguments(Vector()), t, e)) =>
+                compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), unitType))), t, e)))
+
+            case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), IdnT(IdnUse(n))) +: otherArgs), _, e)) if isCapabilityName(n) =>
                 val y = fresh("y")
                 defTerm(f, k, y, letV(x, prmV(capabilityP(n), Vector(y)),
                     compileDefBody(otherArgs, e, k)))
 
-            case Def(IdnDef(f), Argument(IdnDef(x), _) +: otherArgs, e) =>
+            case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _) +: otherArgs), _, e)) =>
                 defTerm(f, k, x, compileDefBody(otherArgs, e, k))
         }
     }
@@ -194,12 +207,8 @@ trait Compiler {
 
     def tailCompile(exp : Expression, k : String) : Term =
         exp match {
-            case And(l, r) =>
-                val x = fresh("x")
-                compile(l, y =>
-                    compile(r, z =>
-                        letV(x, prmV(rowConcatP(), Vector(y, z)),
-                            appC(k, x))))
+            case App(f, Vector()) =>
+                tailCompile(App(f, Vector(unit)), k)
 
             case App(e, Vector(a)) =>
                 compile(e, x1 =>
@@ -212,14 +221,24 @@ trait Compiler {
             case Blk(be) =>
                 tailCompileBlockExp(be, k)
 
-            case Fun(Vector(Argument(IdnDef(x), t)), e) =>
+            case Cat(l, r) =>
+                val x = fresh("x")
+                compile(l, y =>
+                    compile(r, z =>
+                        letV(x, prmV(rowConcatP(), Vector(y, z)),
+                            appC(k, x))))
+
+            case Fun(Arguments(Vector()), e) =>
+                tailCompileFun("_", unitType, e, k)
+
+            case Fun(Arguments(Vector(Argument(IdnDef(x), t))), e) =>
                 tailCompileFun(x, t, e, k)
 
-            case Fun(Argument(IdnDef(x), t) +: as, e) =>
-                tailCompileFun(x, t, Fun(as, e), k)
+            case Fun(Arguments(Argument(IdnDef(x), t) +: as), e) =>
+                tailCompileFun(x, t, Fun(Arguments(as), e), k)
 
-            case Fun(a +: as, e) =>
-                tailCompile(Fun(Vector(a), Fun(as, e)), k)
+            case Fun(Arguments(a +: as), e) =>
+                tailCompile(Fun(Arguments(Vector(a)), Fun(Arguments(as), e)), k)
 
             case Var(IdnUse(x)) =>
                 appC(k, x)
@@ -229,11 +248,11 @@ trait Compiler {
                 letV(x, intV(i),
                     appC(k, x))
 
-            case Row(fields) =>
+            case Rec(fields) =>
                 val x = fresh("x")
                 compileRow(fields, fvs => letV(x, rowV(fvs), appC(k, x)))
 
-            case Sel(e, f) =>
+            case Sel(e, FieldUse(f)) =>
                 val x = fresh("x")
                 compile(e, z =>
                     letV(x, prmV(rowSelectP(), Vector(z, f)),
@@ -279,6 +298,9 @@ trait Compiler {
                 val j = fresh("j")
                 letC(j, x, tailCompileBlockExp(be2, k),
                     tailCompile(e, j))
+
+            case LetTyp(_, be2) =>
+                tailCompileBlockExp(be2, k)
 
             case Return(e) =>
                 tailCompile(e, k)
