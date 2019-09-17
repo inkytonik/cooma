@@ -37,7 +37,7 @@ Macquarie University
 
 \newcommand{\arge}[2]{#1 : #2}
 \newcommand{\flde}[2]{#1 = #2}
-\newcommand{\flds}[2]{\repz{\flde{#1}{#2}}}
+\newcommand{\flds}[2]{\repo{\flde{#1}{#2}}}
 
 \[
 \begin{array}{ll}
@@ -67,6 +67,7 @@ x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{
 \newcommand{\rowe}[2]{\{ \flds{#1}{#2} \}}
 \newcommand{\sele}[2]{#1 . #2}
 \newcommand{\stre}[1]{#1}
+\newcommand{\unie}{\{ \}}
 \newcommand{\vare}[1]{#1}
 
 \newcommand{\fd}[5]{#1(\repz{#2 : #3}) : #4 = #5}
@@ -82,14 +83,12 @@ x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{
 \newcommand{\recty}[1]{\Pi\ #1}
 \newcommand{\strty}{\kw{String}}
 \newcommand{\typty}{\kw{Type}}
+\newcommand{\unity}{\kw{Unit}}
 \newcommand{\varty}[1]{\Sigma\ #1}
 
-\newcommand{\rowty}[2]{\{ \repz{#1 : #2} \}}
+\newcommand{\rowty}[2]{\{ \repo{#1 : #2} \}}
 \newcommand{\rowety}{\{\}}
 \newcommand{\catr}[2]{#1 \odot #2}
-
-\newcommand{\unit}{\blke{}}
-\newcommand{\unitty}{\recty{\rowety}}
 
 \[
 \begin{array}{lcl}
@@ -107,11 +106,13 @@ x, y & \in & \text{variable} \\
   &   & |   & \fune{\repz{\arge{x}{e}}}{e}  & \text{function abstraction ($x_i$ distinct)} \\
   &   & |   & \appe{e}{\repo{e}}            & \text{function application} \\
   &   & |   & \blke{b}                      & \text{block} \\
+  &   & |   & \unie{}                       & \text{unit} \\
   &   & |   & \rowe{x}{e}                   & \text{record ($x_i$ distinct)} \\
   &   & |   & \sele{e}{x}                   & \text{field selection} \\
   &   & |   & \ande{e}{e}                   & \text{record concatenation} \\
   &   & |   & \intty                        & \text{integer type} \\
   &   & |   & \strty                        & \text{string type} \\
+  &   & |   & \unity                        & \text{unit type} \\
   &   & |   & \funty{\repz{e}}{e}           & \text{function type} \\
   &   & |   & \recty{r}                     & \text{record type} \\
 \\
@@ -127,7 +128,6 @@ x, y & \in & \text{variable} \\
 
 Notes:
 \begin{itemize}
-\item Modelled on Pure Type Systems, currently instantiated
 \item Functions and function calls take one or more arguments.
 \item Blocks are ``lets'' that contain value definitions and sections of mutually-recursive function definitions.
 \item Rows are collections of named fields. Rows can be selected from and concatenated.
@@ -200,13 +200,13 @@ Named types for built-in capabilities are aliases for record types that provide 
 \[
 \begin{array}{rcl}
 \kw{Reader} & = &
-\recty{\{ \kw{read} :\funty{}{String} \}} \\
+\recty{\{ \kw{read} :\funty{}{\strty} \}} \\
 
 \kw{Writer} & = &
-\recty{\{ \kw{write} :\funty{String}{\recty{\rowety}} \}} \\
+\recty{\{ \kw{write} :\funty{\strty}{\unity} \}} \\
 
 \kw{ReaderWriter} & = &
-\recty{\{ \kw{read} :\funty{}{String}, \kw{write} :\funty{String}{\recty{\rowety} \}}}
+\recty{\{ \kw{read} :\funty{}{\strty}, \kw{write} :\funty{\strty}{\unity} \}}
 \end{array}
 \]
 
@@ -242,7 +242,7 @@ Context operations:
 
 \subsection{Type rules}
 
-For now we support built-in type names for integers, strings and capabilities.
+For now we support built-in type names for integers, strings, unit and capabilities.
 The latter have no literal form.
 
 \begin{rules}{ccc}
@@ -259,6 +259,14 @@ The latter have no literal form.
   \
 }{
   \infe{\Gamma}{\stre{s}}{\strty}
+}
+
+&
+
+\inference[T-UNI]{
+  \
+}{
+  \infe{\Gamma}{\unie}{\unity}
 }
 
 \end{rules}
@@ -332,8 +340,9 @@ Blocks are typed as let expressions.
 \begin{rules}{cc}
 
 \inference[T-DEF]{
-  \chke{\Gamma}{e_i}{u_i} &
-  \infb{\consc{\Gamma}{\repo{\bnd{x_i}{\funty{\repo{t_i}}{u_i}}}}}{b}{t}
+  \Gamma_1 = \consc{\Gamma}{\repo{\bnd{x_i}{\funty{\repo{t_i}}{u_i}}}} &
+  \chke{\Gamma_1}{e_i}{u_i} &
+  \infb{\Gamma_1}{b}{t}
 }{
   \infb{\Gamma}{\fundef{\fd{x}{y}{t}{u}{e}}{b}}{t}
 }
@@ -361,7 +370,7 @@ Records are typed according to rows that define their fields and the field types
 \end{rules}
 
 Typing of record concatenation uses an auxiliary operation $\catr{r_1}{r_2}$ on rows that returns the union of the row fields, but is only defined if the fields of $r_1$ and $r_2$ are disjoint.
-Based on ``Abstracting extensible data types'' by Morris and McKinna from POPL 2019.
+The approach to typing records is based on ``Abstracting extensible data types'' by Morris and McKinna from POPL 2019 and more of that type system will be used in future.
 
 \begin{rules}{cc}
 
@@ -535,6 +544,7 @@ In the REPL case, there is no special handling of command line arguments, so we 
     \tcmpn{e} : e -> x -> z
 \]
 Constants compile into bound values in the current continuation (only numbers shown).
+Unit compiles into an empty record.
 \[
 \begin{array}{rcll}
 \cmpk{e}{\nume{n}} & = &
@@ -565,7 +575,7 @@ Functions with no arguments are compiled with an anonymous unit argument.
   \cmpk{f}{x_h,t_h,\fune{\repo{\arge{x}{t}}_t}{e}}
   \\
 \cmpk{e}{\fune{}{e}} & = &
-  \cmpk{f}{\_,\unitty,e} \medskip
+  \cmpk{f}{\_,\unity,e} \medskip
   \\
 \tcmpk{e}{\fune{\arge{x}{t}}{e}} & = &
   \tcmpk{f}{x,t,e}
@@ -574,7 +584,7 @@ Functions with no arguments are compiled with an anonymous unit argument.
   \tcmpk{f}{x_h,t_h,\fune{\repo{\arge{x}{t}}_t}{e}}
   \\
 \tcmpk{e}{\fune{}{e}} & = &
-  \tcmpk{f}{\_,\unitty,e}
+  \tcmpk{f}{\_,\unity,e}
   \\
 \end{array}
 \]
@@ -589,14 +599,14 @@ Applications with no arguments are compiled to pass unit.
 \cmpk{e}{\appe{f}{\repo{e}}} & = &
   \cmpk{e}{\appe{\appe{f}{e_h}}{\repo{e}_t}} \\
 \cmpk{e}{\appe{f}{}} & = &
-  \cmpk{e}{\appe{f}{\unit}} \medskip
+  \cmpk{e}{\appe{f}{\unie}} \medskip
   \\
 \tcmpk{e}{\appe{f}{e}} & = &
   \cmpin{e}{f}{(y => \cmpin{e}{e}{(z => \appf{y}{k}{z})})} \\
 \tcmpk{e}{\appe{f}{\repo{e}}} & = &
   \tcmpk{e}{\appe{\appe{f}{e_h}}{\repo{e}_t}} \\
 \tcmpk{e}{\appe{f}{}} & = &
-  \tcmpk{e}{\appe{f}{\unit}}
+  \tcmpk{e}{\appe{f}{\unie}}
 \end{array}
 \]
 Block expressions are compiled by $\cmpn{b}$ or $\tcmpn{b}$.
@@ -683,7 +693,7 @@ The body is either compiled directly if the function only has one argument, or c
  & = &
   \tcmpk{e}{\fune{\repo{\arge{x}{t}}_t}{e}} & \text{otherwise} \\
 \cmpk{d}{\fde{f}{}{u}{e}} & = &
-  \cmpk{d}{\fde{f}{\_ : \unitty}{u}{e}}
+  \cmpk{d}{\fde{f}{\_ : \unity}{u}{e}}
 \end{array}
 \]
 
