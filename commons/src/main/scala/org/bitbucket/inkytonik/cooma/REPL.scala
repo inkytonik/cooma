@@ -107,7 +107,7 @@ trait REPL extends REPLBase[Config] {
             val pr = p.pREPLInput(0)
             if (pr.hasValue) {
                 val input = p.value(pr).asInstanceOf[REPLInput]
-                checkInput(input) match {
+                checkInput(input, config) match {
                     case (Vector(), input, tipe) =>
                         processInput(input, tipe, config)
                     case (messages, _, _) =>
@@ -118,7 +118,7 @@ trait REPL extends REPLBase[Config] {
         }
     }
 
-    def checkInput(input : REPLInput) : (Messages, REPLInput, Type) = {
+    def checkInput(input : REPLInput, config : Config) : (Messages, REPLInput, Type) = {
         val input2 =
             input match {
                 case REPLExpression(e) =>
@@ -128,6 +128,8 @@ trait REPL extends REPLBase[Config] {
                 case input =>
                     input
             }
+        if (config.coomaASTPrint())
+            config.output().emitln(layout(any(input2), 5))
         val tree = new Tree[ASTNode, REPLInput](input2)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
         currentStaticEnv = analyser.env(input2)
