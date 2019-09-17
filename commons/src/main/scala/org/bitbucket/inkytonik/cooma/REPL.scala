@@ -90,16 +90,16 @@ trait REPL extends REPLBase[Config] {
             case Command(Seq(":lines")) =>
                 processconsole(new StringConsole(getLines(console)), "", config)
             case Command(Seq(":paste")) =>
-                enterline(config, getLines(console))
+                enterline(getLines(console), config)
             case Command(Seq(":quit")) =>
                 return None
             case line =>
-                enterline(config, line)
+                enterline(line, config)
         }
         Some(config)
     }
 
-    def enterline(config : Config, line : String) {
+    def enterline(line : String, config : Config) {
         val source = new StringSource(line)
         val p = new CoomaParser(source, positions)
         val pr = p.pWhitespace(0)
