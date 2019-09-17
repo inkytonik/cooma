@@ -8,7 +8,7 @@ import org.graalvm.polyglot.Context
 
 class TruffleBackend(config : Config) extends Backend {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Type
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Expression;
     import scala.math.BigInt;
 
     override def backendName : String = "Graal"
@@ -106,7 +106,7 @@ class TruffleBackend(config : Config) extends Backend {
     }
 
     def repl(
-        env : Env, i : String, tipe : Type,
+        env : Env, i : String, tipe : Expression,
         config : Config, term : Term
     ) : Env = {
         env

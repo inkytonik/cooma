@@ -62,7 +62,7 @@ x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{
 \newcommand{\ande}[2]{#1\;\&\;#2}
 \newcommand{\appe}[2]{#1(#2)}
 \newcommand{\blke}[1]{\{ #1 \}}
-\newcommand{\fune}[2]{\kw{fun}\;(#1)\;.\;#2}
+\newcommand{\fune}[2]{\kw{fun}\;(#1) = #2}
 \newcommand{\nume}[1]{#1}
 \newcommand{\rowe}[2]{\{ \flds{#1}{#2} \}}
 \newcommand{\sele}[2]{#1 . #2}
@@ -104,33 +104,30 @@ x, y & \in & \text{variable} \\
   & e & ::= & \nume{n}                      & \text{integer constant} \\
   &   & |   & \stre{s}                      & \text{string constant} \\
   &   & |   & \vare{x}                      & \text{variable} \\
-  &   & |   & \fune{\repz{\arge{x}{t}}}{e}   & \text{function abstraction ($x_i$ distinct)} \\
-  &   & |   & \appe{e}{\repo{e}}             & \text{function application} \\
+  &   & |   & \fune{\repz{\arge{x}{e}}}{e}  & \text{function abstraction ($x_i$ distinct)} \\
+  &   & |   & \appe{e}{\repo{e}}            & \text{function application} \\
   &   & |   & \blke{b}                      & \text{block} \\
   &   & |   & \rowe{x}{e}                   & \text{record ($x_i$ distinct)} \\
   &   & |   & \sele{e}{x}                   & \text{field selection} \\
   &   & |   & \ande{e}{e}                   & \text{record concatenation} \\
+  &   & |   & \intty                        & \text{integer type} \\
+  &   & |   & \strty                        & \text{string type} \\
+  &   & |   & \funty{\repz{e}}{e}           & \text{function type} \\
+  &   & |   & \recty{r}                     & \text{record type} \\
 \\
 \text{block expression}
   & b & ::= & \valdef{x}{e}{b}                 & \text{value definition} \\
   &   & |   & \fundef{\fd{x}{x}{t}{t}{e}}{b}   & \text{function definitions ($x_i$ distinct)} \\
   &   & |   & \return{e}                       & \text{return} \\
 \\
-\text{type}
-  & t, u & ::=  & \namty             & \text{named type} \\
-  % &     & |   & \typty             & \text{type} \\
-  &      & |   & \funty{\repz{t}}{t} & \text{function} \\
-  &      & |   & \recty{r}          & \text{record} \\
-  % &     & |   & \varty{r}          & \text{variant} \\
-  % &     & |   & \rowty{x}{t}       & \text{row} \\
-\\
 \text{row}
-  & r & ::= & \rowty{x}{t}       & \text{($x_i$ distinct)}
+  & r & ::= & \rowty{x}{e}       & \text{($x_i$ distinct)}
 \end{array}
 \]
 
 Notes:
 \begin{itemize}
+\item Modelled on Pure Type Systems, currently instantiated
 \item Functions and function calls take one or more arguments.
 \item Blocks are ``lets'' that contain value definitions and sections of mutually-recursive function definitions.
 \item Rows are collections of named fields. Rows can be selected from and concatenated.

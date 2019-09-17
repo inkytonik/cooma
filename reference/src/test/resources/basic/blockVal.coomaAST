@@ -13,6 +13,6 @@ Program(
                     Num(
                         20)),
                 Return(
-                    Var(
+                    Idn(
                         IdnUse(
                             "y")))))))

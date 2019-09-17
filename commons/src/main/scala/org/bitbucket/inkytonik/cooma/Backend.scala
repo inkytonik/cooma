@@ -2,7 +2,7 @@ package org.bitbucket.inkytonik.cooma
 
 trait Backend {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Type
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Expression
 
     type Term
     def appC(k : String, x : String) : Term
@@ -41,7 +41,7 @@ trait Backend {
     def emptyEnv : Env
 
     def repl(
-        env : Env, i : String, tipe : Type,
+        env : Env, i : String, tipe : Expression,
         config : Config, term : Term
     ) : Env
 

@@ -21,7 +21,7 @@ class Interpreter(config : Config) {
     self : ReferenceBackend =>
 
     import java.nio.file.{Files, Paths}
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Type
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Expression
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
@@ -408,7 +408,7 @@ class Interpreter(config : Config) {
     }
 
     def repl(
-        env : Env, i : String, tipe : Type,
+        env : Env, i : String, tipe : Expression,
         config : Config, term : Term
     ) : Env = {
         if (config.irPrint())

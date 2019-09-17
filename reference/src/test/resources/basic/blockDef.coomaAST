@@ -13,7 +13,7 @@ Program(
                                         "x"),
                                     IntT()))),
                         IntT(),
-                        Var(
+                        Idn(
                             IdnUse(
                                 "x")))),
                 Def(
@@ -28,16 +28,16 @@ Program(
                                     IntT()))),
                         IntT(),
                         App(
-                            Var(
+                            Idn(
                                 IdnUse(
                                     "f")),
                             Vector(
-                                Var(
+                                Idn(
                                     IdnUse(
                                         "y"))))))),
             Return(
                 App(
-                    Var(
+                    Idn(
                         IdnUse(
                             "g")),
                     Vector(

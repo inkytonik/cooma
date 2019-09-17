@@ -46,10 +46,6 @@ object SymbolTable extends Environments[CoomaEntity] {
         val desc = "function"
     }
 
-    case class TypeEntity(decl : Typ) extends CoomaOkEntity {
-        val desc = "type"
-    }
-
     case class ValueEntity(decl : Val) extends CoomaOkEntity {
         val desc = "value"
     }
@@ -72,19 +68,16 @@ object SymbolTable extends Environments[CoomaEntity] {
 
     //  Declarations for the pre-defined entities
 
-    val unit = Rec(Vector())
-    val unitType = PiT(RowType(Vector()))
-
     def makeRecordTypeEntity(
         name : String,
-        fields : Vector[(String, Type)]
-    ) : TypeEntity = {
+        fields : Vector[(String, Expression)]
+    ) : ValueEntity = {
         val fieldTypes = fields.map { case (n, t) => FieldType(n, t) }
-        TypeEntity(Typ(IdnDef(name), PiT(RowType(fieldTypes))))
+        ValueEntity(Val(IdnDef(name), RecT(Row(fieldTypes))))
     }
 
     val readType = FunT(Vector(), StrT())
-    val writeType = FunT(Vector(StrT()), unitType)
+    val writeType = FunT(Vector(StrT()), UniT())
 
     val readerEntity =
         makeRecordTypeEntity(

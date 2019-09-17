@@ -11,22 +11,28 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Arguments ")" "=" Expression    {Fun, right, 4}
-  | Expression '(' Expression ** "," ')'      {App, left, 3}
-  | Expression "&" Expression                 {Cat, left, 2}
-  | Expression '.' FieldUse                   {Sel, left, 1}
-  | '{' nestnl (BlockExp) \n '}'              {Blk}
-  | IntLit                                    {Num, 1: BigInt.apply : BigInt}
-  | '{' Field ** "," '}'                      {Rec}
-  | StringLit                                 {Str}
-  | IdnUse                                    {Var}
-  | '(' Expression ')'.
+    "fun" '(' Arguments ")" "=" Expression      {Fun, right, 4}
+  | '(' Expression ** "," ")" "=>" Expression   {FunT, right, 4}
+  | Expression '(' Expression ** "," ')'        {App, left, 3}
+  | Expression "&" Expression                   {Cat, left, 2}
+  | Expression '.' FieldUse                     {Sel, left, 1}
+  | '{' '}'                                     {Uni}
+  | '{' nestnl (BlockExp) \n '}'                {Blk}
+  | '{' Field ++ "," '}'                        {Rec}
+  | '{' Row '}'                                 {RecT}
+  | IntLit                                      {Num, 1: BigInt.apply : BigInt}
+  | 'Int'                                       {IntT}
+  | StringLit                                   {Str}
+  | 'String'                                    {StrT}
+  | 'Type'                                      {TypT}
+  | 'Unit'                                      {UniT}
+  | IdnUse                                      {Idn}.
 
 Arguments =
   Argument ** ",".
 
 Argument =
-  IdnDef sp ":" Type.
+  IdnDef sp ":" Expression.
 
 Field =
   Identifier sp "=" Expression.
@@ -36,7 +42,6 @@ FieldUse =
 
 BlockExp =
     Def+ BlockExp   {LetFun}
-  | Typ BlockExp    {LetTyp}
   | Val BlockExp    {LetVal}
   | Expression      {Return}.
 
@@ -44,26 +49,16 @@ Def =
   "def" IdnDef sp Body \n.
 
 Body =
-  '(' Arguments ")" ":" Type sp '=' nestnl (Expression).
-
-Typ =
-  "type" IdnDef sp "=" Type \n.
+  '(' Arguments ")" ":" Expression sp '=' nestnl (Expression).
 
 Val =
   "val" IdnDef sp "=" Expression \n.
 
-Type =
-    '(' Type ** "," ")" "=>" Type  {FunT, right, 1}
-  | RowType                        {PiT}
-  | 'Int'                          {IntT}
-  | 'String'                       {StrT}
-  | IdnUse                         {IdnT}.
-
-RowType =
-  '{' FieldType ** "," '}'.
+Row =
+  FieldType ++ ",".
 
 FieldType =
-  Identifier sp ":" Type.
+  Identifier sp ":" Expression.
 
 // Lexical syntax
 

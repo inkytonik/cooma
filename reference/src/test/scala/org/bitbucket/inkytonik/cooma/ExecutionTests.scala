@@ -63,8 +63,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Int"
                 ),
                 BasicTest(
-                    "parenthesised expression",
-                    "(10)",
+                    "bracketed expression",
+                    "{10}",
                     "10",
                     "Int"
                 ),
@@ -129,7 +129,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "unit",
                     "{}",
                     "{}",
-                    "{}"
+                    "Unit"
                 ),
                 BasicTest(
                     "row (single int field)",
@@ -229,68 +229,68 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
                 BasicTest(
                     "no arguments",
-                    "(fun () = 100)()",
+                    "{fun () = 100}()",
                     "100",
                     "Int"
                 ),
                 BasicTest(
                     "unit argument",
-                    "(fun (x : {}) = 100)({})",
+                    "{fun (x : Unit) = 100}({})",
                     "100",
                     "Int"
                 ),
                 BasicTest(
                     "single integer argument",
-                    """(fun (x : Int) = x)(10)""",
+                    """{fun (x : Int) = x}(10)""",
                     "10",
                     "Int"
                 ),
                 BasicTest(
                     "multiple arguments - first",
-                    """(fun (x : Int, y : String) = x)(10, "hello")""",
+                    """{fun (x : Int, y : String) = x}(10, "hello")""",
                     "10",
                     "Int"
                 ),
                 BasicTest(
                     "multiple arguments - second",
-                    """(fun (x : Int, y : String) = y)(10, "hello")""",
+                    """{fun (x : Int, y : String) = y}(10, "hello")""",
                     """"hello"""",
                     "String"
                 ),
                 BasicTest(
                     "multi-line function",
-                    """(fun (x : Int) =
-                      x)(10)""",
+                    """{fun (x : Int) =
+                      x}(10)""",
                     "10",
                     "Int"
                 ),
                 BasicTest(
                     "row argument",
-                    "(fun (r : {x : Int}) = r.x)({x = 20})",
+                    "{fun (r : {x : Int}) = r.x}({x = 20})",
                     "20",
                     "Int"
                 ),
                 BasicTest(
                     "single field row return",
-                    "(fun (x : Int) = {a = x})(9)",
+                    "{fun (x : Int) = {a = x}}(9)",
                     "{a = 9}",
                     "{a : Int}"
                 ),
                 BasicTest(
                     "function argument",
-                    """(fun (f : (Int) => String) = f(10))(fun (x : Int) = "yes")""",
+                    """{fun (f : (Int) => String) = f(10)}(fun (x : Int) = "yes")""",
                     """"yes"""",
                     "String"
                 ),
                 BasicTest(
                     "function return then call",
-                    "(fun (x : Int) = (fun (y : Int) = x))(10)(15)",
+                    "{fun (x : Int) = fun (y : Int) = x}(10)(15)",
                     "10",
                     "Int"
                 ),
                 BasicTest(
                     "function program result",
-                    "(fun (f : (Int) => Int) = f)(fun (x : Int) = x)",
+                    "{fun (f : (Int) => Int) = f}(fun (x : Int) = x)",
                     "<function>",
                     "(Int) => Int"
                 ),

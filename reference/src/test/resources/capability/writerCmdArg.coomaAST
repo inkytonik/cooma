@@ -5,12 +5,12 @@ Program(
                 Argument(
                     IdnDef(
                         "w"),
-                    IdnT(
+                    Idn(
                         IdnUse(
                             "Writer"))))),
         App(
             Sel(
-                Var(
+                Idn(
                     IdnUse(
                         "w")),
                 FieldUse(

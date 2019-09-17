@@ -118,7 +118,7 @@ trait REPL extends REPLBase[Config] {
         }
     }
 
-    def checkInput(input : REPLInput, config : Config) : (Messages, REPLInput, Type) = {
+    def checkInput(input : REPLInput, config : Config) : (Messages, REPLInput, Expression) = {
         val input2 =
             input match {
                 case REPLExpression(e) =>
@@ -144,7 +144,7 @@ trait REPL extends REPLBase[Config] {
     /**
      * Embed an input entry for the REPL.
      */
-    def processInput(input : REPLInput, tipe : Type, config : Config) =
+    def processInput(input : REPLInput, tipe : Expression, config : Config) =
         input match {
             case REPLDef(fd @ Def(IdnDef(i), _)) =>
                 processDef(i, fd, tipe, config)
@@ -158,25 +158,25 @@ trait REPL extends REPLBase[Config] {
      * Construct a program that binds a value.
      */
     def makeVal(i : String, vd : Val) : Program =
-        Program(Blk(LetVal(vd, Return(Var(IdnUse(i))))))
+        Program(Blk(LetVal(vd, Return(Idn(IdnUse(i))))))
 
     /**
      * Construct a program that binds a function definition.
      */
     def makeDef(i : String, fd : Def) : Program =
-        Program(Blk(LetFun(Vector(fd), Return(Var(IdnUse(i))))))
+        Program(Blk(LetFun(Vector(fd), Return(Idn(IdnUse(i))))))
 
     /**
      * Process a user-entered value binding.
      */
-    def processVal(i : String, vd : Val, tipe : Type, config : Config) {
+    def processVal(i : String, vd : Val, tipe : Expression, config : Config) {
         process(makeVal(i, vd), i, tipe, config)
     }
 
     /**
      * Process a user-entered function definition binding.
      */
-    def processDef(i : String, fd : Def, tipe : Type, config : Config) {
+    def processDef(i : String, fd : Def, tipe : Expression, config : Config) {
         process(makeDef(i, fd), i, tipe, config)
     }
 
@@ -186,11 +186,9 @@ trait REPL extends REPLBase[Config] {
     def process(
         program : Program,
         i : String,
-        tipe : Type,
+        tipe : Expression,
         config : Config
     ) {
-        if (config.coomaASTPrint())
-            config.output().emitln(layout(any(program), 5))
         val term = compileStandalone(program)
         currentDynamicEnv = repl(currentDynamicEnv, i, tipe, config, term)
     }

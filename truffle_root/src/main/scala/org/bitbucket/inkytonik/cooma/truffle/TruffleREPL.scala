@@ -12,7 +12,7 @@ trait TruffleREPL extends REPL {
     /**
      * Process a user-entered value binding.
      */
-    override def processVal(i : String, vd : Val, tipe : Type, config : Config) {
+    override def processVal(i : String, vd : Val, tipe : Expression, config : Config) {
         processLine(
             CoomaParserPrettyPrinter.format(makeVal(i, vd)).layout,
             i, tipe, config
@@ -22,7 +22,7 @@ trait TruffleREPL extends REPL {
     /**
      * Process a user-entered function definition binding.
      */
-    override def processDef(i : String, fd : Def, tipe : Type, config : Config) {
+    override def processDef(i : String, fd : Def, tipe : Expression, config : Config) {
         processLine(
             CoomaParserPrettyPrinter.format(makeDef(i, fd)).layout,
             i, tipe, config
@@ -32,7 +32,7 @@ trait TruffleREPL extends REPL {
     def processLine(
         line : String,
         i : String,
-        tipe : Type,
+        tipe : Expression,
         config : Config
     ) {
         val result = currentDynamicEnv.eval(CoomaConstants.ID, line)

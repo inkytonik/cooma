@@ -178,7 +178,7 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "overriding value names",
-                "{ val x = {} val x = 2 {fun (a : Int) = 0}(x) }",
+                """{ val x = "hi" val x = 2 {fun (a : Int) = 0}(x) }""",
                 ""
             ),
             SemanticTest(
@@ -223,30 +223,30 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "apply no-arg function",
-                "(fun () = 0)()",
+                "{fun () = 0}()",
                 ""
             ),
             SemanticTest(
                 "apply function to too many arguments (zero)",
-                "(fun () = 0)({})",
+                "{fun () = 0}(3)",
                 """|1:14:error: expected no arguments, got 1
-                   |(fun () = 0)({})
+                   |{fun () = 0}(3)
                    |             ^
                    |"""
             ),
             SemanticTest(
                 "apply function to too many arguments (one)",
-                "(fun (x : Int) = 0)(2, 3)",
+                "{fun (x : Int) = 0}(2, 3)",
                 """|1:21:error: expected up to one argument, got 2
-                   |(fun (x : Int) = 0)(2, 3)
+                   |{fun (x : Int) = 0}(2, 3)
                    |                    ^
                    |"""
             ),
             SemanticTest(
                 "apply function to too many arguments (more than one)",
-                "(fun (x : Int, y : Int) = 0)(2, 3, 4)",
+                "{fun (x : Int, y : Int) = 0}(2, 3, 4)",
                 """|1:30:error: expected up to 2 arguments, got 3
-                   |(fun (x : Int, y : Int) = 0)(2, 3, 4)
+                   |{fun (x : Int, y : Int) = 0}(2, 3, 4)
                    |                             ^
                    |"""
             ),
@@ -286,13 +286,13 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "Writer write field has correct type",
-                """{ def f (w : Writer) : {} = w.write("hi") 0 }""",
+                """{ def f (w : Writer) : Unit = w.write("hi") 0 }""",
                 ""
             ),
             SemanticTest(
                 "Writer doesn't have non-write field",
                 "fun (w : Writer) = w.foo",
-                """|1:22:error: foo is not a field of record type {write : (String) => {}}
+                """|1:22:error: foo is not a field of record type {write : (String) => Unit}
                    |fun (w : Writer) = w.foo
                    |                     ^
                    |"""
@@ -309,13 +309,13 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "ReaderWriter write field has correct type",
-                """{ def f (rw : ReaderWriter) : {} = rw.write("hi") 0 }""",
+                """{ def f (rw : ReaderWriter) : Unit = rw.write("hi") 0 }""",
                 ""
             ),
             SemanticTest(
                 "ReaderWriter doesn't have non-write field",
                 "fun (rw : ReaderWriter) = rw.foo",
-                """|1:30:error: foo is not a field of record type {read : () => String, write : (String) => {}}
+                """|1:30:error: foo is not a field of record type {read : () => String, write : (String) => Unit}
                    |fun (rw : ReaderWriter) = rw.foo
                    |                             ^
                    |"""
@@ -363,7 +363,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "non-type name used as argument type",
                 "{ val x = 1 fun (y : x) = y }",
-                """|1:22:error: non-type name x used as type
+                """|1:22:error: expected Type, got Int
                    |{ val x = 1 fun (y : x) = y }
                    |                     ^
                    |"""
@@ -371,7 +371,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "non-type name used as argument type in function type",
                 "{ val x = 1 fun (y : (x) => Int) = y }",
-                """|1:23:error: non-type name x used as type
+                """|1:23:error: expected Type, got Int
                    |{ val x = 1 fun (y : (x) => Int) = y }
                    |                      ^
                    |"""
@@ -379,23 +379,15 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "non-type name used as return type in function type",
                 "{ val x = 1 fun (y : (Int) => x) = y }",
-                """|1:31:error: non-type name x used as type
+                """|1:31:error: expected Type, got Int
                    |{ val x = 1 fun (y : (Int) => x) = y }
                    |                              ^
                    |"""
             ),
             SemanticTest(
-                "non-type name used as type alias definition",
-                "{ val x = 1 type t = x 0 }",
-                """|1:22:error: non-type name x used as type
-                   |{ val x = 1 type t = x 0 }
-                   |                     ^
-                   |"""
-            ),
-            SemanticTest(
                 "non-type name used as field type",
                 "{ val x = 1 fun (y : {a : x}) = 1 }",
-                """|1:27:error: non-type name x used as type
+                """|1:27:error: expected Type, got Int
                    |{ val x = 1 fun (y : {a : x}) = 1 }
                    |                          ^
                    |"""
@@ -405,29 +397,29 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "alias of simple type",
-                "{ type Foo = Int (fun (x : Foo) = 0)(1) }",
+                "{ val Foo = Int {fun (x : Foo) = 0}(1) }",
                 ""
             ),
             SemanticTest(
                 "alias of record type",
-                "{ type Foo = {x : Int, y : String} fun (f : Foo) = f.x }",
+                "{ val Foo = {x : Int, y : String} fun (f : Foo) = f.x }",
                 ""
             ),
             SemanticTest(
                 "alias of function type",
-                "{ type Foo = (Int) => String fun (f : Foo) = f(0) }",
+                "{ val Foo = (Int) => String fun (f : Foo) = f(0) }",
                 ""
             ),
             SemanticTest(
                 "alias of alias of simple type",
-                "{ type Foo = Int type Bar = Foo (fun (x : Bar) = 0)(1) }",
+                "{ val Foo = Int val Bar = Foo {fun (x : Bar) = 0}(1) }",
                 ""
             ),
             SemanticTest(
                 "alias of record type of alias",
                 """{
-                  |   type Foo = Int
-                  |   type Bar = {f : Foo}
+                  |   val Foo = Int
+                  |   val Bar = {f : Foo}
                   |   def m (x : Bar) : Int = x.f
                   |   0
                   |}
@@ -437,8 +429,8 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "alias of function type of alias",
                 """{
-                  |   type Foo = Int
-                  |   type Bar = (Foo) => Foo
+                  |   val Foo = Int
+                  |   val Bar = (Foo) => Foo
                   |   def m (x : Bar) : Int = x(0)
                   |   0
                   |}
@@ -447,18 +439,18 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "alias of not-declared type",
-                "{ type Foo = Bar 0 }",
-                """|1:14:error: Bar is not declared
-                   |{ type Foo = Bar 0 }
-                   |             ^
+                "{ val Foo = Bar 0 }",
+                """|1:13:error: Bar is not declared
+                   |{ val Foo = Bar 0 }
+                   |            ^
                    |"""
             ),
             SemanticTest(
                 "alias of self",
-                "{ type Foo = Foo 0 }",
-                """|1:14:error: Foo is not declared
-                   |{ type Foo = Foo 0 }
-                   |             ^
+                "{ val Foo = Foo 0 }",
+                """|1:13:error: Foo is not declared
+                   |{ val Foo = Foo 0 }
+                   |            ^
                    |"""
             ),
 
@@ -468,12 +460,12 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "function argument type exact match (one)",
-                "(fun (x : Int) = x)(1)",
+                "{fun (x : Int) = x}(1)",
                 ""
             ),
             SemanticTest(
                 "function argument type exact match (two)",
-                "(fun (x : Int, y : Int) = x)(1, 2)",
+                "{fun (x : Int, y : Int) = x}(1, 2)",
                 ""
             ),
             SemanticTest(
@@ -491,49 +483,49 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "bad function argument type (one, simple)",
-                "(fun (x : String) = x)(1)",
+                "{fun (x : String) = x}(1)",
                 """|1:24:error: expected String, got Int
-                   |(fun (x : String) = x)(1)
+                   |{fun (x : String) = x}(1)
                    |                       ^
                    |"""
             ),
             SemanticTest(
                 "bad function argument type (two, simple)",
-                "(fun (x : Int, y : String) = x)(1, 2)",
+                "{fun (x : Int, y : String) = x}(1, 2)",
                 """|1:36:error: expected String, got Int
-                   |(fun (x : Int, y : String) = x)(1, 2)
+                   |{fun (x : Int, y : String) = x}(1, 2)
                    |                                   ^
                    |"""
             ),
             SemanticTest(
                 "bad function argument type (record formal)",
-                "(fun (x : {y : Int}) = x)(1)",
+                "{fun (x : {y : Int}) = x}(1)",
                 """|1:27:error: expected {y : Int}, got Int
-                   |(fun (x : {y : Int}) = x)(1)
+                   |{fun (x : {y : Int}) = x}(1)
                    |                          ^
                    |"""
             ),
             SemanticTest(
                 "bad function argument type (record actual)",
-                "(fun (x : Int) = x)({y = 1})",
+                "{fun (x : Int) = x}({y = 1})",
                 """|1:21:error: expected Int, got {y : Int}
-                   |(fun (x : Int) = x)({y = 1})
+                   |{fun (x : Int) = x}({y = 1})
                    |                    ^
                    |"""
             ),
             SemanticTest(
                 "bad function argument type (function formal)",
-                "(fun (x : (Int) => String) = x)(1)",
+                "{fun (x : (Int) => String) = x}(1)",
                 """|1:33:error: expected (Int) => String, got Int
-                   |(fun (x : (Int) => String) = x)(1)
+                   |{fun (x : (Int) => String) = x}(1)
                    |                                ^
                    |"""
             ),
             SemanticTest(
                 "bad function argument type (function actual)",
-                "(fun (x : Int) = x)(fun (y : Int) = y)",
+                "{fun (x : Int) = x}(fun (y : Int) = y)",
                 """|1:21:error: expected Int, got (Int) => Int
-                   |(fun (x : Int) = x)(fun (y : Int) = y)
+                   |{fun (x : Int) = x}(fun (y : Int) = y)
                    |                    ^
                    |"""
             ),
@@ -601,7 +593,7 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "subtype record function argument",
-                "(fun (r : {x : Int}) = 0)({x = 1, y = 2})",
+                "{fun (r : {x : Int}) = 0}({x = 1, y = 2})",
                 ""
             ),
             SemanticTest(
@@ -611,9 +603,9 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "bad subtype record function argument",
-                "(fun (r : {x : Int, y : Int}) = 0)({x = 1})",
+                "{fun (r : {x : Int, y : Int}) = 0}({x = 1})",
                 """|1:36:error: expected {x : Int, y : Int}, got {x : Int}
-                   |(fun (r : {x : Int, y : Int}) = 0)({x = 1})
+                   |{fun (r : {x : Int, y : Int}) = 0}({x = 1})
                    |                                   ^
                    |"""
             ),
@@ -627,7 +619,7 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "subtype function function argument",
-                "(fun (r : ({x : Int, y : Int}) => Int) = 0)(fun (s : {x : Int}) = s.x)",
+                "{fun (r : ({x : Int, y : Int}) => Int) = 0}(fun (s : {x : Int}) = s.x)",
                 ""
             ),
             SemanticTest(
@@ -637,9 +629,9 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "bad subtype function function argument",
-                "(fun (r : ({x : Int}) => Int) = 0)(fun (s : {x : Int, y : Int}) = s.x)",
+                "{fun (r : ({x : Int}) => Int) = 0}(fun (s : {x : Int, y : Int}) = s.x)",
                 """|1:36:error: expected ({x : Int}) => Int, got ({x : Int, y : Int}) => Int
-                   |(fun (r : ({x : Int}) => Int) = 0)(fun (s : {x : Int, y : Int}) = s.x)
+                   |{fun (r : ({x : Int}) => Int) = 0}(fun (s : {x : Int, y : Int}) = s.x)
                    |                                   ^
                    |"""
             ),
@@ -734,18 +726,18 @@ class SemanticTests extends Tests {
         import org.bitbucket.inkytonik.cooma.SemanticAnalysis.{subtype, subtypes}
         import org.bitbucket.inkytonik.kiama.util.Positions
 
-        def parseType(s : String) : Type = {
+        def parseType(s : String) : Expression = {
             val source = new StringSource(s)
             val positions = new Positions
             val p = new CoomaParser(source, positions)
-            val pr = p.pType(0)
+            val pr = p.pExpression(0)
             if (pr.hasValue)
-                p.value(pr).asInstanceOf[Type]
+                p.value(pr).asInstanceOf[Expression]
             else
                 fail(p.formatParseError(pr.parseError, false))
         }
 
-        def parseTypes(ss : Vector[String]) : Vector[Type] =
+        def parseTypes(ss : Vector[String]) : Vector[Expression] =
             ss.map(parseType)
 
         // NOTE: these must be designed to not be sub-types of each other
@@ -761,8 +753,8 @@ class SemanticTests extends Tests {
                 "() => Int",
                 "(Int) => Int",
                 "(String, Int) => String",
-                "({}) => Int",
-                "(String) => {}}",
+                "(Unit) => Int",
+                "(String) => Unit",
                 "({x : Int}) => String",
                 "(Int) => {x : Int}",
                 "((Int) => Int) => Int",
@@ -790,16 +782,12 @@ class SemanticTests extends Tests {
 
         val onewaySubtypeTests =
             Vector(
-                ("{x : Int}", "{}"),
-                ("{x : Int, y : Int}", "{}"),
                 ("{x : Int, y : Int}", "{x : Int}"),
                 ("{x : Int, y : Int}", "{y : Int}"),
-                ("({}) => Int", "({x : Int}) => Int"),
                 (
                     "({x : Int}, {y : String}) => Int",
                     "({x : Int}, {x : Int, y : String}) => Int"
                 ),
-                ("(Int) => {x : Int}", "(Int) => {}"),
                 ("(Int) => {x : Int, y : Int}", "(Int) => {x : Int}")
             )
 

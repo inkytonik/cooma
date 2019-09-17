@@ -1,19 +1,21 @@
 Program(
     App(
-        Fun(
-            Arguments(
-                Vector(
-                    Argument(
-                        IdnDef(
-                            "x"),
-                        IntT()),
-                    Argument(
-                        IdnDef(
-                            "y"),
-                        StrT()))),
-            Var(
-                IdnUse(
-                    "x"))),
+        Blk(
+            Return(
+                Fun(
+                    Arguments(
+                        Vector(
+                            Argument(
+                                IdnDef(
+                                    "x"),
+                                IntT()),
+                            Argument(
+                                IdnDef(
+                                    "y"),
+                                StrT()))),
+                    Idn(
+                        IdnUse(
+                            "x"))))),
         Vector(
             Num(
                 10),
