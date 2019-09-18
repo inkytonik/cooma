@@ -130,7 +130,7 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
     def toDocValue(v : Value) : Doc =
         v match {
             case FunV(k, x, t) =>
-                "fun" <+> k <+> x <+> text("=>") <+> align(toDocTerm(t))
+                "fun" <+> k <+> x <+> text("=") <+> align(toDocTerm(t))
             case IntV(i) =>
                 value(i)
             case PrmV(p, xs) =>

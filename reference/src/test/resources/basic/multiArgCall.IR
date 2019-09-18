@@ -1,5 +1,5 @@
-letv f5 = fun k6 x => letv f7 = fun j8 y => j8 x
-                      k6 f7
+letv f5 = fun k6 x = letv f7 = fun j8 y = j8 x
+                     k6 f7
 letv x9 = 10
 letc k3 x4 = letv x10 = "hello"
              letc k1 x2 = $halt x2

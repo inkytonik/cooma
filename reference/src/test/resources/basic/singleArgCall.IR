@@ -1,4 +1,4 @@
-letv f3 = fun k4 x => k4 x
+letv f3 = fun k4 x = k4 x
 letv x5 = 10
 letc k1 x2 = $halt x2
 f3 k1 x5
