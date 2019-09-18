@@ -1,0 +1,3 @@
+src/test/resources/bad/badParse.cooma:2:9:error: '}' expected
+    foo bar ble
+        ^

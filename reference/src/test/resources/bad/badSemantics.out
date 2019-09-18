@@ -1,0 +1,3 @@
+src/test/resources/bad/badSemantics.cooma:1:21:error: expected Int, got String
+{fun (x : Int) = x}("hello")
+                    ^

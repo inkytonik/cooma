@@ -493,6 +493,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             filetests(s"${backend.name} file", s"${resourcesPath}/basic", ".cooma", ".out",
                 argslist = List(backend.options ++ List("-r")))
 
+            filetests(s"${backend.name} file", s"${resourcesPath}/bad", ".cooma", ".out",
+                argslist = List(backend.options))
+
             case class OptionTest(
                 name : String,
                 option : String,
@@ -532,6 +535,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         // REPL tests
+
         for (aTest <- basicTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
                 val result = runREPLOnLine(aTest.name, aTest.program, backend.options)

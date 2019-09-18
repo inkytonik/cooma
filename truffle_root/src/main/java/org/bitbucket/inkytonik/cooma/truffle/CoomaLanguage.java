@@ -3,6 +3,7 @@ package org.bitbucket.inkytonik.cooma.truffle;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleException;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -11,7 +12,10 @@ import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.Util;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
+import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
+import org.bitbucket.inkytonik.kiama.util.Emitter;
+import org.bitbucket.inkytonik.kiama.util.StringEmitter;
 
 import java.util.Arrays;
 
@@ -77,15 +81,35 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
         String source = request.getSource().getCharacters().toString();
         if (source.isEmpty()) {
-            truffleDriver.run(config);
+            compileFile(config);
         } else {
             truffleDriver.compileString("string source", source, config);
         }
+
         getContextReference().get().setApplicationArguments(Util.getConfigFilenamesTail(config));
         RootNode evalMain = new CoomaRootNode(this, truffleDriver.getCurrentCompiledNode());
         return Truffle.getRuntime().createCallTarget(evalMain);
     }
 
+    protected void compileFile(Config config) throws CoomaFrontendException {
+        truffleDriver.setCurrentCompiledNode(null);
+
+        truffleDriver.compileFiles(config);
+
+        // Check for frontend error
+        if (truffleDriver.getCurrentCompiledNode() == null) {
+            // If testing, capture output and pass back via exception
+            // so can be reported by frontend. Can't be reported here
+            // since config object is different to frontend. If not
+            // testing, errors have already been reported.
+            Emitter emitter = config.output().apply();
+            String message =
+                (emitter instanceof StringEmitter) ?
+                    ((StringEmitter) emitter).result() :
+                    "";
+            throw new CoomaFrontendException(message);
+        }
+    }
 
     @Override
     protected Object findMetaObject(CoomaContext context, Object value) {
