@@ -14,7 +14,7 @@ LetV(
         LetV(
             "x4",
             PrmV(
-                RowSelectP(),
+                RecSelectP(),
                 Vector(
                     "w",
                     "write")),

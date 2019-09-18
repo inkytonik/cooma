@@ -19,7 +19,7 @@ The Cooma project at Macquarie University is investigating secure programming la
 
 * Functional core compiled to a continuation-passing intermediate representation (["Compiling with continuations, continued", Kennedy, ICFP 2007](https://doi.org/10.1145/1291151.1291179))
 
-* Row-based data types capable of encoding types with variants and object-oriented style extension (["Abstracting extensible data types: or, rows by any other name", Morris and McKinna, POPL 2019](https://doi.org/10.1145/3290325))
+* Row-based data types capable of encoding record types with variants and object-oriented style extension (["Abstracting extensible data types: or, rows by any other name", Morris and McKinna, POPL 2019](https://doi.org/10.1145/3290325))
 
 * Fine-grained object capability-based effects (["A Study of Capability-Based Effect Systems", Liu, EPFL, 2016](https://github.com/liufengyun/stoic))
 
@@ -178,16 +178,16 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 10
 ```
 
-### Row argument and field reference
+### Record argument and field reference
 
 ```ml
 {fun (r : {x : Int, y : Int, z : String}) = r.x} ({x = 20, y = 10, z = "Hi"})
 
-> run -r reference/src/test/resources/basic/rowArg.cooma
+> run -r reference/src/test/resources/basic/recordArg.cooma
 20
 ```
 
-### Row concatenation
+### Record concatenation
 
 ```ml
 {
@@ -196,7 +196,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     {r & s}.x
 }
 
-> run -r reference/src/test/resources/basic/rowConcat.cooma
+> run -r reference/src/test/resources/basic/recordConcat.cooma
 10
 ```
 

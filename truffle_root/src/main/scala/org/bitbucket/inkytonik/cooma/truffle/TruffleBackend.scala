@@ -47,8 +47,8 @@ class TruffleBackend(config : Config) extends Backend {
     def prmV(p : Primitive, xs : Vector[String]) : Value =
         new CoomaPrimitiveValue(p, xs.toArray)
 
-    def rowV(fs : Vector[FieldValue]) : Value =
-        new CoomaRowValueNode(fs.toArray)
+    def recV(fs : Vector[FieldValue]) : Value =
+        new CoomaRecValueNode(fs.toArray)
 
     def strV(s : String) : Value =
         new CoomaStringValueNode(s)
@@ -85,12 +85,12 @@ class TruffleBackend(config : Config) extends Backend {
         new ReaderReadP(filename)
     }
 
-    def rowConcatP() : Primitive = {
-        new RowConcatP()
+    def recConcatP() : Primitive = {
+        new RecConcatP()
     }
 
-    def rowSelectP() : Primitive = {
-        new RowSelectP()
+    def recSelectP() : Primitive = {
+        new RecSelectP()
     }
 
     override type ValueR = org.graalvm.polyglot.Value

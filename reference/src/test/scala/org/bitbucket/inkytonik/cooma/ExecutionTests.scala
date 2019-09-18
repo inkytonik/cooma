@@ -123,7 +123,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "String"
                 ),
 
-                // Rows
+                // Records
 
                 BasicTest(
                     "unit",
@@ -132,31 +132,31 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Unit"
                 ),
                 BasicTest(
-                    "row (single int field)",
+                    "record (single int field)",
                     "{x = 65}",
                     "{x = 65}",
                     "{x : Int}"
                 ),
                 BasicTest(
-                    "row (single string field)",
+                    "record (single string field)",
                     """{name = "Harold"}""",
                     """{name = "Harold"}""",
                     "{name : String}"
                 ),
                 BasicTest(
-                    "row (two fields)",
+                    "record (two fields)",
                     "{a = 1, b = 2}",
                     "{a = 1, b = 2}",
                     "{a : Int, b : Int}"
                 ),
                 BasicTest(
-                    "row (many fields)",
+                    "record (many fields)",
                     """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
                     """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
                     "{name : String, age : Int, year : Int, sex : String}"
                 ),
                 BasicTest(
-                    "multi-line row",
+                    "multi-line record",
                     """{
                         name = "Bob",
                         age = 24
@@ -195,7 +195,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Int"
                 ),
                 BasicTest(
-                    "row concatenation",
+                    "record concatenation",
                     """{
                         val r = {x = 10, y = 20}
                         val s = {a = "Hi"}
@@ -205,7 +205,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "{x : Int, y : Int, a : String}"
                 ),
                 BasicTest(
-                    "select from row concatenation (left)",
+                    "select from record concatenation (left)",
                     """{
                        val r = {x = 10, y = 20}
                         val s = {a = "Hi"}
@@ -215,7 +215,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Int"
                 ),
                 BasicTest(
-                    "select from row concatenation (right)",
+                    "select from record concatenation (right)",
                     """{
                        val r = {x = 10, y = 20}
                        val s = {a = "Hi"}
@@ -265,13 +265,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Int"
                 ),
                 BasicTest(
-                    "row argument",
+                    "record argument",
                     "{fun (r : {x : Int}) = r.x}({x = 20})",
                     "20",
                     "Int"
                 ),
                 BasicTest(
-                    "single field row return",
+                    "single field record return",
                     "{fun (x : Int) = {a = x}}(9)",
                     "{a = 9}",
                     "{a : Int}"

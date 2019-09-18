@@ -90,7 +90,7 @@ trait Compiler {
                 val x = fresh("x")
                 compile(l, y =>
                     compile(r, z =>
-                        letV(x, prmV(rowConcatP(), Vector(y, z)),
+                        letV(x, prmV(recConcatP(), Vector(y, z)),
                             kappa(x))))
 
             case Fun(Arguments(Vector()), e) =>
@@ -112,12 +112,12 @@ trait Compiler {
 
             case Rec(fields) =>
                 val x = fresh("x")
-                compileRow(fields, fvs => letV(x, rowV(fvs), kappa(x)))
+                compileRow(fields, fvs => letV(x, recV(fvs), kappa(x)))
 
             case Sel(r, FieldUse(f)) =>
                 val x = fresh("x")
                 compile(r, z =>
-                    letV(x, prmV(rowSelectP(), Vector(z, f)),
+                    letV(x, prmV(recSelectP(), Vector(z, f)),
                         kappa(x)))
 
             case Str(s) =>
@@ -127,7 +127,7 @@ trait Compiler {
 
             case Uni() =>
                 val x = fresh("x")
-                letV(x, rowV(Vector()),
+                letV(x, recV(Vector()),
                     kappa(x))
 
             // The rest are types, which we erase by replacing with unit
@@ -229,7 +229,7 @@ trait Compiler {
                 val x = fresh("x")
                 compile(l, y =>
                     compile(r, z =>
-                        letV(x, prmV(rowConcatP(), Vector(y, z)),
+                        letV(x, prmV(recConcatP(), Vector(y, z)),
                             appC(k, x))))
 
             case Fun(Arguments(Vector()), e) =>
@@ -254,12 +254,12 @@ trait Compiler {
 
             case Rec(fields) =>
                 val x = fresh("x")
-                compileRow(fields, fvs => letV(x, rowV(fvs), appC(k, x)))
+                compileRow(fields, fvs => letV(x, recV(fvs), appC(k, x)))
 
             case Sel(e, FieldUse(f)) =>
                 val x = fresh("x")
                 compile(e, z =>
-                    letV(x, prmV(rowSelectP(), Vector(z, f)),
+                    letV(x, prmV(recSelectP(), Vector(z, f)),
                         appC(k, x)))
 
             case Str(s) =>
@@ -269,7 +269,7 @@ trait Compiler {
 
             case Uni() =>
                 val x = fresh("x")
-                letV(x, rowV(Vector()),
+                letV(x, recV(Vector()),
                     appC(k, x))
         }
 

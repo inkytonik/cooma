@@ -23,7 +23,7 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
     case class FunV(k : String, x : String, body : Term) extends Value
     case class IntV(i : BigInt) extends Value
     case class PrmV(p : Primitive, xs : Vector[String]) extends Value
-    case class RowV(fs : Vector[FieldValue]) extends Value
+    case class RecV(fs : Vector[FieldValue]) extends Value
     case class StrV(s : String) extends Value
 
     case class FieldValue(f : String, x : String)
@@ -68,8 +68,8 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
     def prmV(p : Primitive, xs : Vector[String]) : Value =
         PrmV(p, xs)
 
-    def rowV(fs : Vector[FieldValue]) : Value =
-        RowV(fs)
+    def recV(fs : Vector[FieldValue]) : Value =
+        RecV(fs)
 
     def strV(s : String) : Value =
         StrV(s)
@@ -91,11 +91,11 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
     def readerReadP(filename : String) : Primitive =
         ReaderReadP(filename)
 
-    def rowConcatP() : Primitive =
-        RowConcatP()
+    def recConcatP() : Primitive =
+        RecConcatP()
 
-    def rowSelectP() : Primitive =
-        RowSelectP()
+    def recSelectP() : Primitive =
+        RecSelectP()
 
     /*
      * Custom IR pretty-printer that escapes string terms.
@@ -135,7 +135,7 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
                 value(i)
             case PrmV(p, xs) =>
                 p.show <> hcat(xs.map(x => space <> x))
-            case RowV(fs) =>
+            case RecV(fs) =>
                 "{" <> ssep(fs.map(toDocFieldValue), "," <> space) <> text("}")
             case StrV(v1) =>
                 "\"" <> value(escape(v1)) <> text("\"")

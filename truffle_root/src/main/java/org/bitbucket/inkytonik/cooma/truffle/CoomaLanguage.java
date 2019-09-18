@@ -129,8 +129,8 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
             return Type.Error.value;
         } else if (value instanceof ContinuationClosure) {
             return Type.Closure.value;
-        } else if (value instanceof RowRuntimeValue) {
-            return Type.Row.value;
+        } else if (value instanceof RecRuntimeValue) {
+            return Type.Record.value;
         } else if (interop.isNull(value)) {
             return "NULL";
         } else if (interop.isExecutable(value)) {
@@ -146,7 +146,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
         Int("Number"),
         String("String"),
         Error("Error"),
-        Row("Row"),
+        Record("Record"),
         Closure("Closure");
 
         final String value;

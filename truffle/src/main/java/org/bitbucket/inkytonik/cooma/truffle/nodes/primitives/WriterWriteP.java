@@ -6,7 +6,7 @@ import org.bitbucket.inkytonik.cooma.truffle.exceptions.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Lazy;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.IntRuntimeValue;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.RowRuntimeValue;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.RecRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.StringRuntimeValue;
 
@@ -44,18 +44,18 @@ public final class WriterWriteP extends Primitive {
 
 	@Override
 	public RuntimeValue run(Rho rho, String[] xs, String[] args) {
-		RuntimeValue row = rho.get(xs[0]);
+		RuntimeValue rec = rho.get(xs[0]);
 		//TODO: check permissions when the primitive is actually executed.
-		if (row instanceof IntRuntimeValue || row instanceof StringRuntimeValue) {
+		if (rec instanceof IntRuntimeValue || rec instanceof StringRuntimeValue) {
 			try (Writer outtry = out.get()) {
-				outtry.write(row.toString());
+				outtry.write(rec.toString());
 			} catch (IOException e) {
 				throw new CoomaException(e, this);
 			}
 		} else {
-			throw new CoomaException(String.format("%s: can't write %s", getShow(), row.toString()), this);
+			throw new CoomaException(String.format("%s: can't write %s", getShow(), rec.toString()), this);
 		}
-		return RowRuntimeValue.empty();
+		return RecRuntimeValue.empty();
 	}
 
 	@Override

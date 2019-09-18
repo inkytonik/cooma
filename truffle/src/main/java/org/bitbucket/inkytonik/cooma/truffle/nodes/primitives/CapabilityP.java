@@ -83,8 +83,8 @@ public class CapabilityP extends Primitive {
 		return result;
 	}
 
-	private RowRuntimeValue makeCapability(List<Pair<String, Primitive>> pairs) {
-		return new RowRuntimeValue(pairs.stream().map(pair -> {
+	private RecRuntimeValue makeCapability(List<Pair<String, Primitive>> pairs) {
+		return new RecRuntimeValue(pairs.stream().map(pair -> {
 					val k = fresh("k");
 					val y = fresh("y");
 					val p = fresh("p");

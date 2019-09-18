@@ -2,19 +2,19 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.FieldValueRuntime;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.RowRuntimeValue;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.RecRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CoomaRowValueNode extends CoomaValueNode{
+public class CoomaRecValueNode extends CoomaValueNode{
 
     private final FieldValue[] fs;
 
 
-    public CoomaRowValueNode(FieldValue[] fs) {
+    public CoomaRecValueNode(FieldValue[] fs) {
         this.fs = fs;
     }
 
@@ -24,6 +24,6 @@ public class CoomaRowValueNode extends CoomaValueNode{
                 .stream(fs)
                 .map((FieldValue fs) -> new FieldValueRuntime(fs.getF(), obtainFromRho(fs.getX())))
                 .collect(Collectors.toList());
-        return new RowRuntimeValue(fieldRL.toArray(new FieldValueRuntime[fs.length]));
+        return new RecRuntimeValue(fieldRL.toArray(new FieldValueRuntime[fs.length]));
     }
 }

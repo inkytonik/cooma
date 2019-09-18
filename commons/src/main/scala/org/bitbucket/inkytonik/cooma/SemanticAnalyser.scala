@@ -268,23 +268,7 @@ class SemanticAnalyser(
                 Some(IntT())
 
             case Rec(fields) =>
-                val ts = fields.map(f => tipe(f.expression))
-                if (ts contains None)
-                    None
-                else {
-                    unaliases(ts.map(_.get)) match {
-                        case Some(us) =>
-                            val ids = fields.map(_.identifier)
-                            val fieldTypes =
-                                (ids.zip(us)).map {
-                                    case (i, u) =>
-                                        FieldType(i, u)
-                                }
-                            Some(RecT(Row(fieldTypes)))
-                        case None =>
-                            None
-                    }
-                }
+                makeRow(fields).map(RecT)
 
             case _ : RecT =>
                 Some(TypT())
@@ -319,7 +303,33 @@ class SemanticAnalyser(
 
             case UniT() =>
                 Some(TypT())
+
+            case Var(fields) =>
+                makeRow(fields).map(VarT)
+
+            case _ : VarT =>
+                Some(TypT())
         }
+
+    def makeRow(fields : Vector[Field]) : Option[Row] = {
+        val ts = fields.map(f => tipe(f.expression))
+        if (ts contains None)
+            None
+        else {
+            unaliases(ts.map(_.get)) match {
+                case Some(us) =>
+                    val ids = fields.map(_.identifier)
+                    val fieldTypes =
+                        (ids.zip(us)).map {
+                            case (i, u) =>
+                                FieldType(i, u)
+                        }
+                    Some(Row(fieldTypes))
+                case None =>
+                    None
+            }
+        }
+    }
 
     val entityType : CoomaEntity => Option[Expression] =
         attr {

@@ -31,7 +31,7 @@ class Interpreter(config : Config) {
     case class ClsR(env : Env, f : String, x : String, e : Term) extends ValueR
     case class ErrR(msg : String) extends ValueR
     case class IntR(num : BigInt) extends ValueR
-    case class RowR(fields : Vector[FldR]) extends ValueR
+    case class RecR(fields : Vector[FldR]) extends ValueR
     case class StrR(str : String) extends ValueR
 
     case class FldR(x : String, v : ValueR)
@@ -119,8 +119,8 @@ class Interpreter(config : Config) {
                 case PrmV(p, xs) =>
                     p.eval(this)(rho, xs, args)
 
-                case RowV(fields) =>
-                    RowR(fields.map {
+                case RecV(fields) =>
+                    RecR(fields.map {
                         case FieldValue(f, v) =>
                             FldR(f, lookupR(rho, v))
                     })
@@ -188,8 +188,8 @@ class Interpreter(config : Config) {
                     sys.error(s"interpretPrim: got non-String argument $v")
             }
 
-        def makeCapability(pairs : Vector[(String, Primitive)]) : RowR = {
-            RowR(
+        def makeCapability(pairs : Vector[(String, Primitive)]) : RecR = {
+            RecR(
                 pairs.map(pair => {
                     val k = fresh("k")
                     val y = fresh("y")
@@ -249,7 +249,7 @@ class Interpreter(config : Config) {
                 text(msg)
             case IntR(i) =>
                 value(i)
-            case RowR(v1) =>
+            case RecR(v1) =>
                 text("{") <> ssep(v1.map(toDocField), text(",") <> space) <> text("}")
             case StrR(v1) =>
                 text("\"") <> value(escape(v1)) <> text("\"")
@@ -325,7 +325,7 @@ class Interpreter(config : Config) {
             } finally {
                 out.close()
             }
-            interp.RowR(Vector())
+            interp.RecR(Vector())
         }
 
         def show = s"consoleWrite $filename"
@@ -357,35 +357,35 @@ class Interpreter(config : Config) {
         def show = s"readerRead $filename"
     }
 
-    case class RowConcatP() extends Primitive {
+    case class RecConcatP() extends Primitive {
         val numArgs = 2
 
         def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val Vector(l, r) = xs
             interp.lookupR(rho, l) match {
-                case interp.RowR(lFields) =>
+                case interp.RecR(lFields) =>
                     interp.lookupR(rho, r) match {
-                        case interp.RowR(rFields) =>
-                            interp.RowR(lFields ++ rFields)
+                        case interp.RecR(rFields) =>
+                            interp.RecR(lFields ++ rFields)
                         case rv =>
-                            sys.error(s"$show: right argument $r of & is non-row $rv")
+                            sys.error(s"$show: right argument $r of & is non-record $rv")
                     }
                 case lv =>
-                    sys.error(s"$show: left argument $l of & is non-row $lv")
+                    sys.error(s"$show: left argument $l of & is non-record $lv")
             }
         }
 
         def show = "concat"
     }
 
-    case class RowSelectP() extends Primitive {
+    case class RecSelectP() extends Primitive {
         val numArgs = 2
 
         def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val Vector(r, f1) = xs
 
             interp.lookupR(rho, r) match {
-                case interp.RowR(fields) =>
+                case interp.RecR(fields) =>
                     fields.collectFirst {
                         case interp.FldR(f2, v) if f1 == f2 =>
                             v

@@ -18,7 +18,7 @@ trait Backend {
     def funV(k : String, x : String, body : Term) : Value
     def intV(i : BigInt) : Value
     def prmV(p : Primitive, xs : Vector[String]) : Value
-    def rowV(fs : Vector[FieldValue]) : Value
+    def recV(fs : Vector[FieldValue]) : Value
     def strV(s : String) : Value
 
     type FieldValue
@@ -29,8 +29,8 @@ trait Backend {
     def capabilityP(cap : String) : Primitive
     def consoleWriteP(filename : String) : Primitive
     def readerReadP(filename : String) : Primitive
-    def rowConcatP() : Primitive
-    def rowSelectP() : Primitive
+    def recConcatP() : Primitive
+    def recSelectP() : Primitive
 
     def showTerm(t : Term) : String
 

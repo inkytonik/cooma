@@ -8,22 +8,22 @@ import lombok.val;
 
 @Value
 @EqualsAndHashCode(callSuper=false)
-public class RowRuntimeValue extends RuntimeValue<RowRuntimeValue> implements TruffleObject {
+public class RecRuntimeValue extends RuntimeValue<RecRuntimeValue> implements TruffleObject {
 
     private final FieldValueRuntime[] fields;
 
-    public RowRuntimeValue(FieldValueRuntime[] fields) {
+    public RecRuntimeValue(FieldValueRuntime[] fields) {
         this.fields = fields;
     }
 
     @Override
-    public int compareTo(RowRuntimeValue rowRuntimeValue) {
+    public int compareTo(RecRuntimeValue recRuntimeValue) {
 
-        if (this.getFields().length == rowRuntimeValue.getFields().length){
+        if (this.getFields().length == recRuntimeValue.getFields().length){
 
             for (int i = 0; i < this.getFields().length ; i++) {
                 FieldValueRuntime local = this.getFields()[i];
-                FieldValueRuntime theirs = rowRuntimeValue.getFields()[i];
+                FieldValueRuntime theirs = recRuntimeValue.getFields()[i];
                 if (local.compareTo(theirs) != 0) {
                     return -1;
                 }
@@ -53,7 +53,7 @@ public class RowRuntimeValue extends RuntimeValue<RowRuntimeValue> implements Tr
         return String.format("{%s}", this.toString()) ;
     }
 
-    public static RowRuntimeValue empty(){
-        return new RowRuntimeValue(new FieldValueRuntime[]{});
+    public static RecRuntimeValue empty(){
+        return new RecRuntimeValue(new FieldValueRuntime[]{});
     }
 }

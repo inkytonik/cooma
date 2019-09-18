@@ -3,10 +3,10 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bitbucket.inkytonik.cooma.truffle.exceptions.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.RowRuntimeValue;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.RecRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
-public class RowConcatP extends Primitive {
+public class RecConcatP extends Primitive {
     @Override
     public Integer getNumargs() {
         return 2;
@@ -19,19 +19,19 @@ public class RowConcatP extends Primitive {
         String right = xs[1];
 
         RuntimeValue rowl = rho.get(left);
-        if (rowl instanceof RowRuntimeValue) {
-            RowRuntimeValue rowlL = (RowRuntimeValue) rowl;
+        if (rowl instanceof RecRuntimeValue) {
+            RecRuntimeValue rowlL = (RecRuntimeValue) rowl;
 
             RuntimeValue rowR = rho.get(right);
-            if (rowR instanceof RowRuntimeValue) {
-                RowRuntimeValue rowlR = (RowRuntimeValue) rowR;
-                return new RowRuntimeValue(ArrayUtils.addAll(rowlL.getFields(),rowlR.getFields()));
+            if (rowR instanceof RecRuntimeValue) {
+                RecRuntimeValue rowlR = (RecRuntimeValue) rowR;
+                return new RecRuntimeValue(ArrayUtils.addAll(rowlL.getFields(),rowlR.getFields()));
             } else {
-                throw new CoomaException(String.format("%s: left argument %s of & is non-row %s", getShow(), right, rowR.print()), this);
+                throw new CoomaException(String.format("%s: left argument %s of & is non-record %s", getShow(), right, rowR.print()), this);
             }
 
         } else {
-            throw new CoomaException(String.format("%s: left argument %s of & is non-row %s", getShow(), left, rowl.print()), this);
+            throw new CoomaException(String.format("%s: left argument %s of & is non-record %s", getShow(), left, rowl.print()), this);
         }
     }
 
