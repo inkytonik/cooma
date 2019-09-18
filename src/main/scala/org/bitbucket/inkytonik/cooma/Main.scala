@@ -9,15 +9,23 @@
  */
 
 package org.bitbucket.inkytonik.cooma
-import org.bitbucket.inkytonik.cooma.truffle.TruffleFrontend
 
 object Main {
+
+    import org.bitbucket.inkytonik.cooma.truffle.TruffleFrontend
+    import org.rogach.scallop.exceptions.UnknownOption
+
     def main(args : Array[String]) {
         val config = new Config(args)
-        config.verify()
-        if (config.graalVM())
-            new TruffleFrontend().interpret(config)
-        else
-            new ReferenceFrontend().interpret(config)
+        try {
+            config.verify()
+            if (config.graalVM())
+                new TruffleFrontend().interpret(config)
+            else
+                new ReferenceFrontend().interpret(config)
+        } catch {
+            case e : UnknownOption =>
+                println(s"cooma: ${e.getMessage()}, use --help for options")
+        }
     }
 }
