@@ -64,7 +64,7 @@ class SemanticAnalyser(
     def checkExpressionType(e : Expression) : Messages =
         (tipe(e), expectedType(e)) match {
             case (Some(t), Some(u)) if !subtype(t, u) =>
-                error(e, s"expected ${show(u)}, got ${show(t)}")
+                error(e, s"expected ${show(u)}, got ${show(e)} of type ${show(t)}")
             case _ =>
                 noMessages
         }
