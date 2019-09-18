@@ -24,7 +24,7 @@ public class TruffleDriver extends Driver {
     @Override
     public void process(Source source, CoomaParserSyntax.Program program, Config config) {
         TruffleCompiler compiler = new TruffleCompiler(config);
-        currentCompiledNode  = compiler.compileCommand(program);
+        setCurrentCompiledNode(compiler.compileCommand(program));
     }
 
     public CoomaTermNode getCurrentCompiledNode() {
