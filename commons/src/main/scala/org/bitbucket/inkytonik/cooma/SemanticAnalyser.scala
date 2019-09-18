@@ -165,12 +165,10 @@ class SemanticAnalyser(
         defineIfNew(e, a.idnDef.identifier, MultipleEntity(), ArgumentEntity(a))
 
     def defineFunction(e : Environment, d : Def) : Environment =
-        defineIfNew(e, d.idnDef.identifier, MultipleEntity(),
-            FunctionEntity(d))
+        defineIfNew(e, d.idnDef.identifier, MultipleEntity(), FunctionEntity(d))
 
     def defineValue(e : Environment, v : Val) : Environment =
-        defineIfNew(e, v.idnDef.identifier, MultipleEntity(),
-            ValueEntity(v))
+        defineIfNew(e, v.idnDef.identifier, MultipleEntity(), ValueEntity(v))
 
     lazy val env : ASTNode => Environment =
         attr {
