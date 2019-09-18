@@ -271,6 +271,10 @@ trait Compiler {
                 val x = fresh("x")
                 letV(x, recV(Vector()),
                     appC(k, x))
+
+            // The rest are types, which we erase by replacing with unit
+            case _ =>
+                tailCompile(Uni(), k)
         }
 
     def tailCompileCapFun(n : String, x : String, e : Expression, k : String) : Term = {
