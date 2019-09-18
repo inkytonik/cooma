@@ -312,7 +312,7 @@ class SemanticAnalyser(
                 Some(TypT())
 
             case TypT() =>
-                sys.error("tipe: asked for type of Type, what to do??")
+                Some(TypT())
 
             case Uni() =>
                 Some(UniT())

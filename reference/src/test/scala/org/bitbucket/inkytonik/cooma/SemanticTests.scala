@@ -258,6 +258,22 @@ class SemanticTests extends Tests {
                    |^
                    |"""
             ),
+            SemanticTest(
+                "type application",
+                "{fun (t : Type, x : t) = x}(Int, 10)",
+                ""
+            ),
+            SemanticTest(
+                "bad type application",
+                "{fun (x : Int, t : Type) = x}(Int, 10)",
+                """|1:31:error: expected Int, got Type
+                   |{fun (x : Int, t : Type) = x}(Int, 10)
+                   |                              ^
+                   |1:36:error: expected Type, got Int
+                   |{fun (x : Int, t : Type) = x}(Int, 10)
+                   |                                   ^
+                   |"""
+            ),
 
             // Pre-defined uses
 

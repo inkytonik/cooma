@@ -129,6 +129,10 @@ trait Compiler {
                 val x = fresh("x")
                 letV(x, rowV(Vector()),
                     kappa(x))
+
+            // The rest are types, which we erase by replacing with unit
+            case _ =>
+                compile(Uni(), kappa)
         }
 
     def compileCapFun(n : String, x : String, e : Expression, kappa : String => Term) : Term = {
