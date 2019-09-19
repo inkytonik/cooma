@@ -108,7 +108,7 @@ trait REPL extends REPLBase[Config] {
             if (pr.hasValue) {
                 val input = p.value(pr).asInstanceOf[REPLInput]
                 checkInput(input, config) match {
-                    case (Vector(), input, tipe) =>
+                    case (Vector(), input, Some(tipe)) =>
                         processInput(input, tipe, config)
                     case (messages, _, _) =>
                         messaging.report(source, messages, config.output())
@@ -118,7 +118,10 @@ trait REPL extends REPLBase[Config] {
         }
     }
 
-    def checkInput(input : REPLInput, config : Config) : (Messages, REPLInput, Expression) = {
+    def checkInput(
+        input : REPLInput,
+        config : Config
+    ) : (Messages, REPLInput, Option[Expression]) = {
         val input2 =
             input match {
                 case REPLExpression(e) =>
@@ -133,12 +136,7 @@ trait REPL extends REPLBase[Config] {
         val tree = new Tree[ASTNode, REPLInput](input2)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
         currentStaticEnv = analyser.env(input2)
-        analyser.replType(input2) match {
-            case Some(tipe) =>
-                (analyser.errors, input2, tipe)
-            case None =>
-                sys.error(s"checkInput: couldn't get type of REPLInput $input2")
-        }
+        (analyser.errors, input2, analyser.replType(input2))
     }
 
     /**
