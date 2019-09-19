@@ -10,7 +10,7 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.VarRuntimeValue;
 
-@NodeInfo(shortName = "letc", description = "Continuation declaration")
+@NodeInfo(shortName = "casV", description = "Multi-way case branching")
 public class CoomaCasVTermNode extends CoomaTermNode {
 
     private final String x;

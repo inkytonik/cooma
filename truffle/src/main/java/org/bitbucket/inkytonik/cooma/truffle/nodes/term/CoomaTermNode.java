@@ -10,5 +10,4 @@ public abstract class CoomaTermNode extends CoomaNode {
      */
     public abstract Object executeGeneric(VirtualFrame frame);
 
-
 }

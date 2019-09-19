@@ -8,7 +8,7 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives.Primitive;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 @Getter
-@NodeInfo(shortName = "PrimV", description = "Primitive value node")
+@NodeInfo(shortName = "prmV", description = "Primitive value")
 public class CoomaPrimitiveValue extends CoomaValueNode {
 
     private final String[] xs;

@@ -9,8 +9,8 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
-@NodeInfo(shortName = "AppC", description = "Continuation application")
-public abstract class CoomaAppCTermNode extends CoomaCAppNode {
+@NodeInfo(shortName = "appC", description = "Continuation application")
+public abstract class CoomaAppCTermNode extends CoomaTermNode {
 
     /**
      * Continuation identifier

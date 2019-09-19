@@ -7,7 +7,7 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value.CoomaDefTerm;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.FuncDefs;
 
-@NodeInfo(shortName = "letf", description = "Functions bindings")
+@NodeInfo(shortName = "letF", description = "Function bindings")
 public class CoomaLetFTermNode extends CoomaTermNode {
 
     @Children

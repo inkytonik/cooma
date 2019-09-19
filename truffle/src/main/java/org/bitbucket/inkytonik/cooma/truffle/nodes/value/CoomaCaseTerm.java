@@ -5,7 +5,7 @@ import lombok.Getter;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaNode;
 
 @Getter
-@NodeInfo(shortName = "caseTerm", description = "LetF func. def. node")
+@NodeInfo(shortName = "caseTerm", description = "A single case in casV")
 public class CoomaCaseTerm extends CoomaNode {
 
     private final String c;

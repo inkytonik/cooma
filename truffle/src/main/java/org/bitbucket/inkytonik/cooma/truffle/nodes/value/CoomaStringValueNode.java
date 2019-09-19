@@ -1,8 +1,12 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeInfo;
+import lombok.Getter;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.StringRuntimeValue;
 
+@Getter
+@NodeInfo(shortName = "strV", description = "String value")
 public class CoomaStringValueNode extends CoomaValueNode {
 
     private final String value;
