@@ -25,16 +25,19 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
     case class PrmV(p : Primitive, xs : Vector[String]) extends Value
     case class RecV(fs : Vector[FieldValue]) extends Value
     case class StrV(s : String) extends Value
+    case class VarV(v : String, x : String) extends Value
 
     case class FieldValue(f : String, x : String)
 
     sealed abstract class Term
     case class AppC(k : String, x : String) extends Term
     case class AppF(f : String, k : String, x : String) extends Term
+    case class CasV(x : String, ks : Vector[CaseTerm]) extends Term
     case class LetC(k : String, x : String, t : Term, body : Term) extends Term
     case class LetF(ds : Vector[DefTerm], body : Term) extends Term
     case class LetV(x : String, v : Value, body : Term) extends Term
 
+    case class CaseTerm(c : String, k : String)
     case class DefTerm(f : String, k : String, x : String, body : Term)
 
     // Terms
@@ -44,6 +47,9 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
 
     def appF(f : String, k : String, x : String) : Term =
         AppF(f, k, x)
+
+    def casV(x : String, cs : Vector[CaseTerm]) : Term =
+        CasV(x, cs)
 
     def letC(k : String, x : String, t : Term, body : Term) : Term =
         LetC(k, x, t, body)
@@ -55,6 +61,9 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
 
     def letV(x : String, v : Value, body : Term) : Term =
         LetV(x, v, body)
+
+    def caseTerm(c : String, k : String) : CaseTerm =
+        CaseTerm(c, k)
 
     def defTerm(f : String, k : String, x : String, body : Term) : DefTerm =
         DefTerm(f, k, x, body)
@@ -73,6 +82,9 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
 
     def strV(s : String) : Value =
         StrV(s)
+
+    def varV(v : String, x : String) : Value =
+        VarV(v, x)
 
     def fieldValue(f : String, x : String) : FieldValue =
         FieldValue(f, x)
@@ -112,6 +124,8 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
                 k <+> x
             case AppF(f, k, x) =>
                 f <+> k <+> x
+            case CasV(x, ks) =>
+                "case" <+> value(x) <+> ssep(ks.map(toDocCaseTerm), space)
             case LetC(k, x, t, body) =>
                 "letc" <+> value(k) <+> value(x) <+> "=" <+> align(toDocTerm(t)) <@>
                     toDocTerm(body)
@@ -122,6 +136,9 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
                 "letv" <+> value(x) <+> "=" <+> align(toDocValue(v)) <@>
                     toDocTerm(body)
         }
+
+    def toDocCaseTerm(caseTerm : CaseTerm) : Doc =
+        '(' <> value(caseTerm.c) <+> value(caseTerm.k) <> ')'
 
     def toDocDefTerm(defTerm : DefTerm) : Doc =
         line <> value(defTerm.f) <+> value(defTerm.k) <+> value(defTerm.x) <+>
@@ -139,6 +156,8 @@ class ReferenceBackend(config : Config) extends Interpreter(config) with Backend
                 "{" <> ssep(fs.map(toDocFieldValue), "," <> space) <> text("}")
             case StrV(v1) =>
                 "\"" <> value(escape(v1)) <> text("\"")
+            case VarV(v1, v2) =>
+                "<" <> value(v1) <+> "=" <+> value(v2) <> text(">")
         }
 
     def toDocFieldValue(field : FieldValue) : Doc =

@@ -52,33 +52,44 @@ class SemanticTests extends Tests {
                    |"""
             ),
             SemanticTest(
-                "distinct field names",
+                "distinct fields",
                 "{x = 1, y = 1}",
                 ""
             ),
             SemanticTest(
-                "duplicate field names",
+                "duplicate fields",
                 "{x = 1, x = 1}",
-                """|1:2:error: duplicate field name x
+                """|1:2:error: duplicate field x
                    |{x = 1, x = 1}
                    | ^
-                   |1:9:error: duplicate field name x
+                   |1:9:error: duplicate field x
                    |{x = 1, x = 1}
                    |        ^
                    |"""
             ),
             SemanticTest(
-                "distinct type field names",
+                "duplicated variant name in variant type",
+                "fun (a : <x : Int, x : Int, y : Int>) = a",
+                """|1:11:error: duplicate type field x
+                   |fun (a : <x : Int, x : Int, y : Int>) = a
+                   |          ^
+                   |1:20:error: duplicate type field x
+                   |fun (a : <x : Int, x : Int, y : Int>) = a
+                   |                   ^
+                   |"""
+            ),
+            SemanticTest(
+                "distinct type fields",
                 "fun (a : {x : Int, y : Int}) = 0",
                 ""
             ),
             SemanticTest(
-                "duplicate type field names",
+                "duplicate type fields",
                 "fun (a : {x : Int, x : Int}) = 0",
-                """|1:11:error: duplicate type field name x
+                """|1:11:error: duplicate type field x
                    |fun (a : {x : Int, x : Int}) = 0
                    |          ^
-                   |1:20:error: duplicate type field name x
+                   |1:20:error: duplicate type field x
                    |fun (a : {x : Int, x : Int}) = 0
                    |                   ^
                    |"""
@@ -108,6 +119,30 @@ class SemanticTests extends Tests {
                 """|1:1:error: x is not declared
                    |x
                    |^
+                   |"""
+            ),
+            SemanticTest(
+                "non-declared name in field definition (record first)",
+                "{x = y}",
+                """|1:6:error: y is not declared
+                   |{x = y}
+                   |     ^
+                   |"""
+            ),
+            SemanticTest(
+                "non-declared name in field definition (record second)",
+                "{x = 1, y = z}",
+                """|1:13:error: z is not declared
+                   |{x = 1, y = z}
+                   |            ^
+                   |"""
+            ),
+            SemanticTest(
+                "non-declared name in field definition (variant)",
+                "<x = y>",
+                """|1:6:error: y is not declared
+                   |<x = y>
+                   |     ^
                    |"""
             ),
             SemanticTest(
@@ -340,17 +375,17 @@ class SemanticTests extends Tests {
             // Selection
 
             SemanticTest(
-                "existent field name (one)",
+                "existent field (one)",
                 "{x = 3}.x",
                 ""
             ),
             SemanticTest(
-                "existent field name (many)",
+                "existent field (many)",
                 "{x = 3, y = 4, z = 5}.y",
                 ""
             ),
             SemanticTest(
-                "non-existent field name (one)",
+                "non-existent field (one)",
                 "{x = 3}.y",
                 """|1:9:error: y is not a field of record type {x : Int}
                    |{x = 3}.y
@@ -358,7 +393,7 @@ class SemanticTests extends Tests {
                    |"""
             ),
             SemanticTest(
-                "non-existent field name (many)",
+                "non-existent field (many)",
                 "{x = 3, y = 4, z = 5}.w",
                 """|1:23:error: w is not a field of record type {x : Int, y : Int, z : Int}
                    |{x = 3, y = 4, z = 5}.w
@@ -371,6 +406,107 @@ class SemanticTests extends Tests {
                 """|1:4:error: selection of x field from non-record type Int
                    |42.x
                    |   ^
+                   |"""
+            ),
+
+            // Matching
+
+            SemanticTest(
+                "basic match",
+                "<x = 1> match { case x a = a }",
+                ""
+            ),
+            SemanticTest(
+                "basic match correct type",
+                """{
+                     def f () : Int = <x = 1> match { case x a = a }
+                     f ()
+                   }""",
+                ""
+            ),
+            SemanticTest(
+                "match of non-variant",
+                "3 match { case x a = a }",
+                """|1:1:error: match of non-variant type Int
+                   |3 match { case x a = a }
+                   |^
+                   |"""
+            ),
+            SemanticTest(
+                "basic match wrong result type",
+                """{
+                  |  def f () : String = <x = 1> match { case x a = a }
+                  |  f ()
+                  |}""",
+                """|2:23:error: expected String, got <x = 1> match { case x a = a } of type Int
+                   |  def f () : String = <x = 1> match { case x a = a }
+                   |                      ^
+                   |"""
+            ),
+            SemanticTest(
+                "non-declared name in match case",
+                "<x = 1> match { case x a = y }",
+                """|1:28:error: y is not declared
+                   |<x = 1> match { case x a = y }
+                   |                           ^
+                   |"""
+            ),
+            SemanticTest(
+                "correct number and type of cases for match",
+                """{
+                    def f () : <x : Int, y : Int> = <x = 3>
+                    f () match { case x a = 1 case y b = 2 }
+                }""",
+                ""
+            ),
+            SemanticTest(
+                "correct number of cases but wrong type for match",
+                """{
+                  |  def f () : <x : Int, y : Int> = <x = 3>
+                  |  f () match { case x a = 1 case y b = "hi" }
+                  |}""",
+                """|3:27:error: case expression types are not the same
+                   |  f () match { case x a = 1 case y b = "hi" }
+                   |                          ^
+                   |3:40:error: case expression types are not the same
+                   |  f () match { case x a = 1 case y b = "hi" }
+                   |                                       ^
+                   |"""
+            ),
+            SemanticTest(
+                "incorrect number of cases for match",
+                """{
+                  |  def f () : <x : Int, y : Int> = <x = 3>
+                  |  f () match { case x a = 1 }
+                  |}""",
+                """|3:16:error: expected 2 cases, got 1
+                   |  f () match { case x a = 1 }
+                   |               ^
+                   |"""
+            ),
+            SemanticTest(
+                "duplicate cases for match",
+                """{
+                  |  def f () : <x : Int, y : Int> = <x = 3>
+                  |  f () match { case x a = 1 case x b = 2 }
+                  |}""",
+                """|3:16:error: duplicate case for variant x
+                   |  f () match { case x a = 1 case x b = 2 }
+                   |               ^
+                   |3:29:error: duplicate case for variant x
+                   |  f () match { case x a = 1 case x b = 2 }
+                   |                            ^
+                   |"""
+            ),
+            SemanticTest(
+                "incorrect variant for match",
+                """{
+                  |  def f () : <x : Int, y : Int> = <x = 3>
+                  |  f () match { case w a = 1 case y b = 2 }
+                  |}""",
+                """|3:16:error: variant w not present in matched type <x : Int, y : Int>
+                   |  f () match { case w a = 1 case y b = 2 }
+                   |               ^
                    |"""
             ),
 
@@ -475,22 +611,22 @@ class SemanticTests extends Tests {
             // - ok arguments
 
             SemanticTest(
-                "function argument type exact match (one)",
+                "function argument type same (one)",
                 "{fun (x : Int) = x}(1)",
                 ""
             ),
             SemanticTest(
-                "function argument type exact match (two)",
+                "function argument type same (two)",
                 "{fun (x : Int, y : Int) = x}(1, 2)",
                 ""
             ),
             SemanticTest(
-                "function definition argument type exact match (one)",
+                "function definition argument type same (one)",
                 "{ def f (x : Int) : Int = x f(1) }",
                 ""
             ),
             SemanticTest(
-                "function definition argument type exact match (two)",
+                "function definition argument type same (two)",
                 "{ def f (x : Int, y : Int) : Int = x f(1, 2) }",
                 ""
             ),

@@ -105,6 +105,9 @@ trait Compiler {
             case Idn(IdnUse(i)) =>
                 kappa(i)
 
+            case Mat(e, cs) =>
+                compileMatch(e, cs.map(_.caseField), kappa)
+
             case Num(i) =>
                 val x = fresh("x")
                 letV(x, intV(i),
@@ -112,7 +115,7 @@ trait Compiler {
 
             case Rec(fields) =>
                 val x = fresh("x")
-                compileRow(fields, fvs => letV(x, recV(fvs), kappa(x)))
+                compileRec(fields, fvs => letV(x, recV(fvs), kappa(x)))
 
             case Sel(r, FieldUse(f)) =>
                 val x = fresh("x")
@@ -130,10 +133,26 @@ trait Compiler {
                 letV(x, recV(Vector()),
                     kappa(x))
 
-            // The rest are types, which we erase by replacing with unit
-            case _ =>
+            case v @ Var(field) =>
+                val x = fresh("x")
+                compile(field.expression, z =>
+                    letV(x, varV(field.identifier, z),
+                        kappa(x)))
+
+            // Types erase to unit
+            case IsType() =>
                 compile(Uni(), kappa)
         }
+
+    object IsType {
+        def unapply(e : Expression) : Boolean =
+            e match {
+                case _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT | _ : UniT | _ : VarT =>
+                    true
+                case _ =>
+                    false
+            }
+    }
 
     def compileCapFun(n : String, x : String, e : Expression, kappa : String => Term) : Term = {
         val f = fresh("f")
@@ -196,14 +215,25 @@ trait Compiler {
         }
     }
 
-    def compileRow(
+    def compileMatch(e : Expression, cs : Vector[Case], kappa : String => Term) : Term = {
+        val cks = cs.map(c => (c, fresh("k")))
+        val caseTerms = cks.map { case (c, k) => caseTerm(c.identifier, k) }
+        compile(e, z =>
+            cks.foldLeft(casV(z, caseTerms)) {
+                case (t, (Case(_, IdnDef(xi), ei), ki)) =>
+                    letC(ki, xi, compile(ei, zi => kappa(zi)),
+                        t)
+            })
+    }
+
+    def compileRec(
         fields : Vector[Field],
         kappa : Vector[FieldValue] => Term
     ) : Term =
         fields match {
             case Field(f, e) +: t =>
                 compile(e, z =>
-                    compileRow(t, fvs => kappa(fieldValue(f, z) +: fvs)))
+                    compileRec(t, fvs => kappa(fieldValue(f, z) +: fvs)))
 
             case Vector() =>
                 kappa(Vector())
@@ -247,6 +277,9 @@ trait Compiler {
             case Idn(IdnUse(x)) =>
                 appC(k, x)
 
+            case Mat(e, cs) =>
+                tailCompileMatch(e, cs.map(_.caseField), k)
+
             case Num(i) =>
                 val x = fresh("x")
                 letV(x, intV(i),
@@ -254,7 +287,7 @@ trait Compiler {
 
             case Rec(fields) =>
                 val x = fresh("x")
-                compileRow(fields, fvs => letV(x, recV(fvs), appC(k, x)))
+                compileRec(fields, fvs => letV(x, recV(fvs), appC(k, x)))
 
             case Sel(e, FieldUse(f)) =>
                 val x = fresh("x")
@@ -272,8 +305,14 @@ trait Compiler {
                 letV(x, recV(Vector()),
                     appC(k, x))
 
-            // The rest are types, which we erase by replacing with unit
-            case _ =>
+            case Var(field) =>
+                val x = fresh("x")
+                compile(field.expression, z =>
+                    letV(x, varV(field.identifier, z),
+                        appC(k, x)))
+
+            // Types erase to unit
+            case IsType() =>
                 tailCompile(Uni(), k)
         }
 
@@ -315,5 +354,16 @@ trait Compiler {
             case Return(e) =>
                 tailCompile(e, k)
         }
+
+    def tailCompileMatch(e : Expression, cs : Vector[Case], k : String) : Term = {
+        val cks = cs.map(c => (c, fresh("k")))
+        val caseTerms = cks.map { case (c, k) => caseTerm(c.identifier, k) }
+        compile(e, z =>
+            cks.foldLeft(casV(z, caseTerms)) {
+                case (t, (Case(vi, IdnDef(xi), ei), ki)) =>
+                    letC(ki, xi, tailCompile(ei, k),
+                        t)
+            })
+    }
 
 }

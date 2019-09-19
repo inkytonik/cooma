@@ -43,11 +43,14 @@ class SemanticAnalyser(
             case u @ IdnUse(i) if entity(u) == UnknownEntity() =>
                 error(u, s"$i is not declared")
 
+            case c : Case =>
+                checkCase(c)
+
             case f @ Field(i, _) if isDuplicateField(f) =>
-                error(f, s"duplicate field name $i")
+                error(f, s"duplicate field $i")
 
             case f @ FieldType(i, _) if isDuplicateFieldType(f) =>
-                error(f, s"duplicate type field name $i")
+                error(f, s"duplicate type field $i")
 
             case e : Expression =>
                 checkExpressionType(e) ++
@@ -56,6 +59,8 @@ class SemanticAnalyser(
                             checkApplication(f, as)
                         case a @ Cat(l, r) =>
                             checkConcat(a, l, r)
+                        case Mat(e, cs) =>
+                            checkMatch(e, cs)
                         case Sel(e, f) =>
                             checkFieldUse(e, f)
                     }
@@ -89,11 +94,48 @@ class SemanticAnalyser(
                 noMessages
         }
 
+    def checkCase(c : Case) : Messages =
+        c match {
+            case tree.parent(tree.parent(m : Mat)) =>
+                checkCaseDup(c, m) ++
+                    checkCaseExpressionTypes(c, m) ++
+                    checkCaseVariants(c, m)
+            case _ =>
+                sys.error(s"checkCase: can't find enclosing match")
+        }
+
+    def checkCaseDup(c : Case, m : Mat) : Messages =
+        if (isDuplicateCase(c, m))
+            error(c, s"duplicate case for variant ${c.identifier}")
+        else
+            noMessages
+
+    def checkCaseExpressionTypes(c : Case, m : Mat) : Messages =
+        matchType(m) match {
+            case BadCases() =>
+                error(c.expression, s"case expression types are not the same")
+            case t =>
+                noMessages
+        }
+
+    def checkCaseVariants(c : Case, m : Mat) : Messages =
+        tipe(m.expression) match {
+            case Some(t @ VarT(fieldTypes)) =>
+                fieldTypes.find(f => f.identifier == c.identifier) match {
+                    case None =>
+                        error(c, s"variant ${c.identifier} not present in matched type ${show(t)}")
+                    case _ =>
+                        noMessages
+                }
+            case _ =>
+                noMessages
+        }
+
     def checkConcat(e : Cat, l : Expression, r : Expression) : Messages = {
         checkRecordUse(l) ++
             checkRecordUse(r) ++
             ((tipe(l), tipe(r)) match {
-                case (Some(RecT(Row(rl))), Some(RecT(Row(rr)))) =>
+                case (Some(RecT(rl)), Some(RecT(rr))) =>
                     val overlap = overlappingFields(rl, rr)
                     if (overlap.isEmpty)
                         noMessages
@@ -106,6 +148,28 @@ class SemanticAnalyser(
             })
     }
 
+    def checkMatch(e : Expression, cs : Vector[CaseScope]) : Messages =
+        checkMathDiscType(e) ++
+            checkMatchCaseNum(e, cs)
+
+    def checkMathDiscType(e : Expression) : Messages =
+        tipe(e) match {
+            case Some(VarT(_)) =>
+                noMessages
+            case Some(t) =>
+                error(e, s"match of non-variant type ${show(t)}")
+            case None =>
+                noMessages
+        }
+
+    def checkMatchCaseNum(e : Expression, cs : Vector[CaseScope]) : Messages =
+        tipe(e) match {
+            case Some(VarT(fields)) if fields.length != cs.length =>
+                error(cs(0), s"expected ${fields.length} cases, got ${cs.length}")
+            case _ =>
+                noMessages
+        }
+
     def checkRecordUse(e : Expression) : Messages =
         tipe(e) match {
             case Some(RecT(_)) | None =>
@@ -117,7 +181,7 @@ class SemanticAnalyser(
     def checkFieldUse(e : Expression, f : FieldUse) : Messages = {
         val i = f.identifier
         tipe(e) match {
-            case Some(t @ RecT(Row(fields))) =>
+            case Some(t @ RecT(fields)) =>
                 if (fields.map(_.identifier) contains i)
                     noMessages
                 else
@@ -132,8 +196,9 @@ class SemanticAnalyser(
     object Scope {
         def unapply(n : ASTNode) : Boolean =
             n match {
-                case _ : Body | _ : Fun | _ : LetFun | _ : LetVal |
-                    _ : REPLDef | _ : REPLExpression | _ : REPLVal =>
+                case _ : Body | _ : CaseScope | _ : Fun | _ : LetFun |
+                    _ : LetVal | _ : REPLDef | _ : REPLExpression |
+                    _ : REPLVal =>
                     true
                 case _ =>
                     false
@@ -155,6 +220,8 @@ class SemanticAnalyser(
             leave(out(n))
         case n : Argument =>
             defineArgument(out(n), n)
+        case n : Case =>
+            defineCaseValue(out(n), n)
         case n : Def =>
             defineFunction(out(n), n)
         case n : Val =>
@@ -163,6 +230,9 @@ class SemanticAnalyser(
 
     def defineArgument(e : Environment, a : Argument) : Environment =
         defineIfNew(e, a.idnDef.identifier, MultipleEntity(), ArgumentEntity(a))
+
+    def defineCaseValue(e : Environment, c : Case) : Environment =
+        defineIfNew(e, c.idnDef.identifier, MultipleEntity(), CaseValueEntity(c))
 
     def defineFunction(e : Environment, d : Def) : Environment =
         defineIfNew(e, d.idnDef.identifier, MultipleEntity(), FunctionEntity(d))
@@ -186,28 +256,32 @@ class SemanticAnalyser(
                 lookup(env(n), n.identifier, UnknownEntity())
         }
 
+    def isDuplicateCase(c : Case, m : Mat) =
+        m.caseScopes.map(_.caseField.identifier).count(_ == c.identifier) > 1
+
     lazy val fieldNames : Rec => Vector[String] =
         attr {
             case Rec(fields) =>
                 fields.map(_.identifier)
         }
 
-    lazy val fieldTypeNames : Row => Vector[String] =
-        attr {
-            case Row(fields) =>
-                fields.map(_.identifier)
+    def isDuplicateField(f : Field) : Boolean =
+        f match {
+            case tree.parent.pair(Field(i, _), Rec(fields)) =>
+                fieldCount(fields, i) > 1
+            case tree.parent.pair(Field(i, _), _ : Var) =>
+                false
         }
 
-    lazy val isDuplicateField : Field => Boolean =
-        attr {
-            case tree.parent.pair(Field(i, _), r : Rec) =>
-                fieldNames(r).count(_ == i) > 1
-        }
+    def fieldCount(fields : Vector[Field], i : String) : Int =
+        fields.map(_.identifier).count(_ == i)
 
-    lazy val isDuplicateFieldType : FieldType => Boolean =
-        attr {
-            case tree.parent.pair(FieldType(i, _), r : Row) =>
-                fieldTypeNames(r).count(_ == i) > 1
+    def isDuplicateFieldType(ft : FieldType) : Boolean =
+        ft match {
+            case tree.parent.pair(FieldType(i, _), RecT(fields)) =>
+                fields.map(_.identifier).count(_ == i) > 1
+            case tree.parent.pair(FieldType(i, _), VarT(fields)) =>
+                fields.map(_.identifier).count(_ == i) > 1
         }
 
     def overlappingFields(
@@ -238,9 +312,9 @@ class SemanticAnalyser(
 
             case Cat(e1, e2) =>
                 (tipe(e1), tipe(e2)) match {
-                    case (Some(RecT(Row(r1))), Some(RecT(Row(r2)))) =>
+                    case (Some(RecT(r1)), Some(RecT(r2))) =>
                         if (overlappingFields(r1, r2).isEmpty)
-                            Some(RecT(Row(r1 ++ r2)))
+                            Some(RecT(r1 ++ r2))
                         else
                             None
                     case _ =>
@@ -264,6 +338,14 @@ class SemanticAnalyser(
             case IntT() =>
                 Some(TypT())
 
+            case m : Mat =>
+                matchType(m) match {
+                    case OkCases(optType) =>
+                        optType
+                    case BadCases() =>
+                        None
+                }
+
             case _ : Num =>
                 Some(IntT())
 
@@ -275,7 +357,7 @@ class SemanticAnalyser(
 
             case Sel(r, FieldUse(f)) =>
                 tipe(r) match {
-                    case Some(RecT(Row(fieldTypes))) =>
+                    case Some(RecT(fieldTypes)) =>
                         fieldTypes.find {
                             case FieldType(i, t) =>
                                 i == f
@@ -304,14 +386,14 @@ class SemanticAnalyser(
             case UniT() =>
                 Some(TypT())
 
-            case Var(fields) =>
-                makeRow(fields).map(VarT)
+            case Var(field) =>
+                makeRow(Vector(field)).map(VarT)
 
             case _ : VarT =>
                 Some(TypT())
         }
 
-    def makeRow(fields : Vector[Field]) : Option[Row] = {
+    def makeRow(fields : Vector[Field]) : Option[Vector[FieldType]] = {
         val ts = fields.map(f => tipe(f.expression))
         if (ts contains None)
             None
@@ -324,7 +406,7 @@ class SemanticAnalyser(
                             case (i, u) =>
                                 FieldType(i, u)
                         }
-                    Some(Row(fieldTypes))
+                    Some(fieldTypes)
                 case None =>
                     None
             }
@@ -335,6 +417,13 @@ class SemanticAnalyser(
         attr {
             case ArgumentEntity(Argument(_, t)) =>
                 unalias(t)
+            case CaseValueEntity(tree.parent.pair(c, tree.parent(Mat(e, _)))) =>
+                tipe(e) match {
+                    case Some(VarT(r)) if tree.index(c) < r.length =>
+                        Some(r(tree.index(c)).expression)
+                    case _ =>
+                        None
+                }
             case FieldEntity(Field(_, e)) =>
                 tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
@@ -343,6 +432,26 @@ class SemanticAnalyser(
                 tipe(e)
             case _ =>
                 None
+        }
+
+    abstract class MatchType
+    case class BadCases() extends MatchType
+    case class OkCases(optType : Option[Expression]) extends MatchType
+
+    lazy val matchType : Mat => MatchType =
+        attr {
+            case m =>
+                val caseTypes =
+                    m.caseScopes.map {
+                        case CaseScope(Case(_, _, e)) =>
+                            tipe(e)
+                    }.distinct
+                if (caseTypes contains None)
+                    OkCases(None)
+                else if (caseTypes.length > 1)
+                    BadCases()
+                else
+                    OkCases(caseTypes(0))
         }
 
     def unalias(t : Expression) : Option[Expression] =
@@ -435,8 +544,10 @@ object SemanticAnalysis {
     def subtype(t : Expression, u : Expression) : Boolean =
         (t == u) ||
             ((t, u) match {
-                case (RecT(Row(tr)), RecT(Row(tu))) =>
-                    tu.diff(tr).isEmpty
+                case (RecT(tr), RecT(ur)) =>
+                    ur.diff(tr).isEmpty
+                case (VarT(tr), VarT(ur)) =>
+                    tr.diff(ur).isEmpty
                 case (FunT(ts, t), FunT(us, u)) =>
                     subtypes(us, ts) && subtype(t, u)
                 case _ =>

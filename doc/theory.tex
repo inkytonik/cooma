@@ -63,17 +63,20 @@ x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{
 \newcommand{\appe}[2]{#1(#2)}
 \newcommand{\blke}[1]{\{ #1 \}}
 \newcommand{\fune}[2]{\kw{fun}\;(#1) = #2}
+\newcommand{\idne}[1]{#1}
+\newcommand{\mate}[2]{#1\;\kw{match}\;#2}
 \newcommand{\nume}[1]{#1}
-\newcommand{\rowe}[2]{\{ \flds{#1}{#2} \}}
+\newcommand{\rece}[2]{\{ \flds{#1}{#2} \}}
 \newcommand{\sele}[2]{#1 . #2}
 \newcommand{\stre}[1]{#1}
 \newcommand{\unie}{\{ \}}
-\newcommand{\vare}[1]{#1}
+\newcommand{\vare}[2]{<\!#1 = #2\!>}
 
 \newcommand{\fd}[5]{#1(\repz{#2 : #3}) : #4 = #5}
 \newcommand{\fdo}[5]{#1(\repo{#2 : #3}) : #4 = #5}
 \newcommand{\fde}[4]{#1(#2) : #3 = #4}
 \newcommand{\fundef}[2]{\repo{\kw{def}\;#1}\;#2}
+\newcommand{\case}[3]{\kw{case}\;#1\;#2 = #3}
 \newcommand{\valdef}[3]{\kw{val}\;#1 = #2\;#3}
 \newcommand{\return}[1]{#1}
 
@@ -86,35 +89,39 @@ x_h, t_h                 & \text{components of first element of $\repo{\arge{x}{
 \newcommand{\unity}{\kw{Unit}}
 \newcommand{\varty}[1]{\Sigma\ #1}
 
+\newcommand{\fldty}[2]{\{ #1 : #2 \}}
 \newcommand{\rowty}[2]{\{ \repo{#1 : #2} \}}
-\newcommand{\rowety}{\{\}}
+\newcommand{\recety}{\{\}}
 \newcommand{\catr}[2]{#1 \odot #2}
 
 \[
 \begin{array}{lcl}
-n & \in & \text{integer} \\
-s & \in & \text{string} \\
-x, y & \in & \text{variable} \\
+n       & \in & \text{integer} \\
+s       & \in & \text{string} \\
+v, x, y & \in & \text{identifier} \\
 \end{array}
 \]
 \[
 \begin{array}{rlcll}
 \text{expression}
-  & e & ::= & \nume{n}                      & \text{integer constant} \\
-  &   & |   & \stre{s}                      & \text{string constant} \\
-  &   & |   & \vare{x}                      & \text{variable} \\
-  &   & |   & \fune{\repz{\arge{x}{e}}}{e}  & \text{function abstraction ($x_i$ distinct)} \\
-  &   & |   & \appe{e}{\repo{e}}            & \text{function application} \\
-  &   & |   & \blke{b}                      & \text{block} \\
-  &   & |   & \unie{}                       & \text{unit} \\
-  &   & |   & \rowe{x}{e}                   & \text{record ($x_i$ distinct)} \\
-  &   & |   & \sele{e}{x}                   & \text{field selection} \\
-  &   & |   & \ande{e}{e}                   & \text{record concatenation} \\
-  &   & |   & \intty                        & \text{integer type} \\
-  &   & |   & \strty                        & \text{string type} \\
-  &   & |   & \unity                        & \text{unit type} \\
-  &   & |   & \funty{\repz{e}}{e}           & \text{function type} \\
-  &   & |   & \recty{r}                     & \text{record type} \\
+  & e & ::= & \nume{n}                         & \text{integer constant} \\
+  &   & |   & \stre{s}                         & \text{string constant} \\
+  &   & |   & \idne{x}                         & \text{variable} \\
+  &   & |   & \fune{\repz{\arge{x}{e}}}{e}     & \text{function abstraction ($x_i$ distinct)} \\
+  &   & |   & \appe{e}{\repo{e}}               & \text{function application} \\
+  &   & |   & \unie{}                          & \text{unit} \\
+  &   & |   & \blke{b}                         & \text{block} \\
+  &   & |   & \rece{x}{e}                      & \text{record ($x_i$ distinct)} \\
+  &   & |   & \sele{e}{x}                      & \text{field selection} \\
+  &   & |   & \ande{e}{e}                      & \text{record concatenation} \\
+  &   & |   & \vare{v}{e}                      & \text{variant} \\
+  &   & |   & \mate{e}{\repo{\case{v}{x}{e}}}  & \text{match} \\
+  &   & |   & \intty                           & \text{integer type} \\
+  &   & |   & \strty                           & \text{string type} \\
+  &   & |   & \unity                           & \text{unit type} \\
+  &   & |   & \funty{\repz{e}}{e}              & \text{function type} \\
+  &   & |   & \recty{r}                        & \text{record type} \\
+  &   & |   & \varty{r}                        & \text{variant type} \\
 \\
 \text{block expression}
   & b & ::= & \valdef{x}{e}{b}                 & \text{value definition} \\
@@ -130,7 +137,10 @@ Notes:
 \begin{itemize}
 \item Functions and function calls take one or more arguments.
 \item Blocks are ``lets'' that contain value definitions and sections of mutually-recursive function definitions.
-\item Rows are collections of named fields. Rows can be selected from and concatenated.
+\item Records are collections of named fields given by a row.
+Records can be selected from and concatenated.
+\item Variants are defined by a row that gives the possible alternatives.
+Match expressions support elimination of variants.
 \end{itemize}
 
 \newpage
@@ -164,11 +174,14 @@ Overloaded notation expresses simultaneous inference or checking of multiple exp
 Subtyping $\subtype{t}{u}$ allows values of type $t$ to be used where values of type $u$ are expected.
 Overloaded notation supports pairwise subtyping of type sequences $\subtype{\repo{t}}{\repo{u}}$.
 
-We support subtyping of records where more fields are present and extend that to the usual subtyping for functions.
+We support subtyping of records where more fields are present.
+Variants are subtypes in the other direction; a variant must use a subset of the variants of its supertype.
+We currently do not support subtyping within field types.
 
-\begin{rules}{cc}
 
-\inference[T-REF]{
+\begin{rules}{ccc}
+
+\inference[S-REF]{
   \
 }{
   \subtype{t}{t}
@@ -176,17 +189,27 @@ We support subtyping of records where more fields are present and extend that to
 
 &
 
-\inference[T-REC]{
+\inference[S-REC]{
   \subs{\rowty{y}{u}}{\rowty{x}{t}}
 }{
   \subtype{\recty{\rowty{x}{t}}}{\recty{\rowty{y}{u}}}
 }
 
+&
+
+\inference[S-VAR]{
+  \subs{\rowty{x}{t}}{\rowty{y}{u}}
+}{
+  \subtype{\varty{\rowty{x}{t}}}{\varty{\rowty{y}{u}}}
+}
+
 \end{rules}
+
+Subtyping extends in the usual way to function types.
 
 \begin{rules}{c}
 
-\inference[T-FUN]{
+\inference[S-FUN]{
   \subtype{\repo{t_2}}{\repo{t_1}} & \subtype{u_1}{u_2}
 }{
   \subtype{\funty{\repo{t_1}}{u_1}}{\funty{\repo{t_2}}{u_2}}
@@ -196,17 +219,25 @@ We support subtyping of records where more fields are present and extend that to
 
 \subsection{Pre-defined names}
 
-Named types for built-in capabilities are aliases for record types that provide the capability operations.
+Boolean is supported via a pre-defined variant type.
+\[
+\begin{array}{rcl}
+\kw{Boolean} & = &
+\varty{\{ \kw{false} : \unity, \kw{true} : \unity \}} \\
+\end{array}
+\]
+
+Named types for pre-defined capabilities are aliases for record types that provide the capability operations.
 \[
 \begin{array}{rcl}
 \kw{Reader} & = &
-\recty{\{ \kw{read} :\funty{}{\strty} \}} \\
+\recty{\{ \kw{read} : \funty{}{\strty} \}} \\
 
 \kw{Writer} & = &
-\recty{\{ \kw{write} :\funty{\strty}{\unity} \}} \\
+\recty{\{ \kw{write} : \funty{\strty}{\unity} \}} \\
 
 \kw{ReaderWriter} & = &
-\recty{\{ \kw{read} :\funty{}{\strty}, \kw{write} :\funty{\strty}{\unity} \}}
+\recty{\{ \kw{read} : \funty{}{\strty}, \kw{write} : \funty{\strty}{\unity} \}}
 \end{array}
 \]
 
@@ -278,7 +309,7 @@ Typing of variables is standard.
 \inference[T-VAR]{
   x \in \Gamma
 }{
-  \infe{\Gamma}{\vare{x}}{\Gamma(x)}
+  \infe{\Gamma}{\idne{x}}{\Gamma(x)}
 }
 
 \end{rules}
@@ -357,14 +388,22 @@ Blocks are typed as let expressions.
 
 \end{rules}
 
-Records are typed according to rows that define their fields and the field types.
+Records and variants are typed according to rows that define their fields and the field types.
 
-\begin{rules}{c}
+\begin{rules}{cc}
 
 \inference[T-REC]{
   \infe{\Gamma}{\repo{e}}{\repo{t}}
 }{
-  \infe{\Gamma}{\rowe{x}{e}}{\recty{\rowty{x}{t}}}
+  \infe{\Gamma}{\rece{x}{e}}{\recty{\rowty{x}{t}}}
+}
+
+&
+
+\inference[T-REC]{
+  \infe{\Gamma}{e}{t}
+}{
+  \infe{\Gamma}{\vare{x}{e}}{\varty{\fldty{x}{t}}}
 }
 
 \end{rules}
@@ -390,9 +429,29 @@ The approach to typing records is based on ``Abstracting extensible data types''
 
 \end{rules}
 
+Match expressions require the discriminant to be a variant.
+Each variant in a case must be distinct and must be mentioned in the variant.
+The case for a variant $y_i$ binds the variable $x_i$ to the variant field for $y$,
+whose type we denote $t_y$.
+The case expressions must have the same type $t$ which is the type of the match.
+(We currently don't support subtyping in the case branch expressions.)
+
+\begin{rules}{c}
+
+\inference[T-MAT]{
+  \infe{\Gamma}{e}{\varty{\rowty{v}{t}}} &
+  \forall i, \exists k, y_i = v_k &
+  \forall i \neq j, y_i \neq y_j &
+  \infe{\consc{\Gamma}{x_i : t_y}}{e_i}{t}
+}{
+  \infe{\Gamma}{\mate{e}{\repo{\case{y}{x}{e}}}}{t}
+}
+
+\end{rules}
+
 A type check can be resolved by a type inference of a subtype.
 
-\begin{rules}{cc}
+\begin{rules}{c}
 
 \inference[T-WID]{
   \infe{\Gamma}{e}{u} & \subtype{u}{t}
@@ -416,12 +475,14 @@ A type check can be resolved by a type inference of a subtype.
 
 \newcommand{\letv}[3]{\kw{letv}\;#1 = #2\;\kw{in}\;#3}
 
+\newcommand{\casv}[3]{\kw{case}\;#1\;\repo{(#2\;#3)}}
 \newcommand{\funv}[3]{\kw{fun}\;#1\;#2\;.\;#3}
 \newcommand{\intv}[1]{#1}
 \newcommand{\prmv}[2]{#1(#2)}
-\newcommand{\rowv}[2]{\{ \repo{#1 = #2} \}}
-\newcommand{\rowvs}[2]{\{ #1 \}}
+\newcommand{\recv}[2]{\{ \repo{#1 = #2} \}}
+\newcommand{\recvs}[2]{\{ #1 \}}
 \newcommand{\strv}[1]{#1}
+\newcommand{\varv}[2]{<\!#1\!>}
 
 \newcommand{\andv}[2]{\kw{concat}\;#1\;#2}
 \newcommand{\argv}[1]{\kw{argument}\;#1}
@@ -430,10 +491,10 @@ A type check can be resolved by a type inference of a subtype.
 
 \[
 \begin{array}{lcl}
-n & \in & \text{integer} \\
-s & \in & \text{string} \\
+n       & \in & \text{integer} \\
+s       & \in & \text{string} \\
 f, k, x & \in & \text{identifier} \\
-p & \in & \text{primitive} \\
+p       & \in & \text{primitive} \\
 \end{array}
 \]
 
@@ -445,19 +506,25 @@ p & \in & \text{primitive} \\
   &   & |   & \letv{x}{v}{z}                 & \text{bind value} \\
   &   & |   & \appc{k}{x}                    & \text{apply continuation} \\
   &   & |   & \appf{f}{k}{x}                 & \text{apply function} \\
+  &   & |   & \casv{x}{x}{k}                 & \text{case} \\
+
 \\
 \text{value}
   & v & ::= & \intv{n}           & \text{integer}  \\
   &   & |   & \strv{s}           & \text{string} \\
   &   & |   & \funv{k}{x}{z}     & \text{function} \\
-  &   & |   & \rowv{x}{x}        & \text{row} \\
+  &   & |   & \recv{x}{x}        & \text{row} \\
   &   & |   & \prmv{p}{\repo{x}}  & \text{primitive call} \\
 \end{array}
 \]
 
 Notes:
 \begin{itemize}
-\item Terms are from Kennedy ``Compiling with Continuations, Continued'', except $\kw{letf}$ binds multiple mutually-recursive functions, instead of a single function.
+\item Terms are from Kennedy ``Compiling with Continuations, Continued'', except:
+\begin{itemize}
+\item $\kw{letf}$ binds multiple mutually-recursive functions, instead of a single function, and
+\item $\kw{case}$ is a multi-way eliminator based on the variant names, instead of a binary one based on ordering.
+\end{itemize}
 \item Values are standard, plus rows and primitive calls.
 \item Primitives encode basic operations, including:
 \begin{itemize}
@@ -557,10 +624,10 @@ Unit compiles into an empty record.
 Variables compile into their use in the current continuation.
 \[
 \begin{array}{rcll}
-\cmpk{e}{\vare{x}} & = &
+\cmpk{e}{\idne{x}} & = &
   \kappa(x) \medskip \\
 
-\tcmpk{e}{\vare{x}} & = &
+\tcmpk{e}{\idne{x}} & = &
   \appc{k}{x} \\
 \end{array}
 \]
@@ -619,18 +686,18 @@ Block expressions are compiled by $\cmpn{b}$ or $\tcmpn{b}$.
   \tcmpin{b}{b}{k} \\
 \end{array}
 \]
-Rows have their field definitions compiled by $\cmpn{r}$.
-The resulting sequence of field values $z$ is bound in a new row $x$ for use in the continuation.
+Records have their field definitions compiled by $\cmpn{r}$.
+The resulting sequence of field values $z$ is bound in a new record $x$ for use in the continuation.
 \[
 \begin{array}{rcll}
-\cmpk{e}{\rowe{f}{e}} & = &
-  \cmpin{r}{\flds{f}{e}}{(z => \letv{x}{\rowvs{z}}{\kappa(x)})} \medskip \\
+\cmpk{e}{\rece{f}{e}} & = &
+  \cmpin{r}{\flds{f}{e}}{(z => \letv{x}{\recvs{z}}{\kappa(x)})} \medskip \\
 
-\tcmpk{e}{\rowe{f}{e}} & = &
-  \cmpin{r}{\flds{f}{e}}{(z => \letv{x}{\rowvs{z}}{\appc{k}{x}})} \\
+\tcmpk{e}{\rece{f}{e}} & = &
+  \cmpin{r}{\flds{f}{e}}{(z => \letv{x}{\recvs{z}}{\appc{k}{x}})} \\
 \end{array}
 \]
-Row operations compile into primitives that use the compiled row arguments $y$ and $z$.
+Record operations compile into primitives that use the compiled record arguments $y$ and $z$.
 \[
 \begin{array}{rcll}
 \cmpk{e}{\sele{r}{f}} & = &
@@ -642,6 +709,35 @@ Row operations compile into primitives that use the compiled row arguments $y$ a
   \cmpin{e}{r}{(z => \letv{x}{\selv{z}{f}}{\appc{k}{x}})} \\
 \cmpk{e}{\ande{l}{r}} & = &
   \cmpin{e}{l}{(y => \cmpin{e}{r}{(z => \letv{x}{\andv{y}{z}}{\appc{k}{x}})})} \\
+\end{array}
+\]
+
+Variants have their field definition compiled by $\cmpn{r}$.
+The resulting field value $z$ is bound in a new variant $x$.
+\[
+\begin{array}{rcll}
+\cmpk{e}{\vare{y}{e}} & = &
+  \cmpin{r}{\flde{y}{e}}{(z => \letv{x}{\varv{z}}{\kappa(x)})} \medskip \\
+
+\tcmpk{e}{\vare{y}{e}} & = &
+  \tcmpin{r}{\flde{y}{e}}{(z => \letv{x}{\varv{z}}{\appc{k}{x}})}
+\end{array}
+\]
+
+Match expressions compile into a cascade of continuation bindings culminating in a case.
+Each continuation $k_i$ defines a case of the match, binding the case variable $x_i$, and finally calling the continuation of the match expression.
+The case at the bottom of the cascade uses the value of the discriminant $z$ and its variant $v_i$ to dispatch to the correct continuation $k_i$.
+\[
+\begin{array}{rcll}
+\cmpk{e}{\mate{e}{\repo{\case{v}{x}{e}}}} & = &
+  \cmpin{e}{e}{(z => \letc{k_i}{x_i}{\cmpin{e}{e_i}{(z_i => \kappa(z_i))}}
+    \ldots \casv{z}{v_i}{k_i}
+  )} \\ \medskip
+
+\tcmpk{e}{\mate{e}{\repo{\case{v}{x}{e}}}} & = &
+  \cmpin{e}{e}{(z => \letc{k_i}{x_i}{\tcmpin{e}{e_i}{(z_i => \appc{k}{z_i})}}
+    \ldots \casv{z}{v_i}{k_i}
+  )}
 \end{array}
 \]
 
@@ -772,7 +868,7 @@ Runtime values are basic values, function closures and rows.
   & r & ::= & \intv{n}              & \text{integer}  \\
   &   & |   & \strv{s}              & \text{string} \\
   &   & |   & \clsf{\rho}{k}{x}{z}  & \text{closure} \\
-  &   & |   & \rowv{x}{r}           & \text{row} \\
+  &   & |   & \recv{x}{r}           & \text{row} \\
 \end{array}
 \]
 
@@ -834,7 +930,7 @@ A function value becomes a closure.
 A row value becomes a runtime row value after the fields have been interpreted.
 \[
 \begin{array}{rlll}
-\cmp{v}{\rowv{x}{y}}{\rho} & = \rowv{x}{\rho(y)} &
+\cmp{v}{\recv{x}{y}}{\rho} & = \recv{x}{\rho(y)} &
 \end{array}
 \]
 

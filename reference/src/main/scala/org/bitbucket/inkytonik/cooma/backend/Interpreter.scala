@@ -33,6 +33,7 @@ class Interpreter(config : Config) {
     case class IntR(num : BigInt) extends ValueR
     case class RecR(fields : Vector[FldR]) extends ValueR
     case class StrR(str : String) extends ValueR
+    case class VarR(c : String, v : ValueR) extends ValueR
 
     case class FldR(x : String, v : ValueR)
 
@@ -95,6 +96,35 @@ class Interpreter(config : Config) {
                             sys.error(s"interpret AppF: $f is $v")
                     }
 
+                case CasV(x, cs) =>
+                    lookupR(rho, x) match {
+                        case VarR(c1, v) =>
+                            val optK =
+                                cs.collectFirst {
+                                    case CaseTerm(c2, k) if c1 == c2 =>
+                                        k
+                                }
+                            optK match {
+                                case Some(k) =>
+                                    lookupC(rho, k) match {
+                                        case ClsC(rho2, y, t) =>
+                                            interpretAux(ConsVE(rho2, y, v), t)
+
+                                        case v =>
+                                            sys.error(s"interpret CasV: $k is $v")
+                                    }
+
+                                case None =>
+                                    sys.error(s"interpret CasV: can't find case for variant $c1")
+                            }
+
+                        case err : ErrR =>
+                            err
+
+                        case v =>
+                            sys.error(s"interpret CasV: $x is $v")
+                    }
+
                 case LetC(k, x, t1, t2) =>
                     val rho2 = ConsCE(rho, k, ClsC(rho, x, t1))
                     interpretAux(rho2, t2)
@@ -127,6 +157,9 @@ class Interpreter(config : Config) {
 
                 case StrV(s) =>
                     StrR(s)
+
+                case VarV(c, v) =>
+                    VarR(c, lookupR(rho, v))
             }
 
         interpretAux(env, term)
@@ -253,6 +286,8 @@ class Interpreter(config : Config) {
                 text("{") <> ssep(v1.map(toDocField), text(",") <> space) <> text("}")
             case StrR(v1) =>
                 text("\"") <> value(escape(v1)) <> text("\"")
+            case VarR(v1, v2) =>
+                text("<") <> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <> text(">")
         }
 
     def toDocField(field : FldR) : Doc =

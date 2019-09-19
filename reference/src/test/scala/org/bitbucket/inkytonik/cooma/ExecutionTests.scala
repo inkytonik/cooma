@@ -45,78 +45,78 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
         // Basic tests
 
-        case class BasicTest(
+        case class ExecTest(
             name : String,
             program : String,
             expectedCompiledResult : String,
             expectedREPLType : String
         )
 
-        val basicTests =
+        val ExecTests =
             List(
                 // Primitive values
 
-                BasicTest(
+                ExecTest(
                     "positive integer",
                     "42",
                     "42",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "bracketed expression",
                     "{10}",
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "positive integer larger than 32 bits",
                     "4294967296123",
                     "4294967296123",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "positive integer larger than 64 bits",
                     "123456789123456789123456789123456789",
                     "123456789123456789123456789123456789",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "negative integer",
                     "-182",
                     "-182",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "negative integer larger than 32 bits",
                     "-4294967296123",
                     "-4294967296123",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "negative integer larger than 64 bits",
                     "-123456789123456789123456789123456789",
                     "-123456789123456789123456789123456789",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "string",
                     """"hello"""",
                     """"hello"""",
                     "String"
                 ),
-                BasicTest(
+                ExecTest(
                     "string with quote",
                     """"hel\"lo"""",
                     """"hel\"lo"""",
                     "String"
                 ),
-                BasicTest(
+                ExecTest(
                     "string with newline",
                     """"hello\n"""",
                     """"hello\n"""",
                     "String"
                 ),
-                BasicTest(
+                ExecTest(
                     "string with escape sequences",
                     """"\b\t\n\f\t\7\15\167"""",
                     """"\b\t\n\f\t\7\rw"""",
@@ -125,37 +125,43 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
                 // Records
 
-                BasicTest(
+                ExecTest(
                     "unit",
                     "{}",
                     "{}",
                     "Unit"
                 ),
-                BasicTest(
+                ExecTest(
                     "record (single int field)",
                     "{x = 65}",
                     "{x = 65}",
                     "{x : Int}"
                 ),
-                BasicTest(
+                ExecTest(
                     "record (single string field)",
                     """{name = "Harold"}""",
                     """{name = "Harold"}""",
                     "{name : String}"
                 ),
-                BasicTest(
+                ExecTest(
                     "record (two fields)",
                     "{a = 1, b = 2}",
                     "{a = 1, b = 2}",
                     "{a : Int, b : Int}"
                 ),
-                BasicTest(
+                ExecTest(
                     "record (many fields)",
                     """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
                     """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
                     "{name : String, age : Int, year : Int, sex : String}"
                 ),
-                BasicTest(
+                ExecTest(
+                    "record (eval field)",
+                    "{a = {fun (x : Int) = x}(3), b = 2}",
+                    "{a = 3, b = 2}",
+                    "{a : Int, b : Int}"
+                ),
+                ExecTest(
                     "multi-line record",
                     """{
                         name = "Bob",
@@ -164,37 +170,37 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """{name = "Bob", age = 24}""",
                     "{name : String, age : Int}"
                 ),
-                BasicTest(
+                ExecTest(
                     "field select (first of one)",
                     """{s = "Hi"}.s""",
                     """"Hi"""",
                     "String"
                 ),
-                BasicTest(
+                ExecTest(
                     "field select (first of two)",
                     """{s = "Hi", t = 10}.s""",
                     """"Hi"""",
                     "String"
                 ),
-                BasicTest(
+                ExecTest(
                     "field select (second of two)",
                     """{s = "Hi", t = 10}.t""",
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "field select (many fields)",
                     """{name = "Bob", age = 24, year = 1998, sex = "F"}.sex""",
                     """"F"""",
                     "String"
                 ),
-                BasicTest(
+                ExecTest(
                     "nested field select",
                     "{r = {y = 42}}.r.y",
                     "42",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "record concatenation",
                     """{
                         val r = {x = 10, y = 20}
@@ -204,7 +210,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """{x = 10, y = 20, a = "Hi"}""",
                     "{x : Int, y : Int, a : String}"
                 ),
-                BasicTest(
+                ExecTest(
                     "select from record concatenation (left)",
                     """{
                        val r = {x = 10, y = 20}
@@ -214,7 +220,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "select from record concatenation (right)",
                     """{
                        val r = {x = 10, y = 20}
@@ -225,70 +231,160 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "String"
                 ),
 
+                // Variants
+
+                ExecTest(
+                    "variant (single int field)",
+                    "<x = 65>",
+                    "<x = 65>",
+                    "<x : Int>"
+                ),
+                ExecTest(
+                    "variant (single string field)",
+                    """<name = "Harold">""",
+                    """<name = "Harold">""",
+                    "<name : String>"
+                ),
+                ExecTest(
+                    "variant (eval field)",
+                    "<a = {fun (x : Int) = x}(3)>",
+                    "<a = 3>",
+                    "<a : Int>"
+                ),
+                ExecTest(
+                    "multi-line variant",
+                    """<
+                        name = "Bob"
+                    >""",
+                    """<name = "Bob">""",
+                    "<name : String>"
+                ),
+                ExecTest(
+                    "basic match",
+                    "<x = 1> match { case x a = a }",
+                    "1",
+                    "Int"
+                ),
+                ExecTest(
+                    "multi-case match (first case, same order)",
+                    """{
+                        def f () : <x : Int, y : Int> = <x = 3>
+                        f () match { case x a = 1 case y b = 2 }
+                    }""",
+                    "1",
+                    "Int"
+                ),
+                ExecTest(
+                    "multi-case match (later case, same order)",
+                    """{
+                        def f () : <x : Int, y : Int> = <y = 3>
+                        f () match { case x a = 1 case y b = 2 }
+                    }""",
+                    "2",
+                    "Int"
+                ),
+                ExecTest(
+                    "multi-case match (first case, different order)",
+                    """{
+                        def f () : <x : Int, y : Int> = <y = 3>
+                        f () match { case y b = 1 case x a = 2 }
+                    }""",
+                    "1",
+                    "Int"
+                ),
+                ExecTest(
+                    "multi-case match (later case, different order)",
+                    """{
+                        def f () : <x : Int, y : Int> = <x = 3>
+                        f () match { case y b = 1 case x a = 2 }
+                    }""",
+                    "2",
+                    "Int"
+                ),
+                ExecTest(
+                    "Boolean match",
+                    """{
+                        def f (b : Boolean) : Unit =
+                            b match {
+                                case false x = x
+                                case true x = x
+                            }
+                        {a = f(<false = {}>), b = f(<true = {}>)}
+                    }""",
+                    "{a = {}, b = {}}",
+                    "{a : Unit, b : Unit}"
+                ),
+
                 // Functions
 
-                BasicTest(
+                ExecTest(
                     "no arguments",
                     "{fun () = 100}()",
                     "100",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "unit argument",
                     "{fun (x : Unit) = 100}({})",
                     "100",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "single integer argument",
                     """{fun (x : Int) = x}(10)""",
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "multiple arguments - first",
                     """{fun (x : Int, y : String) = x}(10, "hello")""",
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "multiple arguments - second",
                     """{fun (x : Int, y : String) = y}(10, "hello")""",
                     """"hello"""",
                     "String"
                 ),
-                BasicTest(
+                ExecTest(
                     "multi-line function",
                     """{fun (x : Int) =
                       x}(10)""",
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "record argument",
                     "{fun (r : {x : Int}) = r.x}({x = 20})",
                     "20",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "single field record return",
                     "{fun (x : Int) = {a = x}}(9)",
                     "{a = 9}",
                     "{a : Int}"
                 ),
-                BasicTest(
+                ExecTest(
+                    "variant argument (one)",
+                    "{fun (r : <x : Int>) = r}(<x = 20>)",
+                    "<x = 20>",
+                    "<x : Int>"
+                ),
+                ExecTest(
                     "function argument",
                     """{fun (f : (Int) => String) = f(10)}(fun (x : Int) = "yes")""",
                     """"yes"""",
                     "String"
                 ),
-                BasicTest(
+                ExecTest(
                     "function return then call",
                     "{fun (x : Int) = fun (y : Int) = x}(10)(15)",
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "function program result",
                     "{fun (f : (Int) => Int) = f}(fun (x : Int) = x)",
                     "<function>",
@@ -297,13 +393,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
                 // Blocks
 
-                BasicTest(
+                ExecTest(
                     "trivial block",
                     "{ 10 }",
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "val block",
                     """{
                        val x = 10
@@ -312,7 +408,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "val block (inner ref)",
                     """{
                         val x = 10
@@ -322,7 +418,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "20",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "val block (outer ref)",
                     """{
                         val x = 10
@@ -332,7 +428,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "val block with functions",
                     """{
                         val f = fun (x : Int) = x
@@ -342,7 +438,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "def block no arguments",
                     """{
                         def f() : Int = 10
@@ -351,7 +447,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "def block (single)",
                     """{
                         def f(x : Int) : Int = x
@@ -360,7 +456,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "def block (multi inner)",
                     """{
                         def f(x : Int) : Int = x
@@ -370,7 +466,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "def block (multi outer)",
                     """{
                         def f(x : Int) : Int = x
@@ -380,7 +476,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "block (val and def)",
                     """{
                         val a = 20
@@ -390,7 +486,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "20",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "def redefinition",
                     """{
                         def f(x : Int) : Int = 10
@@ -401,7 +497,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "30",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "nested val block (inner)",
                     """{
                         val a = 10
@@ -413,7 +509,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "20",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "nested val block (outer)",
                     """{
                         val a = 10
@@ -425,7 +521,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "nested val block (redefinition)",
                     """{
                         val a = 10
@@ -437,7 +533,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "20",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "nested def block (outer)",
                     """{
                         def f(x : Int) : Int = 10
@@ -449,7 +545,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "10",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "nested def block (inner)",
                     """{
                         def f(x : Int) : Int = 10
@@ -461,7 +557,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "20",
                     "Int"
                 ),
-                BasicTest(
+                ExecTest(
                     "nested def block (redefinition)",
                     """{
                         def f(x : Int) : Int = 10
@@ -472,12 +568,22 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     }""",
                     "20",
                     "Int"
+                ),
+                ExecTest(
+                    "variant argument",
+                    """{
+                        def f (r : <x : Int, y : Int, z : Int>) : <x : Int, y : Int, z : Int> = r
+                        def g () : <x : Int, y : Int> = <x = 3>
+                        f(g())
+                        }""",
+                    "<x = 3>",
+                    "<x : Int, y : Int, z : Int>"
                 )
             )
 
         // Compile and run tests
 
-        for (aTest <- basicTests) {
+        for (aTest <- ExecTests) {
             test(s"${backend.name} run: ${aTest.name}") {
                 val result = runString(aTest.name, aTest.program, backend.options, backend)
                 result shouldBe ""
@@ -536,7 +642,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
         // REPL tests
 
-        for (aTest <- basicTests) {
+        for (aTest <- ExecTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
                 val result = runREPLOnLine(aTest.name, aTest.program, backend.options)
                 val expectedResult = s"res0 : ${aTest.expectedREPLType} = ${aTest.expectedCompiledResult}\n"

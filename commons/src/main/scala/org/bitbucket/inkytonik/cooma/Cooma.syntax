@@ -11,15 +11,18 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Arguments ")" "=" Expression      {Fun, right, 4}
-  | '(' Expression ** "," ")" "=>" Expression   {FunT, right, 4}
+    "fun" '(' Arguments ")" "=" Expression      {Fun, right, 5}
+  | '(' Expression ** "," ")" "=>" Expression   {FunT, right, 5}
+  | Expression sp "match" "{" CaseScope+ '}'    {Mat, left, 4}
   | Expression '(' Expression ** "," ')'        {App, left, 3}
   | Expression "&" Expression                   {Cat, left, 2}
   | Expression '.' FieldUse                     {Sel, left, 1}
   | '{' '}'                                     {Uni}
   | '{' nestnl (BlockExp) \n '}'                {Blk}
   | '{' Field ++ "," '}'                        {Rec}
-  | '{' Row '}'                                 {RecT}
+  | '{' FieldType ++ "," '}'                    {RecT}
+  | '<' Field '>'                               {Var}
+  | '<' FieldType ++ "," '>'                    {VarT}
   | IntLit                                      {Num, 1: BigInt.apply : BigInt}
   | 'Int'                                       {IntT}
   | StringLit                                   {Str}
@@ -33,6 +36,12 @@ Arguments =
 
 Argument =
   IdnDef sp ":" Expression.
+
+CaseScope =
+  Case.
+
+Case =
+  "case" Identifier sp IdnDef sp "=" Expression sp.
 
 Field =
   Identifier sp "=" Expression.
@@ -53,9 +62,6 @@ Body =
 
 Val =
   "val" IdnDef sp "=" Expression \n.
-
-Row =
-  FieldType ++ ",".
 
 FieldType =
   Identifier sp ":" Expression.

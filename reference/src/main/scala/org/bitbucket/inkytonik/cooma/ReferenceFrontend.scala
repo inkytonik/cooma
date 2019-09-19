@@ -47,4 +47,5 @@ class ReferenceDriver extends Driver {
         val args = config.filenames().tail
         system.interpret(term, args, config)
     }
+
 }

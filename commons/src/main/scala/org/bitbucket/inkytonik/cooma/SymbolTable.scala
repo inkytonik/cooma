@@ -38,6 +38,10 @@ object SymbolTable extends Environments[CoomaEntity] {
         val desc = "argument"
     }
 
+    case class CaseValueEntity(decl : Case) extends CoomaOkEntity {
+        val desc = "case value"
+    }
+
     case class FieldEntity(decl : Field) extends CoomaOkEntity {
         val desc = "field"
     }
@@ -68,13 +72,29 @@ object SymbolTable extends Environments[CoomaEntity] {
 
     //  Declarations for the pre-defined entities
 
-    def makeRecordTypeEntity(
+    def makeValueEntity(
         name : String,
-        fields : Vector[(String, Expression)]
-    ) : ValueEntity = {
-        val fieldTypes = fields.map { case (n, t) => FieldType(n, t) }
-        ValueEntity(Val(IdnDef(name), RecT(Row(fieldTypes))))
-    }
+        tipe : Expression
+    ) : ValueEntity =
+        ValueEntity(Val(IdnDef(name), tipe))
+
+    def makeFieldTypes(fields : Vector[(String, Expression)]) : Vector[FieldType] =
+        fields.map { case (n, t) => FieldType(n, t) }
+
+    def makeVariantTypeEntity(name : String, fields : Vector[(String, Expression)]) : ValueEntity =
+        makeValueEntity(name, VarT(makeFieldTypes(fields)))
+
+    val booleanEntity =
+        makeVariantTypeEntity(
+            "Boolean",
+            Vector(
+                ("false", UniT()),
+                ("true", UniT())
+            )
+        )
+
+    def makeRecordTypeEntity(name : String, fields : Vector[(String, Expression)]) : ValueEntity =
+        makeValueEntity(name, RecT(makeFieldTypes(fields)))
 
     val readType = FunT(Vector(), StrT())
     val writeType = FunT(Vector(StrT()), UniT())
@@ -108,9 +128,10 @@ object SymbolTable extends Environments[CoomaEntity] {
      */
     val predefBindings =
         Vector(
+            ("Boolean", booleanEntity),
             ("Reader", readerEntity),
-            ("Writer", writerEntity),
-            ("ReaderWriter", readerWriterEntity)
+            ("ReaderWriter", readerWriterEntity),
+            ("Writer", writerEntity)
         )
 
     /**
