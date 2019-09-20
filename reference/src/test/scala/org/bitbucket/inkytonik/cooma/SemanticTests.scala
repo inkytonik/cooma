@@ -548,8 +548,13 @@ class SemanticTests extends Tests {
             // type aliases
 
             SemanticTest(
-                "alias of simple type",
+                "alias of simple type as argument",
                 "{ val Foo = Int {fun (x : Foo) = 0}(1) }",
+                ""
+            ),
+            SemanticTest(
+                "alias of simple type as return type",
+                "{ val Foo = Int def f (x : Int) : Foo = 0 f(1) }",
                 ""
             ),
             SemanticTest(

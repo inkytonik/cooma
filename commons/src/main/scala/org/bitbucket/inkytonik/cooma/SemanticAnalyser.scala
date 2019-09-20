@@ -510,7 +510,7 @@ class SemanticAnalyser(
                 Some(TypT())
 
             case tree.parent.pair(a, Body(_, t, e)) if a eq e =>
-                Some(t)
+                unalias(t)
 
             case tree.parent.pair(a, Body(_, t, _)) if a eq t =>
                 Some(TypT())
