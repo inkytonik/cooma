@@ -11,11 +11,11 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Arguments ")" "=" Expression      {Fun, right, 5}
-  | '(' Expression ** "," ")" "=>" Expression   {FunT, right, 5}
-  | Expression sp "match" "{" CaseScope+ '}'    {Mat, left, 4}
-  | Expression '(' Expression ** "," ')'        {App, left, 3}
+    "fun" '(' Arguments ")" "=" Expression      {Fun, right, 4}
+  | '(' Expression ** "," ")" "=>" Expression   {FunT, right, 4}
+  | Expression sp "match" "{" CaseScope+ '}'    {Mat, left, 3}
   | Expression "&" Expression                   {Cat, left, 2}
+  | Expression '(' Expression ** "," ')'        {App, left, 1}
   | Expression '.' FieldUse                     {Sel, left, 1}
   | '{' '}'                                     {Uni}
   | '{' nestnl (BlockExp) \n '}'                {Blk}
