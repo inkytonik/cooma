@@ -302,7 +302,7 @@ class SemanticAnalyser(
                         if (numArgs == ts.length)
                             unalias(t)
                         else
-                            unaliasFun(ts.drop(numArgs), t)
+                            unaliasFunT(ts.drop(numArgs), t)
                     case _ =>
                         None
                 }
@@ -324,7 +324,7 @@ class SemanticAnalyser(
             case Fun(Arguments(as), e) =>
                 tipe(e) match {
                     case Some(t) =>
-                        unaliasFun(as.map(_.expression), t)
+                        unaliasFunT(as.map(_.expression), t)
                     case None =>
                         None
                 }
@@ -427,7 +427,7 @@ class SemanticAnalyser(
             case FieldEntity(Field(_, e)) =>
                 tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
-                unaliasFun(as.map(_.expression), t)
+                unaliasFunT(as.map(_.expression), t)
             case ValueEntity(Val(_, e)) =>
                 tipe(e)
             case _ =>
@@ -463,6 +463,12 @@ class SemanticAnalyser(
                     case _ =>
                         None
                 }
+            case FunT(us, u) =>
+                unaliasFunT(us, u)
+            case RecT(fieldTypes) =>
+                unaliasRecT(fieldTypes)
+            case VarT(fieldTypes) =>
+                unaliasVarT(fieldTypes)
             case _ =>
                 Some(t)
         }
@@ -475,7 +481,7 @@ class SemanticAnalyser(
             None
     }
 
-    def unaliasFun(ts : Vector[Expression], t : Expression) : Option[Expression] =
+    def unaliasFunT(ts : Vector[Expression], t : Expression) : Option[FunT] =
         unaliases(ts) match {
             case Some(us) =>
                 unalias(t) match {
@@ -487,6 +493,26 @@ class SemanticAnalyser(
             case None =>
                 None
         }
+
+    def unaliasFieldTypes(fts : Vector[FieldType]) : Option[Vector[FieldType]] = {
+        val is = fts.map(_.identifier)
+        val ts = fts.map(_.expression)
+        unaliases(ts) match {
+            case Some(us) =>
+                Some(is.zip(us).map {
+                    case (i, t) =>
+                        FieldType(i, t)
+                })
+            case None =>
+                None
+        }
+    }
+
+    def unaliasRecT(fts : Vector[FieldType]) : Option[RecT] =
+        unaliasFieldTypes(fts).map(RecT)
+
+    def unaliasVarT(fts : Vector[FieldType]) : Option[VarT] =
+        unaliasFieldTypes(fts).map(VarT)
 
     lazy val blockTipe : BlockExp => Option[Expression] =
         attr {
@@ -530,7 +556,7 @@ class SemanticAnalyser(
             case REPLExpression(e) =>
                 tipe(e)
             case REPLDef(Def(_, Body(Arguments(as), t, e))) =>
-                unaliasFun(as.map(_.expression), t)
+                unaliasFunT(as.map(_.expression), t)
             case REPLVal(v) =>
                 tipe(v.expression)
         }

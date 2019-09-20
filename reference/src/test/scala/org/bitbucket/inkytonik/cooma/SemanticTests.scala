@@ -584,6 +584,30 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
+                "argument alias of record type with nested alias",
+                """{
+                  |   val Foo = Int
+                  |   val Bar = {f : (Foo) => Int}
+                  |   def m (x : Bar) : Int = x.f(1)
+                  |   0
+                  |}
+                  |""",
+                ""
+            ),
+            SemanticTest(
+                "return alias of variant type with nested alias",
+                """{
+                  |   val Foo = Int
+                  |   val Ble = {a : Int}
+                  |   val Bar = <f : (Foo) => Ble>
+                  |   def m (x : Int) : Bar =
+                  |      <f = fun (y : Foo) = {a = 3}>
+                  |   0
+                  |}
+                  |""",
+                ""
+            ),
+            SemanticTest(
                 "alias of function type of alias",
                 """{
                   |   val Foo = Int
