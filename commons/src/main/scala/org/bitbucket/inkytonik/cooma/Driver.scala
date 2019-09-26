@@ -29,7 +29,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
     override def driver(args : Seq[String]) {
         createAndInitConfig(args) match {
             case Left(message) =>
-                System.err.println(s"cooma: $message, use --help to see list")
+                System.err.println(s"cooma: $message, use --help for options")
             case Right(config) =>
                 run(config)
         }
