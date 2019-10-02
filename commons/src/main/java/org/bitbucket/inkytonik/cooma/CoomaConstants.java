@@ -1,4 +1,4 @@
-package org.bitbucket.inkytonik.cooma.truffle;
+package org.bitbucket.inkytonik.cooma;
 
 public class CoomaConstants {
 	public static final String ID = "cooma";

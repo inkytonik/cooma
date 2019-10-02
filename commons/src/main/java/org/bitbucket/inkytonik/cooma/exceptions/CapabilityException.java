@@ -1,4 +1,4 @@
-package org.bitbucket.inkytonik.cooma.truffle.exceptions;
+package org.bitbucket.inkytonik.cooma.exceptions;
 
 public class CapabilityException extends Exception {
 
