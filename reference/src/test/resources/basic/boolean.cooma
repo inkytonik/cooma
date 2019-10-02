@@ -6,5 +6,5 @@
             case true x =
                 2
         }
-    {a = f(<false = {}>), b = f(<true = {}>)}
+    {a = f(false), b = f(true)}
 }
