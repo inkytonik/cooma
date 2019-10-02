@@ -1,7 +1,7 @@
 package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 
-import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants;
-import org.bitbucket.inkytonik.cooma.truffle.exceptions.CapabilityException;
+import org.bitbucket.inkytonik.cooma.CoomaConstants;
+import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException;
 import org.bitbucket.inkytonik.cooma.truffle.exceptions.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;

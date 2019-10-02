@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
-import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, REPL}
+import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, CoomaConstants, REPL}
 
 trait TruffleREPL extends REPL {
 

@@ -8,7 +8,7 @@ public class Utils {
 
     @SuppressWarnings("unchecked")
     public static <T extends RuntimeValue> T  obtainFromRho(CoomaContext coomaContext, String key) {
-        return (T) coomaContext.getRho().get(key);
+        return coomaContext.getRho().get(key);
     }
 
     public static void extendRho(CoomaContext context, String key, RuntimeValue value) {

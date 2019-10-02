@@ -1,7 +1,8 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
 import java.io.{InputStream, PrintStream}
-import org.bitbucket.inkytonik.cooma.Frontend
+
+import org.bitbucket.inkytonik.cooma.{CoomaConstants, Frontend}
 
 class TruffleFrontend(in : InputStream = System.in, out : PrintStream = System.out) extends Frontend {
 

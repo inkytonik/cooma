@@ -100,8 +100,13 @@ lazy val root = (project in file("."))
 		version := "0.1.0",
 		organization := "org.bitbucket.inkytonik.cooma",
 		scalaVersion := "2.12.8",
+		assemblySettings,
 		commonsettings,
-		mainClass in Compile := (mainClass in Compile in reference).value
+		mainClass in Compile := (mainClass in Compile in reference).value,
+		libraryDependencies ++= kiamaDependencies ++ Seq(
+			"org.scalatest" %% "scalatest" % "3.0.5" % "test",
+			"org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
+		)
 	)
 	.dependsOn(
 		reference,
@@ -122,12 +127,8 @@ lazy val root = (project in file("."))
 lazy val reference = (project in file("reference"))
 	.settings(
 		commonsettings,
-		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main"),
-		libraryDependencies ++= kiamaDependencies ++ Seq(
-				"org.scalatest" %% "scalatest" % "3.0.5" % "test",
-				"org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
-			)
-	) dependsOn (commons, truffle_root)
+		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main")
+	) dependsOn (commons)
 
 lazy val truffle_root = (project in file("truffle_root"))
 	.settings(

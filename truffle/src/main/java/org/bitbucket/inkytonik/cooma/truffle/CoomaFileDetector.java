@@ -1,6 +1,7 @@
 package org.bitbucket.inkytonik.cooma.truffle;
 
 import com.oracle.truffle.api.TruffleFile;
+import org.bitbucket.inkytonik.cooma.CoomaConstants;
 
 import java.nio.charset.Charset;
 

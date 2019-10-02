@@ -2,7 +2,7 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.primitives;
 
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.bitbucket.inkytonik.cooma.truffle.exceptions.CapabilityException;
+import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException;
 import org.bitbucket.inkytonik.cooma.truffle.exceptions.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Pair;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
