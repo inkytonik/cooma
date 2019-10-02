@@ -95,7 +95,6 @@ lazy val assemblySettings = Seq(
 
 // Modules
 lazy val root = (project in file("."))
-	.disablePlugins(sbtassembly.AssemblyPlugin)
 	.settings(
 		name := "cooma",
 		version := "0.1.0",
@@ -121,7 +120,6 @@ lazy val root = (project in file("."))
 	)
 
 lazy val reference = (project in file("reference"))
-	.disablePlugins(sbtassembly.AssemblyPlugin)
 	.settings(
 		commonsettings,
 		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main"),
