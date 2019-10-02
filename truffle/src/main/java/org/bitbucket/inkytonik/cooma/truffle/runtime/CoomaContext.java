@@ -1,6 +1,7 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
 import com.oracle.truffle.api.TruffleLanguage;
+import lombok.val;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 
 
@@ -24,11 +25,10 @@ public final class CoomaContext {
     }
 
     private Rho predefRho() {
-        Rho rho = new Rho();
+        val rho = new Rho();
         RecRuntimeValue unit = new RecRuntimeValue(new FieldValueRuntime[] {});
-        rho.extend("false", new VarRuntimeValue("false", unit));
-        rho.extend("true", new VarRuntimeValue("true", unit));
-        return rho;
+        return  rho.extend("false", new VarRuntimeValue("false", unit))
+                    .extend("true", new VarRuntimeValue("true", unit));
     }
 
     public TruffleLanguage.Env getEnv() {
