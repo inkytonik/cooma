@@ -1,42 +1,34 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, CoomaParserPrettyPrinter, REPL}
+import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, REPL}
 
 trait TruffleREPL extends REPL {
 
     self : Compiler with TruffleBackend =>
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
+    import org.bitbucket.inkytonik.cooma.Config
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.format
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
+    import org.graalvm.polyglot.Context
 
-    /**
-     * Process a user-entered value binding.
-     */
-    override def processVal(i : String, vd : Val, tipe : Expression, config : Config) {
-        processLine(
-            CoomaParserPrettyPrinter.format(makeVal(i, vd)).layout,
-            i, tipe, config
-        )
+    var currentDynamicEnv : Context = _
+
+    override def initialise() {
+        super.initialise()
+        currentDynamicEnv = Context.newBuilder(CoomaConstants.ID).build()
     }
 
-    /**
-     * Process a user-entered function definition binding.
-     */
-    override def processDef(i : String, fd : Def, tipe : Expression, config : Config) {
-        processLine(
-            CoomaParserPrettyPrinter.format(makeDef(i, fd)).layout,
-            i, tipe, config
-        )
-    }
-
-    def processLine(
-        line : String,
+    def process(
+        program : Program,
         i : String,
         tipe : Expression,
         config : Config
     ) {
-        val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
-        config.output().emitln(s"$i : ${show(tipe)} = ${showRuntimeValue(result)}")
+        execute(i, tipe, config, {
+            val line = format(program).layout
+            val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
+            output(i, tipe, Some(result), config)
+        })
     }
 
 }

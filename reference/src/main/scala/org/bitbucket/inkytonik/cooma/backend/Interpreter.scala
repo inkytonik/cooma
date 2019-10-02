@@ -21,8 +21,6 @@ class Interpreter(config : Config) {
     self : ReferenceBackend =>
 
     import java.nio.file.{Files, Paths}
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Expression
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
@@ -51,13 +49,35 @@ class Interpreter(config : Config) {
     def consEnv(env : Env, i : String, v : ValueR) : Env =
         ConsVE(env, i, v)
 
+    val unit = RecR(Vector())
+
+    val predef =
+        Vector(
+            ("false", VarR("false", unit)),
+            ("true", VarR("true", unit))
+        )
+
+    val predefEnv =
+        predef.foldLeft(emptyEnv) {
+            case (env, (i, v)) =>
+                consEnv(env, i, v)
+        }
+
     def interpret(term : Term, args : Seq[String], config : Config) {
-        interpret(term, NilE(), args, config) match {
+        interpret(term, predefEnv, args, config) match {
             case ErrR(msg) =>
                 config.output().emitln(s"cooma: $msg")
+                if (config.server()) {
+                    if (driver.settingBool("showResult"))
+                        driver.publishProduct(source, "result", "cooma", pretty(value(msg)))
+                }
             case v =>
                 if (config.resultPrint())
                     config.output().emitln(showRuntimeValue(v))
+                if (config.server()) {
+                    if (driver.settingBool("showResult"))
+                        driver.publishProduct(source, "result", "cooma", formatRuntimeValue(v, 5))
+                }
         }
     }
 
@@ -440,22 +460,6 @@ class Interpreter(config : Config) {
         }
 
         def show = "select"
-    }
-
-    def repl(
-        env : Env, i : String, tipe : Expression,
-        config : Config, term : Term
-    ) : Env = {
-        if (config.irPrint())
-            config.output().emitln(showTerm(term))
-        if (config.irASTPrint())
-            config.output().emitln(layout(any(term), 5))
-
-        val args = config.filenames()
-        val result = interpret(term, env, args, config)
-
-        config.output().emitln(s"$i : ${show(tipe)} = ${showRuntimeValue(result)}")
-        consEnv(env, i, result)
     }
 
 }

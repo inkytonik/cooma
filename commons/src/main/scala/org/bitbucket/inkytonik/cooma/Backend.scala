@@ -2,8 +2,6 @@ package org.bitbucket.inkytonik.cooma
 
 trait Backend {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Expression
-
     type Term
     def appC(k : String, x : String) : Term
     def appF(f : String, k : String, x : String) : Term
@@ -41,14 +39,6 @@ trait Backend {
 
     type ValueR
     def showRuntimeValue(v : ValueR) : String
-
-    type Env
-    def emptyEnv : Env
-
-    def repl(
-        env : Env, i : String, tipe : Expression,
-        config : Config, term : Term
-    ) : Env
 
     def backendName : String
 

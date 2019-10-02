@@ -16,7 +16,7 @@ import org.bitbucket.inkytonik.kiama.attribution.Attribution
 import org.bitbucket.inkytonik.kiama.relation.Tree
 
 class SemanticAnalyser(
-    tree : Tree[ASTNode, ASTNode],
+    val tree : Tree[ASTNode, ASTNode],
     rootenv : Environment = predef
 ) extends Attribution {
 
@@ -248,6 +248,25 @@ class SemanticAnalyser(
                 leave(env(p))
             case tree.parent(p) =>
                 env(p)
+        }
+
+    /**
+     * The "deepest" env of an expression, defined to be the env
+     * of the plain expression, and the env of the body of a
+     * block expression (recursively). Currently only used when
+     * processing the predef.
+     */
+    lazy val deepEnv : Expression => Environment =
+        attr {
+            case Blk(b) => blockEnv(b)
+            case e      => env(e)
+        }
+
+    lazy val blockEnv : BlockExp => Environment =
+        attr {
+            case LetFun(_, b) => blockEnv(b)
+            case LetVal(_, b) => blockEnv(b)
+            case Return(e)    => env(e)
         }
 
     lazy val entity : IdnUse => CoomaEntity =

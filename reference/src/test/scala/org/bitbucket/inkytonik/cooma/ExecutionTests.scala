@@ -19,7 +19,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
     import org.bitbucket.inkytonik.cooma.truffle.{TruffleBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
-    import org.bitbucket.inkytonik.kiama.util.{FileSource, Source, StringConsole}
+    import org.bitbucket.inkytonik.kiama.util.{FileSource, Source, StringConsole, StringSource}
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
     import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
     import org.rogach.scallop.throwError
@@ -578,6 +578,21 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         }""",
                     "<x = 3>",
                     "<x : Int, y : Int, z : Int>"
+                ),
+
+                // Predef
+
+                ExecTest(
+                    "true",
+                    "true",
+                    "<true = {}>",
+                    "<true : Unit>"
+                ),
+                ExecTest(
+                    "false",
+                    "false",
+                    "<false = {}>",
+                    "<false : Unit>"
                 )
             )
 
@@ -767,6 +782,21 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         res2
                     """,
                     "res0 : Int = 10\nres1 : Int = 20\nres2 : Int = 30\nres3 : Int = 30"
+                ),
+                REPLTest(
+                    "built-in type",
+                    "Int",
+                    "res0 : Type"
+                ),
+                REPLTest(
+                    "pre-defined type",
+                    "Boolean",
+                    "res0 : Type"
+                ),
+                REPLTest(
+                    "pre-defined value",
+                    "true",
+                    "res0 : <true : Unit> = <true = {}>"
                 )
 
             )
@@ -1007,24 +1037,30 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         runREPLTest(name, ":lines", input, options)
 
     override def createREPL(config : Config) : REPL with Compiler with org.bitbucket.inkytonik.cooma.Backend = {
-        if (config.graalVM())
-            new TruffleBackend(config) with TruffleREPL with Compiler
-        else
-            new ReferenceBackend(config) with REPL with Compiler
+        val repl =
+            if (config.graalVM())
+                new TruffleBackend(config) with TruffleREPL with Compiler
+            else {
+                val source = new StringSource("")
+                new ReferenceBackend(this, source, config) with ReferenceREPL with Compiler
+            }
+        repl.initialise()
+        repl
     }
 
-    /**
-     *
-     * @param source The original cooma Source
-     * @param prog   The cooma source AST.
-     * @param config
-     */
     override def process(source : Source, prog : Program, config : Config) : Unit = {
-        val frontend = if (config.graalVM()) new TruffleDriver else new ReferenceDriver
+        val frontend =
+            if (config.graalVM())
+                new TruffleDriver
+            else
+                new ReferenceDriver
         frontend.process(source, prog, config)
     }
 
     override def testdriver(config : Config) : Unit = {
-        if (config.graalVM()) new TruffleFrontend().interpret(config) else super.testdriver(config)
+        if (config.graalVM())
+            new TruffleFrontend().interpret(config)
+        else
+            super.testdriver(config)
     }
 }

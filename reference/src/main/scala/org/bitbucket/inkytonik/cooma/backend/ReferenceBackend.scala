@@ -11,7 +11,14 @@
 package org.bitbucket.inkytonik.cooma
 package backend
 
-class ReferenceBackend(config : Config) extends Interpreter(config) with Backend {
+import org.bitbucket.inkytonik.cooma.Driver
+import org.bitbucket.inkytonik.kiama.util.Source
+
+class ReferenceBackend(
+    val driver : Driver,
+    val source : Source,
+    config : Config
+) extends Interpreter(config) with Backend {
 
     import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._

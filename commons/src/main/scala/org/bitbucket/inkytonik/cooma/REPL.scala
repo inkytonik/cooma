@@ -7,7 +7,7 @@ trait REPL extends REPLBase[Config] {
     self : Compiler with Backend =>
 
     import org.bitbucket.inkytonik.cooma.BuildInfo
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, show}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.{Console, Source, StringConsole}
@@ -29,13 +29,11 @@ trait REPL extends REPLBase[Config] {
     /**
      * Compile-time environment that keeps track of previously defined entities.
      */
-    var currentStaticEnv : Environment = predef
+    var currentStaticEnv : Environment = _
 
     /**
-     * Runtime environment that keeps track of previously bound values.
+     * Create a configuration for this REPL session.
      */
-    var currentDynamicEnv : Env = emptyEnv
-
     def createConfig(args : Seq[String]) : Config =
         new Config(args)
 
@@ -52,7 +50,6 @@ trait REPL extends REPLBase[Config] {
      */
     def initialise() {
         currentStaticEnv = predef
-        currentDynamicEnv = emptyEnv
         nResults = 0
     }
 
@@ -186,9 +183,40 @@ trait REPL extends REPLBase[Config] {
         i : String,
         tipe : Expression,
         config : Config
+    )
+
+    /**
+     * Execute a REPL line. If the type of the line is Type, just
+     * print that fact, otherwise used eval to do the actual evaluation.
+     */
+    def execute(
+        i : String,
+        tipe : Expression,
+        config : Config,
+        eval : => Unit
+    ) =
+        if (tipe == TypT())
+            output(i, tipe, None, config)
+        else
+            eval
+
+    /**
+     * Output in the REPL with name, type and optional result.
+     */
+    def output(
+        i : String,
+        tipe : Expression,
+        optResult : Option[ValueR],
+        config : Config
     ) {
-        val term = compileStandalone(program)
-        currentDynamicEnv = repl(currentDynamicEnv, i, tipe, config, term)
+        val suffix =
+            optResult match {
+                case Some(result) =>
+                    s" = ${showRuntimeValue(result)}"
+                case None =>
+                    ""
+            }
+        config.output().emitln(s"$i : ${show(tipe)}$suffix")
     }
 
     /**

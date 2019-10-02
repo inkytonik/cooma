@@ -17,7 +17,6 @@ public final class Rho {
         this.rho = rho;
     }
 
-
     @SuppressWarnings("unchecked")
     public <T extends RuntimeValue> T  get(String key) {
         return (T) rho.get(key);

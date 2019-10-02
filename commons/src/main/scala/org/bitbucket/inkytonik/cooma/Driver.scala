@@ -13,9 +13,9 @@ package org.bitbucket.inkytonik.cooma
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
 import org.bitbucket.inkytonik.kiama.util.CompilerBase
 
-abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
+abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout}
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, pretty}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.{Messages, noMessages}
@@ -43,6 +43,8 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
             compileFile(config.filenames()(0), config)
     }
 
+    val analysers = scala.collection.mutable.Map[Source, SemanticAnalyser]()
+
     override def makeast(source : Source, config : Config) : Either[Program, Messages] = {
         val p = new CoomaParser(source, positions)
         val pr = p.pProgram(0)
@@ -50,7 +52,11 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
             val program = p.value(pr).asInstanceOf[Program]
             if (config.coomaASTPrint())
                 config.output().emitln(layout(any(program), 5))
-            checkProgram(program, config) match {
+            if (config.server()) {
+                publishSourceProduct(source, format(program))
+                publishSourceTreeProduct(source, pretty(any(program)))
+            }
+            checkProgram(program, source, config) match {
                 case Vector() =>
                     Left(program)
                 case messages =>
@@ -60,12 +66,19 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] {
             Right(Vector(p.errorToMessage(pr.parseError)))
     }
 
-    def checkProgram(program : Program, config : Config) : Messages =
-        if (config.filenames().isEmpty) {
+    def checkProgram(program : Program, source : Source, config : Config) : Messages =
+        if (!config.server() && config.filenames().isEmpty) {
             noMessages
         } else {
             val tree = new Tree[ASTNode, Program](program)
             val analyser = new SemanticAnalyser(tree)
+            analysers.get(source) match {
+                case Some(prevAnalyser) =>
+                    positions.resetAllAt(prevAnalyser.tree.nodes)
+                case _ =>
+                // Do nothing
+            }
+            analysers(source) = analyser
             analyser.errors
         }
 

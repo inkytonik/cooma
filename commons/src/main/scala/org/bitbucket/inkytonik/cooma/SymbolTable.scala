@@ -25,6 +25,8 @@ sealed abstract class CoomaEntity extends Entity with Product
 object SymbolTable extends Environments[CoomaEntity] {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.kiama.relation.Tree
+    import org.bitbucket.inkytonik.kiama.util.{Messaging, Positions, StringSource}
 
     /**
      * A MiniJava entity that represents a legally resolved entity.
@@ -70,74 +72,53 @@ object SymbolTable extends Environments[CoomaEntity] {
         override val isError = true
     }
 
-    //  Declarations for the pre-defined entities
+    // Pre-defined entities
 
-    def makeValueEntity(
-        name : String,
-        tipe : Expression
-    ) : ValueEntity =
-        ValueEntity(Val(IdnDef(name), tipe))
+    val predefSource =
+        new StringSource("""
+            {
+                // Boolean
+                val Boolean = <false : Unit, true : Unit>
+                val false = <false = {}>
+                val true = <true = {}>
 
-    def makeFieldTypes(fields : Vector[(String, Expression)]) : Vector[FieldType] =
-        fields.map { case (n, t) => FieldType(n, t) }
+                // Capability types
+                val Reader = {read : () => String}
+                val ReaderWriter = {read : () => String, write : (String) => Unit}
+                val Writer = {write : (String) => Unit}
 
-    def makeVariantTypeEntity(name : String, fields : Vector[(String, Expression)]) : ValueEntity =
-        makeValueEntity(name, VarT(makeFieldTypes(fields)))
-
-    val booleanEntity =
-        makeVariantTypeEntity(
-            "Boolean",
-            Vector(
-                ("false", UniT()),
-                ("true", UniT())
-            )
-        )
-
-    def makeRecordTypeEntity(name : String, fields : Vector[(String, Expression)]) : ValueEntity =
-        makeValueEntity(name, RecT(makeFieldTypes(fields)))
-
-    val readType = FunT(Vector(), StrT())
-    val writeType = FunT(Vector(StrT()), UniT())
-
-    val readerEntity =
-        makeRecordTypeEntity(
-            "Reader",
-            Vector(
-                ("read", readType)
-            )
-        )
-
-    val writerEntity =
-        makeRecordTypeEntity(
-            "Writer",
-            Vector(
-                ("write", writeType)
-            )
-        )
-
-    val readerWriterEntity =
-        makeRecordTypeEntity(
-            "Writer",
-            Vector(
-                ("read", readType),
-                ("write", writeType)
-            )
-        )
-    /**
-     * Bindings for the pre-defined entities.
-     */
-    val predefBindings =
-        Vector(
-            ("Boolean", booleanEntity),
-            ("Reader", readerEntity),
-            ("ReaderWriter", readerWriterEntity),
-            ("Writer", writerEntity)
-        )
+                0
+            }
+        """)
 
     /**
      * Pre-defined environment. Program environments extend this.
+     * It's created by processing the predef source in an empty
+     * environment and extracting the final environment.
      */
-    val predef : Environment =
-        rootenv(predefBindings : _*)
+    val predef : Environment = {
+        val positions = new Positions()
+        val messaging = new Messaging(positions)
+        val p = new CoomaParser(predefSource, positions)
+        val pr = p.pProgram(0)
+        if (pr.hasValue) {
+            val program = p.value(pr).asInstanceOf[Program]
+            val tree = new Tree[ASTNode, Program](program)
+            val analyser = new SemanticAnalyser(tree, rootenv())
+            analyser.errors match {
+                case Vector() =>
+                    analyser.deepEnv(program.expression)
+                case messages =>
+                    println("Cooma: processing program found errors:\n")
+                    println(messaging.formatMessages(messages))
+                    sys.exit(1)
+            }
+        } else {
+            val message = p.errorToMessage(pr.parseError)
+            println("Cooma: can't parse predef:\n")
+            println(messaging.formatMessage(message))
+            sys.exit(1)
+        }
+    }
 
 }

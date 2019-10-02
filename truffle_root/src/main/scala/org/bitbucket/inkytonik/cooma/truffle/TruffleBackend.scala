@@ -4,11 +4,9 @@ import org.bitbucket.inkytonik.cooma.{Backend, Config}
 
 class TruffleBackend(config : Config) extends Backend {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Expression;
     import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
-    import org.graalvm.polyglot.Context
     import scala.math.BigInt;
 
     override def backendName : String = "Graal"
@@ -108,19 +106,6 @@ class TruffleBackend(config : Config) extends Backend {
 
     def showRuntimeValue(v : ValueR) : String = {
         v.toString
-    }
-
-    override type Env = Context
-
-    def emptyEnv : Env = {
-        Context.newBuilder(CoomaConstants.ID).build()
-    }
-
-    def repl(
-        env : Env, i : String, tipe : Expression,
-        config : Config, term : Term
-    ) : Env = {
-        env
     }
 
 }

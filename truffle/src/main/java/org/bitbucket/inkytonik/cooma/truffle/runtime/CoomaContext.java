@@ -20,12 +20,17 @@ public final class CoomaContext {
     public CoomaContext(TruffleLanguage.Env env) {
         this.env = env;
         this.applicationArguments = env.getApplicationArguments();
-        rho = new Rho();
+        rho = predefRho();
     }
 
-    /**
-     * Return the current Truffle environment.
-     */
+    private Rho predefRho() {
+        Rho rho = new Rho();
+        RecRuntimeValue unit = new RecRuntimeValue(new FieldValueRuntime[] {});
+        rho.extend("false", new VarRuntimeValue("false", unit));
+        rho.extend("true", new VarRuntimeValue("true", unit));
+        return rho;
+    }
+
     public TruffleLanguage.Env getEnv() {
         return env;
     }
@@ -45,4 +50,5 @@ public final class CoomaContext {
     public void setApplicationArguments(String[] applicationArguments) {
         this.applicationArguments = applicationArguments;
     }
+
 }
