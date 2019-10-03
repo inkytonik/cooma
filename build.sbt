@@ -85,6 +85,7 @@ lazy val commonsettings = Seq(
 lazy val assemblySettings = Seq(
 	assemblyJarName in assembly := name.value + ".jar",
 	assemblyMergeStrategy in assembly := {
+		case PathList("META-INF", "ECLIPSE_.RSA") => MergeStrategy.discard
 		case PathList("META-INF", "truffle", "language") => MergeStrategy.first
 		case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
 		case PathList("META-INF", xs@_*) => MergeStrategy.first
@@ -121,7 +122,7 @@ lazy val root = (project in file("."))
 		truffle,
 		truffle_root,
 		trufflelauncher,
-		trufflecomponent,
+		trufflecomponent
 	)
 
 lazy val reference = (project in file("reference"))
@@ -133,7 +134,7 @@ lazy val reference = (project in file("reference"))
 lazy val truffle_root = (project in file("truffle_root"))
 	.settings(
 		assemblySettings,
-		commonsettings,
+		commonsettings
 	)
     .aggregate(truffle)
 	.dependsOn(truffle)
