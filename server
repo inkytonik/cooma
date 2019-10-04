@@ -1,6 +1,0 @@
-#!/bin/bash
-java \
-    -cp target/scala-2.12/cooma.jar \
-    org.bitbucket.inkytonik.cooma.Main \
-    --debug \
-    --server
