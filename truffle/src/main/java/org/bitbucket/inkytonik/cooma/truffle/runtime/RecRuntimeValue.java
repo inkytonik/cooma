@@ -20,7 +20,6 @@ public class RecRuntimeValue extends RuntimeValue<RecRuntimeValue> implements Tr
     public int compareTo(RecRuntimeValue recRuntimeValue) {
 
         if (this.getFields().length == recRuntimeValue.getFields().length){
-
             for (int i = 0; i < this.getFields().length ; i++) {
                 FieldValueRuntime local = this.getFields()[i];
                 FieldValueRuntime theirs = recRuntimeValue.getFields()[i];

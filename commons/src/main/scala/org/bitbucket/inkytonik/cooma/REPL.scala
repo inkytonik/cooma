@@ -206,7 +206,7 @@ trait REPL extends REPLBase[Config] {
     def output(
         i : String,
         tipe : Expression,
-        optResult : Option[ValueR],
+        optResult : Option[OutputValueR],
         config : Config
     ) {
         val suffix =

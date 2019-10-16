@@ -1,10 +1,13 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
-import org.bitbucket.inkytonik.cooma.{Backend, Config}
+import java.math.BigInteger
+
+import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
+import org.bitbucket.inkytonik.cooma.truffle.runtime._
+import org.bitbucket.inkytonik.cooma.{Backend, Config, Primitives}
 
 class TruffleBackend(config : Config) extends Backend {
 
-    import org.bitbucket.inkytonik.cooma.truffle.nodes.primitives._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
     import scala.math.BigInt;
@@ -51,7 +54,7 @@ class TruffleBackend(config : Config) extends Backend {
         new CoomaIntValueNode(i.bigInteger)
 
     def prmV(p : Primitive, xs : Vector[String]) : Value =
-        new CoomaPrimitiveValue(p, xs.toArray)
+        new CoomaPrimitiveValue(this, p, xs.toArray)
 
     def recV(fs : Vector[FieldValue]) : Value =
         new CoomaRecValueNode(fs.toArray)
@@ -76,36 +79,97 @@ class TruffleBackend(config : Config) extends Backend {
     def showTerm(t : Term) : String =
         t.toString
 
-    override type Primitive = org.bitbucket.inkytonik.cooma.truffle.nodes.primitives.Primitive
+    type Primitive = org.bitbucket.inkytonik.cooma.Primitives.Primitive[TruffleBackend]
 
     def argumentP(i : Int) : Primitive = {
-        new ArgumentP(i)
+        Primitives.ArgumentP(i)
     }
 
     def capabilityP(cap : String) : Primitive = {
-        new CapabilityP(cap)
+        Primitives.CapabilityP(cap)
     }
 
     def consoleWriteP(filename : String) : Primitive = {
-        new WriterWriteP(filename)
+        Primitives.WriterWriteP(filename)
     }
 
     def readerReadP(filename : String) : Primitive = {
-        new ReaderReadP(filename)
+        Primitives.ReaderReadP(filename)
     }
 
     def recConcatP() : Primitive = {
-        new RecConcatP()
+        Primitives.RecConcatP()
     }
 
     def recSelectP() : Primitive = {
-        new RecSelectP()
+        Primitives.RecSelectP()
     }
 
-    override type ValueR = org.graalvm.polyglot.Value
+    //Runtime Values
 
-    def showRuntimeValue(v : ValueR) : String = {
+    override type ValueR = RuntimeValue[_]
+    override type OutputValueR = org.graalvm.polyglot.Value
+    override type Env = Rho
+    override type FldR = FieldValueRuntime
+
+    def showRuntimeValue(v : OutputValueR) : String = {
         v.toString
     }
 
+    def errR(msg : String) : ValueR =
+        new ErrorRuntimeValue(msg)
+
+    def strR(str : String) : ValueR =
+        new StringRuntimeValue(str)
+
+    def varR(c : String, v : ValueR) : ValueR =
+        new VarRuntimeValue(c, v)
+
+    def clsR(env : Env, f : String, x : String, e : Term) : ValueR =
+        new FunctionClosure(env, f, x, e)
+
+    def recR(fields : Vector[FldR]) : ValueR =
+        new RecRuntimeValue(fields.toArray)
+
+    def fldR(x : String, v : ValueR) : FldR =
+        new FieldValueRuntime(x, v)
+
+    def intR(num : BigInt) : ValueR =
+        new IntRuntimeValue(new BigInteger(num.toByteArray))
+
+    def isErrR(value : RuntimeValue[_]) : Option[String] =
+        value match {
+            case error : ErrorRuntimeValue => Some(error.getMessage)
+            case _                         => None
+        }
+
+    def isStrR(value : RuntimeValue[_]) : Option[String] =
+        value match {
+            case string : StringRuntimeValue => Some(string.getInnerValue)
+            case _                           => None
+        }
+
+    def isIntR(value : RuntimeValue[_]) : Option[BigInt] =
+        value match {
+            case int : IntRuntimeValue => Some(int.getInnerValue)
+            case _                     => None
+        }
+
+    override def isRecR(value : RuntimeValue[_]) : Option[Vector[FieldValueRuntime]] =
+        value match {
+            case rec : RecRuntimeValue => Some(rec.getFields.toVector)
+            case _                     => None
+        }
+
+    override def isFldR(value : FieldValueRuntime) : Option[(String, RuntimeValue[_])] =
+        value match {
+            case value : FieldValueRuntime => Some((value.getX, value.getV))
+            case _                         => None
+        }
+
+    override def emptyEnv : Rho = new Rho
+
+    override def lookupR(rho : Rho, x : String) : RuntimeValue[_] = rho.get(x)
+
+    override def getConfig() : Config = config
 }

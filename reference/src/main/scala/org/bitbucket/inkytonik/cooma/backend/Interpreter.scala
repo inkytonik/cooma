@@ -11,16 +11,11 @@
 package org.bitbucket.inkytonik.cooma
 package backend
 
-import java.io._
-
-import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
-
 class Interpreter(config : Config) {
 
     self : ReferenceBackend =>
 
-    import java.nio.file.{Files, Paths}
-    import org.bitbucket.inkytonik.cooma.Util.{escape, fresh}
+    import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 
@@ -42,9 +37,6 @@ class Interpreter(config : Config) {
     case class ConsVE(env : Env, x : String, v : ValueR) extends Env
     case class NilE() extends Env
 
-    def emptyEnv : Env =
-        NilE()
-
     def consEnv(env : Env, i : String, v : ValueR) : Env =
         ConsVE(env, i, v)
 
@@ -62,7 +54,7 @@ class Interpreter(config : Config) {
                 consEnv(env, i, v)
         }
 
-    def interpret(term : Term, args : Seq[String], config : Config) {
+    def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
         interpret(term, predefEnv, args, config) match {
             case ErrR(msg) =>
                 config.output().emitln(s"cooma: $msg")
@@ -184,32 +176,6 @@ class Interpreter(config : Config) {
         interpretAux(env, term)
     }
 
-    def lookupR(rho : Env, x : String) : ValueR =
-        rho match {
-            case ConsCE(rho2, _, _) =>
-                lookupR(rho2, x)
-
-            case ConsFE(rho2, rho2f, ds) =>
-                ds.collectFirst {
-                    case DefTerm(f, k, y, e) if x == f =>
-                        ClsR(rho2f(), k, y, e)
-                } match {
-                    case Some(v) =>
-                        v
-                    case None =>
-                        lookupR(rho2, x)
-                }
-
-            case ConsVE(rho2, y, v) if x == y =>
-                v
-
-            case ConsVE(rho2, _, _) =>
-                lookupR(rho2, x)
-
-            case NilE() =>
-                sys.error(s"lookupR: can't find value $x")
-        }
-
     def lookupC(rho : Env, x : String) : ClsC =
         rho match {
             case ConsCE(rho2, y, v) if x == y =>
@@ -228,64 +194,9 @@ class Interpreter(config : Config) {
                 sys.error(s"lookupC: can't find $x")
         }
 
-    def capability(rho : Env, name : String, x : String) : ValueR = {
-
-        val argument =
-            lookupR(rho, x) match {
-                case StrR(s) =>
-                    s
-                case err : ErrR =>
-                    return err
-                case v =>
-                    sys.error(s"interpretPrim: got non-String argument $v")
-            }
-
-        def makeCapability(pairs : Vector[(String, Primitive)]) : RecR = {
-            RecR(
-                pairs.map(pair => {
-                    val k = fresh("k")
-                    val y = fresh("y")
-                    val p = fresh("p")
-                    FldR(
-                        pair._1,
-                        ClsR(NilE(), k, y,
-                            LetV(p, PrmV(pair._2, Vector(y)),
-                                AppC(k, p)))
-                    )
-                })
-            )
-        }
-
-        name match {
-            case "Writer" =>
-                try {
-                    makeCapability(Vector(("write", WriterWriteP(argument))))
-                } catch {
-                    case capE : CapabilityException => ErrR(capE.getMessage)
-                }
-            case "Reader" =>
-                try {
-                    makeCapability(Vector(("read", ReaderReadP(argument))))
-                } catch {
-                    case capE : CapabilityException => ErrR(capE.getMessage)
-                }
-            case "ReaderWriter" =>
-                try {
-                    makeCapability(Vector(
-                        ("read", ReaderReadP(argument)),
-                        ("write", WriterWriteP(argument))
-                    ))
-                } catch {
-                    case capE : CapabilityException => ErrR(capE.getMessage)
-                }
-            case _ =>
-                sys.error(s"capability: unknown primitive $name")
-        }
-    }
-
     /*
-     * Pretty-printer for runtime result values.
-     */
+	 * Pretty-printer for runtime result values.
+	 */
 
     def showRuntimeValue(v : ValueR) : String =
         formatRuntimeValue(v, 5).layout
@@ -311,154 +222,5 @@ class Interpreter(config : Config) {
 
     def toDocField(field : FldR) : Doc =
         value(field.x) <+> text("=") <+> toDocRuntimeValue(field.v)
-
-    // Primitives
-
-    abstract class Primitive {
-        def numArgs : Int
-
-        def eval(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
-            if (xs.length == numArgs)
-                run(interp)(rho, xs, args)
-            else
-                sys.error(s"$show: expected $numArgs arg(s), got $xs")
-
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR
-
-        def show : String
-    }
-
-    case class ArgumentP(i : Int) extends Primitive {
-        val numArgs = 0
-
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
-            if ((i < 0) || (i >= args.length))
-                interp.ErrR(s"command-line argument $i does not exist (arg count = ${args.length})")
-            else
-                interp.StrR(args(i))
-
-        def show = s"arg $i"
-    }
-
-    case class CapabilityP(cap : String) extends Primitive {
-        val numArgs = 1
-
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
-            interp.capability(rho, cap, xs(0))
-
-        def show = s"cap $cap"
-    }
-
-    case class WriterWriteP(filename : String) extends Primitive {
-        import java.nio.file.{Files, Paths}
-
-        val numArgs = 1
-
-        if (CoomaConstants.CONSOLEIO != filename &&
-            !Files.isWritable(Paths.get(filename))) throw new CapabilityException(s"Writer capability unavailable: can't write $filename")
-
-        lazy val out : Writer = filename match {
-            case CoomaConstants.CONSOLEIO => new StringWriter() {
-                override def write(s : String) : Unit = config.output().emit(s)
-            }
-            case _ => new BufferedWriter(new FileWriter(filename))
-        }
-
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) = {
-            val x = xs(0)
-            val s = interp.lookupR(rho, x) match {
-                case interp.IntR(i) =>
-                    i.toString
-                case interp.StrR(s) =>
-                    s
-                case v =>
-                    sys.error(s"$show: can't write $v")
-            }
-            try {
-                out.write(s)
-            } finally {
-                out.close()
-            }
-            interp.RecR(Vector())
-        }
-
-        def show = s"consoleWrite $filename"
-    }
-
-    case class ReaderReadP(filename : String) extends Primitive {
-
-        import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
-
-        val numArgs = 1
-
-        if (CoomaConstants.CONSOLEIO != filename && !Files.isReadable(Paths.get(filename)))
-            throw new CapabilityException(s"Reader capability unavailable: can't read $filename")
-
-        lazy val in : Reader =
-            new BufferedReader(filename match {
-                case CoomaConstants.CONSOLEIO => new InputStreamReader(System.in)
-                case _                        => new BufferedReader(new FileReader(filename))
-            })
-
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            try {
-                interp.StrR(readReaderContents(in))
-            } catch {
-                case e : IOException => sys.error(e.getMessage)
-            }
-        }
-
-        def show = s"readerRead $filename"
-    }
-
-    case class RecConcatP() extends Primitive {
-        val numArgs = 2
-
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            val Vector(l, r) = xs
-            interp.lookupR(rho, l) match {
-                case interp.RecR(lFields) =>
-                    interp.lookupR(rho, r) match {
-                        case interp.RecR(rFields) =>
-                            interp.RecR(lFields ++ rFields)
-                        case rv =>
-                            sys.error(s"$show: right argument $r of & is non-record $rv")
-                    }
-                case lv =>
-                    sys.error(s"$show: left argument $l of & is non-record $lv")
-            }
-        }
-
-        def show = "concat"
-    }
-
-    case class RecSelectP() extends Primitive {
-        val numArgs = 2
-
-        def run(interp : Interpreter)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            val Vector(r, f1) = xs
-
-            interp.lookupR(rho, r) match {
-                case interp.RecR(fields) =>
-                    fields.collectFirst {
-                        case interp.FldR(f2, v) if f1 == f2 =>
-                            v
-                    } match {
-                        case Some(v) =>
-                            v
-                        case None =>
-                            sys.error(s"$show: can't find field $f1 in $fields")
-                    }
-
-                case err : interp.ErrR =>
-                    err
-
-                case v =>
-                    sys.error(s"$show: $r is $v, looking for field $f1")
-            }
-        }
-
-        def show = "select"
-    }
 
 }
