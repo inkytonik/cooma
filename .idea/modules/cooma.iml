@@ -19,8 +19,6 @@
     <orderEntry type="library" scope="TEST" name="sbt: org.scalacheck:scalacheck_2.12:1.14.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scala-sbt:test-interface:1.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scala-lang.modules:scala-xml_2.12:1.0.6:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="sbt: org.bitbucket.inkytonik.kiama:kiama_2.12:2.3.0-SNAPSHOT:tests:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="sbt: org.bitbucket.inkytonik.kiama:kiama-extras_2.12:2.3.0-SNAPSHOT:tests:jar" level="project" />
     <orderEntry type="library" name="sbt: org.rogach:scallop_2.12:3.3.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.7.2:jar" level="project" />
     <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.7.2:jar" level="project" />
@@ -53,5 +51,6 @@
     <orderEntry type="module" module-name="trufflecomponent" exported="" />
     <orderEntry type="module" module-name="truffle_root" exported="" />
     <orderEntry type="module" module-name="truffle" exported="" />
+    <orderEntry type="module" module-name="commons" exported="" />
   </component>
 </module>
