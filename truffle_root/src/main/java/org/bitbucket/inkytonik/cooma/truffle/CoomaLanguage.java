@@ -10,12 +10,18 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.CoomaConstants;
+import org.bitbucket.inkytonik.cooma.PrimitiveUtils;
 import org.bitbucket.inkytonik.cooma.Util;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
 import org.bitbucket.inkytonik.kiama.util.Emitter;
 import org.bitbucket.inkytonik.kiama.util.StringEmitter;
+import org.rogach.scallop.ScallopOption;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Arrays;
 
 import static scala.collection.JavaConverters.collectionAsScalaIterableConverter;
@@ -27,6 +33,11 @@ import static scala.collection.JavaConverters.collectionAsScalaIterableConverter
 public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
     private TruffleDriver truffleDriver = new TruffleDriver();
+
+    @Override
+    protected void finalizeContext(CoomaContext context) {
+        System.setOut(context.getOriginalSout());
+    }
 
     public static String toString(Object value) {
         try {

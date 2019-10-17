@@ -63,7 +63,7 @@ trait Backend {
 
     def lookupR(rho : Env, x : String) : ValueR
 
-    def getConfig() : Config
+    def getConfig : Config
 
     /**
      * When evaluating a program using Truffle, what we get as an output

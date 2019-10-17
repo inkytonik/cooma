@@ -9,6 +9,8 @@
  */
 
 package org.bitbucket.inkytonik.cooma.backend
+import java.io.{StringWriter}
+
 import org.bitbucket.inkytonik.cooma.{Backend, Config, Driver}
 import org.bitbucket.inkytonik.kiama.util.Source
 
@@ -106,8 +108,12 @@ class ReferenceBackend(
     def capabilityP(cap : String) : Primitive =
         CapabilityP(cap)
 
-    def consoleWriteP(filename : String) : Primitive =
-        WriterWriteP(filename)
+    def consoleWriteP(filename : String) : Primitive = {
+        val stdout = new StringWriter() {
+            override def write(s : String) : Unit = getConfig.output().emit(s)
+        }
+        WriterWriteP(filename, stdout)
+    }
 
     def readerReadP(filename : String) : Primitive =
         ReaderReadP(filename)
@@ -251,7 +257,7 @@ class ReferenceBackend(
                 sys.error(s"lookupR: can't find value $x")
         }
 
-    def getConfig() : Config = config
+    def getConfig : Config = config
 
     def emptyEnv : Env = NilE()
 

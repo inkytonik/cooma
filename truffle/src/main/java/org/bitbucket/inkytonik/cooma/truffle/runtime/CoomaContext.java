@@ -4,6 +4,8 @@ import com.oracle.truffle.api.TruffleLanguage;
 import lombok.val;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 
+import java.io.PrintStream;
+
 
 /**
  *
@@ -17,11 +19,15 @@ public final class CoomaContext {
     private final TruffleLanguage.Env env;
     private Rho rho;
     private String[] applicationArguments;
+    private PrintStream originalSout;
+
 
     public CoomaContext(TruffleLanguage.Env env) {
         this.env = env;
         this.applicationArguments = env.getApplicationArguments();
         rho = predefRho();
+        originalSout = System.out;
+        System.setOut(new PrintStream(env.out()));
     }
 
     private Rho predefRho() {
@@ -51,4 +57,7 @@ public final class CoomaContext {
         this.applicationArguments = applicationArguments;
     }
 
+    public PrintStream getOriginalSout() {
+        return originalSout;
+    }
 }

@@ -1,5 +1,6 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
+import java.io.{PrintWriter}
 import java.math.BigInteger
 
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
@@ -90,7 +91,7 @@ class TruffleBackend(config : Config) extends Backend {
     }
 
     def consoleWriteP(filename : String) : Primitive = {
-        Primitives.WriterWriteP(filename)
+        Primitives.WriterWriteP(filename, new PrintWriter(System.out))
     }
 
     def readerReadP(filename : String) : Primitive = {
@@ -171,5 +172,6 @@ class TruffleBackend(config : Config) extends Backend {
 
     override def lookupR(rho : Rho, x : String) : RuntimeValue[_] = rho.get(x)
 
-    override def getConfig() : Config = config
+    override def getConfig : Config = config
+
 }

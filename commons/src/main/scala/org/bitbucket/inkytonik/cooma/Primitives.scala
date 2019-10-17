@@ -19,56 +19,6 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR
 
         def show : String
-
-        def capability(interp : I)(rho : interp.Env, name : String, x : String) : interp.ValueR = {
-
-            def makeCapability(pairs : Vector[(String, interp.Primitive)]) : interp.ValueR = {
-                interp.recR(
-                    pairs.map(pair => {
-                        val k = fresh("k")
-                        val y = fresh("y")
-                        val p = fresh("p")
-                        val term = interp.letV(p, interp.prmV(pair._2, Vector(y)), interp.appC(k, p))
-                        interp.fldR(pair._1, interp.clsR(interp.emptyEnv, k, y, term))
-                    })
-                )
-            }
-
-            val value = interp.lookupR(rho, x)
-            val argument = interp.isStrR(value) match {
-                case Some(s) => s
-                case None => interp.isErrR(value) match {
-                    case Some(_) => return value
-                    case None    => sys.error(s"interpretPrim: got non-String argument $value")
-                }
-            }
-
-            name match {
-                case "Writer" =>
-                    try {
-                        makeCapability(Vector(("write", interp.consoleWriteP(argument))))
-                    } catch {
-                        case capE : CapabilityException => interp.errR(capE.getMessage)
-                    }
-                case "Reader" =>
-                    try {
-                        makeCapability(Vector(("read", interp.readerReadP(argument))))
-                    } catch {
-                        case capE : CapabilityException => interp.errR(capE.getMessage)
-                    }
-                case "ReaderWriter" =>
-                    try {
-                        makeCapability(Vector(
-                            ("read", interp.readerReadP(argument)),
-                            ("write", interp.consoleWriteP(argument))
-                        ))
-                    } catch {
-                        case capE : CapabilityException => interp.errR(capE.getMessage)
-                    }
-                case _ =>
-                    sys.error(s"capability: unknown primitive $name")
-            }
-        }
     }
 
     case class ArgumentP[I <: Backend](i : Int) extends Primitive[I] {
@@ -116,6 +66,61 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
             capability(interp)(rho, cap, xs.head)
 
+        def capability(interp : I)(rho : interp.Env, name : String, x : String) : interp.ValueR = {
+
+            def makeCapability(pairs : Vector[(String, interp.Primitive)]) : interp.ValueR = {
+                interp.recR(
+                    pairs.map(pair => {
+                        val k = fresh("k")
+                        val y = fresh("y")
+                        val p = fresh("p")
+                        interp.fldR(
+                            pair._1, interp.clsR(
+                                interp.emptyEnv, k, y,
+                                interp.letV(p, interp.prmV(pair._2, Vector(y)),
+                                    interp.appC(k, p))
+                            )
+                        )
+                    })
+                )
+            }
+
+            val value = interp.lookupR(rho, x)
+            val argument = interp.isStrR(value) match {
+                case Some(s) => s
+                case None => interp.isErrR(value) match {
+                    case Some(_) => return value
+                    case None    => sys.error(s"interpretPrim: got non-String argument $value")
+                }
+            }
+
+            name match {
+                case "Writer" =>
+                    try {
+                        makeCapability(Vector(("write", interp.consoleWriteP(argument))))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
+                case "Reader" =>
+                    try {
+                        makeCapability(Vector(("read", interp.readerReadP(argument))))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
+                case "ReaderWriter" =>
+                    try {
+                        makeCapability(Vector(
+                            ("read", interp.readerReadP(argument)),
+                            ("write", interp.consoleWriteP(argument))
+                        ))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
+                case _ =>
+                    sys.error(s"capability: unknown primitive $name")
+            }
+        }
+
         def show = s"cap $cap"
     }
 
@@ -123,9 +128,7 @@ object Primitives {
         val numArgs = 2
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            //TODO: roll this back
-            val l = xs.head
-            val r = xs.tail.head
+            val Vector(l, r) = xs
             interp.isRecR(interp.lookupR(rho, l)) match {
                 case Some(lFields) =>
                     interp.isRecR(interp.lookupR(rho, r)) match {
@@ -139,7 +142,7 @@ object Primitives {
         def show = "concat"
     }
 
-    case class WriterWriteP[I <: Backend](filename : String) extends Primitive[I] {
+    case class WriterWriteP[I <: Backend](filename : String, stdout : Writer) extends Primitive[I] {
         val numArgs = 1
 
         if (CoomaConstants.CONSOLEIO != filename &&
@@ -148,14 +151,11 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
 
             lazy val out : Writer = filename match {
-                case CoomaConstants.CONSOLEIO => new StringWriter() {
-                    override def write(s : String) : Unit = interp.getConfig().output().emit(s)
-                }
-                case _ => new BufferedWriter(new FileWriter(filename))
+                case CoomaConstants.CONSOLEIO => stdout
+                case _                        => new BufferedWriter(new FileWriter(filename))
             }
 
-            val x = xs.head
-            val value = interp.lookupR(rho, x)
+            val value = interp.lookupR(rho, xs.head)
             val s = interp.isIntR(value) match {
                 case Some(i : BigInt) => i.toString
                 case None => interp.isStrR(value) match {
@@ -179,9 +179,7 @@ object Primitives {
         val numArgs = 2
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            //TODO: roll this back
-            val r = xs.head
-            val f1 = xs.tail.head
+            val Vector(r, f1) = xs
             val value = interp.lookupR(rho, r)
             interp.isRecR(value) match {
                 case Some(fields) =>
