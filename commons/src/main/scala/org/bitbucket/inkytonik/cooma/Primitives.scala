@@ -2,6 +2,7 @@ package org.bitbucket.inkytonik.cooma
 
 import java.io._
 
+import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp.{ADD, DIV, MUL, POW, SUB}
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
 
@@ -74,6 +75,7 @@ object Primitives {
                         val k = fresh("k")
                         val y = fresh("y")
                         val p = fresh("p")
+
                         interp.fldR(
                             pair._1, interp.clsR(
                                 interp.emptyEnv, k, y,
@@ -198,6 +200,32 @@ object Primitives {
         }
 
         def show = "select"
+    }
+
+    object IntPrimOp extends Enumeration {
+        type IntPrimOp = Value
+        val ADD, SUB, MUL, DIV, POW = Value
+    }
+
+    case class IntBinOpP[I <: Backend](op : IntPrimOp.IntPrimOp) extends Primitive[I] {
+        val numArgs = 2
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            val operands = xs.map(s => interp.isIntR(interp.lookupR(rho, s)) match {
+                case Some(v) => v
+                case _       => BigInt(0)
+            })
+
+            interp.intR(op match {
+                case ADD => operands.sum
+                case SUB => operands.reduce(_ - _)
+                case MUL => operands.product
+                case DIV => operands.reduce(_ / _)
+                case POW => operands.reduce((x, y) => x.pow(y.toInt))
+            })
+        }
+
+        def show = "intPrm"
     }
 
 }

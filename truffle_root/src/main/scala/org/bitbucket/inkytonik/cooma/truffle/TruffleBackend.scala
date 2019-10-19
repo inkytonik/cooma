@@ -1,8 +1,9 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
-import java.io.{PrintWriter}
+import java.io.PrintWriter
 import java.math.BigInteger
 
+import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
 import org.bitbucket.inkytonik.cooma.truffle.runtime._
 import org.bitbucket.inkytonik.cooma.{Backend, Config, Primitives}
@@ -82,29 +83,26 @@ class TruffleBackend(config : Config) extends Backend {
 
     type Primitive = org.bitbucket.inkytonik.cooma.Primitives.Primitive[TruffleBackend]
 
-    def argumentP(i : Int) : Primitive = {
+    def argumentP(i : Int) : Primitive =
         Primitives.ArgumentP(i)
-    }
 
-    def capabilityP(cap : String) : Primitive = {
+    def capabilityP(cap : String) : Primitive =
         Primitives.CapabilityP(cap)
-    }
 
-    def consoleWriteP(filename : String) : Primitive = {
+    def consoleWriteP(filename : String) : Primitive =
         Primitives.WriterWriteP(filename, new PrintWriter(System.out))
-    }
 
-    def readerReadP(filename : String) : Primitive = {
+    def readerReadP(filename : String) : Primitive =
         Primitives.ReaderReadP(filename)
-    }
 
-    def recConcatP() : Primitive = {
+    def recConcatP() : Primitive =
         Primitives.RecConcatP()
-    }
 
-    def recSelectP() : Primitive = {
+    def recSelectP() : Primitive =
         Primitives.RecSelectP()
-    }
+
+    def intP(op : IntPrimOp.IntPrimOp) : Primitive =
+        Primitives.IntP(op)
 
     //Runtime Values
 

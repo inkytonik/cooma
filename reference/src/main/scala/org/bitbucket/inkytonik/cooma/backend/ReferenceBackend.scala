@@ -9,9 +9,9 @@
  */
 
 package org.bitbucket.inkytonik.cooma.backend
-import java.io.{StringWriter}
+import java.io.StringWriter
 
-import org.bitbucket.inkytonik.cooma.{Backend, Config, Driver}
+import org.bitbucket.inkytonik.cooma.{Backend, Config, Driver, Primitives}
 import org.bitbucket.inkytonik.kiama.util.Source
 
 class ReferenceBackend(
@@ -123,6 +123,9 @@ class ReferenceBackend(
 
     def recSelectP() : Primitive =
         RecSelectP()
+
+    def intP(op : IntPrimOp.IntPrimOp) : Primitive =
+        Primitives.IntP(op)
 
     //Value runtimes
 

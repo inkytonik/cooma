@@ -5,6 +5,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.val;
 
+import java.util.Arrays;
+
 
 @Value
 @EqualsAndHashCode(callSuper=false)

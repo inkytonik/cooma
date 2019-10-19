@@ -57,6 +57,9 @@ public abstract class CoomaAppFTermNode extends CoomaTermNode {
                     .extend(closure.getK(), obtainFromRho(this.k))
                     .extend(closure.getX(), obtainFromRho(this.x));
             replaceRho(p1);
+            if (closure.getZ().getParent() == null){
+                this.insert(closure.getZ());
+            }
             return closure.getZ().executeGeneric(frame);
 
         } else if (value instanceof ErrorRuntimeValue) {

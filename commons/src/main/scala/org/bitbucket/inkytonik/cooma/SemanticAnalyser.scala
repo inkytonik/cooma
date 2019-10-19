@@ -63,6 +63,7 @@ class SemanticAnalyser(
                             checkMatch(e, cs)
                         case Sel(e, f) =>
                             checkFieldUse(e, f)
+                        //TODO: add checks for prim
                     }
         }
 
@@ -366,6 +367,9 @@ class SemanticAnalyser(
                 }
 
             case _ : Num =>
+                Some(IntT())
+
+            case _ : Prm =>
                 Some(IntT())
 
             case Rec(fields) =>

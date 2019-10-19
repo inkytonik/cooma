@@ -1,5 +1,7 @@
 package org.bitbucket.inkytonik.cooma
 
+import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp
+
 trait Compiler {
 
     self : Backend =>
@@ -112,6 +114,18 @@ trait Compiler {
                 val x = fresh("x")
                 letV(x, intV(i),
                     kappa(x))
+
+            case Prm(p, args) =>
+                val primitivesTable = Map(
+                    "IntAdd" -> intP(IntPrimOp.ADD),
+                    "IntSub" -> intP(IntPrimOp.SUB),
+                    "IntMul" -> intP(IntPrimOp.MUL),
+                    "IntDiv" -> intP(IntPrimOp.DIV),
+                    "IntPow" -> intP(IntPrimOp.POW)
+                )
+                val x = fresh("x")
+                compilePrimArgs(args, cArgs => letV(x, prmV(primitivesTable(p), cArgs),
+                    kappa(x)))
 
             case Rec(fields) =>
                 val x = fresh("x")
@@ -234,6 +248,19 @@ trait Compiler {
             case Field(f, e) +: t =>
                 compile(e, z =>
                     compileRec(t, fvs => kappa(fieldValue(f, z) +: fvs)))
+
+            case Vector() =>
+                kappa(Vector())
+        }
+
+    def compilePrimArgs(
+        fields : Vector[Expression],
+        kappa : Vector[String] => Term
+    ) : Term =
+        fields match {
+            case e +: t =>
+                compile(e, z =>
+                    compilePrimArgs(t, fvs => kappa(z +: fvs)))
 
             case Vector() =>
                 kappa(Vector())

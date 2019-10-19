@@ -35,6 +35,9 @@ trait Backend {
     def recConcatP() : Primitive
     def recSelectP() : Primitive
 
+    import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp.IntPrimOp
+    def intP(op : IntPrimOp) : Primitive
+
     def showTerm(t : Term) : String
 
     type ValueR
