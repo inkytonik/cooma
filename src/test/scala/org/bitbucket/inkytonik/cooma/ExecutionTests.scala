@@ -593,7 +593,37 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "false",
                     "<false = {}>",
                     "<false : Unit>"
-                )
+                ),
+
+                //Primitives
+                ExecTest(
+                    "Prim keyword Primitive add",
+                    "prim IntAdd(2, 2)",
+                    "4",
+                    "Int"
+                ),
+
+                ExecTest(
+                    "Prim keyword Primitive sub",
+                    "prim IntSub(2, 2)",
+                    "0",
+                    "Int"
+                ),
+
+                ExecTest(
+                    "Primitive record Ints add",
+                    "Ints.add(2, 2)",
+                    "4",
+                    "Int"
+                ),
+
+                ExecTest(
+                    "Primitive record Ints sub",
+                    "Ints.sub(2, 2)",
+                    "0",
+                    "Int"
+                ),
+
             )
 
         // Compile and run tests

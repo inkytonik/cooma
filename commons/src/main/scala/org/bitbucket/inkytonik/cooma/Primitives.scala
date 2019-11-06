@@ -216,13 +216,17 @@ object Primitives {
                 case _       => BigInt(0)
             })
 
-            interp.intR(op match {
-                case ADD => operands.sum
-                case SUB => operands.reduce(_ - _)
-                case MUL => operands.product
-                case DIV => operands.reduce(_ / _)
-                case POW => operands.reduce((x, y) => x.pow(y.toInt))
-            })
+            try {
+                interp.intR(op match {
+                    case ADD => operands.sum
+                    case SUB => operands.reduce(_ - _)
+                    case MUL => operands.product
+                    case DIV => operands.reduce(_ / _)
+                    case POW => operands.reduce((x, y) => x.pow(y.toInt))
+                })
+            } catch {
+                case e : Throwable => interp.errR(s"Error executing primitive: ${e.getMessage}")
+            }
         }
 
         def show = "intPrm"

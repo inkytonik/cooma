@@ -875,8 +875,69 @@ class SemanticTests extends Tests {
                    |{w = 0, x = 1, y = 2} & {y = 1, x = 2}
                    |^
                    |"""
-            )
-        )
+            ),
+
+            //Primitives semantic tests
+
+            SemanticTest(
+                "Wrong number of arguments for int binary op primitive (no args)",
+                "prim IntAdd()",
+                """|1:1:error: primitive expects 2 arguments, provided 0.
+                   |prim IntAdd()
+                   |^
+                   |"""
+            ),
+
+            SemanticTest(
+                "Wrong number of arguments for int binary op primitive (less)",
+                "prim IntAdd(2)",
+                """|1:1:error: primitive expects 2 arguments, provided 1.
+                   |prim IntAdd(2)
+                   |^
+				   |"""
+            ),
+
+            SemanticTest(
+                "Wrong number of arguments for int binary op primitive (more)",
+                "prim IntAdd(2,2,2)",
+                """|1:1:error: primitive expects 2 arguments, provided 3.
+                   |prim IntAdd(2,2,2)
+                   |^
+                   |"""
+            ),
+
+            SemanticTest(
+                "Wrong argument type for int binary op primitive",
+                "prim IntAdd(\"2\",2)",
+                """|1:13:error: expected Int, got "2" of type String
+                   |prim IntAdd("2",2)
+                   |            ^
+                   |"""
+            ),
+
+            SemanticTest(
+                "Wrong argument type (cont) for int binary op primitive",
+                "prim IntAdd(2,\"2\")",
+                """|1:15:error: expected Int, got "2" of type String
+                   |prim IntAdd(2,"2")
+                   |              ^
+                   |"""
+            ),
+
+            SemanticTest(
+                "Wrong argument type and number of arguments for int binary op primitive",
+                "prim IntAdd(2,\"2\",2)",
+                """|1:1:error: primitive expects 2 arguments, provided 3.
+                   |prim IntAdd(2,"2",2)
+                   |^
+				   |1:15:error: expected Int, got "2" of type String
+                   |prim IntAdd(2,"2",2)
+                   |              ^
+                   |"""
+            ),
+
+
+    )
 
     for (aTest <- semanticTests) {
         test(aTest.name) {

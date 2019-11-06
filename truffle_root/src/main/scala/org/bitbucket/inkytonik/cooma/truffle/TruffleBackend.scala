@@ -102,7 +102,7 @@ class TruffleBackend(config : Config) extends Backend {
         Primitives.RecSelectP()
 
     def intP(op : IntPrimOp.IntPrimOp) : Primitive =
-        Primitives.IntP(op)
+        Primitives.IntBinOpP(op)
 
     //Runtime Values
 

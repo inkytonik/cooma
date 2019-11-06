@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp
+import org.bitbucket.inkytonik.cooma.Primitives.{IntPrimOp}
 
 trait Compiler {
 
@@ -33,6 +33,18 @@ trait Compiler {
      */
     def isCapabilityName(n : String) : Boolean =
         (n == "Writer") || (n == "Reader") || (n == "ReaderWriter")
+
+    /**
+     * Case class and map that stores primitives metadata.
+     */
+    case class PrimitiveMeta(prm : Primitive, expectedType : Expression)
+    val primitivesTable = Map(
+        "IntAdd" -> PrimitiveMeta(intP(IntPrimOp.ADD), IntT()),
+        "IntSub" -> PrimitiveMeta(intP(IntPrimOp.SUB), IntT()),
+        "IntMul" -> PrimitiveMeta(intP(IntPrimOp.MUL), IntT()),
+        "IntDiv" -> PrimitiveMeta(intP(IntPrimOp.DIV), IntT()),
+        "IntPow" -> PrimitiveMeta(intP(IntPrimOp.POW), IntT())
+    )
 
     /**
      * Compile an expression to produce its value via the halt
@@ -116,15 +128,8 @@ trait Compiler {
                     kappa(x))
 
             case Prm(p, args) =>
-                val primitivesTable = Map(
-                    "IntAdd" -> intP(IntPrimOp.ADD),
-                    "IntSub" -> intP(IntPrimOp.SUB),
-                    "IntMul" -> intP(IntPrimOp.MUL),
-                    "IntDiv" -> intP(IntPrimOp.DIV),
-                    "IntPow" -> intP(IntPrimOp.POW)
-                )
                 val x = fresh("x")
-                compilePrimArgs(args, cArgs => letV(x, prmV(primitivesTable(p), cArgs),
+                compilePrimArgs(args, cArgs => letV(x, prmV(primitivesTable(p).prm, cArgs),
                     kappa(x)))
 
             case Rec(fields) =>
@@ -254,13 +259,13 @@ trait Compiler {
         }
 
     def compilePrimArgs(
-        fields : Vector[Expression],
+        args : Vector[Expression],
         kappa : Vector[String] => Term
     ) : Term =
-        fields match {
+        args match {
             case e +: t =>
-                compile(e, z =>
-                    compilePrimArgs(t, fvs => kappa(z +: fvs)))
+                compile(e, argE =>
+                    compilePrimArgs(t, argT => kappa(argE +: argT)))
 
             case Vector() =>
                 kappa(Vector())
@@ -311,6 +316,12 @@ trait Compiler {
                 val x = fresh("x")
                 letV(x, intV(i),
                     appC(k, x))
+
+            case Prm(p, args) =>
+                val x = fresh("x")
+                compilePrimArgs(args, cArgs =>
+                    letV(x, prmV(primitivesTable(p).prm, cArgs),
+                        appC(k, x)))
 
             case Rec(fields) =>
                 val x = fresh("x")

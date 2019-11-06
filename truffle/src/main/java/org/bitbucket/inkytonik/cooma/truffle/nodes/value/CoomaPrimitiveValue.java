@@ -31,14 +31,6 @@ public class CoomaPrimitiveValue extends CoomaValueNode {
         RuntimeValue primitive = (RuntimeValue) p.eval(backend, obtainRho(),
                 JavaConverters.asScalaIteratorConverter(Arrays.asList(xs).iterator()).asScala().toVector(),
                 JavaConverters.asScalaIteratorConverter(Arrays.asList(getArgs()).iterator()).asScala().toVector());
-
-//        if (primitive instanceof RecRuntimeValue){
-//            Arrays.stream(((RecRuntimeValue) primitive).getFields())
-//                    .filter( field -> field.getV() instanceof FunctionClosure)
-//                    .filter( field -> ((FunctionClosure) field.getV()).getZ().getParent() == null )
-//                    .forEach( field -> this.insert(( (FunctionClosure) field.getV()).getZ()));
-//        }
-
         return primitive;
     }
 }

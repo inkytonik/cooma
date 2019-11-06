@@ -1,1 +1,3 @@
-prim IntAdd(9, 4)
+{
+   Ints.add(Ints.sub(2,1),-1)
+}

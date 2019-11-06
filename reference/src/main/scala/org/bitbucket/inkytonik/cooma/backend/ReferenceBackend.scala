@@ -125,7 +125,7 @@ class ReferenceBackend(
         RecSelectP()
 
     def intP(op : IntPrimOp.IntPrimOp) : Primitive =
-        Primitives.IntP(op)
+        Primitives.IntBinOpP(op)
 
     //Value runtimes
 
