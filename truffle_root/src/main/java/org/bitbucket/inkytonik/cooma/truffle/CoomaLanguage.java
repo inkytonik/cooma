@@ -68,7 +68,9 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
     @Override
     protected CoomaContext createContext(TruffleLanguage.Env env) {
-        return new CoomaContext(env);
+        String[] args = env.getApplicationArguments();
+        Config config = new Config(collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
+        return new CoomaContext(env, new TruffleBackend(config), config);
     }
 
     @Override
@@ -85,10 +87,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
-        String[] args = getCurrentContext(this.getClass()).getEnv().getApplicationArguments();
-        Config config = new Config(collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
-        config.verify();
-
+        Config config = getContextReference().get().getConfig();
         String source = request.getSource().getCharacters().toString();
         if (source.isEmpty()) {
             compileFile(config);

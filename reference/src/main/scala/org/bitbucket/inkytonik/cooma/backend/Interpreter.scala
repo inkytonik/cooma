@@ -11,8 +11,6 @@
 package org.bitbucket.inkytonik.cooma
 package backend
 
-import org.bitbucket.inkytonik.cooma.Primitives.{IntBinOpP, IntPrimOp}
-
 class Interpreter(config : Config) {
 
     self : ReferenceBackend =>
@@ -48,9 +46,7 @@ class Interpreter(config : Config) {
         Vector(
             ("false", VarR("false", unit)),
             ("true", VarR("true", unit)),
-            ("Ints", RecR(IntPrimOp.values.map(op => FldR(op.toString.toLowerCase(), ClsR(NilE(), "k5", "x",
-                LetV("f6", FunV("j7", "y", LetV("k8", PrmV(IntBinOpP(op), Vector("x", "y")), AppC("j7", "k8"))),
-                    AppC("k5", "f6"))))).toVector))
+            ("Ints", Primitives.generateDynamicRuntime(this))
         )
 
     val predefEnv =

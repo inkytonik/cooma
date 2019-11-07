@@ -2,7 +2,6 @@ package org.bitbucket.inkytonik.cooma
 
 import java.io._
 
-import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp.{ADD, DIV, MUL, POW, SUB}
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
 
@@ -213,16 +212,16 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val operands = xs.map(s => interp.isIntR(interp.lookupR(rho, s)) match {
                 case Some(v) => v
-                case _       => BigInt(0)
+                case _       => BigInt(0) //TODO: this should be an error.
             })
 
             try {
                 interp.intR(op match {
-                    case ADD => operands.sum
-                    case SUB => operands.reduce(_ - _)
-                    case MUL => operands.product
-                    case DIV => operands.reduce(_ / _)
-                    case POW => operands.reduce((x, y) => x.pow(y.toInt))
+                    case IntPrimOp.ADD => operands.sum
+                    case IntPrimOp.SUB => operands.reduce(_ - _)
+                    case IntPrimOp.MUL => operands.product
+                    case IntPrimOp.DIV => operands.reduce(_ / _)
+                    case IntPrimOp.POW => operands.reduce((x, y) => x.pow(y.toInt))
                 })
             } catch {
                 case e : Throwable => interp.errR(s"Error executing primitive: ${e.getMessage}")
@@ -232,4 +231,9 @@ object Primitives {
         def show = "intPrm"
     }
 
+    def generateDynamicRuntime[I <: Backend](interp : I) : interp.ValueR = {
+        interp.recR(IntPrimOp.values.map(op => interp.fldR(op.toString.toLowerCase(), interp.clsR(interp.emptyEnv, "k5", "x",
+            interp.letV("f6", interp.funV("j7", "y", interp.letV("k8", interp.prmV(interp.intP(op), Vector("x", "y")), interp.appC("j7", "k8"))),
+                interp.appC("k5", "f6"))))).toVector)
+    }
 }
