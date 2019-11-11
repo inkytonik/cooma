@@ -79,6 +79,7 @@ object SymbolTable extends Environments[CoomaEntity] {
         "IntMul" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntDiv" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntPow" -> FunT(Vector(IntT(), IntT()), IntT()),
+        //"IntLTE" -> FunT(Vector(IntT(), IntT()), //get the Boolean type from the predef environment ),
         "StrConcat" -> FunT(Vector(StrT(), StrT()), StrT()),
     )
 

@@ -624,6 +624,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Int"
                 ),
 
+
             )
 
         // Compile and run tests
@@ -827,7 +828,45 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "pre-defined value",
                     "true",
                     "res0 : <true : Unit> = <true = {}>"
-                )
+                ),
+
+				//Primitives
+
+                REPLTest(
+                    "Ints primitives - integer addition",
+                    "Ints.add(10, 3)",
+                    "res0 : Int = 13"
+                ),
+
+                REPLTest(
+                    "Ints primitives - integer substraction",
+                    "Ints.sub(10, 3)",
+                    "res0 : Int = 7"
+                ),
+
+                REPLTest(
+                    "Ints primitives - integer substraction, negative result",
+                    "Ints.sub(3, 10)",
+                    "res0 : Int = -7"
+                ),
+
+                REPLTest(
+                    "Ints primitives - integer multiplication",
+                    "Ints.mul(10, 3)",
+                    "res0 : Int = 30"
+                ),
+
+                REPLTest(
+                    "Ints primitives - integer division",
+                    "Ints.div(10, 3)",
+                    "res0 : Int = 3"
+                ),
+
+                REPLTest(
+					"Ints primitives - division by zero",
+					"Ints.div(2, 0)",
+					"Error executing primitive: BigInteger divide by zero"
+				)
 
             )
 

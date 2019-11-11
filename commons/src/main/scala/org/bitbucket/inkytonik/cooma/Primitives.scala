@@ -212,7 +212,7 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val operands = xs.map(s => interp.isIntR(interp.lookupR(rho, s)) match {
                 case Some(v) => v
-                case _       => BigInt(0) //TODO: this should be an error.
+                case _       => sys.error(s"IntBinOpP.run: can't find operand $s on environment.")
             })
 
             try {
@@ -232,6 +232,7 @@ object Primitives {
     }
 
     def generateDynamicRuntime[I <: Backend](interp : I) : interp.ValueR = {
+        //rename, fs for functions, js and ks for continuations
         interp.recR(IntPrimOp.values.map(op => interp.fldR(op.toString.toLowerCase(), interp.clsR(interp.emptyEnv, "k5", "x",
             interp.letV("f6", interp.funV("j7", "y", interp.letV("k8", interp.prmV(interp.intP(op), Vector("x", "y")), interp.appC("j7", "k8"))),
                 interp.appC("k5", "f6"))))).toVector)

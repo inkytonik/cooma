@@ -220,6 +220,11 @@ trait REPL extends REPLBase[Config] {
     }
 
     /**
+     * Output in the REPL for error messages
+     */
+    def errorOutput(i : String, config : Config) = config.output().emitln(i)
+
+    /**
      * Extractor for commands, splits the line into separate words.
      */
     object Command {

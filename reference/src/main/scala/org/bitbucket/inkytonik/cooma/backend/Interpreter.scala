@@ -44,7 +44,7 @@ class Interpreter(config : Config) {
 
     val predef =
         Vector(
-            ("false", VarR("false", unit)),
+            ("false", VarR("false", unit)), //add these two for the Backend
             ("true", VarR("true", unit)),
             ("Ints", Primitives.generateDynamicRuntime(this))
         )
@@ -57,8 +57,8 @@ class Interpreter(config : Config) {
 
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
         interpret(term, predefEnv, args, config) match {
-            case ErrR(msg) =>
-                config.output().emitln(s"cooma: $msg")
+            case err @ ErrR(msg) =>
+                config.output().emitln(showRuntimeValue(err))
                 if (config.server()) {
                     if (driver.settingBool("showResult"))
                         driver.publishProduct(source, "result", "cooma", pretty(value(msg)))
@@ -209,7 +209,7 @@ class Interpreter(config : Config) {
             case ClsR(v1, v2, v3, v4) =>
                 text("<function>")
             case ErrR(msg) =>
-                text(msg)
+                text(s"cooma: $msg")
             case IntR(i) =>
                 value(i)
             case RecR(v1) =>
