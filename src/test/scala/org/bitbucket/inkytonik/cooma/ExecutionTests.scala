@@ -865,7 +865,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 REPLTest(
 					"Ints primitives - division by zero",
 					"Ints.div(2, 0)",
-					"Error executing primitive: BigInteger divide by zero"
+					"cooma: Error executing primitive: BigInteger divide by zero"
 				)
 
             )

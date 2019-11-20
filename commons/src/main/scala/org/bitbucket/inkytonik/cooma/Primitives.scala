@@ -1,5 +1,7 @@
 package org.bitbucket.inkytonik.cooma
 
+import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter, IOException, InputStreamReader, Writer}
+
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
 
@@ -42,7 +44,7 @@ object Primitives {
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
 
-            lazy val in : Reader =
+            lazy val in : BufferedReader =
                 new BufferedReader(filename match {
                     case CoomaConstants.CONSOLEIO => new InputStreamReader(System.in)
                     case _                        => new BufferedReader(new FileReader(filename))
