@@ -33,8 +33,8 @@ trait ReferenceREPL extends REPL {
             val args = config.filenames()
             val result = interpret(term, currentDynamicEnv, args, config)
             isErrR(result) match {
-                case Some(msg) =>
-                    errorOutput(msg, config)
+                case Some(_) =>
+                    errorOutput(Some(result), config)
                 case None => {
                     currentDynamicEnv = consEnv(currentDynamicEnv, i, result)
                     output(i, tipe, Some(result), config)

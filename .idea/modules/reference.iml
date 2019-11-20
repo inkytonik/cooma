@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="reference [file:/home/diego/dev/cooma/]" external.linked.project.path="$MODULE_DIR$/../../reference" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
+<module external.linked.project.id="reference [file:/D:/Facu/MRes/DevWorkTony/cooma/]" external.linked.project.path="$MODULE_DIR$/../../reference" external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
     <output url="file://$MODULE_DIR$/../../reference/target/scala-2.12/classes" />
     <output-test url="file://$MODULE_DIR$/../../reference/target/scala-2.12/test-classes" />
@@ -11,23 +11,23 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="commons" exported="" />
-    <orderEntry type="library" name="sbt: com.google.code.gson:gson:2.7:jar" level="project" />
-    <orderEntry type="library" name="sbt: com.google.guava:guava:21.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: jline:jline:2.14.6:jar" level="project" />
-    <orderEntry type="library" name="sbt: junit:junit:4.8.2:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.dsinfo:dsinfo_2.12:0.4.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.dsprofile:dsprofile_2.12:0.4.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.kiama:kiama-extras_2.12:2.3.0-SNAPSHOT:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.kiama:kiama_2.12:2.3.0-SNAPSHOT:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j:0.7.2:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.7.2:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.7.2:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.eclipse.xtend:org.eclipse.xtend.lib:2.16.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.16.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.16.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.rogach:scallop_2.12:3.3.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.12.8:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.12.8:jar" level="project" />
     <orderEntry type="library" name="sbt: xtc:rats:2.3.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.12.8:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.12.8:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.rogach:scallop_2.12:3.3.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.16.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.16.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.xtend:org.eclipse.xtend.lib:2.16.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.7.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j.generator:0.7.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.eclipse.lsp4j:org.eclipse.lsp4j:0.7.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.kiama:kiama_2.12:2.3.0-SNAPSHOT:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.kiama:kiama-extras_2.12:2.3.0-SNAPSHOT:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.dsprofile:dsprofile_2.12:0.4.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.bitbucket.inkytonik.dsinfo:dsinfo_2.12:0.4.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: junit:junit:4.8.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: jline:jline:2.14.6:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.google.guava:guava:21.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.google.code.gson:gson:2.7:jar" level="project" />
   </component>
 </module>

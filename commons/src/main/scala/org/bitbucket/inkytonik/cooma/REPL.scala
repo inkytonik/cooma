@@ -6,13 +6,13 @@ trait REPL extends REPLBase[Config] {
 
     self : Compiler with Backend =>
 
-    import org.bitbucket.inkytonik.cooma.BuildInfo
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, show}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.kiama.relation.Tree
-    import org.bitbucket.inkytonik.kiama.util.{Console, Source, StringConsole}
-    import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
     import org.bitbucket.inkytonik.cooma.SymbolTable._
+    import org.bitbucket.inkytonik.kiama.relation.Tree
+    import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
+    import org.bitbucket.inkytonik.kiama.util.{Console, Source, StringConsole}
+
     import scala.collection.mutable.ListBuffer
 
     override val prompt = "\ncooma> "
@@ -222,7 +222,12 @@ trait REPL extends REPLBase[Config] {
     /**
      * Output in the REPL for error messages
      */
-    def errorOutput(i : String, config : Config) = config.output().emitln(i)
+    def errorOutput(optResult : Option[OutputValueR], config : Config) = {
+        config.output().emitln(optResult match {
+            case Some(result) => showRuntimeValue(result)
+            case None         => ""
+        })
+    }
 
     /**
      * Extractor for commands, splits the line into separate words.

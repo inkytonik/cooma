@@ -1,7 +1,5 @@
 package org.bitbucket.inkytonik.cooma
 
-import java.io._
-
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
 
@@ -236,5 +234,32 @@ object Primitives {
         interp.recR(IntPrimOp.values.map(op => interp.fldR(op.toString.toLowerCase(), interp.clsR(interp.emptyEnv, "k5", "x",
             interp.letV("f6", interp.funV("j7", "y", interp.letV("k8", interp.prmV(interp.intP(op), Vector("x", "y")), interp.appC("j7", "k8"))),
                 interp.appC("k5", "f6"))))).toVector)
+        interp.recR(IntPrimOp.values.map(op => {
+            interp.fldR(
+                op.toString.toLowerCase(),
+                interp.clsR(
+                    interp.emptyEnv,
+                    "k5",
+                    "x",
+                    interp.letV(
+                        "f6",
+                        interp.funV(
+                            "j7",
+                            "y",
+                            interp.letV(
+                                "k8",
+                                interp.prmV(
+                                    interp.intP(op),
+                                    Vector("x", "y")
+                                ),
+                                interp.appC("j7", "k8")
+                            )
+                        ),
+                        interp.appC("k5", "f6")
+                    )
+                )
+            )
+        }).toVector)
     }
 }
+
