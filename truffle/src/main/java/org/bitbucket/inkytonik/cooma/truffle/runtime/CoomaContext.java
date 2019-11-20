@@ -6,11 +6,7 @@ import org.bitbucket.inkytonik.cooma.Backend;
 import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.Primitives;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
-
 import java.io.PrintStream;
-import java.util.Arrays;
-
-import static scala.collection.JavaConverters.collectionAsScalaIterableConverter;
 
 
 /**
