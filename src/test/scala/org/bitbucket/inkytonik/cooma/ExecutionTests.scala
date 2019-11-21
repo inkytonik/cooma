@@ -11,6 +11,7 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
+import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp
 import org.bitbucket.inkytonik.kiama.util.TestCompilerWithConfig
 
 class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
@@ -595,37 +596,24 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<false : Unit>"
                 ),
 
-                //Primitives
-                ExecTest(
-                    "Prim keyword Primitive add",
-                    "prim IntAdd(2, 2)",
-                    "4",
-                    "Int"
-                ),
-
-                ExecTest(
-                    "Prim keyword Primitive sub",
-                    "prim IntSub(2, 2)",
-                    "0",
-                    "Int"
-                ),
-
-                ExecTest(
-                    "Primitive record Ints add",
-                    "Ints.add(2, 2)",
-                    "4",
-                    "Int"
-                ),
-
-                ExecTest(
-                    "Primitive record Ints sub",
-                    "Ints.sub(2, 2)",
-                    "0",
-                    "Int"
-                ),
-
-
-            )
+            )++ Primitives.IntPrimOp.values.flatMap(op => {
+                def underscoreToCamel(name : String) = name.head.toUpper + name.tail
+                val primOp = s"Int${underscoreToCamel(op.toString.toLowerCase)}"
+                Vector(
+                    ExecTest(
+                        s"Execution of primitive through Prim Keyword - ${primOp}",
+                        s"prim ${primOp}(2, 2)",
+                        op match {
+                            case IntPrimOp.ADD => "4"
+                            case IntPrimOp.SUB => "0"
+                            case IntPrimOp.MUL => "4"
+                            case IntPrimOp.DIV => "1"
+                            case IntPrimOp.POW => "4"
+                        },
+                        "Int"
+                    ),
+                )
+            })
 
         // Compile and run tests
 
@@ -867,8 +855,33 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 					"Ints.div(2, 0)",
 					"cooma: Error executing primitive: BigInteger divide by zero"
 				)
-
-            )
+            ) ++ Primitives.IntPrimOp.values.map(op => {
+                REPLTest(
+                    s"Primitive ${op} has the correct type",
+                    s"Ints.${op.toString.toLowerCase}",
+                    "res0 : (Int, Int) => Int = <function>"
+                )
+            }) ++ Primitives.IntPrimOp.values.map(op => {
+                REPLTest(
+                    s"Primitive ${op} partial application has the correct type",
+                    s"Ints.${op.toString.toLowerCase}(1)",
+                    "res0 : (Int) => Int = <function>"
+                )
+            }) ++ Primitives.IntPrimOp.values.flatMap(op => {
+                Vector(
+                    REPLTest(
+                        s"Primitive ${op} produces the expected result",
+                        s"Ints.${op.toString.toLowerCase}(2,2)",
+                        s"res0 : Int = ${op match {
+                            case IntPrimOp.ADD => "4"
+                            case IntPrimOp.SUB => "0"
+                            case IntPrimOp.MUL => "4"
+                            case IntPrimOp.DIV => "1"
+                            case IntPrimOp.POW => "4"
+                        }}"
+                    )
+                )
+            })
 
         for (aTest <- replTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
@@ -1077,7 +1090,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
     }
 
     def runString(name : String, program : String, options : Seq[String], backend : Backend) : String = {
-        val allArgs = Seq("--Koutput", "string") ++ options :+ "test.cooma"
+
+
+    val allArgs = Seq("--Koutput", "string") ++ options :+ "test.cooma"
         runTest(name, backend.frontend.interpret(name, program, _), options, allArgs)
     }
 
