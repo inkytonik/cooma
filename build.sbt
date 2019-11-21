@@ -44,7 +44,7 @@ lazy val commonsettings = Seq(
 	},
 	testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
 	logBuffered in Test := false,
-	fork := true,
+	//fork := true,
 	connectInput in run := true,
 	outputStrategy in run := Some(StdoutOutput),
 
@@ -79,6 +79,7 @@ lazy val commonsettings = Seq(
 		   |file, You can obtain one at http://mozilla.org/MPL/2.0/.
 		   |""".stripMargin
 	)),
+	updateOptions := updateOptions.value.withCachedResolution(true)
 )
 
 // Assembly
@@ -104,12 +105,13 @@ lazy val root = (project in file("."))
 		assemblySettings,
 		commonsettings,
 		mainClass in Compile := (mainClass in Compile in reference).value,
-		libraryDependencies ++= kiamaDependencies ++ Seq(
+		libraryDependencies ++= Seq(
 			"org.scalatest" %% "scalatest" % "3.0.5" % "test",
 			"org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
-		)
+		) ++ kiamaDependencies
 	)
 	.dependsOn(
+		commons,
 		reference,
 		truffle,
 		truffle_root,
@@ -144,7 +146,7 @@ lazy val truffle = (project in file("truffle"))
 		assemblySettings,
 		commonsettings,
 		compileOrder := CompileOrder.Mixed,
-		libraryDependencies ++= kiamaDependencies ++ Seq(
+		libraryDependencies ++= Seq(
 				"org.projectlombok" % "lombok" % "1.16.16",
 				"org.graalvm.truffle" % "truffle-api" % "19.0.0",
 				"org.graalvm.truffle" % "truffle-dsl-processor" % "19.0.0",

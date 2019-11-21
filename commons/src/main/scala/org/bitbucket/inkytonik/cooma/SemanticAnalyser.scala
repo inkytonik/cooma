@@ -63,8 +63,21 @@ class SemanticAnalyser(
                             checkMatch(e, cs)
                         case Sel(e, f) =>
                             checkFieldUse(e, f)
+                        case prm @ Prm(_, _) =>
+                            checkPrimitive(prm)
                     }
         }
+
+    def checkPrimitive(prm : Prm) : Messages = {
+        primitivesTypesTable.get(prm.identifier) match {
+            case Some(funT) =>
+                if (prm.optExpressions.length != funT.optExpressions.length)
+                    error(prm, s"primitive expects ${funT.optExpressions.length} arguments, provided ${prm.optExpressions.length}.")
+                else
+                    noMessages
+            case None => error(prm, s"primitive ${prm.identifier} not found.")
+        }
+    }
 
     def checkExpressionType(e : Expression) : Messages =
         (tipe(e), expectedType(e)) match {
@@ -368,6 +381,17 @@ class SemanticAnalyser(
             case _ : Num =>
                 Some(IntT())
 
+            case Prm(i, args) =>
+                primitivesTypesTable.get(i) match {
+                    case Some(FunT(ts, t)) =>
+                        if (args.length == ts.length)
+                            unalias(t)
+                        else
+                            None
+                    case _ =>
+                        None
+                }
+
             case Rec(fields) =>
                 makeRow(fields).map(RecT)
 
@@ -565,6 +589,15 @@ class SemanticAnalyser(
 
             case tree.parent(_ : FunT) =>
                 Some(TypT())
+
+            case tree.parent.pair(a, Prm(i, _)) =>
+                val argnum = tree.index(a)
+                primitivesTypesTable.get(i) match {
+                    case Some(FunT(ts, _)) if ts.length > argnum =>
+                        unalias(ts(argnum))
+                    case _ =>
+                        None
+                }
 
             case _ =>
                 None

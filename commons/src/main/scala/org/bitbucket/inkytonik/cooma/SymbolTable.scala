@@ -72,6 +72,18 @@ object SymbolTable extends Environments[CoomaEntity] {
         override val isError = true
     }
 
+
+    val primitivesTypesTable = Map(
+        "IntAdd" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntSub" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntMul" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntDiv" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntPow" -> FunT(Vector(IntT(), IntT()), IntT()),
+        //"IntLTE" -> FunT(Vector(IntT(), IntT()), //get the Boolean type from the predef environment ),
+        "StrConcat" -> FunT(Vector(StrT(), StrT()), StrT()),
+    )
+
+
     // Pre-defined entities
 
     val predefSource =
@@ -86,6 +98,15 @@ object SymbolTable extends Environments[CoomaEntity] {
                 val Reader = {read : () => String}
                 val ReaderWriter = {read : () => String, write : (String) => Unit}
                 val Writer = {write : (String) => Unit}
+
+                // Primitives
+                val Ints = {
+                    add = fun (x : Int, y : Int) = prim IntAdd(x, y),
+					sub = fun (x : Int, y : Int) = prim IntSub(x, y),
+                    mul = fun (x : Int, y : Int) = prim IntMul(x, y),
+	                div = fun (x : Int, y : Int) = prim IntDiv(x, y),
+                    pow = fun (x : Int, y : Int) = prim IntPow(x, y)
+                }
 
                 0
             }
@@ -120,5 +141,7 @@ object SymbolTable extends Environments[CoomaEntity] {
             sys.exit(1)
         }
     }
+
+
 
 }

@@ -35,11 +35,46 @@ trait Backend {
     def recConcatP() : Primitive
     def recSelectP() : Primitive
 
+    import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp.IntPrimOp
+    def intP(op : IntPrimOp) : Primitive
+
     def showTerm(t : Term) : String
 
     type ValueR
-    def showRuntimeValue(v : ValueR) : String
+    def errR(msg : String) : ValueR
+    def strR(str : String) : ValueR
+    def varR(c : String, v : ValueR) : ValueR
+    def intR(num : BigInt) : ValueR
+    def clsR(env : Env, f : String, x : String, e : Term) : ValueR
+    def recR(fields : Vector[FldR]) : ValueR
+
+    def isErrR(value : ValueR) : Option[String]
+    def isStrR(value : ValueR) : Option[String]
+    def isIntR(value : ValueR) : Option[BigInt]
+    def isRecR(value : ValueR) : Option[Vector[FldR]]
+
+    type FldR
+    def fldR(x : String, v : ValueR) : FldR
+    def isFldR(value : FldR) : Option[(String, ValueR)]
+
+    def showRuntimeValue(v : OutputValueR) : String
 
     def backendName : String
+
+    type Env
+    def emptyEnv : Env
+
+    def lookupR(rho : Env, x : String) : ValueR
+
+    def getConfig : Config
+
+    /**
+     * When evaluating a program using Truffle, what we get as an output
+     * are org.graalvm.polyglot.Value values instead of ValueRs,
+     * therefore, we need to have this second output type.
+     * For the reference interpreter, this type will point to the ValueR and
+     * in the case of the truffle, to org.graalvm.polyglot.Value
+     */
+    type OutputValueR
 
 }

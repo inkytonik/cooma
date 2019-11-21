@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
-import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, CoomaConstants, REPL}
+import org.bitbucket.inkytonik.cooma._
 
 trait TruffleREPL extends REPL {
 
@@ -27,7 +27,11 @@ trait TruffleREPL extends REPL {
         execute(i, tipe, config, {
             val line = format(program).layout
             val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
-            output(i, tipe, Some(result), config)
+            if (CoomaLanguage.Type.Error.value.equals(result.getMetaObject.toString)) {
+                errorOutput(Some(result), config)
+            } else {
+                output(i, tipe, Some(result), config)
+            }
         })
     }
 

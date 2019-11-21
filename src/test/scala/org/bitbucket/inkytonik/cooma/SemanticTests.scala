@@ -876,7 +876,67 @@ class SemanticTests extends Tests {
                    |^
                    |"""
             )
-        )
+        ) ++ Primitives.IntPrimOp.values.flatMap(op => {
+                def underscoreToCamel(name : String) = name.head.toUpper + name.tail
+                val primOp = s"Int${underscoreToCamel(op.toString.toLowerCase)}"
+                Vector(
+                    SemanticTest(
+                        s"Wrong number of arguments for int binary ${primOp} op primitive (no args)",
+                        s"prim ${primOp}()",
+                        s"""|1:1:error: primitive expects 2 arguments, provided 0.
+                            |prim ${primOp}()
+                            |^
+                            |"""
+                    ),
+                    SemanticTest(
+                        s"Wrong number of arguments for int binary ${primOp} op primitive (less)",
+                        s"prim  ${primOp}(2)",
+                        s"""|1:1:error: primitive expects 2 arguments, provided 1.
+                            |prim  ${primOp}(2)
+                            |^
+                            |"""
+                    ),
+
+                    SemanticTest(
+                        s"Wrong number of arguments for int binary ${primOp} primitive (more)",
+                        s"prim ${primOp}(2,2,2)",
+                        s"""|1:1:error: primitive expects 2 arguments, provided 3.
+                           |prim ${primOp}(2,2,2)
+                           |^
+                           |"""
+                    ),
+
+                    SemanticTest(
+                        s"Wrong argument type for int binary ${primOp} primitive",
+                        s"""prim ${primOp}(\"2\",2)""",
+                        s"""|1:13:error: expected Int, got "2" of type String
+                           |prim ${primOp}("2",2)
+                           |            ^
+                           |"""
+                    ),
+
+                    SemanticTest(
+                        s"Wrong argument type (cont) for int binary ${primOp} op primitive",
+                        s"""prim ${primOp}(2,\"2\")""",
+                        s"""|1:15:error: expected Int, got "2" of type String
+                           |prim ${primOp}(2,"2")
+                           |              ^
+                           |"""
+                    ),
+
+                    SemanticTest(
+                        s"Wrong argument type and number of arguments for int binary ${primOp} primitive",
+                        s"""prim ${primOp}(2,\"2\",2)""",
+                        s"""|1:1:error: primitive expects 2 arguments, provided 3.
+                           |prim ${primOp}(2,"2",2)
+                           |^
+                           |1:15:error: expected Int, got "2" of type String
+                           |prim ${primOp}(2,"2",2)
+                           |              ^
+                           |"""
+                    )
+                )
+            })
 
     for (aTest <- semanticTests) {
         test(aTest.name) {

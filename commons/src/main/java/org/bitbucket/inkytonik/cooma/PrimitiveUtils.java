@@ -2,6 +2,9 @@ package org.bitbucket.inkytonik.cooma;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class PrimitiveUtils {
 
@@ -15,4 +18,13 @@ public class PrimitiveUtils {
 			return sb.toString();
 		}
 	}
+
+	public static boolean isFileWritable(String filePath){
+		return Files.isWritable(Paths.get(filePath));
+	}
+
+	public static boolean isFileReadable(String filePath){
+		return Files.isReadable(Paths.get(filePath));
+	}
+
 }

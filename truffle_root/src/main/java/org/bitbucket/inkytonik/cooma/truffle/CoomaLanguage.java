@@ -10,12 +10,18 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
 import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.CoomaConstants;
+import org.bitbucket.inkytonik.cooma.PrimitiveUtils;
 import org.bitbucket.inkytonik.cooma.Util;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
 import org.bitbucket.inkytonik.kiama.util.Emitter;
 import org.bitbucket.inkytonik.kiama.util.StringEmitter;
+import org.rogach.scallop.ScallopOption;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Arrays;
 
 import static scala.collection.JavaConverters.collectionAsScalaIterableConverter;
@@ -27,6 +33,11 @@ import static scala.collection.JavaConverters.collectionAsScalaIterableConverter
 public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
     private TruffleDriver truffleDriver = new TruffleDriver();
+
+    @Override
+    protected void finalizeContext(CoomaContext context) {
+        System.setOut(context.getOriginalSout());
+    }
 
     public static String toString(Object value) {
         try {
@@ -57,7 +68,9 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
     @Override
     protected CoomaContext createContext(TruffleLanguage.Env env) {
-        return new CoomaContext(env);
+        String[] args = env.getApplicationArguments();
+        Config config = new Config(collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
+        return new CoomaContext(env, new TruffleBackend(config), config);
     }
 
     @Override
@@ -74,10 +87,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
-        String[] args = getCurrentContext(this.getClass()).getEnv().getApplicationArguments();
-        Config config = new Config(collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
-        config.verify();
-
+        Config config = getContextReference().get().getConfig();
         String source = request.getSource().getCharacters().toString();
         if (source.isEmpty()) {
             compileFile(config);

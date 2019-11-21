@@ -1,0 +1,3 @@
+{
+   Ints.div(Ints.sub(2,1), 0)
+}

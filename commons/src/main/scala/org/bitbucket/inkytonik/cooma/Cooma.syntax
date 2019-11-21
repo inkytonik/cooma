@@ -29,6 +29,7 @@ Expression {paren} =
   | 'String'                                    {StrT}
   | 'Type'                                      {TypT}
   | 'Unit'                                      {UniT}
+  | "prim" Identifier '(' Expression ** "," ')' {Prm}
   | IdnUse                                      {Idn}.
 
 Arguments =

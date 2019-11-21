@@ -8,10 +8,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.bitbucket.inkytonik.cooma
-package backend
+package org.bitbucket.inkytonik.cooma.backend
+import java.io.StringWriter
 
-import org.bitbucket.inkytonik.cooma.Driver
+import org.bitbucket.inkytonik.cooma.{Backend, Config, Driver, Primitives}
 import org.bitbucket.inkytonik.kiama.util.Source
 
 class ReferenceBackend(
@@ -25,6 +25,8 @@ class ReferenceBackend(
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 
     override def backendName : String = "Reference"
+
+    type Primitive = org.bitbucket.inkytonik.cooma.Primitives.Primitive[ReferenceBackend]
 
     sealed abstract class Value
     case class FunV(k : String, x : String, body : Term) extends Value
@@ -46,6 +48,8 @@ class ReferenceBackend(
 
     case class CaseTerm(c : String, k : String)
     case class DefTerm(f : String, k : String, x : String, body : Term)
+
+    override type OutputValueR = ValueR
 
     // Terms
 
@@ -97,15 +101,19 @@ class ReferenceBackend(
         FieldValue(f, x)
 
     // Primitives
-
+    import org.bitbucket.inkytonik.cooma.Primitives._
     def argumentP(i : Int) : Primitive =
         ArgumentP(i)
 
     def capabilityP(cap : String) : Primitive =
         CapabilityP(cap)
 
-    def consoleWriteP(filename : String) : Primitive =
-        WriterWriteP(filename)
+    def consoleWriteP(filename : String) : Primitive = {
+        val stdout = new StringWriter() {
+            override def write(s : String) : Unit = getConfig.output().emit(s)
+        }
+        WriterWriteP(filename, stdout)
+    }
 
     def readerReadP(filename : String) : Primitive =
         ReaderReadP(filename)
@@ -115,6 +123,62 @@ class ReferenceBackend(
 
     def recSelectP() : Primitive =
         RecSelectP()
+
+    def intP(op : IntPrimOp.IntPrimOp) : Primitive =
+        Primitives.IntBinOpP(op)
+
+    //Value runtimes
+
+    def errR(msg : String) : ValueR =
+        ErrR(msg)
+
+    def strR(str : String) : ValueR =
+        StrR(str)
+
+    def varR(c : String, v : ValueR) : ValueR =
+        VarR(c, v)
+
+    def intR(num : BigInt) : ValueR =
+        IntR(num)
+
+    def clsR(env : Env, f : String, x : String, e : Term) : ValueR =
+        ClsR(env, f, x, e)
+
+    def recR(fields : Vector[FldR]) : ValueR =
+        RecR(fields)
+
+    def fldR(x : String, v : ValueR) : FldR =
+        FldR(x, v)
+
+    def isErrR(value : ValueR) : Option[String] =
+        value match {
+            case ErrR(s) => Some(s)
+            case _       => None
+        }
+
+    def isStrR(value : ValueR) : Option[String] =
+        value match {
+            case StrR(s) => Some(s)
+            case _       => None
+        }
+
+    def isIntR(value : ValueR) : Option[BigInt] =
+        value match {
+            case IntR(i) => Some(i)
+            case _       => None
+        }
+
+    def isFldR(value : FldR) : Option[(String, ValueR)] =
+        value match {
+            case FldR(x, v) => Some((x, v))
+            case _          => None
+        }
+
+    def isRecR(value : ValueR) : Option[Vector[FldR]] =
+        value match {
+            case RecR(fields) => Some(fields)
+            case _            => None
+        }
 
     /*
      * Custom IR pretty-printer that escapes string terms.
@@ -169,5 +233,35 @@ class ReferenceBackend(
 
     def toDocFieldValue(field : FieldValue) : Doc =
         value(field.f) <+> text("=") <+> value(field.x)
+
+    def lookupR(rho : Env, x : String) : ValueR =
+        rho match {
+            case ConsCE(rho2, _, _) =>
+                lookupR(rho2, x)
+
+            case ConsFE(rho2, rho2f, ds) =>
+                ds.collectFirst {
+                    case DefTerm(f, k, y, e) if x == f =>
+                        ClsR(rho2f(), k, y, e)
+                } match {
+                    case Some(v) =>
+                        v
+                    case None =>
+                        lookupR(rho2, x)
+                }
+
+            case ConsVE(rho2, y, v) if x == y =>
+                v
+
+            case ConsVE(rho2, _, _) =>
+                lookupR(rho2, x)
+
+            case NilE() =>
+                sys.error(s"lookupR: can't find value $x")
+        }
+
+    def getConfig : Config = config
+
+    def emptyEnv : Env = NilE()
 
 }
