@@ -1,3 +1,7 @@
 {
-   Ints.div(Ints.sub(2,1), 0)
+   val x = prim IntAdd(1,1)
+   val y = Ints.add(1,1)
+   Ints.sub(x,y)
+
+   //populate record with results and compare
 }

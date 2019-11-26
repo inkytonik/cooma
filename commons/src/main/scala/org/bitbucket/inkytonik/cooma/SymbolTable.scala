@@ -79,6 +79,12 @@ object SymbolTable extends Environments[CoomaEntity] {
         "IntMul" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntDiv" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntPow" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntEq" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntNeq" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntGt" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntGte" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntLt" -> FunT(Vector(IntT(), IntT()), IntT()),
+        "IntLte" -> FunT(Vector(IntT(), IntT()), IntT()),
         //"IntLTE" -> FunT(Vector(IntT(), IntT()), //get the Boolean type from the predef environment ),
         "StrConcat" -> FunT(Vector(StrT(), StrT()), StrT()),
     )
@@ -105,9 +111,21 @@ object SymbolTable extends Environments[CoomaEntity] {
 					sub = fun (x : Int, y : Int) = prim IntSub(x, y),
                     mul = fun (x : Int, y : Int) = prim IntMul(x, y),
 	                div = fun (x : Int, y : Int) = prim IntDiv(x, y),
-                    pow = fun (x : Int, y : Int) = prim IntPow(x, y)
+                    pow = fun (x : Int, y : Int) = prim IntPow(x, y),
+					eq =  fun (x : Int, y : Int) = prim IntEq(x, y),
+                    neq = fun (x : Int, y : Int) = prim IntNeq(x, y),
+                    gt =  fun (x : Int, y : Int) = prim IntGt(x, y),
+                    gte = fun (x : Int, y : Int) = prim IntGte(x, y),
+                    lt =  fun (x : Int, y : Int) = prim IntLt(x, y),
+                    lte = fun (x : Int, y : Int) = prim IntLte(x, y)
                 }
 
+	            val Strings = {
+			        length = fun (x : String) = prim StrLength(x),
+		            concat = fun (x : String, y : String) = prim StrConcat(x, y),
+			        substr = fun (x : String, y : Int) = prim StrSubstr(x, y),
+			        eq     = fun (x : String, y : String) = prim StrEq(x, y)
+                }
                 0
             }
         """)

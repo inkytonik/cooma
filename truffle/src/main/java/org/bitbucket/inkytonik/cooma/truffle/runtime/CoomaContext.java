@@ -39,10 +39,8 @@ public final class CoomaContext {
 
     private Rho predefRho() {
         val rho = new Rho();
-        RecRuntimeValue unit = new RecRuntimeValue(new FieldValueRuntime[] {});
-        Rho extendedRho =  rho.extend("false", new VarRuntimeValue("false", unit))
-                    .extend("true", new VarRuntimeValue("true", unit));
-
+        Rho extendedRho =  rho.extend("false", (RuntimeValue) truffleBackend.falseR())
+                    .extend("true", (RuntimeValue) truffleBackend.trueR());
         extendedRho = extendedRho.extend("Ints", (RuntimeValue) Primitives.generateDynamicRuntime(truffleBackend));
         return extendedRho;
     }

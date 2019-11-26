@@ -35,8 +35,8 @@ trait Backend {
     def recConcatP() : Primitive
     def recSelectP() : Primitive
 
-    import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp.IntPrimOp
-    def intP(op : IntPrimOp) : Primitive
+    def intBinP(op : Primitives.IntPrimBinOp.IntPrimBinOp) : Primitive
+    def intRelP(op : Primitives.IntPrimRelOp.IntPrimRelOp) : Primitive
 
     def showTerm(t : Term) : String
 
@@ -47,6 +47,9 @@ trait Backend {
     def intR(num : BigInt) : ValueR
     def clsR(env : Env, f : String, x : String, e : Term) : ValueR
     def recR(fields : Vector[FldR]) : ValueR
+
+    def falseR() : ValueR
+    def trueR() : ValueR
 
     def isErrR(value : ValueR) : Option[String]
     def isStrR(value : ValueR) : Option[String]

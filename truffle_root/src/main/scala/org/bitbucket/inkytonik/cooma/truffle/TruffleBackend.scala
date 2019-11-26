@@ -2,8 +2,6 @@ package org.bitbucket.inkytonik.cooma.truffle
 
 import java.io.PrintWriter
 import java.math.BigInteger
-
-import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
 import org.bitbucket.inkytonik.cooma.truffle.runtime._
 import org.bitbucket.inkytonik.cooma.{Backend, Config, Primitives}
@@ -101,8 +99,11 @@ class TruffleBackend(config : Config) extends Backend {
     def recSelectP() : Primitive =
         Primitives.RecSelectP()
 
-    def intP(op : IntPrimOp.IntPrimOp) : Primitive =
+    def intBinP(op : Primitives.IntPrimBinOp.IntPrimBinOp) : Primitive =
         Primitives.IntBinOpP(op)
+
+    def intRelP(op : Primitives.IntPrimRelOp.IntPrimRelOp) : Primitive =
+        Primitives.IntRelOp(op)
 
     //Runtime Values
 
@@ -123,6 +124,10 @@ class TruffleBackend(config : Config) extends Backend {
 
     def varR(c : String, v : ValueR) : ValueR =
         new VarRuntimeValue(c, v)
+
+    val unit = new RecRuntimeValue(Array.empty[FieldValueRuntime])
+    def falseR = new VarRuntimeValue("false", unit)
+    def trueR = new VarRuntimeValue("true", unit)
 
     def clsR(env : Env, f : String, x : String, e : Term) : ValueR =
         new FunctionClosure(env, f, x, e)

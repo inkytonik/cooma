@@ -2,6 +2,8 @@ package org.bitbucket.inkytonik.cooma
 
 import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter, IOException, InputStreamReader, Writer}
 
+import org.bitbucket.inkytonik.cooma.Primitives.IntPrimRelOp.{EQ, GT, GTE, LT, LTE, NEQ}
+import org.bitbucket.inkytonik.cooma.Primitives.StrPrimOp.{CONCAT, LENGTH, SUBSTR}
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
 
@@ -201,67 +203,158 @@ object Primitives {
         def show = "select"
     }
 
-    object IntPrimOp extends Enumeration {
-        type IntPrimOp = Value
-        val ADD, SUB, MUL, DIV, POW = Value
-    }
-
-    case class IntBinOpP[I <: Backend](op : IntPrimOp.IntPrimOp) extends Primitive[I] {
-        val numArgs = 2
-
+    abstract class IntPrimitive[I <: Backend] extends Primitive[I] {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val operands = xs.map(s => interp.isIntR(interp.lookupR(rho, s)) match {
                 case Some(v) => v
                 case _       => sys.error(s"IntBinOpP.run: can't find operand $s on environment.")
             })
+            doRun(interp)(operands)
+        }
 
+        def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR
+    }
+
+    object IntPrimBinOp extends Enumeration {
+        type IntPrimBinOp = Value
+        val ADD, SUB, MUL, DIV, POW = Value
+    }
+
+    case class IntBinOpP[I <: Backend](op : IntPrimBinOp.IntPrimBinOp) extends IntPrimitive[I] {
+        val numArgs = 2
+
+        def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR = {
             try {
                 interp.intR(op match {
-                    case IntPrimOp.ADD => operands.sum
-                    case IntPrimOp.SUB => operands.reduce(_ - _)
-                    case IntPrimOp.MUL => operands.product
-                    case IntPrimOp.DIV => operands.reduce(_ / _)
-                    case IntPrimOp.POW => operands.reduce((x, y) => x.pow(y.toInt))
+                    case IntPrimBinOp.ADD => operands.sum
+                    case IntPrimBinOp.SUB => operands.reduce(_ - _)
+                    case IntPrimBinOp.MUL => operands.product
+                    case IntPrimBinOp.DIV => operands.reduce(_ / _)
+                    case IntPrimBinOp.POW => operands.reduce((x, y) => x.pow(y.toInt))
                 })
             } catch {
                 case e : Throwable => interp.errR(s"Error executing primitive: ${e.getMessage}")
             }
         }
 
-        def show = "intPrm"
+        def show = "intPrmBinOp"
     }
 
+    object IntPrimRelOp extends Enumeration {
+        type IntPrimRelOp = Value
+        val EQ, NEQ, GT, GTE, LT, LTE = Value
+    }
+
+    case class IntRelOp[I <: Backend](op : IntPrimRelOp.IntPrimRelOp) extends IntPrimitive[I] {
+        val numArgs = 2
+
+        def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR = {
+            val Vector(left, right) = operands
+            if (op match {
+                case EQ  => left == right
+                case NEQ => left != right
+                case GT  => left > right
+                case GTE => left >= right
+                case LT  => left < right
+                case LTE => left <= right
+            }) {
+                interp.trueR()
+            } else {
+                interp.falseR()
+            }
+        }
+
+        def show = "intPrmRelOp"
+    }
+
+    object StrPrimOp extends Enumeration {
+        type StrPrimOp = Value
+        val LENGTH, CONCAT, SUBSTR, EQ = Value
+    }
+
+    case class StringPrimitive[I <: Backend](op : StrPrimOp.StrPrimOp) extends Primitive[I] {
+        val numArgs = 2
+
+        def show = "strPrim"
+
+        override def eval(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            if((op match {
+                case LENGTH => 1
+                case CONCAT => 2
+                case SUBSTR => 2
+                case StrPrimOp.EQ => 2
+            }) == xs.length)
+                run(interp)(rho, xs, args)
+            else
+                sys.error(s"$show: expected $numArgs arg(s), got $xs")
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+
+            def extractStrParams = {
+                xs.map(s => interp.isStrR(interp.lookupR(rho, s)) match {
+                    case Some(v) => v
+                    case _ => sys.error(s"IntBinOpP.run: can't find operand $s on environment.")
+                })
+            }
+
+            op match {
+                case LENGTH =>
+                    interp.intR(extractStrParams.head.length)
+                case CONCAT =>
+                    interp.strR(extractStrParams.reduce(_ + _))
+                case SUBSTR => {
+                        val left = interp.isStrR((interp.lookupR(rho, xs.head))) match {
+                            case Some(v) => v
+                            case _       => sys.error(s"IntBinOpP.run: can't find operand ${xs.head} on environment.")
+                        }
+
+                        val right = interp.isIntR((interp.lookupR(rho, xs.tail.head))) match {
+                            case Some(v) => v
+                            case _       => sys.error(s"IntBinOpP.run: can't find operand ${xs.tail.head} on environment.")
+                        }
+                        interp.strR(left.substring(right.toInt))
+                    }
+                case StrPrimOp.EQ => {
+                    val Vector(left, right) = extractStrParams
+                    if (left.equals(right)) {
+                        interp.trueR()
+                    } else {
+                        interp.falseR()
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
     def generateDynamicRuntime[I <: Backend](interp : I) : interp.ValueR = {
-        //rename, fs for functions, js and ks for continuations
-        interp.recR(IntPrimOp.values.map(op => interp.fldR(op.toString.toLowerCase(), interp.clsR(interp.emptyEnv, "k5", "x",
-            interp.letV("f6", interp.funV("j7", "y", interp.letV("k8", interp.prmV(interp.intP(op), Vector("x", "y")), interp.appC("j7", "k8"))),
-                interp.appC("k5", "f6"))))).toVector)
-        interp.recR(IntPrimOp.values.map(op => {
+        def generateField(opName : String, p : interp.Primitive) = {
+            val closurek = fresh("k")
+            val letvk = fresh("k")
+            val x = fresh("x")
+            val f = fresh("f")
+            val j = fresh("j")
+            val y = fresh("y")
             interp.fldR(
-                op.toString.toLowerCase(),
+                opName,
                 interp.clsR(
-                    interp.emptyEnv,
-                    "k5",
-                    "x",
-                    interp.letV(
-                        "f6",
-                        interp.funV(
-                            "j7",
-                            "y",
-                            interp.letV(
-                                "k8",
-                                interp.prmV(
-                                    interp.intP(op),
-                                    Vector("x", "y")
-                                ),
-                                interp.appC("j7", "k8")
-                            )
-                        ),
-                        interp.appC("k5", "f6")
-                    )
+                    interp.emptyEnv, closurek, x,
+                    interp.letV(f, interp.funV(j, y,
+                        interp.letV(
+                            letvk,
+                            interp.prmV(p, Vector(x, y)),
+                            interp.appC(j, letvk)
+                        )),
+                        interp.appC(closurek, f))
                 )
             )
-        }).toVector)
+        }
+        interp.recR(
+            IntPrimBinOp.values.map(op => { generateField(op.toString.toLowerCase(), interp.intBinP(op)) }).toVector ++
+                IntPrimRelOp.values.map(op => { generateField(op.toString.toLowerCase(), interp.intRelP(op)) }).toVector
+        )
     }
 }
 

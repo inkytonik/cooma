@@ -124,11 +124,13 @@ class ReferenceBackend(
     def recSelectP() : Primitive =
         RecSelectP()
 
-    def intP(op : IntPrimOp.IntPrimOp) : Primitive =
+    def intBinP(op : Primitives.IntPrimBinOp.IntPrimBinOp) : Primitive =
         Primitives.IntBinOpP(op)
 
-    //Value runtimes
+    def intRelP(op : Primitives.IntPrimRelOp.IntPrimRelOp) : Primitive =
+        Primitives.IntRelOp(op)
 
+    //Value runtimes
     def errR(msg : String) : ValueR =
         ErrR(msg)
 

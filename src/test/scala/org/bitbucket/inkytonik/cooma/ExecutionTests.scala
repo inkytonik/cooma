@@ -11,7 +11,7 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.cooma.Primitives.IntPrimOp
+import org.bitbucket.inkytonik.cooma.Primitives.IntPrimBinOp
 import org.bitbucket.inkytonik.kiama.util.TestCompilerWithConfig
 
 class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
@@ -596,7 +596,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<false : Unit>"
                 ),
 
-            )++ Primitives.IntPrimOp.values.flatMap(op => {
+            )++ Primitives.IntPrimBinOp.values.flatMap(op => {
                 def underscoreToCamel(name : String) = name.head.toUpper + name.tail
                 val primOp = s"Int${underscoreToCamel(op.toString.toLowerCase)}"
                 Vector(
@@ -604,11 +604,11 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         s"Execution of primitive through Prim Keyword - ${primOp}",
                         s"prim ${primOp}(2, 2)",
                         op match {
-                            case IntPrimOp.ADD => "4"
-                            case IntPrimOp.SUB => "0"
-                            case IntPrimOp.MUL => "4"
-                            case IntPrimOp.DIV => "1"
-                            case IntPrimOp.POW => "4"
+                            case IntPrimBinOp.ADD => "4"
+                            case IntPrimBinOp.SUB => "0"
+                            case IntPrimBinOp.MUL => "4"
+                            case IntPrimBinOp.DIV => "1"
+                            case IntPrimBinOp.POW => "4"
                         },
                         "Int"
                     ),
@@ -855,33 +855,38 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 					"Ints.div(2, 0)",
 					"cooma: Error executing primitive: BigInteger divide by zero"
 				)
-            ) ++ Primitives.IntPrimOp.values.map(op => {
+            ) ++ Primitives.IntPrimBinOp.values.map(op => {
                 REPLTest(
                     s"Primitive ${op} has the correct type",
                     s"Ints.${op.toString.toLowerCase}",
                     "res0 : (Int, Int) => Int = <function>"
                 )
-            }) ++ Primitives.IntPrimOp.values.map(op => {
+            }) ++ Primitives.IntPrimBinOp.values.map(op => {
                 REPLTest(
                     s"Primitive ${op} partial application has the correct type",
                     s"Ints.${op.toString.toLowerCase}(1)",
                     "res0 : (Int) => Int = <function>"
                 )
-            }) ++ Primitives.IntPrimOp.values.flatMap(op => {
+            }) ++ Primitives.IntPrimBinOp.values.flatMap(op => {
                 Vector(
                     REPLTest(
                         s"Primitive ${op} produces the expected result",
                         s"Ints.${op.toString.toLowerCase}(2,2)",
                         s"res0 : Int = ${op match {
-                            case IntPrimOp.ADD => "4"
-                            case IntPrimOp.SUB => "0"
-                            case IntPrimOp.MUL => "4"
-                            case IntPrimOp.DIV => "1"
-                            case IntPrimOp.POW => "4"
+                            case IntPrimBinOp.ADD => "4"
+                            case IntPrimBinOp.SUB => "0"
+                            case IntPrimBinOp.MUL => "4"
+                            case IntPrimBinOp.DIV => "1"
+                            case IntPrimBinOp.POW => "4"
                         }}"
                     )
                 )
             })
+
+
+        /**
+         * check((i: BigInt, j:BigInt) =>  primitive call == i + J
+         */
 
         for (aTest <- replTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
@@ -1058,6 +1063,23 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 deleteFile(writer)
             }
         }
+
+        {
+            val filename = "src/test/resources/primitives/intAdd.cooma"
+            val name = s"Primitives file execution($filename)"
+            val expectedResult = "0\n"
+
+            test(s"${backend.name} run: $name") {
+                val result = runFile(filename, backend.options, backend, Seq())
+                result shouldBe ""
+            }
+
+            test(s"${backend.name} run: $name result") {
+                val result = runFile(filename, backend.options ++ Seq("-r"), backend, Seq())
+                result shouldBe expectedResult
+            }
+        }
+
     }
 
     def makeConfig(args : Seq[String]) : Config = {

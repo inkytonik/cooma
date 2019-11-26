@@ -42,10 +42,15 @@ class Interpreter(config : Config) {
 
     val unit = RecR(Vector())
 
+    def falseR = VarR("false", unit)
+    def trueR = VarR("true", unit)
+
+    //add to the backend the values for true and false
+
     val predef =
         Vector(
-            ("false", VarR("false", unit)), //add these two for the Backend
-            ("true", VarR("true", unit)),
+            ("false", falseR), //add these two for the Backend
+            ("true", trueR),
             ("Ints", Primitives.generateDynamicRuntime(this))
         )
 

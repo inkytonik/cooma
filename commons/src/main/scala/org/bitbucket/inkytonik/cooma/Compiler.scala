@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.Primitives.{IntPrimOp}
+import org.bitbucket.inkytonik.cooma.Primitives.{IntPrimBinOp, IntPrimRelOp}
 
 trait Compiler {
 
@@ -39,11 +39,17 @@ trait Compiler {
      */
     case class PrimitiveMeta(prm : Primitive, expectedType : Expression)
     val primitivesTable = Map(
-        "IntAdd" -> PrimitiveMeta(intP(IntPrimOp.ADD), IntT()),
-        "IntSub" -> PrimitiveMeta(intP(IntPrimOp.SUB), IntT()),
-        "IntMul" -> PrimitiveMeta(intP(IntPrimOp.MUL), IntT()),
-        "IntDiv" -> PrimitiveMeta(intP(IntPrimOp.DIV), IntT()),
-        "IntPow" -> PrimitiveMeta(intP(IntPrimOp.POW), IntT())
+        "IntAdd" -> PrimitiveMeta(intBinP(IntPrimBinOp.ADD), IntT()),
+        "IntSub" -> PrimitiveMeta(intBinP(IntPrimBinOp.SUB), IntT()),
+        "IntMul" -> PrimitiveMeta(intBinP(IntPrimBinOp.MUL), IntT()),
+        "IntDiv" -> PrimitiveMeta(intBinP(IntPrimBinOp.DIV), IntT()),
+        "IntPow" -> PrimitiveMeta(intBinP(IntPrimBinOp.POW), IntT()),
+        "IntEq"  -> PrimitiveMeta(intRelP(IntPrimRelOp.EQ),  IntT()),
+        "IntNeq" -> PrimitiveMeta(intRelP(IntPrimRelOp.NEQ), IntT()),
+        "IntGt"  -> PrimitiveMeta(intRelP(IntPrimRelOp.GT),  IntT()),
+        "IntGte" -> PrimitiveMeta(intRelP(IntPrimRelOp.GTE), IntT()),
+        "IntLt"  -> PrimitiveMeta(intRelP(IntPrimRelOp.LT),  IntT()),
+        "IntLte" -> PrimitiveMeta(intRelP(IntPrimRelOp.LTE), IntT()),
     )
 
     /**
