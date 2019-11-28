@@ -793,6 +793,15 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "res0 : Int = 10\nres1 : Int = 10"
                 ),
                 REPLTest(
+                    "single val binding",
+                    """
+                        val x = 10
+						x
+                        res0
+                    """,
+                    "x : Int = 10\nres0 : Int = 10"
+                ),
+                REPLTest(
                     "multiple result name binding",
                     """
                         10

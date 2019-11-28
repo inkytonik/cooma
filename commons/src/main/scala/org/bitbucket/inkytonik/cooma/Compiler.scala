@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.Primitives.{IntPrimBinOp, IntPrimRelOp}
+import org.bitbucket.inkytonik.cooma.Primitives.{IntPrimBinOp, IntPrimRelOp, StrPrimOp}
 
 trait Compiler {
 
@@ -50,6 +50,11 @@ trait Compiler {
         "IntGte" -> PrimitiveMeta(intRelP(IntPrimRelOp.GTE), IntT()),
         "IntLt"  -> PrimitiveMeta(intRelP(IntPrimRelOp.LT),  IntT()),
         "IntLte" -> PrimitiveMeta(intRelP(IntPrimRelOp.LTE), IntT()),
+        "StrLength" -> PrimitiveMeta(stringP(StrPrimOp.LENGTH), StrT()),
+        "StrConcat" -> PrimitiveMeta(stringP(StrPrimOp.CONCAT), StrT()),
+        "StrEq" -> PrimitiveMeta(stringP(StrPrimOp.EQ), StrT()),
+        "StrSubstr" -> PrimitiveMeta(stringP(StrPrimOp.SUBSTR), StrT()),
+        //TODO: substring expects both string and int and therefore we need to refactor this
     )
 
     /**
@@ -411,3 +416,5 @@ trait Compiler {
     }
 
 }
+
+

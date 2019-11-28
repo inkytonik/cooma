@@ -72,26 +72,29 @@ object SymbolTable extends Environments[CoomaEntity] {
         override val isError = true
     }
 
-
+    val boolT = VarT(Vector(FieldType("false", UniT()), FieldType("true", UniT())))
     val primitivesTypesTable = Map(
         "IntAdd" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntSub" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntMul" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntDiv" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntPow" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntEq" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntNeq" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntGt" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntGte" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntLt" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntLte" -> FunT(Vector(IntT(), IntT()), IntT()),
-        //"IntLTE" -> FunT(Vector(IntT(), IntT()), //get the Boolean type from the predef environment ),
+        "IntEq" -> FunT(Vector(IntT(), IntT()), boolT ),
+        "IntNeq" -> FunT(Vector(IntT(), IntT()), boolT),
+        "IntGt" -> FunT(Vector(IntT(), IntT()), boolT),
+        "IntGte" -> FunT(Vector(IntT(), IntT()), boolT),
+        "IntLt" -> FunT(Vector(IntT(), IntT()), boolT),
+        "IntLte" -> FunT(Vector(IntT(), IntT()), boolT),
+        "IntNeg" -> FunT(Vector(IntT()), IntT()),
+        "IntAbs" -> FunT(Vector(IntT()), IntT()),
+        "StrLength" -> FunT(Vector(StrT()), IntT()),
         "StrConcat" -> FunT(Vector(StrT(), StrT()), StrT()),
+        "StrEq" -> FunT(Vector(StrT(), StrT()), boolT),
+        "StrSubstr" -> FunT(Vector(StrT(), IntT()), StrT()),
+
     )
 
-
     // Pre-defined entities
-
     val predefSource =
         new StringSource("""
             {
@@ -99,6 +102,14 @@ object SymbolTable extends Environments[CoomaEntity] {
                 val Boolean = <false : Unit, true : Unit>
                 val false = <false = {}>
                 val true = <true = {}>
+
+                //def not (b : Boolean) : Boolean =
+                //    b match {
+                //        case false x =
+                //            true
+                //        case true x =
+                //            false
+                //    }
 
                 // Capability types
                 val Reader = {read : () => String}

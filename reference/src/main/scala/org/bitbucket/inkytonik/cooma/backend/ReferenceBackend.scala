@@ -130,6 +130,9 @@ class ReferenceBackend(
     def intRelP(op : Primitives.IntPrimRelOp.IntPrimRelOp) : Primitive =
         Primitives.IntRelOp(op)
 
+    def stringP(op : Primitives.StrPrimOp.StrPrimOp) : Primitive =
+        Primitives.StringPrimitive(op)
+
     //Value runtimes
     def errR(msg : String) : ValueR =
         ErrR(msg)

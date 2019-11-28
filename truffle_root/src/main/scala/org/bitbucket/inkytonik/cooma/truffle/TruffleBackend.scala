@@ -2,6 +2,7 @@ package org.bitbucket.inkytonik.cooma.truffle
 
 import java.io.PrintWriter
 import java.math.BigInteger
+
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
 import org.bitbucket.inkytonik.cooma.truffle.runtime._
 import org.bitbucket.inkytonik.cooma.{Backend, Config, Primitives}
@@ -104,6 +105,9 @@ class TruffleBackend(config : Config) extends Backend {
 
     def intRelP(op : Primitives.IntPrimRelOp.IntPrimRelOp) : Primitive =
         Primitives.IntRelOp(op)
+
+    def stringP(op : Primitives.StrPrimOp.StrPrimOp) : Primitive =
+        Primitives.StringPrimitive(op)
 
     //Runtime Values
 

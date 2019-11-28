@@ -6,7 +6,11 @@ import org.bitbucket.inkytonik.cooma.Backend;
 import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.Primitives;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
+import scala.collection.JavaConverters;
+
 import java.io.PrintStream;
+import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -41,7 +45,10 @@ public final class CoomaContext {
         val rho = new Rho();
         Rho extendedRho =  rho.extend("false", (RuntimeValue) truffleBackend.falseR())
                     .extend("true", (RuntimeValue) truffleBackend.trueR());
-        extendedRho = extendedRho.extend("Ints", (RuntimeValue) Primitives.generateDynamicRuntime(truffleBackend));
+		for (Map.Entry<String, Object> entry : JavaConverters.mapAsJavaMap(Primitives.generateDynamicRuntime(truffleBackend)).entrySet()) {
+			extendedRho = extendedRho.extend(entry.getKey(), (RuntimeValue) entry.getValue());
+		}
+
         return extendedRho;
     }
 

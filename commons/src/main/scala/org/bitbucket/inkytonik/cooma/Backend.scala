@@ -37,6 +37,7 @@ trait Backend {
 
     def intBinP(op : Primitives.IntPrimBinOp.IntPrimBinOp) : Primitive
     def intRelP(op : Primitives.IntPrimRelOp.IntPrimRelOp) : Primitive
+    def stringP(op : Primitives.StrPrimOp.StrPrimOp) : Primitive
 
     def showTerm(t : Term) : String
 

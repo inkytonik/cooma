@@ -278,10 +278,10 @@ object Primitives {
         def show = "strPrim"
 
         override def eval(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
-            if((op match {
-                case LENGTH => 1
-                case CONCAT => 2
-                case SUBSTR => 2
+            if ((op match {
+                case LENGTH       => 1
+                case CONCAT       => 2
+                case SUBSTR       => 2
                 case StrPrimOp.EQ => 2
             }) == xs.length)
                 run(interp)(rho, xs, args)
@@ -293,7 +293,7 @@ object Primitives {
             def extractStrParams = {
                 xs.map(s => interp.isStrR(interp.lookupR(rho, s)) match {
                     case Some(v) => v
-                    case _ => sys.error(s"IntBinOpP.run: can't find operand $s on environment.")
+                    case _       => sys.error(s"IntBinOpP.run: can't find operand $s on environment.")
                 })
             }
 
@@ -303,17 +303,18 @@ object Primitives {
                 case CONCAT =>
                     interp.strR(extractStrParams.reduce(_ + _))
                 case SUBSTR => {
-                        val left = interp.isStrR((interp.lookupR(rho, xs.head))) match {
-                            case Some(v) => v
-                            case _       => sys.error(s"IntBinOpP.run: can't find operand ${xs.head} on environment.")
-                        }
-
-                        val right = interp.isIntR((interp.lookupR(rho, xs.tail.head))) match {
-                            case Some(v) => v
-                            case _       => sys.error(s"IntBinOpP.run: can't find operand ${xs.tail.head} on environment.")
-                        }
-                        interp.strR(left.substring(right.toInt))
+                    val left = interp.isStrR((interp.lookupR(rho, xs.head))) match {
+                        case Some(v) => v
+                        //TODO: fix messages
+                        case _       => sys.error(s"IntBinOpP.run: can't find operand ${xs.head} on environment.")
                     }
+
+                    val right = interp.isIntR((interp.lookupR(rho, xs.tail.head))) match {
+                        case Some(v) => v
+                        case _       => sys.error(s"IntBinOpP.run: can't find operand ${xs.tail.head} on environment.")
+                    }
+                    interp.strR(left.substring(right.toInt))
+                }
                 case StrPrimOp.EQ => {
                     val Vector(left, right) = extractStrParams
                     if (left.equals(right)) {
@@ -326,35 +327,59 @@ object Primitives {
         }
     }
 
+    def generateDynamicRuntime[I <: Backend](interp : I) : Map[String, interp.ValueR] = {
+        def generateField(opName : String, p : interp.Primitive, numArgs : Int) : interp.FldR = {
+            val closurek = fresh("primk")
+            val letvk = fresh("primk")
+            val x = fresh("primx")
+            val f = fresh("primf")
+            val j = fresh("primj")
+            val y = fresh("primy")
 
-
-
-    def generateDynamicRuntime[I <: Backend](interp : I) : interp.ValueR = {
-        def generateField(opName : String, p : interp.Primitive) = {
-            val closurek = fresh("k")
-            val letvk = fresh("k")
-            val x = fresh("x")
-            val f = fresh("f")
-            val j = fresh("j")
-            val y = fresh("y")
-            interp.fldR(
-                opName,
-                interp.clsR(
-                    interp.emptyEnv, closurek, x,
-                    interp.letV(f, interp.funV(j, y,
+            if (numArgs == 1) {
+                val letvx = fresh("primx")
+                interp.fldR(
+                    opName,
+                    interp.clsR(
+                        interp.emptyEnv, closurek, x,
                         interp.letV(
-                            letvk,
-                            interp.prmV(p, Vector(x, y)),
-                            interp.appC(j, letvk)
-                        )),
-                        interp.appC(closurek, f))
+                            letvx,
+                            interp.prmV(p, Vector(x)),
+                            interp.appC(closurek, letvx)
+                        )
+                    )
                 )
-            )
+            } else {
+                //Two arguments
+                interp.fldR(
+                    opName,
+                    interp.clsR(
+                        interp.emptyEnv, closurek, x,
+                        interp.letV(f, interp.funV(j, y,
+                            interp.letV(
+                                letvk,
+                                interp.prmV(p, Vector(x, y)),
+                                interp.appC(j, letvk)
+                            )),
+                            interp.appC(closurek, f))
+                    )
+                )
+            }
         }
-        interp.recR(
-            IntPrimBinOp.values.map(op => { generateField(op.toString.toLowerCase(), interp.intBinP(op)) }).toVector ++
-                IntPrimRelOp.values.map(op => { generateField(op.toString.toLowerCase(), interp.intRelP(op)) }).toVector
+
+        Map(
+            "Ints" -> interp.recR(
+                IntPrimBinOp.values.map(op => { generateField(op.toString.toLowerCase(), interp.intBinP(op), 2) }).toVector ++
+                    IntPrimRelOp.values.map(op => { generateField(op.toString.toLowerCase(), interp.intRelP(op), 2) }).toVector
+            ),
+            "Strings" -> interp.recR(Vector(
+                generateField(StrPrimOp.LENGTH.toString.toLowerCase(), interp.stringP(StrPrimOp.LENGTH), 1),
+                generateField(StrPrimOp.CONCAT.toString.toLowerCase(), interp.stringP(StrPrimOp.CONCAT), 2),
+                generateField(StrPrimOp.EQ.toString.toLowerCase(), interp.stringP(StrPrimOp.EQ), 2),
+                generateField(StrPrimOp.SUBSTR.toString.toLowerCase(), interp.stringP(StrPrimOp.SUBSTR), 2)
+            ))
         )
+
     }
 }
 
