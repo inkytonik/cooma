@@ -79,7 +79,7 @@ object SymbolTable extends Environments[CoomaEntity] {
         "IntMul" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntDiv" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntPow" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntEq" -> FunT(Vector(IntT(), IntT()), boolT ),
+        "IntEq" -> FunT(Vector(IntT(), IntT()), boolT),
         "IntNeq" -> FunT(Vector(IntT(), IntT()), boolT),
         "IntGt" -> FunT(Vector(IntT(), IntT()), boolT),
         "IntGte" -> FunT(Vector(IntT(), IntT()), boolT),
@@ -90,8 +90,7 @@ object SymbolTable extends Environments[CoomaEntity] {
         "StrLength" -> FunT(Vector(StrT()), IntT()),
         "StrConcat" -> FunT(Vector(StrT(), StrT()), StrT()),
         "StrEq" -> FunT(Vector(StrT(), StrT()), boolT),
-        "StrSubstr" -> FunT(Vector(StrT(), IntT()), StrT()),
-
+        "StrSubstr" -> FunT(Vector(StrT(), IntT()), StrT())
     )
 
     // Pre-defined entities
@@ -170,7 +169,5 @@ object SymbolTable extends Environments[CoomaEntity] {
             sys.exit(1)
         }
     }
-
-
 
 }
