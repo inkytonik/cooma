@@ -1,7 +1,5 @@
 {
-    val Strings = {
-   			        length = fun (x : String) = prim StrLength(x)
-   			        }
-    Strings.length("hola")
-   //populate record with results and compare
+   val x = prim IntAdd(1,1)
+   val y = Ints.add(1,1)
+   Ints.sub(x,y)
 }

@@ -293,7 +293,7 @@ object Primitives {
             def extractStrParams = {
                 xs.map(s => interp.isStrR(interp.lookupR(rho, s)) match {
                     case Some(v) => v
-                    case _       => sys.error(s"IntBinOpP.run: can't find operand $s on environment.")
+                    case _       => sys.error(s"String Primitive.${op.toString.toLowerCase}: can't find operand $s on environment.")
                 })
             }
 
@@ -305,13 +305,12 @@ object Primitives {
                 case SUBSTR => {
                     val left = interp.isStrR((interp.lookupR(rho, xs.head))) match {
                         case Some(v) => v
-                        //TODO: fix messages
-                        case _       => sys.error(s"IntBinOpP.run: can't find operand ${xs.head} on environment.")
+                        case _       => sys.error(s"String Primitive.substr: can't find operand ${xs.head} on environment.")
                     }
 
                     val right = interp.isIntR((interp.lookupR(rho, xs.tail.head))) match {
                         case Some(v) => v
-                        case _       => sys.error(s"IntBinOpP.run: can't find operand ${xs.tail.head} on environment.")
+                        case _       => sys.error(s"String Primitive.substr: can't find operand ${xs.tail.head} on environment.")
                     }
                     interp.strR(left.substring(right.toInt))
                 }

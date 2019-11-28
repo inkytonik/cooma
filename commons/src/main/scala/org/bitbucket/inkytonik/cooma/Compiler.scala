@@ -44,17 +44,16 @@ trait Compiler {
         "IntMul" -> PrimitiveMeta(intBinP(IntPrimBinOp.MUL), IntT()),
         "IntDiv" -> PrimitiveMeta(intBinP(IntPrimBinOp.DIV), IntT()),
         "IntPow" -> PrimitiveMeta(intBinP(IntPrimBinOp.POW), IntT()),
-        "IntEq"  -> PrimitiveMeta(intRelP(IntPrimRelOp.EQ),  IntT()),
+        "IntEq" -> PrimitiveMeta(intRelP(IntPrimRelOp.EQ), IntT()),
         "IntNeq" -> PrimitiveMeta(intRelP(IntPrimRelOp.NEQ), IntT()),
-        "IntGt"  -> PrimitiveMeta(intRelP(IntPrimRelOp.GT),  IntT()),
+        "IntGt" -> PrimitiveMeta(intRelP(IntPrimRelOp.GT), IntT()),
         "IntGte" -> PrimitiveMeta(intRelP(IntPrimRelOp.GTE), IntT()),
-        "IntLt"  -> PrimitiveMeta(intRelP(IntPrimRelOp.LT),  IntT()),
+        "IntLt" -> PrimitiveMeta(intRelP(IntPrimRelOp.LT), IntT()),
         "IntLte" -> PrimitiveMeta(intRelP(IntPrimRelOp.LTE), IntT()),
         "StrLength" -> PrimitiveMeta(stringP(StrPrimOp.LENGTH), StrT()),
         "StrConcat" -> PrimitiveMeta(stringP(StrPrimOp.CONCAT), StrT()),
         "StrEq" -> PrimitiveMeta(stringP(StrPrimOp.EQ), StrT()),
-        "StrSubstr" -> PrimitiveMeta(stringP(StrPrimOp.SUBSTR), StrT()),
-        //TODO: substring expects both string and int and therefore we need to refactor this
+        "StrSubstr" -> PrimitiveMeta(stringP(StrPrimOp.SUBSTR), StrT())
     )
 
     /**
@@ -416,5 +415,4 @@ trait Compiler {
     }
 
 }
-
 

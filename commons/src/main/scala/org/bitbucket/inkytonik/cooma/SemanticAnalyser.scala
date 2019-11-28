@@ -75,9 +75,7 @@ class SemanticAnalyser(
                     error(prm, s"primitive expects ${funT.optExpressions.length} arguments, provided ${prm.optExpressions.length}.")
                 else
                     noMessages
-            //TODO: remove this wildcard case
-            case _ => noMessages
-            //            case None => error(prm, s"primitive ${prm.identifier} not found.")
+            case None => error(prm, s"primitive ${prm.identifier} not found.")
         }
     }
 
