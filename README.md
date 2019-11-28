@@ -32,7 +32,7 @@ The Cooma project at Macquarie University is investigating secure programming la
 Specification and reference implementation is under way.
 
 * Functional core with tail call optimisation
-* Row-based record data types (literals, selection, concatenation, no variants)
+* Row-based record and variant data types (literals, selection, concatenation, simple matching)
 * Object capabilities via records
 * Runtime-provided resource capabilities (I/O operations only)
 * Implicit argument resolution (not started)
