@@ -109,7 +109,7 @@ class ReferenceBackend(
     def capabilityP(cap : String) : Primitive =
         CapabilityP(cap)
 
-    def consoleWriteP(filename : String) : Primitive = {
+    def writerWriteP(filename : String) : Primitive = {
         val stdout = new StringWriter() {
             override def write(s : String) : Unit = getConfig.output().emit(s)
         }

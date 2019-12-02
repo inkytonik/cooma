@@ -30,10 +30,10 @@ trait Backend {
     type Primitive
     def argumentP(i : Int) : Primitive
     def capabilityP(cap : String) : Primitive
-    def consoleWriteP(filename : String) : Primitive
     def readerReadP(filename : String) : Primitive
     def recConcatP() : Primitive
     def recSelectP() : Primitive
+    def writerWriteP(filename : String) : Primitive
 
     def intBinP(op : Primitives.IntPrimBinOp.IntPrimBinOp) : Primitive
     def intRelP(op : Primitives.IntPrimRelOp.IntPrimRelOp) : Primitive

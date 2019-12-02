@@ -101,7 +101,7 @@ object Primitives {
             name match {
                 case "Writer" =>
                     try {
-                        makeCapability(Vector(("write", interp.consoleWriteP(argument))))
+                        makeCapability(Vector(("write", interp.writerWriteP(argument))))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
@@ -115,7 +115,7 @@ object Primitives {
                     try {
                         makeCapability(Vector(
                             ("read", interp.readerReadP(argument)),
-                            ("write", interp.consoleWriteP(argument))
+                            ("write", interp.writerWriteP(argument))
                         ))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)

@@ -88,7 +88,7 @@ class TruffleBackend(config : Config) extends Backend {
     def capabilityP(cap : String) : Primitive =
         Primitives.CapabilityP(cap)
 
-    def consoleWriteP(filename : String) : Primitive =
+    def writerWriteP(filename : String) : Primitive =
         Primitives.WriterWriteP(filename, new PrintWriter(System.out))
 
     def readerReadP(filename : String) : Primitive =
