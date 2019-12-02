@@ -209,7 +209,7 @@ class SemanticAnalyser(
     object Scope {
         def unapply(n : ASTNode) : Boolean =
             n match {
-                case _ : Body | _ : CaseScope | _ : Fun | _ : LetFun |
+                case _ : Body | _ : CaseScope | _ : Fun | _ : LetDef |
                     _ : LetVal | _ : REPLDef | _ : REPLExp |
                     _ : REPLVal =>
                     true
@@ -277,7 +277,7 @@ class SemanticAnalyser(
 
     lazy val blockEnv : BlockExp => Environment =
         attr {
-            case LetFun(_, b) => blockEnv(b)
+            case LetDef(_, b) => blockEnv(b)
             case LetVal(_, b) => blockEnv(b)
             case Return(e)    => env(e)
         }
@@ -559,7 +559,7 @@ class SemanticAnalyser(
 
     lazy val blockTipe : BlockExp => Option[Expression] =
         attr {
-            case LetFun(_, b) => blockTipe(b)
+            case LetDef(_, b) => blockTipe(b)
             case LetVal(_, b) => blockTipe(b)
             case Return(e)    => tipe(e)
         }

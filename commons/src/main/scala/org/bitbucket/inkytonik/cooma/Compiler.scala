@@ -207,7 +207,7 @@ trait Compiler {
 
     def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
         be match {
-            case LetFun(ds, be2) =>
+            case LetDef(ds, be2) =>
                 letF(
                     ds.map(compileDef),
                     compileBlockExp(be2, kappa)
@@ -388,7 +388,7 @@ trait Compiler {
 
     def tailCompileBlockExp(be : BlockExp, k : String) : Term =
         be match {
-            case LetFun(ds, be2) =>
+            case LetDef(ds, be2) =>
                 letF(
                     ds.map(compileDef),
                     tailCompileBlockExp(be2, k)

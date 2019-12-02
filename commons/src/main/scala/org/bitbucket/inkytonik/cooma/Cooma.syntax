@@ -51,7 +51,7 @@ FieldUse =
   Identifier.
 
 BlockExp =
-    Def+ BlockExp   {LetFun}
+    Def+ BlockExp   {LetDef}
   | Val BlockExp    {LetVal}
   | Expression      {Return}.
 
