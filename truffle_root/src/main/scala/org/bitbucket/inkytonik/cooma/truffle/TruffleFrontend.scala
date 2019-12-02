@@ -16,7 +16,7 @@ class TruffleFrontend(in : InputStream = System.in, out : PrintStream = System.o
     override def interpret(config : Config) : Unit = {
         if (config.filenames().isEmpty) {
             val repl = new TruffleDriver().createREPL(config)
-            repl.driver(config.args)
+            repl.driver(config.args.toIndexedSeq)
         } else {
             interpret("", config)
         }

@@ -15,8 +15,8 @@ object Main {
     import org.bitbucket.inkytonik.cooma.truffle.TruffleFrontend
     import org.rogach.scallop.exceptions.UnknownOption
 
-    def main(args : Array[String]) {
-        val config = new Config(args)
+    def main(args : Array[String]) : Unit = {
+        val config = new Config(args.toIndexedSeq)
         try {
             config.verify()
             if (config.graalVM())

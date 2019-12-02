@@ -6,6 +6,7 @@ import org.bitbucket.inkytonik.cooma.Primitives.IntPrimRelOp.{EQ, GT, GTE, LT, L
 import org.bitbucket.inkytonik.cooma.Primitives.StrPrimOp.{CONCAT, LENGTH, SUBSTR}
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
+import scala.language.existentials
 
 object Primitives {
 
@@ -368,8 +369,8 @@ object Primitives {
 
         Map(
             "Ints" -> interp.recR(
-                IntPrimBinOp.values.map(op => { generateField(op.toString.toLowerCase(), interp.intBinP(op), 2) }).toVector ++
-                    IntPrimRelOp.values.map(op => { generateField(op.toString.toLowerCase(), interp.intRelP(op), 2) }).toVector
+                IntPrimBinOp.values.unsorted.map(op => { generateField(op.toString.toLowerCase(), interp.intBinP(op), 2) }).toVector ++
+                    IntPrimRelOp.values.unsorted.map(op => { generateField(op.toString.toLowerCase(), interp.intRelP(op), 2) }).toVector
             ),
             "Strings" -> interp.recR(Vector(
                 generateField(StrPrimOp.LENGTH.toString.toLowerCase(), interp.stringP(StrPrimOp.LENGTH), 1),
@@ -381,4 +382,3 @@ object Primitives {
 
     }
 }
-

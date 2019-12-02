@@ -13,7 +13,7 @@ trait TruffleREPL extends REPL {
 
     var currentDynamicEnv : Context = _
 
-    override def initialise() {
+    override def initialise() : Unit = {
         super.initialise()
         currentDynamicEnv = Context.newBuilder(CoomaConstants.ID).build()
     }
@@ -23,7 +23,7 @@ trait TruffleREPL extends REPL {
         i : String,
         tipe : Expression,
         config : Config
-    ) {
+    ) : Unit = {
         execute(i, tipe, config, {
             val line = format(program).layout
             val result = currentDynamicEnv.eval(CoomaConstants.ID, line)

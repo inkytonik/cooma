@@ -11,7 +11,7 @@ trait ReferenceREPL extends REPL {
 
     var currentDynamicEnv : Env = _
 
-    override def initialise() {
+    override def initialise() : Unit = {
         super.initialise()
         currentDynamicEnv = predefEnv
     }
@@ -21,7 +21,7 @@ trait ReferenceREPL extends REPL {
         i : String,
         tipe : Expression,
         config : Config
-    ) {
+    ) : Unit = {
         val term = compileStandalone(program)
 
         if (config.irPrint())

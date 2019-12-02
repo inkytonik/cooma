@@ -26,12 +26,12 @@ class ReferenceDriver extends Driver {
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, pretty}
     import org.bitbucket.inkytonik.kiama.util.StringSource
 
-    override def run(config : Config) {
+    override def run(config : Config) : Unit = {
         if (config.server()) {
             launch(config)
         } else if (config.filenames().isEmpty) {
             val repl = createREPL(config)
-            repl.driver(config.args)
+            repl.driver(config.args.toIndexedSeq)
         } else
             super.run(config)
     }

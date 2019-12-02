@@ -40,7 +40,7 @@ trait REPL extends REPLBase[Config] {
     /**
      * Start the REPL
      */
-    override def driver(args : Seq[String]) {
+    override def driver(args : Seq[String]) : Unit = {
         initialise()
         super.driver(args)
     }
@@ -48,12 +48,12 @@ trait REPL extends REPLBase[Config] {
     /**
      * Initialise REPL state.
      */
-    def initialise() {
+    def initialise() : Unit = {
         currentStaticEnv = predef
         nResults = 0
     }
 
-    def help(config : Config) {
+    def help(config : Config) : Unit = {
         config.output().emit(
             """
 			  |exp                    evaluate exp, print value
@@ -96,7 +96,7 @@ trait REPL extends REPLBase[Config] {
         Some(config)
     }
 
-    def enterline(line : String, config : Config) {
+    def enterline(line : String, config : Config) : Unit = {
         val source = new StringSource(line)
         val p = new CoomaParser(source, positions)
         val pr = p.pWhitespace(0)
@@ -164,14 +164,14 @@ trait REPL extends REPLBase[Config] {
     /**
      * Process a user-entered value binding.
      */
-    def processVal(i : String, vd : Val, tipe : Expression, config : Config) {
+    def processVal(i : String, vd : Val, tipe : Expression, config : Config) : Unit = {
         process(makeVal(i, vd), i, tipe, config)
     }
 
     /**
      * Process a user-entered function definition binding.
      */
-    def processDef(i : String, fd : Def, tipe : Expression, config : Config) {
+    def processDef(i : String, fd : Def, tipe : Expression, config : Config) : Unit = {
         process(makeDef(i, fd), i, tipe, config)
     }
 
@@ -183,7 +183,7 @@ trait REPL extends REPLBase[Config] {
         i : String,
         tipe : Expression,
         config : Config
-    )
+    ) : Unit
 
     /**
      * Execute a REPL line. If the type of the line is Type, just
@@ -208,7 +208,7 @@ trait REPL extends REPLBase[Config] {
         tipe : Expression,
         optResult : Option[OutputValueR],
         config : Config
-    ) {
+    ) : Unit = {
         val suffix =
             optResult match {
                 case Some(result) =>

@@ -26,7 +26,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
     def createConfig(args : Seq[String]) : Config =
         new Config(args)
 
-    override def driver(args : Seq[String]) {
+    override def driver(args : Seq[String]) : Unit = {
         createAndInitConfig(args) match {
             case Left(message) =>
                 System.err.println(s"cooma: $message, use --help for options")
@@ -38,7 +38,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
     def isREPL(config : Config) =
         config.filenames().isEmpty
 
-    override def compileFiles(config : Config) {
+    override def compileFiles(config : Config) : Unit = {
         if (!isREPL(config))
             compileFile(config.filenames()(0), config)
     }

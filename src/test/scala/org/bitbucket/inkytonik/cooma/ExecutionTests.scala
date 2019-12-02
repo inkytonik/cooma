@@ -119,8 +119,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ),
                 ExecTest(
                     "string with escape sequences",
-                    """"\b\t\n\f\t\7\15\167"""",
-                    """"\b\t\n\f\t\7\rw"""",
+                    """"\b\f\n\r\t\\\"\'"""",
+                    """"\b\f\n\r\t\\\"\'"""",
                     "String"
                 ),
 
@@ -596,8 +596,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<false : Unit>"
                 )
 
-            ) ++ Primitives.IntPrimBinOp.values.flatMap(op => {
-                    def underscoreToCamel(name : String) = name.head.toUpper + name.tail
+            ) ++ Primitives.IntPrimBinOp.values.unsorted.flatMap(op => {
+                    def underscoreToCamel(name : String) = s"${name.head.toUpper}${name.tail}"
                     val primOp = s"Int${underscoreToCamel(op.toString.toLowerCase)}"
                     Vector(
                         ExecTest(
@@ -864,19 +864,19 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Ints.div(2, 0)",
                     "cooma: Error executing primitive: BigInteger divide by zero"
                 )
-            ) ++ Primitives.IntPrimBinOp.values.map(op => {
+            ) ++ Primitives.IntPrimBinOp.values.unsorted.map(op => {
                     REPLTest(
                         s"Primitive ${op} has the correct type",
                         s"Ints.${op.toString.toLowerCase}",
                         "res0 : (Int, Int) => Int = <function>"
                     )
-                }) ++ Primitives.IntPrimBinOp.values.map(op => {
+                }) ++ Primitives.IntPrimBinOp.values.unsorted.map(op => {
                     REPLTest(
                         s"Primitive ${op} partial application has the correct type",
                         s"Ints.${op.toString.toLowerCase}(1)",
                         "res0 : (Int) => Int = <function>"
                     )
-                }) ++ Primitives.IntPrimBinOp.values.flatMap(op => {
+                }) ++ Primitives.IntPrimBinOp.values.unsorted.flatMap(op => {
                     Vector(
                         REPLTest(
                             s"Primitive ${op} produces the expected result",

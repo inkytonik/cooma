@@ -7,7 +7,7 @@ import scala.sys.process._
 name := "cooma"
 version := "0.1.0"
 organization in ThisBuild := "org.bitbucket.inkytonik.cooma"
-scalaVersion in ThisBuild := "2.12.8"
+scalaVersion in ThisBuild := "2.13.1"
 
 lazy val kiamaDependencies = Seq(
 	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
@@ -17,7 +17,10 @@ lazy val kiamaDependencies = Seq(
 )
 
 lazy val commonsettings = Seq(
-	unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle",
+	organization := "org.bitbucket.inkytonik.cooma",
+	scalaVersion := "2.13.1",
+
+	unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.13/classes/org/bitbucket/inkytonik/cooma/truffle",
 	scalacOptions ++=
 		Seq(
 			"-deprecation",
@@ -100,8 +103,6 @@ lazy val root = (project in file("."))
 	.settings(
 		name := "cooma",
 		version := "0.1.0",
-		organization := "org.bitbucket.inkytonik.cooma",
-		scalaVersion := "2.12.8",
 		assemblySettings,
 		commonsettings,
 		mainClass in Compile := (mainClass in Compile in reference).value,
