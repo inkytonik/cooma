@@ -68,13 +68,13 @@ Enter definitions or expressions (:help for commands)
 
 cooma> :help
 
-exp                          evaluate exp, print value
-val x = exp                  add new value definition
-def f(x : Int) : Int = exp   add new function definition
-:help                        print this message
-:lines                       enter multiple separate input lines until :end
-:paste                       enter single multi-line input until :end
-:quit                        quit the REPL (also Control-D)
+exp                         evaluate exp, print value
+val x = exp                 add new value definition
+def f (x : Int) Int = exp   add new function definition
+:help                       print this message
+:lines                      enter multiple separate input lines until :end
+:paste                      enter single multi-line input until :end
+:quit                       quit the REPL (also Control-D)
 
 cooma> 10
 res0 = 10
@@ -88,8 +88,8 @@ x : Int = 20
 cooma> x
 res2 : Int = 20
 
-cooma> def f(x : Int) = x
-f : (Int) => Int = <function>
+cooma> def f (x : Int) Int = x
+f : (Int) Int = <function>
 
 cooma> f(20)
 res3 : Int = 20
@@ -119,7 +119,7 @@ res5 : Int = 1
 E.g., for the program `reference/src/test/resources/basic/multiArgCall.cooma` which is a simple multiple argument function call:
 
 ```ml
-{fun (x : Int, y : String) = x} (10, "hello")
+{fun (x : Int, y : String) x} (10, "hello")
 ```
 
 we get the following using the `-r` option to print the program result:
@@ -169,8 +169,8 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 
 ```ml
 {
-    def f (x : Int) : Int = x
-    def g (y : Int) : Int = f(y)
+    def f (x : Int) Int = x
+    def g (y : Int) Int = f(y)
     g(10)
 }
 
@@ -181,7 +181,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ### Record argument and field reference
 
 ```ml
-{fun (r : {x : Int, y : Int, z : String}) = r.x} ({x = 20, y = 10, z = "Hi"})
+{fun (r : {x : Int, y : Int, z : String}) r.x} ({x = 20, y = 10, z = "Hi"})
 
 > run -r reference/src/test/resources/basic/recordArg.cooma
 20
@@ -203,12 +203,12 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ### String command-line arguments
 
 ```ml
-fun (s : String) = s
+fun (s : String) s
 
 > run -r reference/src/test/resources/capability/stringCmdArg.cooma hello
 "hello"
 
-fun (s : String, t : String) = t
+fun (s : String, t : String) t
 
 > run -r reference/src/test/resources/capability/multiStringCmdArg.cooma hello there
 "there"
@@ -221,7 +221,7 @@ E.g., a Writer capability allows the program to write to the named file or devic
 (The name "-" means standard output, or input for readers.)
 
 ```ml
-fun (w : Writer) = w.write("Hello world!\n")
+fun (w : Writer) w.write("Hello world!\n")
 
 > run -r reference/src/test/resources/capability/writerCmdArg.cooma /dev/tty
 Hello world!
@@ -240,10 +240,10 @@ cooma: Writer capability unavailable: can't write /does/not/exist
 ### Writer and Reader capabilities
 
 ```ml
-fun (w : Writer, r : Reader) = w.write(r.read())
+fun (w : Writer, r : Reader) w.write(r.read())
 
 > run -r reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty reference/src/test/resources/basic/multiArgCall.cooma
-(fun (x : Int, y : String) = x) (10, "hello")
+(fun (x : Int, y : String) x) (10, "hello")
 {}
 ```
 

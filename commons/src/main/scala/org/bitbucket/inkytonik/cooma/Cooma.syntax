@@ -11,8 +11,8 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Arguments ")" "=" Expression      {Fun, right, 4}
-  | '(' Expression ** "," ")" "=>" Expression   {FunT, right, 4}
+    "fun" '(' Arguments ")" Expression          {Fun, right, 4}
+  | '(' Expression ** "," ")" Expression        {FunT, right, 4}
   | Expression sp "match" "{" CaseScope+ '}'    {Mat, left, 3}
   | Expression "&" Expression                   {Cat, left, 2}
   | Expression '(' Expression ** "," ')'        {App, left, 1}
@@ -42,7 +42,7 @@ CaseScope =
   Case.
 
 Case =
-  "case" Identifier sp IdnDef sp "=" Expression sp.
+  "case" Identifier sp IdnDef sp "=>" Expression sp.
 
 Field =
   Identifier sp "=" Expression.
@@ -59,7 +59,7 @@ Def =
   "def" IdnDef sp Body \n.
 
 Body =
-  '(' Arguments ")" ":" Expression sp '=' nestnl (Expression).
+  '(' Arguments ")" Expression sp '=' nestnl (Expression).
 
 Val =
   "val" IdnDef sp "=" Expression \n.

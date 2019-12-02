@@ -1,26 +1,26 @@
 {
     // predef: val Reader = {read : () => String}
-    val Reader2 = {read1 : () => String, read2 : () => String}
-    val Chooser = {choose : (Boolean) => Reader}
+    val Reader2 = {read1 : () String, read2 : () String}
+    val Chooser = {choose : (Boolean) Reader}
 
-    def alice () : Reader2 = {
-        read1 = fun () = "read1",
-        read2 = fun () = "read2"
+    def alice () Reader2 = {
+        read1 = fun () "read1",
+        read2 = fun () "read2"
     }
 
-    def trusted () : Chooser = {
+    def trusted () Chooser = {
         val r2 = alice()
         {
             choose =
-                fun (b : Boolean) =
+                fun (b : Boolean)
                     b match {
-                        case true x  = {read = r2.read1}
-                        case false x = {read = r2.read2}
+                        case true x  => {read = r2.read1}
+                        case false x => {read = r2.read2}
                     }
         }
     }
 
-    def bob () : String =
+    def bob () String =
         trusted().choose(false).read()
 
     bob()

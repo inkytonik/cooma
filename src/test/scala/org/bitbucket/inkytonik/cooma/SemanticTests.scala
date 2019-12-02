@@ -37,18 +37,18 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "distinct argument names",
-                "fun(x : Int, y : Int) = x",
+                "fun (x : Int, y : Int) x",
                 ""
             ),
             SemanticTest(
                 "duplicated argument names",
-                "fun(x : Int, x : Int) = x",
-                """|1:5:error: x is declared more than once
-                   |fun(x : Int, x : Int) = x
-                   |    ^
-                   |1:14:error: x is declared more than once
-                   |fun(x : Int, x : Int) = x
-                   |             ^
+                "fun (x : Int, x : Int) x",
+                """|1:6:error: x is declared more than once
+                   |fun (x : Int, x : Int) x
+                   |     ^
+                   |1:15:error: x is declared more than once
+                   |fun (x : Int, x : Int) x
+                   |              ^
                    |"""
             ),
             SemanticTest(
@@ -69,45 +69,45 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "duplicated variant name in variant type",
-                "fun (a : <x : Int, x : Int, y : Int>) = a",
+                "fun (a : <x : Int, x : Int, y : Int>) a",
                 """|1:11:error: duplicate type field x
-                   |fun (a : <x : Int, x : Int, y : Int>) = a
+                   |fun (a : <x : Int, x : Int, y : Int>) a
                    |          ^
                    |1:20:error: duplicate type field x
-                   |fun (a : <x : Int, x : Int, y : Int>) = a
+                   |fun (a : <x : Int, x : Int, y : Int>) a
                    |                   ^
                    |"""
             ),
             SemanticTest(
                 "distinct type fields",
-                "fun (a : {x : Int, y : Int}) = 0",
+                "fun (a : {x : Int, y : Int}) 0",
                 ""
             ),
             SemanticTest(
                 "duplicate type fields",
-                "fun (a : {x : Int, x : Int}) = 0",
+                "fun (a : {x : Int, x : Int}) 0",
                 """|1:11:error: duplicate type field x
-                   |fun (a : {x : Int, x : Int}) = 0
+                   |fun (a : {x : Int, x : Int}) 0
                    |          ^
                    |1:20:error: duplicate type field x
-                   |fun (a : {x : Int, x : Int}) = 0
+                   |fun (a : {x : Int, x : Int}) 0
                    |                   ^
                    |"""
             ),
             SemanticTest(
                 "distinct function names",
-                "{ def f(i : Int) : Int = i def g(i : Int) : Int = i 0 }",
+                "{ def f (i : Int) Int = i def g (i : Int) Int = i 0 }",
                 ""
             ),
             SemanticTest(
                 "duplicate function names in same group",
-                "{ def f(i : Int) : Int = i def f(i : Int) : Int = i 0 }",
+                "{ def f (i : Int) Int = i def f (i : Int) Int = i 0 }",
                 """|1:7:error: f is declared more than once
-                   |{ def f(i : Int) : Int = i def f(i : Int) : Int = i 0 }
+                   |{ def f (i : Int) Int = i def f (i : Int) Int = i 0 }
                    |      ^
-                   |1:32:error: f is declared more than once
-                   |{ def f(i : Int) : Int = i def f(i : Int) : Int = i 0 }
-                   |                               ^
+                   |1:31:error: f is declared more than once
+                   |{ def f (i : Int) Int = i def f (i : Int) Int = i 0 }
+                   |                              ^
                    |"""
             ),
 
@@ -165,39 +165,39 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "declared argument name",
-                "fun (x : Int) = x",
+                "fun (x : Int) x",
                 ""
             ),
             SemanticTest(
                 "not-declared use in no argument function",
-                "fun () = x",
-                """|1:10:error: x is not declared
-                   |fun () = x
-                   |         ^
+                "fun () x",
+                """|1:8:error: x is not declared
+                   |fun () x
+                   |       ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use in argument function",
-                "fun (x : Int) = y",
-                """|1:17:error: y is not declared
-                   |fun (x : Int) = y
-                   |                ^
+                "fun (x : Int) y",
+                """|1:15:error: y is not declared
+                   |fun (x : Int) y
+                   |              ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use in nested expression",
-                "fun (x : {a : Int}) = x & y",
-                """|1:27:error: y is not declared
-                   |fun (x : {a : Int}) = x & y
-                   |                          ^
+                "fun (x : {a : Int}) x & y",
+                """|1:25:error: y is not declared
+                   |fun (x : {a : Int}) x & y
+                   |                        ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use in field definition",
-                "fun () = {a = y}",
-                """|1:15:error: y is not declared
-                   |fun () = {a = y}
-                   |              ^
+                "fun () {a = y}",
+                """|1:13:error: y is not declared
+                   |fun () {a = y}
+                   |            ^
                    |"""
             ),
             SemanticTest(
@@ -218,44 +218,44 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "overriding value names",
-                """{ val x = "hi" val x = 2 {fun (a : Int) = 0}(x) }""",
+                """{ val x = "hi" val x = 2 {fun (a : Int) 0}(x) }""",
                 ""
             ),
             SemanticTest(
                 "not-declared use in no argument function definition",
-                "{ def f () : Int = x 0 }",
-                """|1:20:error: x is not declared
-                   |{ def f () : Int = x 0 }
-                   |                   ^
+                "{ def f () Int = x 0 }",
+                """|1:18:error: x is not declared
+                   |{ def f () Int = x 0 }
+                   |                 ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use in argument function definition",
-                "{ def f (x : Int) : Int = y 0 }",
-                """|1:27:error: y is not declared
-                   |{ def f (x : Int) : Int = y 0 }
-                   |                          ^
+                "{ def f (x : Int) Int = y 0 }",
+                """|1:25:error: y is not declared
+                   |{ def f (x : Int) Int = y 0 }
+                   |                        ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use as type name in function",
-                "fun (x : Foo) = 0",
+                "fun (x : Foo) 0",
                 """|1:10:error: Foo is not declared
-                   |fun (x : Foo) = 0
+                   |fun (x : Foo) 0
                    |         ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use as type name in function defintion",
-                "{ def f (x : Foo) : Int = 0 0 }",
+                "{ def f (x : Foo) Int = 0 0 }",
                 """|1:14:error: Foo is not declared
-                   |{ def f (x : Foo) : Int = 0 0 }
+                   |{ def f (x : Foo) Int = 0 0 }
                    |             ^
                    |"""
             ),
             SemanticTest(
                 "overriding function names in different group",
-                "{ def f(i : String) : Int = 0 val x = 1 def f(i : Int) : Int = i f(0) }",
+                "{ def f (i : String) Int = 0 val x = 1 def f (i : Int) Int = i f(0) }",
                 ""
             ),
 
@@ -263,31 +263,31 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "apply no-arg function",
-                "{fun () = 0}()",
+                "{fun () 0}()",
                 ""
             ),
             SemanticTest(
                 "apply function to too many arguments (zero)",
-                "{fun () = 0}(3)",
-                """|1:14:error: expected no arguments, got 1
-                   |{fun () = 0}(3)
-                   |             ^
+                "{fun () 0}(3)",
+                """|1:12:error: expected no arguments, got 1
+                   |{fun () 0}(3)
+                   |           ^
                    |"""
             ),
             SemanticTest(
                 "apply function to too many arguments (one)",
-                "{fun (x : Int) = 0}(2, 3)",
-                """|1:21:error: expected up to one argument, got 2
-                   |{fun (x : Int) = 0}(2, 3)
-                   |                    ^
+                "{fun (x : Int) 0}(2, 3)",
+                """|1:19:error: expected up to one argument, got 2
+                   |{fun (x : Int) 0}(2, 3)
+                   |                  ^
                    |"""
             ),
             SemanticTest(
                 "apply function to too many arguments (more than one)",
-                "{fun (x : Int, y : Int) = 0}(2, 3, 4)",
-                """|1:30:error: expected up to 2 arguments, got 3
-                   |{fun (x : Int, y : Int) = 0}(2, 3, 4)
-                   |                             ^
+                "{fun (x : Int, y : Int) 0}(2, 3, 4)",
+                """|1:28:error: expected up to 2 arguments, got 3
+                   |{fun (x : Int, y : Int) 0}(2, 3, 4)
+                   |                           ^
                    |"""
             ),
             SemanticTest(
@@ -300,18 +300,18 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "type application",
-                "{fun (t : Type, x : t) = x}(Int, 10)",
+                "{fun (t : Type, x : t) x}(Int, 10)",
                 ""
             ),
             SemanticTest(
                 "bad type application",
-                "{fun (x : Int, t : Type) = x}(Int, 10)",
-                """|1:31:error: expected Int, got Int of type Type
-                   |{fun (x : Int, t : Type) = x}(Int, 10)
-                   |                              ^
-                   |1:36:error: expected Type, got 10 of type Int
-                   |{fun (x : Int, t : Type) = x}(Int, 10)
-                   |                                   ^
+                "{fun (x : Int, t : Type) x}(Int, 10)",
+                """|1:29:error: expected Int, got Int of type Type
+                   |{fun (x : Int, t : Type) x}(Int, 10)
+                   |                            ^
+                   |1:34:error: expected Type, got 10 of type Int
+                   |{fun (x : Int, t : Type) x}(Int, 10)
+                   |                                 ^
                    |"""
             ),
 
@@ -319,61 +319,61 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "Reader is a record with a read field",
-                "fun (r : Reader) = r.read()",
+                "fun (r : Reader) r.read()",
                 ""
             ),
             SemanticTest(
                 "Reader read field has correct type",
-                "{ def f (r : Reader) : String = r.read() 0 }",
+                "{ def f (r : Reader) String = r.read() 0 }",
                 ""
             ),
             SemanticTest(
                 "Reader doesn't have non-read field",
-                "fun (r : Reader) = r.foo",
-                """|1:22:error: foo is not a field of record type {read : () => String}
-                   |fun (r : Reader) = r.foo
-                   |                     ^
+                "fun (r : Reader) r.foo",
+                """|1:20:error: foo is not a field of record type {read : () String}
+                   |fun (r : Reader) r.foo
+                   |                   ^
                    |"""
             ),
             SemanticTest(
                 "Writer is pre-defined record type",
-                """fun (w : Writer) = w.write("hello")""",
+                """fun (w : Writer) w.write("hello")""",
                 ""
             ),
             SemanticTest(
                 "Writer write field has correct type",
-                """{ def f (w : Writer) : Unit = w.write("hi") 0 }""",
+                """{ def f (w : Writer) Unit = w.write("hi") 0 }""",
                 ""
             ),
             SemanticTest(
                 "Writer doesn't have non-write field",
-                "fun (w : Writer) = w.foo",
-                """|1:22:error: foo is not a field of record type {write : (String) => Unit}
-                   |fun (w : Writer) = w.foo
-                   |                     ^
+                "fun (w : Writer) w.foo",
+                """|1:20:error: foo is not a field of record type {write : (String) Unit}
+                   |fun (w : Writer) w.foo
+                   |                   ^
                    |"""
             ),
             SemanticTest(
                 "ReaderWriter is pre-defined record type",
-                "fun (rw : ReaderWriter) = { val s = rw.read() rw.write(s) }",
+                "fun (rw : ReaderWriter) { val s = rw.read() rw.write(s) }",
                 ""
             ),
             SemanticTest(
                 "ReaderWriter read field has correct type",
-                "{ def f (rw : ReaderWriter) : String = rw.read() 0 }",
+                "{ def f (rw : ReaderWriter) String = rw.read() 0 }",
                 ""
             ),
             SemanticTest(
                 "ReaderWriter write field has correct type",
-                """{ def f (rw : ReaderWriter) : Unit = rw.write("hi") 0 }""",
+                """{ def f (rw : ReaderWriter) Unit = rw.write("hi") 0 }""",
                 ""
             ),
             SemanticTest(
                 "ReaderWriter doesn't have non-write field",
-                "fun (rw : ReaderWriter) = rw.foo",
-                """|1:30:error: foo is not a field of record type {read : () => String, write : (String) => Unit}
-                   |fun (rw : ReaderWriter) = rw.foo
-                   |                             ^
+                "fun (rw : ReaderWriter) rw.foo",
+                """|1:28:error: foo is not a field of record type {read : () String, write : (String) Unit}
+                   |fun (rw : ReaderWriter) rw.foo
+                   |                           ^
                    |"""
             ),
 
@@ -418,99 +418,99 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "basic match",
-                "<x = 1> match { case x a = a }",
+                "<x = 1> match { case x a => a }",
                 ""
             ),
             SemanticTest(
                 "basic match correct type",
                 """{
-                     def f () : Int = <x = 1> match { case x a = a }
+                     def f () Int = <x = 1> match { case x a => a }
                      f ()
                    }""",
                 ""
             ),
             SemanticTest(
                 "match of non-variant",
-                "3 match { case x a = a }",
+                "3 match { case x a => a }",
                 """|1:1:error: match of non-variant type Int
-                   |3 match { case x a = a }
+                   |3 match { case x a => a }
                    |^
                    |"""
             ),
             SemanticTest(
                 "basic match wrong result type",
                 """{
-                  |  def f () : String = <x = 1> match { case x a = a }
+                  |  def f () String = <x = 1> match { case x a => a }
                   |  f ()
                   |}""",
-                """|2:23:error: expected String, got <x = 1> match { case x a = a } of type Int
-                   |  def f () : String = <x = 1> match { case x a = a }
-                   |                      ^
+                """|2:21:error: expected String, got <x = 1> match { case x a => a } of type Int
+                   |  def f () String = <x = 1> match { case x a => a }
+                   |                    ^
                    |"""
             ),
             SemanticTest(
                 "non-declared name in match case",
-                "<x = 1> match { case x a = y }",
-                """|1:28:error: y is not declared
-                   |<x = 1> match { case x a = y }
-                   |                           ^
+                "<x = 1> match { case x a => y }",
+                """|1:29:error: y is not declared
+                   |<x = 1> match { case x a => y }
+                   |                            ^
                    |"""
             ),
             SemanticTest(
                 "correct number and type of cases for match",
                 """{
-                    def f () : <x : Int, y : Int> = <x = 3>
-                    f () match { case x a = 1 case y b = 2 }
+                    def f () <x : Int, y : Int> = <x = 3>
+                    f () match { case x a => 1 case y b => 2 }
                 }""",
                 ""
             ),
             SemanticTest(
                 "correct number of cases but wrong type for match",
                 """{
-                  |  def f () : <x : Int, y : Int> = <x = 3>
-                  |  f () match { case x a = 1 case y b = "hi" }
+                  |  def f () <x : Int, y : Int> = <x = 3>
+                  |  f () match { case x a => 1 case y b => "hi" }
                   |}""",
-                """|3:27:error: case expression types are not the same
-                   |  f () match { case x a = 1 case y b = "hi" }
-                   |                          ^
-                   |3:40:error: case expression types are not the same
-                   |  f () match { case x a = 1 case y b = "hi" }
-                   |                                       ^
+                """|3:28:error: case expression types are not the same
+                   |  f () match { case x a => 1 case y b => "hi" }
+                   |                           ^
+                   |3:42:error: case expression types are not the same
+                   |  f () match { case x a => 1 case y b => "hi" }
+                   |                                         ^
                    |"""
             ),
             SemanticTest(
                 "incorrect number of cases for match",
                 """{
-                  |  def f () : <x : Int, y : Int> = <x = 3>
-                  |  f () match { case x a = 1 }
+                  |  def f () <x : Int, y : Int> = <x = 3>
+                  |  f () match { case x a => 1 }
                   |}""",
                 """|3:16:error: expected 2 cases, got 1
-                   |  f () match { case x a = 1 }
+                   |  f () match { case x a => 1 }
                    |               ^
                    |"""
             ),
             SemanticTest(
                 "duplicate cases for match",
                 """{
-                  |  def f () : <x : Int, y : Int> = <x = 3>
-                  |  f () match { case x a = 1 case x b = 2 }
+                  |  def f () <x : Int, y : Int> = <x = 3>
+                  |  f () match { case x a => 1 case x b => 2 }
                   |}""",
                 """|3:16:error: duplicate case for variant x
-                   |  f () match { case x a = 1 case x b = 2 }
+                   |  f () match { case x a => 1 case x b => 2 }
                    |               ^
-                   |3:29:error: duplicate case for variant x
-                   |  f () match { case x a = 1 case x b = 2 }
-                   |                            ^
+                   |3:30:error: duplicate case for variant x
+                   |  f () match { case x a => 1 case x b => 2 }
+                   |                             ^
                    |"""
             ),
             SemanticTest(
                 "incorrect variant for match",
                 """{
-                  |  def f () : <x : Int, y : Int> = <x = 3>
-                  |  f () match { case w a = 1 case y b = 2 }
+                  |  def f () <x : Int, y : Int> = <x = 3>
+                  |  f () match { case w a => 1 case y b => 2 }
                   |}""",
                 """|3:16:error: variant w not present in matched type <x : Int, y : Int>
-                   |  f () match { case w a = 1 case y b = 2 }
+                   |  f () match { case w a => 1 case y b => 2 }
                    |               ^
                    |"""
             ),
@@ -519,33 +519,33 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "non-type name used as argument type",
-                "{ val x = 1 fun (y : x) = y }",
+                "{ val x = 1 fun (y : x) y }",
                 """|1:22:error: expected Type, got x of type Int
-                   |{ val x = 1 fun (y : x) = y }
+                   |{ val x = 1 fun (y : x) y }
                    |                     ^
                    |"""
             ),
             SemanticTest(
                 "non-type name used as argument type in function type",
-                "{ val x = 1 fun (y : (x) => Int) = y }",
+                "{ val x = 1 fun (y : (x) Int) y }",
                 """|1:23:error: expected Type, got x of type Int
-                   |{ val x = 1 fun (y : (x) => Int) = y }
+                   |{ val x = 1 fun (y : (x) Int) y }
                    |                      ^
                    |"""
             ),
             SemanticTest(
                 "non-type name used as return type in function type",
-                "{ val x = 1 fun (y : (Int) => x) = y }",
-                """|1:31:error: expected Type, got x of type Int
-                   |{ val x = 1 fun (y : (Int) => x) = y }
-                   |                              ^
+                "{ val x = 1 fun (y : (Int) x) y }",
+                """|1:28:error: expected Type, got x of type Int
+                   |{ val x = 1 fun (y : (Int) x) y }
+                   |                           ^
                    |"""
             ),
             SemanticTest(
                 "non-type name used as field type",
-                "{ val x = 1 fun (y : {a : x}) = 1 }",
+                "{ val x = 1 fun (y : {a : x}) 1 }",
                 """|1:27:error: expected Type, got x of type Int
-                   |{ val x = 1 fun (y : {a : x}) = 1 }
+                   |{ val x = 1 fun (y : {a : x}) 1 }
                    |                          ^
                    |"""
             ),
@@ -554,27 +554,27 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "alias of simple type as argument",
-                "{ val Foo = Int {fun (x : Foo) = 0}(1) }",
+                "{ val Foo = Int {fun (x : Foo) 0}(1) }",
                 ""
             ),
             SemanticTest(
                 "alias of simple type as return type",
-                "{ val Foo = Int def f (x : Int) : Foo = 0 f(1) }",
+                "{ val Foo = Int def f (x : Int) Foo = 0 f(1) }",
                 ""
             ),
             SemanticTest(
                 "alias of record type",
-                "{ val Foo = {x : Int, y : String} fun (f : Foo) = f.x }",
+                "{ val Foo = {x : Int, y : String} fun (f : Foo) f.x }",
                 ""
             ),
             SemanticTest(
                 "alias of function type",
-                "{ val Foo = (Int) => String fun (f : Foo) = f(0) }",
+                "{ val Foo = (Int) String fun (f : Foo) f(0) }",
                 ""
             ),
             SemanticTest(
                 "alias of alias of simple type",
-                "{ val Foo = Int val Bar = Foo {fun (x : Bar) = 0}(1) }",
+                "{ val Foo = Int val Bar = Foo {fun (x : Bar) 0}(1) }",
                 ""
             ),
             SemanticTest(
@@ -582,7 +582,7 @@ class SemanticTests extends Tests {
                 """{
                       val Foo = Int
                       val Bar = {f : Foo}
-                      def m (x : Bar) : Int = x.f
+                      def m (x : Bar) Int = x.f
                       0
                    }""",
                 ""
@@ -591,8 +591,8 @@ class SemanticTests extends Tests {
                 "argument alias of record type with nested alias",
                 """{
                       val Foo = Int
-                      val Bar = {f : (Foo) => Int}
-                      def m (x : Bar) : Int = x.f(1)
+                      val Bar = {f : (Foo) Int}
+                      def m (x : Bar) Int = x.f(1)
                       0
                    }""",
                 ""
@@ -602,9 +602,9 @@ class SemanticTests extends Tests {
                 """{
                       val Foo = Int
                       val Ble = {a : Int}
-                      val Bar = <f : (Foo) => Ble>
-                      def m (x : Int) : Bar =
-                         <f = fun (y : Foo) = {a = 3}>
+                      val Bar = <f : (Foo) Ble>
+                      def m (x : Int) Bar =
+                         <f = fun (y : Foo) {a = 3}>
                       0
                    }""",
                 ""
@@ -613,8 +613,8 @@ class SemanticTests extends Tests {
                 "alias of function type of alias",
                 """{
                       val Foo = Int
-                      val Bar = (Foo) => Foo
-                      def m (x : Bar) : Int = x(0)
+                      val Bar = (Foo) Foo
+                      def m (x : Bar) Int = x(0)
                       0
                    }""",
                 ""
@@ -642,22 +642,22 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "function argument type same (one)",
-                "{fun (x : Int) = x}(1)",
+                "{fun (x : Int) x}(1)",
                 ""
             ),
             SemanticTest(
                 "function argument type same (two)",
-                "{fun (x : Int, y : Int) = x}(1, 2)",
+                "{fun (x : Int, y : Int) x}(1, 2)",
                 ""
             ),
             SemanticTest(
                 "function definition argument type same (one)",
-                "{ def f (x : Int) : Int = x f(1) }",
+                "{ def f (x : Int) Int = x f(1) }",
                 ""
             ),
             SemanticTest(
                 "function definition argument type same (two)",
-                "{ def f (x : Int, y : Int) : Int = x f(1, 2) }",
+                "{ def f (x : Int, y : Int) Int = x f(1, 2) }",
                 ""
             ),
 
@@ -665,98 +665,98 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "bad function argument type (one, simple)",
-                "{fun (x : String) = x}(1)",
-                """|1:24:error: expected String, got 1 of type Int
-                   |{fun (x : String) = x}(1)
-                   |                       ^
+                "{fun (x : String) x}(1)",
+                """|1:22:error: expected String, got 1 of type Int
+                   |{fun (x : String) x}(1)
+                   |                     ^
                    |"""
             ),
             SemanticTest(
                 "bad function argument type (two, simple)",
-                "{fun (x : Int, y : String) = x}(1, 2)",
-                """|1:36:error: expected String, got 2 of type Int
-                   |{fun (x : Int, y : String) = x}(1, 2)
-                   |                                   ^
-                   |"""
-            ),
-            SemanticTest(
-                "bad function argument type (record formal)",
-                "{fun (x : {y : Int}) = x}(1)",
-                """|1:27:error: expected {y : Int}, got 1 of type Int
-                   |{fun (x : {y : Int}) = x}(1)
-                   |                          ^
-                   |"""
-            ),
-            SemanticTest(
-                "bad function argument type (record actual)",
-                "{fun (x : Int) = x}({y = 1})",
-                """|1:21:error: expected Int, got {y = 1} of type {y : Int}
-                   |{fun (x : Int) = x}({y = 1})
-                   |                    ^
-                   |"""
-            ),
-            SemanticTest(
-                "bad function argument type (function formal)",
-                "{fun (x : (Int) => String) = x}(1)",
-                """|1:33:error: expected (Int) => String, got 1 of type Int
-                   |{fun (x : (Int) => String) = x}(1)
-                   |                                ^
-                   |"""
-            ),
-            SemanticTest(
-                "bad function argument type (function actual)",
-                "{fun (x : Int) = x}(fun (y : Int) = y)",
-                """|1:21:error: expected Int, got fun (y : Int) = y of type (Int) => Int
-                   |{fun (x : Int) = x}(fun (y : Int) = y)
-                   |                    ^
-                   |"""
-            ),
-            SemanticTest(
-                "bad function definition argument type (one, simple)",
-                "{ def f (x : String) : Int = 0 f(1) }",
-                """|1:34:error: expected String, got 1 of type Int
-                   |{ def f (x : String) : Int = 0 f(1) }
+                "{fun (x : Int, y : String) x}(1, 2)",
+                """|1:34:error: expected String, got 2 of type Int
+                   |{fun (x : Int, y : String) x}(1, 2)
                    |                                 ^
                    |"""
             ),
             SemanticTest(
+                "bad function argument type (record formal)",
+                "{fun (x : {y : Int}) x}(1)",
+                """|1:25:error: expected {y : Int}, got 1 of type Int
+                   |{fun (x : {y : Int}) x}(1)
+                   |                        ^
+                   |"""
+            ),
+            SemanticTest(
+                "bad function argument type (record actual)",
+                "{fun (x : Int) x}({y = 1})",
+                """|1:19:error: expected Int, got {y = 1} of type {y : Int}
+                   |{fun (x : Int) x}({y = 1})
+                   |                  ^
+                   |"""
+            ),
+            SemanticTest(
+                "bad function argument type (function formal)",
+                "{fun (x : (Int) String) x}(1)",
+                """|1:28:error: expected (Int) String, got 1 of type Int
+                   |{fun (x : (Int) String) x}(1)
+                   |                           ^
+                   |"""
+            ),
+            SemanticTest(
+                "bad function argument type (function actual)",
+                "{fun (x : Int) x}(fun (y : Int) y)",
+                """|1:19:error: expected Int, got fun (y : Int) y of type (Int) Int
+                   |{fun (x : Int) x}(fun (y : Int) y)
+                   |                  ^
+                   |"""
+            ),
+            SemanticTest(
+                "bad function definition argument type (one, simple)",
+                "{ def f (x : String) Int = 0 f(1) }",
+                """|1:32:error: expected String, got 1 of type Int
+                   |{ def f (x : String) Int = 0 f(1) }
+                   |                               ^
+                   |"""
+            ),
+            SemanticTest(
                 "bad function definition argument type (two, simple)",
-                "{ def f (x : Int, y : String) : Int = x f(1, 2) }",
-                """|1:46:error: expected String, got 2 of type Int
-                   |{ def f (x : Int, y : String) : Int = x f(1, 2) }
-                   |                                             ^
+                "{ def f (x : Int, y : String) Int = x f(1, 2) }",
+                """|1:44:error: expected String, got 2 of type Int
+                   |{ def f (x : Int, y : String) Int = x f(1, 2) }
+                   |                                           ^
                    |"""
             ),
             SemanticTest(
                 "bad function definition argument type (record formal)",
-                "{ def f (x : {y : Int}) : Int = 0 f(1) }",
-                """|1:37:error: expected {y : Int}, got 1 of type Int
-                   |{ def f (x : {y : Int}) : Int = 0 f(1) }
-                   |                                    ^
+                "{ def f (x : {y : Int}) Int = 0 f(1) }",
+                """|1:35:error: expected {y : Int}, got 1 of type Int
+                   |{ def f (x : {y : Int}) Int = 0 f(1) }
+                   |                                  ^
                    |"""
             ),
             SemanticTest(
                 "bad function definition argument type (record actual)",
-                "{ def f (x : Int) : Int = x f({y = 1}) }",
-                """|1:31:error: expected Int, got {y = 1} of type {y : Int}
-                   |{ def f (x : Int) : Int = x f({y = 1}) }
-                   |                              ^
+                "{ def f (x : Int) Int = x f({y = 1}) }",
+                """|1:29:error: expected Int, got {y = 1} of type {y : Int}
+                   |{ def f (x : Int) Int = x f({y = 1}) }
+                   |                            ^
                    |"""
             ),
             SemanticTest(
                 "bad function definition argument type (function formal)",
-                "{ def f (x : (Int) => String) : Int = 0 f(1) }",
-                """|1:43:error: expected (Int) => String, got 1 of type Int
-                   |{ def f (x : (Int) => String) : Int = 0 f(1) }
-                   |                                          ^
+                "{ def f (x : (Int) String) Int = 0 f(1) }",
+                """|1:38:error: expected (Int) String, got 1 of type Int
+                   |{ def f (x : (Int) String) Int = 0 f(1) }
+                   |                                     ^
                    |"""
             ),
             SemanticTest(
                 "bad function definition argument type (function actual)",
-                "{ def f (x : Int) : Int = x f(fun (y : Int) = y) }",
-                """|1:31:error: expected Int, got fun (y : Int) = y of type (Int) => Int
-                   |{ def f (x : Int) : Int = x f(fun (y : Int) = y) }
-                   |                              ^
+                "{ def f (x : Int) Int = x f(fun (y : Int) y) }",
+                """|1:29:error: expected Int, got fun (y : Int) y of type (Int) Int
+                   |{ def f (x : Int) Int = x f(fun (y : Int) y) }
+                   |                            ^
                    |"""
             ),
 
@@ -764,10 +764,10 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "bad function definition return type",
-                "{ def f (x : Int) : Int = {x = 1} f(0) }",
-                """|1:27:error: expected Int, got {x = 1} of type {x : Int}
-                   |{ def f (x : Int) : Int = {x = 1} f(0) }
-                   |                          ^
+                "{ def f (x : Int) Int = {x = 1} f(0) }",
+                """|1:25:error: expected Int, got {x = 1} of type {x : Int}
+                   |{ def f (x : Int) Int = {x = 1} f(0) }
+                   |                        ^
                    |"""
             ),
 
@@ -775,54 +775,54 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "subtype record function argument",
-                "{fun (r : {x : Int}) = 0}({x = 1, y = 2})",
+                "{fun (r : {x : Int}) 0}({x = 1, y = 2})",
                 ""
             ),
             SemanticTest(
                 "subtype record function definition argument",
-                "{ def f (r : {x : Int}) : Int = 0 f({x = 1, y = 2}) }",
+                "{ def f (r : {x : Int}) Int = 0 f({x = 1, y = 2}) }",
                 ""
             ),
             SemanticTest(
                 "bad subtype record function argument",
-                "{fun (r : {x : Int, y : Int}) = 0}({x = 1})",
-                """|1:36:error: expected {x : Int, y : Int}, got {x = 1} of type {x : Int}
-                   |{fun (r : {x : Int, y : Int}) = 0}({x = 1})
-                   |                                   ^
+                "{fun (r : {x : Int, y : Int}) 0}({x = 1})",
+                """|1:34:error: expected {x : Int, y : Int}, got {x = 1} of type {x : Int}
+                   |{fun (r : {x : Int, y : Int}) 0}({x = 1})
+                   |                                 ^
                    |"""
             ),
             SemanticTest(
                 "bad subtype record function definition argument",
-                "{ def f (r : {x : Int, y : Int}) : Int = 0 f({x = 1}) }",
-                """|1:46:error: expected {x : Int, y : Int}, got {x = 1} of type {x : Int}
-                   |{ def f (r : {x : Int, y : Int}) : Int = 0 f({x = 1}) }
-                   |                                             ^
+                "{ def f (r : {x : Int, y : Int}) Int = 0 f({x = 1}) }",
+                """|1:44:error: expected {x : Int, y : Int}, got {x = 1} of type {x : Int}
+                   |{ def f (r : {x : Int, y : Int}) Int = 0 f({x = 1}) }
+                   |                                           ^
                    |"""
             ),
             SemanticTest(
                 "subtype function function argument",
-                "{fun (r : ({x : Int, y : Int}) => Int) = 0}(fun (s : {x : Int}) = s.x)",
+                "{fun (r : ({x : Int, y : Int}) Int) 0}(fun (s : {x : Int}) s.x)",
                 ""
             ),
             SemanticTest(
                 "subtype function function definition argument",
-                "{ def f (r : ({x : Int, y : Int}) => Int) : Int = 0 f(fun (s : {x : Int}) = 0) }",
+                "{ def f (r : ({x : Int, y : Int}) Int) Int = 0 f(fun (s : {x : Int}) 0) }",
                 ""
             ),
             SemanticTest(
                 "bad subtype function function argument",
-                "{fun (r : ({x : Int}) => Int) = 0}(fun (s : {x : Int, y : Int}) = s.x)",
-                """|1:36:error: expected ({x : Int}) => Int, got fun (s : {x : Int, y : Int}) = s.x of type ({x : Int, y : Int}) => Int
-                   |{fun (r : ({x : Int}) => Int) = 0}(fun (s : {x : Int, y : Int}) = s.x)
-                   |                                   ^
+                "{fun (r : ({x : Int}) Int) 0}(fun (s : {x : Int, y : Int}) s.x)",
+                """|1:31:error: expected ({x : Int}) Int, got fun (s : {x : Int, y : Int}) s.x of type ({x : Int, y : Int}) Int
+                   |{fun (r : ({x : Int}) Int) 0}(fun (s : {x : Int, y : Int}) s.x)
+                   |                              ^
                    |"""
             ),
             SemanticTest(
                 "bad subtype function function definition argument",
-                "{ def f (r : ({x : Int}) => Int) : Int = 0 f(fun (s : {x : Int, y : Int}) = s.x) }",
-                """|1:46:error: expected ({x : Int}) => Int, got fun (s : {x : Int, y : Int}) = s.x of type ({x : Int, y : Int}) => Int
-                   |{ def f (r : ({x : Int}) => Int) : Int = 0 f(fun (s : {x : Int, y : Int}) = s.x) }
-                   |                                             ^
+                "{ def f (r : ({x : Int}) Int) Int = 0 f(fun (s : {x : Int, y : Int}) s.x) }",
+                """|1:41:error: expected ({x : Int}) Int, got fun (s : {x : Int, y : Int}) s.x of type ({x : Int, y : Int}) Int
+                   |{ def f (r : ({x : Int}) Int) Int = 0 f(fun (s : {x : Int, y : Int}) s.x) }
+                   |                                        ^
                    |"""
             ),
 
@@ -992,15 +992,15 @@ class SemanticTests extends Tests {
                 "{x : Int}",
                 "{a : Int, b : String}",
                 "{r : Int, s : { a : Int, b : String}}",
-                "() => Int",
-                "(Int) => Int",
-                "(String, Int) => String",
-                "(Unit) => Int",
-                "(String) => Unit",
-                "({x : Int}) => String",
-                "(Int) => {x : Int}",
-                "((Int) => Int) => Int",
-                "(Int) => (Int) => Int"
+                "() Int",
+                "(Int) Int",
+                "(String, Int) String",
+                "(Unit) Int",
+                "(String) Unit",
+                "({x : Int}) String",
+                "(Int) {x : Int}",
+                "((Int) Int) Int",
+                "(Int) (Int) Int"
             )
 
         for (tt <- reflSubtypeTests) {
@@ -1027,10 +1027,10 @@ class SemanticTests extends Tests {
                 ("{x : Int, y : Int}", "{x : Int}"),
                 ("{x : Int, y : Int}", "{y : Int}"),
                 (
-                    "({x : Int}, {y : String}) => Int",
-                    "({x : Int}, {x : Int, y : String}) => Int"
+                    "({x : Int}, {y : String}) Int",
+                    "({x : Int}, {x : Int, y : String}) Int"
                 ),
-                ("(Int) => {x : Int, y : Int}", "(Int) => {x : Int}")
+                ("(Int) {x : Int, y : Int}", "(Int) {x : Int}")
             )
 
         for ((tt, uu) <- onewaySubtypeTests) {

@@ -1,5 +1,5 @@
 {
-    def f (x : Int) : Int = x
-    def g (y : Int) : Int = f(y)
+    def f (x : Int) Int = x
+    def g (y : Int) Int = f(y)
     g(10)
 }

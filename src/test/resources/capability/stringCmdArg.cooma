@@ -1,1 +1,1 @@
-fun (s : String) = s
+fun (s : String) s

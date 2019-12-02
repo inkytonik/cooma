@@ -159,7 +159,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ),
                 ExecTest(
                     "record (eval field)",
-                    "{a = {fun (x : Int) = x}(3), b = 2}",
+                    "{a = {fun (x : Int) x}(3), b = 2}",
                     "{a = 3, b = 2}",
                     "{a : Int, b : Int}"
                 ),
@@ -249,7 +249,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ),
                 ExecTest(
                     "variant (eval field)",
-                    "<a = {fun (x : Int) = x}(3)>",
+                    "<a = {fun (x : Int) x}(3)>",
                     "<a = 3>",
                     "<a : Int>"
                 ),
@@ -263,15 +263,15 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ),
                 ExecTest(
                     "basic match",
-                    "<x = 1> match { case x a = a }",
+                    "<x = 1> match { case x a => a }",
                     "1",
                     "Int"
                 ),
                 ExecTest(
                     "multi-case match (first case, same order)",
                     """{
-                        def f () : <x : Int, y : Int> = <x = 3>
-                        f () match { case x a = 1 case y b = 2 }
+                        def f () <x : Int, y : Int> = <x = 3>
+                        f () match { case x a => 1 case y b => 2 }
                     }""",
                     "1",
                     "Int"
@@ -279,8 +279,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "multi-case match (later case, same order)",
                     """{
-                        def f () : <x : Int, y : Int> = <y = 3>
-                        f () match { case x a = 1 case y b = 2 }
+                        def f () <x : Int, y : Int> = <y = 3>
+                        f () match { case x a => 1 case y b => 2 }
                     }""",
                     "2",
                     "Int"
@@ -288,8 +288,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "multi-case match (first case, different order)",
                     """{
-                        def f () : <x : Int, y : Int> = <y = 3>
-                        f () match { case y b = 1 case x a = 2 }
+                        def f () <x : Int, y : Int> = <y = 3>
+                        f () match { case y b => 1 case x a => 2 }
                     }""",
                     "1",
                     "Int"
@@ -297,8 +297,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "multi-case match (later case, different order)",
                     """{
-                        def f () : <x : Int, y : Int> = <x = 3>
-                        f () match { case y b = 1 case x a = 2 }
+                        def f () <x : Int, y : Int> = <x = 3>
+                        f () match { case y b => 1 case x a => 2 }
                     }""",
                     "2",
                     "Int"
@@ -306,10 +306,10 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "Boolean match",
                     """{
-                        def f (b : Boolean) : Unit =
+                        def f (b : Boolean) Unit =
                             b match {
-                                case false x = x
-                                case true x = x
+                                case false x => x
+                                case true x => x
                             }
                         {a = f(<false = {}>), b = f(<true = {}>)}
                     }""",
@@ -321,76 +321,76 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
                 ExecTest(
                     "no arguments",
-                    "{fun () = 100}()",
+                    "{fun () 100}()",
                     "100",
                     "Int"
                 ),
                 ExecTest(
                     "unit argument",
-                    "{fun (x : Unit) = 100}({})",
+                    "{fun (x : Unit) 100}({})",
                     "100",
                     "Int"
                 ),
                 ExecTest(
                     "single integer argument",
-                    """{fun (x : Int) = x}(10)""",
+                    """{fun (x : Int) x}(10)""",
                     "10",
                     "Int"
                 ),
                 ExecTest(
                     "multiple arguments - first",
-                    """{fun (x : Int, y : String) = x}(10, "hello")""",
+                    """{fun (x : Int, y : String) x}(10, "hello")""",
                     "10",
                     "Int"
                 ),
                 ExecTest(
                     "multiple arguments - second",
-                    """{fun (x : Int, y : String) = y}(10, "hello")""",
+                    """{fun (x : Int, y : String) y}(10, "hello")""",
                     """"hello"""",
                     "String"
                 ),
                 ExecTest(
                     "multi-line function",
-                    """{fun (x : Int) =
+                    """{fun (x : Int)
                       x}(10)""",
                     "10",
                     "Int"
                 ),
                 ExecTest(
                     "record argument",
-                    "{fun (r : {x : Int}) = r.x}({x = 20})",
+                    "{fun (r : {x : Int}) r.x}({x = 20})",
                     "20",
                     "Int"
                 ),
                 ExecTest(
                     "single field record return",
-                    "{fun (x : Int) = {a = x}}(9)",
+                    "{fun (x : Int) {a = x}}(9)",
                     "{a = 9}",
                     "{a : Int}"
                 ),
                 ExecTest(
                     "variant argument (one)",
-                    "{fun (r : <x : Int>) = r}(<x = 20>)",
+                    "{fun (r : <x : Int>) r}(<x = 20>)",
                     "<x = 20>",
                     "<x : Int>"
                 ),
                 ExecTest(
                     "function argument",
-                    """{fun (f : (Int) => String) = f(10)}(fun (x : Int) = "yes")""",
+                    """{fun (f : (Int) String) f(10)}(fun (x : Int) "yes")""",
                     """"yes"""",
                     "String"
                 ),
                 ExecTest(
                     "function return then call",
-                    "{fun (x : Int) = fun (y : Int) = x}(10)(15)",
+                    "{fun (x : Int) fun (y : Int) x}(10)(15)",
                     "10",
                     "Int"
                 ),
                 ExecTest(
                     "function program result",
-                    "{fun (f : (Int) => Int) = f}(fun (x : Int) = x)",
+                    "{fun (f : (Int) Int) f}(fun (x : Int) x)",
                     "<function>",
-                    "(Int) => Int"
+                    "(Int) Int"
                 ),
 
                 // Blocks
@@ -443,8 +443,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "val block with functions",
                     """{
-                        val f = fun (x : Int) = x
-                        val g = fun (y : Int) = f(y)
+                        val f = fun (x : Int) x
+                        val g = fun (y : Int) f(y)
                         g(10)
                     }""",
                     "10",
@@ -453,7 +453,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "def block no arguments",
                     """{
-                        def f() : Int = 10
+                        def f() Int = 10
                         f()
                     }""",
                     "10",
@@ -462,7 +462,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "def block (single)",
                     """{
-                        def f(x : Int) : Int = x
+                        def f(x : Int) Int = x
                         f(10)
                     }""",
                     "10",
@@ -471,8 +471,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "def block (multi inner)",
                     """{
-                        def f(x : Int) : Int = x
-                        def g(y : Int) : Int = f(y)
+                        def f(x : Int) Int = x
+                        def g(y : Int) Int = f(y)
                         g(10)
                     }""",
                     "10",
@@ -481,8 +481,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "def block (multi outer)",
                     """{
-                        def f(x : Int) : Int = x
-                        def g(y : Int) : Int = f(y)
+                        def f(x : Int) Int = x
+                        def g(y : Int) Int = f(y)
                         f(10)
                     }""",
                     "10",
@@ -492,7 +492,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "block (val and def)",
                     """{
                         val a = 20
-                        def f(x : Int) : Int = a
+                        def f(x : Int) Int = a
                         f(10)
                     }""",
                     "20",
@@ -501,9 +501,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "def redefinition",
                     """{
-                        def f(x : Int) : Int = 10
+                        def f(x : Int) Int = 10
                         val a = 20
-                        def f(y : Int) : Int = 30
+                        def f(y : Int) Int = 30
                         f(0)
                     }""",
                     "30",
@@ -548,9 +548,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "nested def block (outer)",
                     """{
-                        def f(x : Int) : Int = 10
+                        def f(x : Int) Int = 10
                         {
-                            def g(y : Int) : Int = 20
+                            def g(y : Int) Int = 20
                             f(0)
                         }
                     }""",
@@ -560,9 +560,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "nested def block (inner)",
                     """{
-                        def f(x : Int) : Int = 10
+                        def f(x : Int) Int = 10
                         {
-                            def g(y : Int) : Int = 20
+                            def g(y : Int) Int = 20
                             g(0)
                         }
                     }""",
@@ -572,9 +572,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "nested def block (redefinition)",
                     """{
-                        def f(x : Int) : Int = 10
+                        def f(x : Int) Int = 10
                         {
-                            def f(y : Int) : Int = 20
+                            def f(y : Int) Int = 20
                             f(0)
                         }
                     }""",
@@ -584,8 +584,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "variant argument",
                     """{
-                        def f (r : <x : Int, y : Int, z : Int>) : <x : Int, y : Int, z : Int> = r
-                        def g () : <x : Int, y : Int> = <x = 3>
+                        def f (r : <x : Int, y : Int, z : Int>) <x : Int, y : Int, z : Int> = r
+                        def g () <x : Int, y : Int> = <x = 3>
                         f(g())
                         }""",
                     "<x = 3>",
@@ -764,46 +764,46 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 REPLTest(
                     "single function definition",
                     """
-                        def f(x : Int) : Int = x
+                        def f(x : Int) Int = x
                         f(10)
                     """,
-                    "f : (Int) => Int = <function>\nres0 : Int = 10"
+                    "f : (Int) Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "value and function definition",
                     """
                         val x = 10
-                        def f(y : Int) : Int = x
+                        def f(y : Int) Int = x
                         f(20)
                     """,
-                    "x : Int = 10\nf : (Int) => Int = <function>\nres0 : Int = 10"
+                    "x : Int = 10\nf : (Int) Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "multiple function definitions (upper)",
                     """
-                        def f(x : Int) : Int = 10
-                        def g(y : Int) : Int = 20
+                        def f(x : Int) Int = 10
+                        def g(y : Int) Int = 20
                         f(1)
                     """,
-                    "f : (Int) => Int = <function>\ng : (Int) => Int = <function>\nres0 : Int = 10"
+                    "f : (Int) Int = <function>\ng : (Int) Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "multiple function definitions (lower)",
                     """
-                        def f(x : Int) : Int = 10
-                        def g(y : Int) : Int = 20
+                        def f(x : Int) Int = 10
+                        def g(y : Int) Int = 20
                         g(1)
                     """,
-                    "f : (Int) => Int = <function>\ng : (Int) => Int = <function>\nres0 : Int = 20"
+                    "f : (Int) Int = <function>\ng : (Int) Int = <function>\nres0 : Int = 20"
                 ),
                 REPLTest(
                     "multiple function definitions (chain)",
                     """
-                        def f(x : Int) : Int = 10
-                        def g(y : Int) : Int = f(y)
+                        def f(x : Int) Int = 10
+                        def g(y : Int) Int = f(y)
                         g(1)
                     """,
-                    "f : (Int) => Int = <function>\ng : (Int) => Int = <function>\nres0 : Int = 10"
+                    "f : (Int) Int = <function>\ng : (Int) Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "single result name binding from constant",
@@ -888,13 +888,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     REPLTest(
                         s"Primitive ${op} has the correct type",
                         s"Ints.${op.name}",
-                        "res0 : (Int, Int) => Int = <function>"
+                        "res0 : (Int, Int) Int = <function>"
                     )
                 }) ++ allIntPrimBinOps.map(op => {
                     REPLTest(
                         s"Primitive ${op} partial application has the correct type",
                         s"Ints.${op.name}(1)",
-                        "res0 : (Int) => Int = <function>"
+                        "res0 : (Int) Int = <function>"
                     )
                 }) ++ allIntPrimBinOps.flatMap(op => {
                     Vector(

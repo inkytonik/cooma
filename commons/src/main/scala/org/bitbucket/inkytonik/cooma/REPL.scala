@@ -56,13 +56,13 @@ trait REPL extends REPLBase[Config] {
     def help(config : Config) : Unit = {
         config.output().emit(
             """
-			  |exp                    evaluate exp, print value
-			  |val x = exp            add new value definition
-			  |def f(x : Int) = exp   add new function definition
-			  |:help                  print this message
-			  |:lines                 enter multiple separate input lines until :end
-			  |:paste                 enter single multi-line input until :end
-			  |:quit                  quit the REPL (also Control-D)
+			  |exp                        evaluate exp, print value
+			  |val x = exp                add new value definition
+			  |def f(x : Int) Int = exp   add new function definition
+			  |:help                      print this message
+			  |:lines                     enter multiple separate input lines until :end
+			  |:paste                     enter single multi-line input until :end
+			  |:quit                      quit the REPL (also Control-D)
 			  |""".stripMargin
         )
     }

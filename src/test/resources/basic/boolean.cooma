@@ -1,9 +1,9 @@
 {
-    def f (b : Boolean) : Int =
+    def f (b : Boolean) Int =
         b match {
-            case false x =
+            case false x =>
                 1
-            case true x =
+            case true x =>
                 2
         }
     {a = f(false), b = f(true)}

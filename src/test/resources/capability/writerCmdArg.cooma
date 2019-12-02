@@ -1,1 +1,1 @@
-fun (w : Writer) = w.write("Hello world!\n")
+fun (w : Writer) w.write("Hello world!\n")

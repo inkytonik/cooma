@@ -1,5 +1,5 @@
 {
-    val f = fun (x : Int) = x
-    val g = fun (y : Int) = f(y)
+    val f = fun (x : Int) x
+    val g = fun (y : Int) f(y)
     g(10)
 }

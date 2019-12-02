@@ -1,1 +1,1 @@
-{fun (x : Int) = x} (10)
+{fun (x : Int) x} (10)

@@ -102,7 +102,7 @@ object SymbolTable extends Environments[CoomaEntity] {
                 val false = <false = {}>
                 val true = <true = {}>
 
-                //def not (b : Boolean) : Boolean =
+                //def not (b : Boolean) Boolean =
                 //    b match {
                 //        case false x =
                 //            true
@@ -111,30 +111,30 @@ object SymbolTable extends Environments[CoomaEntity] {
                 //    }
 
                 // Capability types
-                val Reader = {read : () => String}
-                val ReaderWriter = {read : () => String, write : (String) => Unit}
-                val Writer = {write : (String) => Unit}
+                val Reader = {read : () String}
+                val ReaderWriter = {read : () String, write : (String) Unit}
+                val Writer = {write : (String) Unit}
 
                 // Primitives
                 val Ints = {
-                    add = fun (x : Int, y : Int) = prim IntAdd(x, y),
-					sub = fun (x : Int, y : Int) = prim IntSub(x, y),
-                    mul = fun (x : Int, y : Int) = prim IntMul(x, y),
-	                div = fun (x : Int, y : Int) = prim IntDiv(x, y),
-                    pow = fun (x : Int, y : Int) = prim IntPow(x, y),
-					eq =  fun (x : Int, y : Int) = prim IntEq(x, y),
-                    neq = fun (x : Int, y : Int) = prim IntNeq(x, y),
-                    gt =  fun (x : Int, y : Int) = prim IntGt(x, y),
-                    gte = fun (x : Int, y : Int) = prim IntGte(x, y),
-                    lt =  fun (x : Int, y : Int) = prim IntLt(x, y),
-                    lte = fun (x : Int, y : Int) = prim IntLte(x, y)
+                    add = fun (x : Int, y : Int) prim IntAdd(x, y),
+					sub = fun (x : Int, y : Int) prim IntSub(x, y),
+                    mul = fun (x : Int, y : Int) prim IntMul(x, y),
+	                div = fun (x : Int, y : Int) prim IntDiv(x, y),
+                    pow = fun (x : Int, y : Int) prim IntPow(x, y),
+					eq =  fun (x : Int, y : Int) prim IntEq(x, y),
+                    neq = fun (x : Int, y : Int) prim IntNeq(x, y),
+                    gt =  fun (x : Int, y : Int) prim IntGt(x, y),
+                    gte = fun (x : Int, y : Int) prim IntGte(x, y),
+                    lt =  fun (x : Int, y : Int) prim IntLt(x, y),
+                    lte = fun (x : Int, y : Int) prim IntLte(x, y)
                 }
 
 	            val Strings = {
-			        length = fun (x : String) = prim StrLength(x),
-		            concat = fun (x : String, y : String) = prim StrConcat(x, y),
-			        substr = fun (x : String, y : Int) = prim StrSubstr(x, y),
-			        eq     = fun (x : String, y : String) = prim StrEq(x, y)
+			        length = fun (x : String) prim StrLength(x),
+		            concat = fun (x : String, y : String) prim StrConcat(x, y),
+			        substr = fun (x : String, y : Int) prim StrSubstr(x, y),
+			        eq     = fun (x : String, y : String) prim StrEq(x, y)
                 }
                 0
             }

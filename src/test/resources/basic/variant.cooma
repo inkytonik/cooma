@@ -1,4 +1,4 @@
 <a = 3> match {
-    case a i =
+    case a i =>
         i
 }

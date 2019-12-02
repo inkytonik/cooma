@@ -1,1 +1,1 @@
-{fun (x : Int) = x}("hello")
+{fun (x : Int) x}("hello")
