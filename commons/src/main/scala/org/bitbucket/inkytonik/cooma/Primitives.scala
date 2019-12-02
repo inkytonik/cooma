@@ -2,11 +2,8 @@ package org.bitbucket.inkytonik.cooma
 
 import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter, IOException, InputStreamReader, Writer}
 
-import org.bitbucket.inkytonik.cooma.Primitives.IntPrimRelOp.{EQ, GT, GTE, LT, LTE, NEQ}
-import org.bitbucket.inkytonik.cooma.Primitives.StrPrimOp.{CONCAT, LENGTH, SUBSTR}
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
-import scala.language.existentials
 
 object Primitives {
 
@@ -77,7 +74,6 @@ object Primitives {
                         val k = fresh("k")
                         val y = fresh("y")
                         val p = fresh("p")
-
                         interp.fldR(
                             pair._1, interp.clsR(
                                 interp.emptyEnv, k, y,
@@ -94,7 +90,7 @@ object Primitives {
                 case Some(s) => s
                 case None => interp.isErrR(value) match {
                     case Some(_) => return value
-                    case None    => sys.error(s"interpretPrim: got non-String argument $value")
+                    case None    => sys.error(s"$show: got non-String argument $value")
                 }
             }
 
@@ -131,17 +127,20 @@ object Primitives {
     case class RecConcatP[I <: Backend]() extends Primitive[I] {
         val numArgs = 2
 
-        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            val Vector(l, r) = xs
-            interp.isRecR(interp.lookupR(rho, l)) match {
-                case Some(lFields) =>
-                    interp.isRecR(interp.lookupR(rho, r)) match {
-                        case Some(rFields) => interp.recR(lFields ++ rFields)
-                        case None          => sys.error(s"$show: right argument $r of & is non-record")
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs match {
+                case Vector(l, r) =>
+                    interp.isRecR(interp.lookupR(rho, l)) match {
+                        case Some(lFields) =>
+                            interp.isRecR(interp.lookupR(rho, r)) match {
+                                case Some(rFields) => interp.recR(lFields ++ rFields)
+                                case None          => sys.error(s"$show: right argument $r of & is non-record")
+                            }
+                        case None => sys.error(s"$show: left argument $l of & is non-record")
                     }
-                case None => sys.error(s"$show: left argument $l of & is non-record")
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
             }
-        }
 
         def show = "concat"
     }
@@ -182,24 +181,27 @@ object Primitives {
     case class RecSelectP[I <: Backend]() extends Primitive[I] {
         val numArgs = 2
 
-        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            val Vector(r, f1) = xs
-            val value = interp.lookupR(rho, r)
-            interp.isRecR(value) match {
-                case Some(fields) =>
-                    //fields.find
-                    fields.collectFirst {
-                        case f if interp.isFldR(f).isDefined && interp.isFldR(f).get._1 == f1 => interp.isFldR(f).get._2
-                    } match {
-                        case Some(v) => v
-                        case None    => sys.error(s"$show: can't find field $f1 in $fields")
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs match {
+                case Vector(r, f1) =>
+                    val value = interp.lookupR(rho, r)
+                    interp.isRecR(value) match {
+                        case Some(fields) =>
+                            fields.collectFirst {
+                                case f if interp.isFldR(f).isDefined && interp.isFldR(f).get._1 == f1 =>
+                                    interp.isFldR(f).get._2
+                            } match {
+                                case Some(v) => v
+                                case None    => sys.error(s"$show: can't find field $f1 in $fields")
+                            }
+                        case None => interp.isErrR(value) match {
+                            case Some(_) => value
+                            case None    => sys.error(s"$show: $r is $value, looking for field $f1")
+                        }
                     }
-                case None => interp.isErrR(value) match {
-                    case Some(_) => value
-                    case None    => sys.error(s"$show: $r is $value, looking for field $f1")
-                }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
             }
-        }
 
         def show = "select"
     }
@@ -208,7 +210,7 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val operands = xs.map(s => interp.isIntR(interp.lookupR(rho, s)) match {
                 case Some(v) => v
-                case _       => sys.error(s"IntBinOpP.run: can't find operand $s on environment.")
+                case _       => sys.error(s"$show: can't find integer operand $s")
             })
             doRun(interp)(operands)
         }
@@ -216,119 +218,137 @@ object Primitives {
         def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR
     }
 
-    object IntPrimBinOp extends Enumeration {
-        type IntPrimBinOp = Value
-        val ADD, SUB, MUL, DIV, POW = Value
+    trait PrimOp {
+        self : Product =>
+        def numArgs : Int
+        val name = productPrefix.toLowerCase
     }
 
-    case class IntBinOpP[I <: Backend](op : IntPrimBinOp.IntPrimBinOp) extends IntPrimitive[I] {
+    sealed abstract class IntPrimBinOp extends Product with PrimOp {
         val numArgs = 2
+    }
+    case object ADD extends IntPrimBinOp
+    case object SUB extends IntPrimBinOp
+    case object MUL extends IntPrimBinOp
+    case object DIV extends IntPrimBinOp
+    case object POW extends IntPrimBinOp
+
+    val allIntPrimBinOps = Vector(ADD, SUB, MUL, DIV, POW)
+
+    case class IntBinOpP[I <: Backend](op : IntPrimBinOp) extends IntPrimitive[I] {
+        val numArgs = op.numArgs
 
         def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR = {
             try {
-                interp.intR(op match {
-                    case IntPrimBinOp.ADD => operands.sum
-                    case IntPrimBinOp.SUB => operands.reduce(_ - _)
-                    case IntPrimBinOp.MUL => operands.product
-                    case IntPrimBinOp.DIV => operands.reduce(_ / _)
-                    case IntPrimBinOp.POW => operands.reduce((x, y) => x.pow(y.toInt))
-                })
-            } catch {
-                case e : Throwable => interp.errR(s"Error executing primitive: ${e.getMessage}")
-            }
-        }
-
-        def show = "intPrmBinOp"
-    }
-
-    object IntPrimRelOp extends Enumeration {
-        type IntPrimRelOp = Value
-        val EQ, NEQ, GT, GTE, LT, LTE = Value
-    }
-
-    case class IntRelOp[I <: Backend](op : IntPrimRelOp.IntPrimRelOp) extends IntPrimitive[I] {
-        val numArgs = 2
-
-        def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR = {
-            val Vector(left, right) = operands
-            if (op match {
-                case EQ  => left == right
-                case NEQ => left != right
-                case GT  => left > right
-                case GTE => left >= right
-                case LT  => left < right
-                case LTE => left <= right
-            }) {
-                interp.trueR()
-            } else {
-                interp.falseR()
-            }
-        }
-
-        def show = "intPrmRelOp"
-    }
-
-    object StrPrimOp extends Enumeration {
-        type StrPrimOp = Value
-        val LENGTH, CONCAT, SUBSTR, EQ = Value
-    }
-
-    case class StringPrimitive[I <: Backend](op : StrPrimOp.StrPrimOp) extends Primitive[I] {
-        val numArgs = 2
-
-        def show = "strPrim"
-
-        override def eval(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
-            if ((op match {
-                case LENGTH       => 1
-                case CONCAT       => 2
-                case SUBSTR       => 2
-                case StrPrimOp.EQ => 2
-            }) == xs.length)
-                run(interp)(rho, xs, args)
-            else
-                sys.error(s"$show: expected $numArgs arg(s), got $xs")
-
-        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-
-            def extractStrParams = {
-                xs.map(s => interp.isStrR(interp.lookupR(rho, s)) match {
-                    case Some(v) => v
-                    case _       => sys.error(s"String Primitive.${op.toString.toLowerCase}: can't find operand $s on environment.")
-                })
-            }
-
-            op match {
-                case LENGTH =>
-                    interp.intR(extractStrParams.head.length)
-                case CONCAT =>
-                    interp.strR(extractStrParams.reduce(_ + _))
-                case SUBSTR => {
-                    val left = interp.isStrR((interp.lookupR(rho, xs.head))) match {
-                        case Some(v) => v
-                        case _       => sys.error(s"String Primitive.substr: can't find operand ${xs.head} on environment.")
-                    }
-
-                    val right = interp.isIntR((interp.lookupR(rho, xs.tail.head))) match {
-                        case Some(v) => v
-                        case _       => sys.error(s"String Primitive.substr: can't find operand ${xs.tail.head} on environment.")
-                    }
-                    interp.strR(left.substring(right.toInt))
+                operands match {
+                    case Vector(l, r) =>
+                        interp.intR(op match {
+                            case ADD => l + r
+                            case SUB => l - r
+                            case MUL => l * r
+                            case DIV => l / r
+                            case POW => l.pow(r.toInt)
+                        })
+                    case _ =>
+                        sys.error(s"$show $op: unexpectedly got operands $operands")
                 }
-                case StrPrimOp.EQ => {
-                    val Vector(left, right) = extractStrParams
-                    if (left.equals(right)) {
+            } catch {
+                case e : Throwable =>
+                    interp.errR(s"Error executing integer ${op.name}: ${e.getMessage}")
+            }
+        }
+
+        def show = "intBinOp"
+    }
+
+    sealed abstract class IntPrimRelOp extends Product with PrimOp {
+        val numArgs = 2
+    }
+    case object EQINT extends IntPrimRelOp
+    case object NEQINT extends IntPrimRelOp
+    case object GT extends IntPrimRelOp
+    case object GTE extends IntPrimRelOp
+    case object LT extends IntPrimRelOp
+    case object LTE extends IntPrimRelOp
+
+    val allIntPrimRelOps = Vector(EQINT, NEQINT, GT, GTE, LT, LTE)
+
+    case class IntRelOp[I <: Backend](op : IntPrimRelOp) extends IntPrimitive[I] {
+        val numArgs = op.numArgs
+
+        def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR =
+            operands match {
+                case Vector(left, right) =>
+                    if (op match {
+                        case EQINT  => left == right
+                        case NEQINT => left != right
+                        case GT     => left > right
+                        case GTE    => left >= right
+                        case LT     => left < right
+                        case LTE    => left <= right
+                    }) {
                         interp.trueR()
                     } else {
                         interp.falseR()
                     }
+                case _ =>
+                    sys.error(s"$show $op: unexpectedly got operands $operands")
+            }
+
+        def show = "intRelOp"
+    }
+
+    sealed abstract class StrPrimOp(val numArgs : Int) extends Product with PrimOp
+    case object CONCAT extends StrPrimOp(2)
+    case object LENGTH extends StrPrimOp(1)
+    case object EQSTR extends StrPrimOp(2)
+    case object SUBSTR extends StrPrimOp(2)
+
+    val allStrPrimOps = Vector(CONCAT, EQSTR, LENGTH, SUBSTR)
+
+    case class StringPrimitive[I <: Backend](op : StrPrimOp) extends Primitive[I] {
+        val numArgs = op.numArgs
+
+        def show = "strOp"
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+
+            val extractStrParams = {
+                xs.map(s => interp.isStrR(interp.lookupR(rho, s)) match {
+                    case Some(v) => v
+                    case _       => sys.error(s"$show: can't find string operand $s")
+                })
+            }
+
+            (op, extractStrParams) match {
+                case (CONCAT, Vector(l, r)) =>
+                    interp.strR(l + r)
+
+                case (EQSTR, Vector(l, r)) =>
+                    if (l == r) interp.trueR() else interp.falseR()
+
+                case (LENGTH, Vector(v)) =>
+                    interp.intR(v.length)
+
+                case (SUBSTR, Vector(l, None)) => {
+                    val r = interp.isIntR((interp.lookupR(rho, xs(1)))) match {
+                        case Some(v) =>
+                            v
+                        case _ =>
+                            sys.error(s"$show $op: can't find int operand ${xs(1)}")
+                    }
+                    interp.strR(l.substring(r.toInt))
                 }
+
+                case (_, _) =>
+                    sys.error(s"$show $op: unexpectedly got arguments $xs")
             }
         }
     }
 
     def generateDynamicRuntime[I <: Backend](interp : I) : Map[String, interp.ValueR] = {
-        def generateField(opName : String, p : interp.Primitive, numArgs : Int) : interp.FldR = {
+
+        def generateField(op : PrimOp, p : interp.Primitive) : interp.FldR = {
             val closurek = fresh("primk")
             val letvk = fresh("primk")
             val x = fresh("primx")
@@ -336,48 +356,54 @@ object Primitives {
             val j = fresh("primj")
             val y = fresh("primy")
 
-            if (numArgs == 1) {
-                val letvx = fresh("primx")
-                interp.fldR(
-                    opName,
-                    interp.clsR(
-                        interp.emptyEnv, closurek, x,
-                        interp.letV(
-                            letvx,
-                            interp.prmV(p, Vector(x)),
-                            interp.appC(closurek, letvx)
+            op.numArgs match {
+                case 1 =>
+                    val letvx = fresh("primx")
+                    interp.fldR(
+                        op.name,
+                        interp.clsR(
+                            interp.emptyEnv, closurek, x,
+                            interp.letV(
+                                letvx,
+                                interp.prmV(p, Vector(x)),
+                                interp.appC(closurek, letvx)
+                            )
                         )
                     )
-                )
-            } else {
-                //Two arguments
-                interp.fldR(
-                    opName,
-                    interp.clsR(
-                        interp.emptyEnv, closurek, x,
-                        interp.letV(f, interp.funV(j, y,
-                            interp.letV(
-                                letvk,
-                                interp.prmV(p, Vector(x, y)),
-                                interp.appC(j, letvk)
-                            )),
-                            interp.appC(closurek, f))
+
+                case 2 =>
+                    interp.fldR(
+                        op.name,
+                        interp.clsR(
+                            interp.emptyEnv, closurek, x,
+                            interp.letV(f, interp.funV(j, y,
+                                interp.letV(
+                                    letvk,
+                                    interp.prmV(p, Vector(x, y)),
+                                    interp.appC(j, letvk)
+                                )),
+                                interp.appC(closurek, f))
+                        )
                     )
-                )
+
+                case n =>
+                    sys.error(s"generateField: unsupported primOp $op with $n arguments")
             }
         }
 
         Map(
-            "Ints" -> interp.recR(
-                IntPrimBinOp.values.unsorted.map(op => { generateField(op.toString.toLowerCase(), interp.intBinP(op), 2) }).toVector ++
-                    IntPrimRelOp.values.unsorted.map(op => { generateField(op.toString.toLowerCase(), interp.intRelP(op), 2) }).toVector
-            ),
-            "Strings" -> interp.recR(Vector(
-                generateField(StrPrimOp.LENGTH.toString.toLowerCase(), interp.stringP(StrPrimOp.LENGTH), 1),
-                generateField(StrPrimOp.CONCAT.toString.toLowerCase(), interp.stringP(StrPrimOp.CONCAT), 2),
-                generateField(StrPrimOp.EQ.toString.toLowerCase(), interp.stringP(StrPrimOp.EQ), 2),
-                generateField(StrPrimOp.SUBSTR.toString.toLowerCase(), interp.stringP(StrPrimOp.SUBSTR), 2)
-            ))
+            "Ints" ->
+                interp.recR(
+                    (for { op <- allIntPrimBinOps }
+                        yield generateField(op, interp.intBinP(op))) ++
+                        (for { op <- allIntPrimRelOps }
+                            yield generateField(op, interp.intRelP(op)))
+                ),
+            "Strings" ->
+                interp.recR(
+                    for { op <- allStrPrimOps }
+                        yield generateField(op, interp.stringP(op))
+                )
         )
 
     }

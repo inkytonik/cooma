@@ -876,7 +876,7 @@ class SemanticTests extends Tests {
                    |^
                    |"""
             )
-        ) ++ Primitives.IntPrimBinOp.values.unsorted.flatMap(op => {
+        ) ++ Primitives.allIntPrimBinOps.flatMap(op => {
                 def underscoreToCamel(name : String) = s"${name.head.toUpper}${name.tail}"
                 val primOp = s"Int${underscoreToCamel(op.toString.toLowerCase)}"
                 Vector(

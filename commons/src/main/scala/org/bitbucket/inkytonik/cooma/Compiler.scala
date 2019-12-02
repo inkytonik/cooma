@@ -1,13 +1,12 @@
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.Primitives.{IntPrimBinOp, IntPrimRelOp, StrPrimOp}
-
 trait Compiler {
 
     self : Backend =>
 
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.Primitives._
     import org.bitbucket.inkytonik.cooma.Util.{fresh, resetFresh, unescape}
 
     /**
@@ -38,22 +37,23 @@ trait Compiler {
      * Case class and map that stores primitives metadata.
      */
     case class PrimitiveMeta(prm : Primitive, expectedType : Expression)
+
     val primitivesTable = Map(
-        "IntAdd" -> PrimitiveMeta(intBinP(IntPrimBinOp.ADD), IntT()),
-        "IntSub" -> PrimitiveMeta(intBinP(IntPrimBinOp.SUB), IntT()),
-        "IntMul" -> PrimitiveMeta(intBinP(IntPrimBinOp.MUL), IntT()),
-        "IntDiv" -> PrimitiveMeta(intBinP(IntPrimBinOp.DIV), IntT()),
-        "IntPow" -> PrimitiveMeta(intBinP(IntPrimBinOp.POW), IntT()),
-        "IntEq" -> PrimitiveMeta(intRelP(IntPrimRelOp.EQ), IntT()),
-        "IntNeq" -> PrimitiveMeta(intRelP(IntPrimRelOp.NEQ), IntT()),
-        "IntGt" -> PrimitiveMeta(intRelP(IntPrimRelOp.GT), IntT()),
-        "IntGte" -> PrimitiveMeta(intRelP(IntPrimRelOp.GTE), IntT()),
-        "IntLt" -> PrimitiveMeta(intRelP(IntPrimRelOp.LT), IntT()),
-        "IntLte" -> PrimitiveMeta(intRelP(IntPrimRelOp.LTE), IntT()),
-        "StrLength" -> PrimitiveMeta(stringP(StrPrimOp.LENGTH), StrT()),
-        "StrConcat" -> PrimitiveMeta(stringP(StrPrimOp.CONCAT), StrT()),
-        "StrEq" -> PrimitiveMeta(stringP(StrPrimOp.EQ), StrT()),
-        "StrSubstr" -> PrimitiveMeta(stringP(StrPrimOp.SUBSTR), StrT())
+        "IntAdd" -> PrimitiveMeta(intBinP(ADD), IntT()),
+        "IntSub" -> PrimitiveMeta(intBinP(SUB), IntT()),
+        "IntMul" -> PrimitiveMeta(intBinP(MUL), IntT()),
+        "IntDiv" -> PrimitiveMeta(intBinP(DIV), IntT()),
+        "IntPow" -> PrimitiveMeta(intBinP(POW), IntT()),
+        "IntEq" -> PrimitiveMeta(intRelP(EQINT), IntT()),
+        "IntNeq" -> PrimitiveMeta(intRelP(NEQINT), IntT()),
+        "IntGt" -> PrimitiveMeta(intRelP(GT), IntT()),
+        "IntGte" -> PrimitiveMeta(intRelP(GTE), IntT()),
+        "IntLt" -> PrimitiveMeta(intRelP(LT), IntT()),
+        "IntLte" -> PrimitiveMeta(intRelP(LTE), IntT()),
+        "StrConcat" -> PrimitiveMeta(stringP(CONCAT), StrT()),
+        "StrEq" -> PrimitiveMeta(stringP(EQSTR), StrT()),
+        "StrLength" -> PrimitiveMeta(stringP(LENGTH), StrT()),
+        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR), StrT())
     )
 
     /**
@@ -415,4 +415,3 @@ trait Compiler {
     }
 
 }
-

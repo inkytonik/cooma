@@ -11,7 +11,6 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.cooma.Primitives.IntPrimBinOp
 import org.bitbucket.inkytonik.kiama.util.TestCompilerWithConfig
 
 class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
@@ -19,6 +18,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
     import java.io.{ByteArrayOutputStream, PrintStream}
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
+    import org.bitbucket.inkytonik.cooma.Primitives._
     import org.bitbucket.inkytonik.cooma.truffle.{TruffleBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
     import org.bitbucket.inkytonik.kiama.util.{FileSource, Source, StringConsole, StringSource}
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
@@ -596,19 +596,18 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<false : Unit>"
                 )
 
-            ) ++ Primitives.IntPrimBinOp.values.unsorted.flatMap(op => {
-                    def underscoreToCamel(name : String) = s"${name.head.toUpper}${name.tail}"
-                    val primOp = s"Int${underscoreToCamel(op.toString.toLowerCase)}"
+            ) ++ allIntPrimBinOps.flatMap(op => {
+                    val primOp = s"Int${op.name.head.toUpper}${op.name.tail}"
                     Vector(
                         ExecTest(
-                            s"Execution of primitive through Prim Keyword - ${primOp}",
+                            s"Execution of primitive through prim Keyword - ${primOp}",
                             s"prim ${primOp}(2, 2)",
                             op match {
-                                case IntPrimBinOp.ADD => "4"
-                                case IntPrimBinOp.SUB => "0"
-                                case IntPrimBinOp.MUL => "4"
-                                case IntPrimBinOp.DIV => "1"
-                                case IntPrimBinOp.POW => "4"
+                                case ADD => "4"
+                                case SUB => "0"
+                                case MUL => "4"
+                                case DIV => "1"
+                                case POW => "4"
                             },
                             "Int"
                         )
@@ -862,32 +861,32 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 REPLTest(
                     "Ints primitives - division by zero",
                     "Ints.div(2, 0)",
-                    "cooma: Error executing primitive: BigInteger divide by zero"
+                    "cooma: Error executing integer div: BigInteger divide by zero"
                 )
-            ) ++ Primitives.IntPrimBinOp.values.unsorted.map(op => {
+            ) ++ allIntPrimBinOps.map(op => {
                     REPLTest(
                         s"Primitive ${op} has the correct type",
-                        s"Ints.${op.toString.toLowerCase}",
+                        s"Ints.${op.name}",
                         "res0 : (Int, Int) => Int = <function>"
                     )
-                }) ++ Primitives.IntPrimBinOp.values.unsorted.map(op => {
+                }) ++ allIntPrimBinOps.map(op => {
                     REPLTest(
                         s"Primitive ${op} partial application has the correct type",
-                        s"Ints.${op.toString.toLowerCase}(1)",
+                        s"Ints.${op.name}(1)",
                         "res0 : (Int) => Int = <function>"
                     )
-                }) ++ Primitives.IntPrimBinOp.values.unsorted.flatMap(op => {
+                }) ++ allIntPrimBinOps.flatMap(op => {
                     Vector(
                         REPLTest(
                             s"Primitive ${op} produces the expected result",
-                            s"Ints.${op.toString.toLowerCase}(2,2)",
+                            s"Ints.${op.name}(2,2)",
                             s"res0 : Int = ${
                                 op match {
-                                    case IntPrimBinOp.ADD => "4"
-                                    case IntPrimBinOp.SUB => "0"
-                                    case IntPrimBinOp.MUL => "4"
-                                    case IntPrimBinOp.DIV => "1"
-                                    case IntPrimBinOp.POW => "4"
+                                    case ADD => "4"
+                                    case SUB => "0"
+                                    case MUL => "4"
+                                    case DIV => "1"
+                                    case POW => "4"
                                 }
                             }"
                         )

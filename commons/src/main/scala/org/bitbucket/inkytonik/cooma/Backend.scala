@@ -35,9 +35,9 @@ trait Backend {
     def recSelectP() : Primitive
     def writerWriteP(filename : String) : Primitive
 
-    def intBinP(op : Primitives.IntPrimBinOp.IntPrimBinOp) : Primitive
-    def intRelP(op : Primitives.IntPrimRelOp.IntPrimRelOp) : Primitive
-    def stringP(op : Primitives.StrPrimOp.StrPrimOp) : Primitive
+    def intBinP(op : Primitives.IntPrimBinOp) : Primitive
+    def intRelP(op : Primitives.IntPrimRelOp) : Primitive
+    def stringP(op : Primitives.StrPrimOp) : Primitive
 
     def showTerm(t : Term) : String
 
