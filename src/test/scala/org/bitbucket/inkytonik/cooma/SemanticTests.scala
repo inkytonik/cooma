@@ -151,6 +151,11 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
+                "redeclared value name",
+                "{ val x = 1 val x = 2 x}",
+                ""
+            ),
+            SemanticTest(
                 "not-declared value name",
                 "{ val x = 1 y}",
                 """|1:13:error: y is not declared

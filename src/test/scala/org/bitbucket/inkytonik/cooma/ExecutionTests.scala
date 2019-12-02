@@ -50,7 +50,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             name : String,
             program : String,
             expectedCompiledResult : String,
-            expectedREPLType : String
+            expectedREPLType : String,
+            expectedREPLVar : String = "res0"
         )
 
         val ExecTests =
@@ -410,6 +411,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Int"
                 ),
                 ExecTest(
+                    "val block with redefinition",
+                    """{
+                       val x = 10
+                       val x = 20
+                       x
+                    }""",
+                    "20",
+                    "Int"
+                ),
+                ExecTest(
                     "val block (inner ref)",
                     """{
                         val x = 10
@@ -587,13 +598,15 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "true",
                     "true",
                     "<true = {}>",
-                    "<true : Unit>"
+                    "<true : Unit>",
+                    "true"
                 ),
                 ExecTest(
                     "false",
                     "false",
                     "<false = {}>",
-                    "<false : Unit>"
+                    "<false : Unit>",
+                    "false"
                 )
 
             ) ++ allIntPrimBinOps.flatMap(op => {
@@ -678,7 +691,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         for (aTest <- ExecTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
                 val result = runREPLOnLine(aTest.name, aTest.program, backend.options)
-                val expectedResult = s"res0 : ${aTest.expectedREPLType} = ${aTest.expectedCompiledResult}\n"
+                val expectedResult = s"${aTest.expectedREPLVar} : ${aTest.expectedREPLType} = ${aTest.expectedCompiledResult}\n"
                 result shouldBe expectedResult
             }
         }
@@ -719,7 +732,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val x = 1
                     x
                     """,
-                    "x : Int = 1\nres0 : Int = 1"
+                    "x : Int = 1\nx : Int = 1"
                 ),
                 REPLTest(
                     "multiple value definitions (upper)",
@@ -728,7 +741,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val y = 2
                         x
                     """,
-                    "x : Int = 1\ny : Int = 2\nres0 : Int = 1"
+                    "x : Int = 1\ny : Int = 2\nx : Int = 1"
                 ),
                 REPLTest(
                     "multiple value definitions (lower)",
@@ -737,7 +750,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         val y = 2
                         y
                     """,
-                    "x : Int = 1\ny : Int = 2\nres0 : Int = 2"
+                    "x : Int = 1\ny : Int = 2\ny : Int = 2"
+                ),
+                REPLTest(
+                    "multiple value definitions (redefinition)",
+                    """
+                        val x = 1
+                        val x = 2
+                        x
+                    """,
+                    "x : Int = 1\nx : Int = 2\nx : Int = 2"
                 ),
                 REPLTest(
                     "single function definition",
@@ -784,21 +806,20 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "f : (Int) => Int = <function>\ng : (Int) => Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
-                    "single result name binding",
+                    "single result name binding from constant",
                     """
                         10
                         res0
                     """,
-                    "res0 : Int = 10\nres1 : Int = 10"
+                    "res0 : Int = 10\nres0 : Int = 10"
                 ),
                 REPLTest(
-                    "single val binding",
+                    "single result name binding from val",
                     """
                         val x = 10
 						x
-                        res0
                     """,
-                    "x : Int = 10\nres0 : Int = 10"
+                    "x : Int = 10\nx : Int = 10"
                 ),
                 REPLTest(
                     "multiple result name binding",
@@ -808,7 +829,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         30
                         res2
                     """,
-                    "res0 : Int = 10\nres1 : Int = 20\nres2 : Int = 30\nres3 : Int = 30"
+                    "res0 : Int = 10\nres1 : Int = 20\nres2 : Int = 30\nres2 : Int = 30"
                 ),
                 REPLTest(
                     "built-in type",
@@ -818,12 +839,12 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 REPLTest(
                     "pre-defined type",
                     "Boolean",
-                    "res0 : Type"
+                    "Boolean : Type"
                 ),
                 REPLTest(
                     "pre-defined value",
                     "true",
-                    "res0 : <true : Unit> = <true = {}>"
+                    "true : <true : Unit> = <true = {}>"
                 ),
 
                 //Primitives

@@ -210,7 +210,7 @@ class SemanticAnalyser(
         def unapply(n : ASTNode) : Boolean =
             n match {
                 case _ : Body | _ : CaseScope | _ : Fun | _ : LetFun |
-                    _ : LetVal | _ : REPLDef | _ : REPLExpression |
+                    _ : LetVal | _ : REPLDef | _ : REPLExp |
                     _ : REPLVal =>
                     true
                 case _ =>
@@ -605,7 +605,7 @@ class SemanticAnalyser(
 
     lazy val replType : REPLInput => Option[Expression] =
         attr {
-            case REPLExpression(e) =>
+            case REPLExp(e) =>
                 tipe(e)
             case REPLDef(Def(_, Body(Arguments(as), t, e))) =>
                 unaliasFunT(as.map(_.expression), t)

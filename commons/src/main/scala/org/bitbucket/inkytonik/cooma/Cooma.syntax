@@ -106,6 +106,6 @@ REPLInput =
   Spacing REPLEntry EOF.
 
 REPLEntry : REPLInput =
-    Expression  {REPLExpression}
+    Expression  {REPLExp}
   | Def         {REPLDef}
   | Val         {REPLVal}.

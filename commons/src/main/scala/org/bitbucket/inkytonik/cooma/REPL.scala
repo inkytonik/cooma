@@ -121,7 +121,9 @@ trait REPL extends REPLBase[Config] {
     ) : (Messages, REPLInput, Option[Expression]) = {
         val input2 =
             input match {
-                case REPLExpression(e) =>
+                case REPLExp(Idn(IdnUse(_))) =>
+                    input
+                case REPLExp(e) =>
                     val i = s"res$nResults"
                     nResults = nResults + 1
                     REPLVal(Val(IdnDef(i), e))
@@ -143,6 +145,8 @@ trait REPL extends REPLBase[Config] {
         input match {
             case REPLDef(fd @ Def(IdnDef(i), _)) =>
                 processDef(i, fd, tipe, config)
+            case REPLExp(e @ Idn(IdnUse(i))) =>
+                processIdn(i, e, tipe, config)
             case REPLVal(vd @ Val(IdnDef(i), e)) =>
                 processVal(i, vd, tipe, config)
             case _ =>
@@ -150,29 +154,27 @@ trait REPL extends REPLBase[Config] {
         }
 
     /**
-     * Construct a program that binds a value.
-     */
-    def makeVal(i : String, vd : Val) : Program =
-        Program(Blk(LetVal(vd, Return(Idn(IdnUse(i))))))
-
-    /**
-     * Construct a program that binds a function definition.
-     */
-    def makeDef(i : String, fd : Def) : Program =
-        Program(Blk(LetFun(Vector(fd), Return(Idn(IdnUse(i))))))
-
-    /**
      * Process a user-entered value binding.
      */
     def processVal(i : String, vd : Val, tipe : Expression, config : Config) : Unit = {
-        process(makeVal(i, vd), i, tipe, config)
+        val program = Program(Blk(LetVal(vd, Return(Idn(IdnUse(i))))))
+        process(program, i, tipe, config)
     }
 
     /**
      * Process a user-entered function definition binding.
      */
     def processDef(i : String, fd : Def, tipe : Expression, config : Config) : Unit = {
-        process(makeDef(i, fd), i, tipe, config)
+        val program = Program(Blk(LetFun(Vector(fd), Return(Idn(IdnUse(i))))))
+        process(program, i, tipe, config)
+    }
+
+    /**
+     * Process a user-entered identifier expression.
+     */
+    def processIdn(i : String, e : Expression, tipe : Expression, config : Config) : Unit = {
+        val program = Program(e)
+        process(program, i, tipe, config)
     }
 
     /**
