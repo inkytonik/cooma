@@ -20,9 +20,11 @@ class TruffleBackend(config : Config) extends Backend {
 
     override type Value = CoomaValueNode
 
-    def appC(k : String, x : String) : CoomaTermNode = CoomaAppCTermNodeGen.create(k, x)
+    def appC(k : String, x : String) : CoomaTermNode =
+        CoomaAppCTermNodeGen.create(k, x)
 
-    def appF(f : String, k : String, x : String) : CoomaTermNode = CoomaAppFTermNodeGen.create(f, k, x)
+    def appF(f : String, k : String, x : String) : CoomaTermNode =
+        CoomaAppFTermNodeGen.create(f, k, x)
 
     type CaseTerm = CoomaCaseTerm
 
