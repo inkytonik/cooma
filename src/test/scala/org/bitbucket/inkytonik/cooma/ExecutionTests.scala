@@ -598,14 +598,14 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "true",
                     "true",
                     "<true = {}>",
-                    "<true : Unit>",
+                    "Boolean",
                     "true"
                 ),
                 ExecTest(
                     "false",
                     "false",
                     "<false = {}>",
-                    "<false : Unit>",
+                    "Boolean",
                     "false"
                 )
 
@@ -717,6 +717,14 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Hello"
                     """,
                     """res0 : String = "Hello""""
+                ),
+                REPLTest(
+                    "single evaluation (function and use)",
+                    """
+                        fun (x : Int) x
+                        res0(10)
+                    """,
+                    "res0 : (Int) Int = <function>\nres1 : Int = 10"
                 ),
                 REPLTest(
                     "multiple evaluations",
@@ -844,7 +852,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 REPLTest(
                     "pre-defined value",
                     "true",
-                    "true : <true : Unit> = <true = {}>"
+                    "true : Boolean = <true = {}>"
                 ),
 
                 //Primitives

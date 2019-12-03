@@ -62,7 +62,7 @@ Body =
   '(' Arguments ")" Expression sp '=' nestnl (Expression).
 
 Val =
-  "val" IdnDef sp "=" Expression \n.
+  "val" IdnDef (":" Expression)? sp "=" Expression \n.
 
 FieldType =
   Identifier sp ":" Expression.

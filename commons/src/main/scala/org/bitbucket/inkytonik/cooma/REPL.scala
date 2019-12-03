@@ -105,38 +105,56 @@ trait REPL extends REPLBase[Config] {
             if (pr.hasValue) {
                 val input = p.value(pr).asInstanceOf[REPLInput]
                 checkInput(input, config) match {
-                    case (Vector(), input, Some(tipe)) =>
-                        processInput(input, tipe, config)
-                    case (messages, _, _) =>
+                    case Left(messages) =>
                         messaging.report(source, messages, config.output())
+                    case Right((input, tipe)) =>
+                        processInput(input, tipe, config)
                 }
             } else
                 config.output().emitln(p.formatParseError(pr.parseError, false))
         }
     }
 
+    def defineVal(i : String, t : Expression, e : Expression) : REPLVal = {
+        val v = Val(IdnDef(i), Some(t), e)
+        currentStaticEnv = define(enter(currentStaticEnv), i, ValueEntity(v))
+        REPLVal(v)
+    }
+
     def checkInput(
         input : REPLInput,
         config : Config
-    ) : (Messages, REPLInput, Option[Expression]) = {
-        val input2 =
-            input match {
-                case REPLExp(Idn(IdnUse(_))) =>
-                    input
-                case REPLExp(e) =>
-                    val i = s"res$nResults"
-                    nResults = nResults + 1
-                    REPLVal(Val(IdnDef(i), e))
-                case input =>
-                    input
-            }
+    ) : Either[Messages, (REPLInput, Expression)] = {
         if (config.coomaASTPrint())
-            config.output().emitln(layout(any(input2), 5))
-        val tree = new Tree[ASTNode, REPLInput](input2)
+            config.output().emitln(layout(any(input), 5))
+        val tree = new Tree[ASTNode, REPLInput](input)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
-        if (analyser.errors.isEmpty)
-            currentStaticEnv = analyser.env(input2)
-        (analyser.errors, input2, analyser.replType(input2))
+        (analyser.errors, analyser.replType(input)) match {
+            case (Vector(), Some(inputType)) =>
+                val input2 =
+                    input match {
+                        case REPLDef(Def(IdnDef(i), Body(as, t, e))) =>
+                            defineVal(i, inputType, Fun(as, e))
+
+                        case REPLExp(Idn(IdnUse(_))) =>
+                            input
+
+                        case REPLExp(e) =>
+                            val i = s"res$nResults"
+                            nResults = nResults + 1
+                            defineVal(i, inputType, e)
+
+                        case REPLVal(Val(IdnDef(i), None, e)) =>
+                            defineVal(i, inputType, e)
+
+                        case REPLVal(Val(IdnDef(i), Some(t), e)) =>
+                            defineVal(i, t, e)
+                    }
+                Right((input2, inputType))
+
+            case (messages, _) =>
+                Left(messages)
+        }
     }
 
     /**
@@ -148,7 +166,7 @@ trait REPL extends REPLBase[Config] {
                 processDef(i, fd, tipe, config)
             case REPLExp(e @ Idn(IdnUse(i))) =>
                 processIdn(i, e, tipe, config)
-            case REPLVal(vd @ Val(IdnDef(i), e)) =>
+            case REPLVal(vd @ Val(IdnDef(i), _, e)) =>
                 processVal(i, vd, tipe, config)
             case _ =>
                 sys.error(s"$input not supported for the moment")

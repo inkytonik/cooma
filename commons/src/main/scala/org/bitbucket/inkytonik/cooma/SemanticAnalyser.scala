@@ -81,7 +81,7 @@ class SemanticAnalyser(
     }
 
     def checkExpressionType(e : Expression) : Messages =
-        (unaliasedType(e), unalias(expectedType(e))) match {
+        (unaliasedType(e), unalias(e, expectedType(e))) match {
             case (Some(t), Some(u)) if !subtype(t, u) =>
                 error(e, s"expected ${show(u)}, got ${show(e)} of type ${show(t)}")
             case _ =>
@@ -466,7 +466,7 @@ class SemanticAnalyser(
                 tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
                 Some(FunT(as.map(_.expression), t))
-            case ValueEntity(Val(_, None, e)) =>
+            case ValueEntity(Val(i, None, e)) =>
                 tipe(e)
             case ValueEntity(Val(_, t, e)) =>
                 t
@@ -497,43 +497,43 @@ class SemanticAnalyser(
     val unaliasedType : Expression => Option[Expression] =
         attr {
             case e =>
-                unalias(tipe(e))
+                unalias(e, tipe(e))
         }
 
-    def unalias(optType : Option[Expression]) : Option[Expression] =
-        optType.flatMap(unalias)
+    def unalias(e : Expression, optType : Option[Expression]) : Option[Expression] =
+        optType.flatMap(t => unalias(e, t))
 
-    def unalias(t : Expression) : Option[Expression] =
+    def unalias(e : Expression, t : Expression) : Option[Expression] =
         t match {
-            case Idn(u @ IdnUse(x)) =>
-                lookup(env(u), x, UnknownEntity()) match {
+            case Idn(IdnUse(x)) =>
+                lookup(env(e), x, UnknownEntity()) match {
                     case ValueEntity(Val(_, _, v)) if t != v =>
-                        unalias(v)
+                        unalias(e, v)
                     case _ =>
                         None
                 }
             case FunT(us, u) =>
-                unaliasFunT(us, u)
+                unaliasFunT(e, us, u)
             case RecT(fieldTypes) =>
-                unaliasRecT(fieldTypes)
+                unaliasRecT(e, fieldTypes)
             case VarT(fieldTypes) =>
-                unaliasVarT(fieldTypes)
+                unaliasVarT(e, fieldTypes)
             case _ =>
                 Some(t)
         }
 
-    def unaliases(ts : Vector[Expression]) : Option[Vector[Expression]] = {
-        val us = ts.map(unalias)
+    def unaliases(e : Expression, ts : Vector[Expression]) : Option[Vector[Expression]] = {
+        val us = ts.map(t => unalias(e, t))
         if (us.forall(_.isDefined))
             Some(us.map(_.get))
         else
             None
     }
 
-    def unaliasFunT(ts : Vector[Expression], t : Expression) : Option[FunT] =
-        unaliases(ts) match {
+    def unaliasFunT(e : Expression, ts : Vector[Expression], t : Expression) : Option[FunT] =
+        unaliases(e, ts) match {
             case Some(us) =>
-                unalias(t) match {
+                unalias(e, t) match {
                     case Some(u) =>
                         Some(FunT(us, u))
                     case None =>
@@ -543,10 +543,10 @@ class SemanticAnalyser(
                 None
         }
 
-    def unaliasFieldTypes(fts : Vector[FieldType]) : Option[Vector[FieldType]] = {
+    def unaliasFieldTypes(e : Expression, fts : Vector[FieldType]) : Option[Vector[FieldType]] = {
         val is = fts.map(_.identifier)
         val ts = fts.map(_.expression)
-        unaliases(ts) match {
+        unaliases(e, ts) match {
             case Some(us) =>
                 Some(is.zip(us).map {
                     case (i, t) =>
@@ -557,11 +557,11 @@ class SemanticAnalyser(
         }
     }
 
-    def unaliasRecT(fts : Vector[FieldType]) : Option[RecT] =
-        unaliasFieldTypes(fts).map(RecT)
+    def unaliasRecT(e : Expression, fts : Vector[FieldType]) : Option[RecT] =
+        unaliasFieldTypes(e, fts).map(RecT)
 
-    def unaliasVarT(fts : Vector[FieldType]) : Option[VarT] =
-        unaliasFieldTypes(fts).map(VarT)
+    def unaliasVarT(e : Expression, fts : Vector[FieldType]) : Option[VarT] =
+        unaliasFieldTypes(e, fts).map(VarT)
 
     lazy val blockTipe : BlockExp => Option[Expression] =
         attr {
@@ -614,9 +614,11 @@ class SemanticAnalyser(
             case REPLExp(e) =>
                 tipe(e)
             case REPLDef(Def(_, Body(Arguments(as), t, e))) =>
-                unaliasFunT(as.map(_.expression), t)
-            case REPLVal(v) =>
-                tipe(v.expression)
+                Some(FunT(as.map(_.expression), t))
+            case REPLVal(Val(_, None, e)) =>
+                tipe(e)
+            case REPLVal(Val(_, t, _)) =>
+                t
         }
 
 }

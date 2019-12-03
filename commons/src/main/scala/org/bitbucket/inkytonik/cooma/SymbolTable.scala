@@ -99,14 +99,14 @@ object SymbolTable extends Environments[CoomaEntity] {
             {
                 // Boolean
                 val Boolean = <false : Unit, true : Unit>
-                val false = <false = {}>
-                val true = <true = {}>
+                val false : Boolean = <false = {}>
+                val true : Boolean = <true = {}>
 
-                //def not (b : Boolean) Boolean =
+                // def not (b : Boolean) Boolean =
                 //    b match {
-                //        case false x =
+                //        case false x =>
                 //            true
-                //        case true x =
+                //        case true x =>
                 //            false
                 //    }
 

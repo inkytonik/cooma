@@ -213,7 +213,7 @@ trait Compiler {
                     compileBlockExp(be2, kappa)
                 )
 
-            case LetVal(Val(IdnDef(x), e), be2) =>
+            case LetVal(Val(IdnDef(x), _, e), be2) =>
                 val j = fresh("j")
                 letC(j, x, compileBlockExp(be2, kappa),
                     tailCompile(e, j))
@@ -394,7 +394,7 @@ trait Compiler {
                     tailCompileBlockExp(be2, k)
                 )
 
-            case LetVal(Val(IdnDef(x), e), be2) =>
+            case LetVal(Val(IdnDef(x), _, e), be2) =>
                 val j = fresh("j")
                 letC(j, x, tailCompileBlockExp(be2, k),
                     tailCompile(e, j))
