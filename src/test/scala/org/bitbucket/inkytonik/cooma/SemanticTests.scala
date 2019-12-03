@@ -568,6 +568,18 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
+                "bad concat of aliased record types",
+                """{
+                  |   val Foo = {x : Int, y : String}
+                  |   val Bar = {x : Int}
+                  |   fun (f : Foo, b : Bar) f & b
+                  |}""",
+                """|4:27:error: record concatenation has overlapping field(s) x
+                   |   fun (f : Foo, b : Bar) f & b
+                   |                          ^
+                   |"""
+            ),
+            SemanticTest(
                 "alias of function type",
                 "{ val Foo = (Int) String fun (f : Foo) f(0) }",
                 ""
@@ -608,6 +620,57 @@ class SemanticTests extends Tests {
                       0
                    }""",
                 ""
+            ),
+            SemanticTest(
+                "ok match alias of variant type",
+                """{
+                      val Foo = <f : Unit>
+                      def m (x : Foo) Int =
+                         x match { case f a => 10 }
+                      0
+                   }""",
+                ""
+            ),
+            SemanticTest(
+                "bad match alias of variant type",
+                """{
+                  |   val Foo = <f : Unit>
+                  |   def m (x : Foo) Int =
+                  |     x match { case g a => 10 }
+                  |   0
+                  |}""",
+                """|4:16:error: variant g not present in matched type <f : Unit>
+                   |     x match { case g a => 10 }
+                   |               ^
+                   |"""
+            ),
+            SemanticTest(
+                "ok aliased case branches",
+                """{
+                      val Foo = Int
+                      val Bar = Int
+                      def m (v : <a : Int, b : Int>, x : Foo, y : Bar) Int =
+                        v match { case a c => x case b d => y }
+                      0
+                   }""",
+                ""
+            ),
+            SemanticTest(
+                "bad aliased case branches",
+                """{
+                  |   val Foo = Int
+                  |   val Bar = String
+                  |   def m (v : <a : Int, b : Int>, x : Foo, y : Bar) Int =
+                  |      v match { case a c => x case b d => y }
+                  |   0
+                  |}""",
+                """|5:29:error: case expression types are not the same
+                   |      v match { case a c => x case b d => y }
+                   |                            ^
+                   |5:43:error: case expression types are not the same
+                   |      v match { case a c => x case b d => y }
+                   |                                          ^
+                   |"""
             ),
             SemanticTest(
                 "alias of function type of alias",
@@ -868,7 +931,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad record concatenation (overlapping field)",
                 "{x = 1} & {y = 1, x = 2}",
-                """|1:1:error: record concatenation has overlapping fields x
+                """|1:1:error: record concatenation has overlapping field(s) x
                    |{x = 1} & {y = 1, x = 2}
                    |^
                    |"""
@@ -876,7 +939,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad record concatenation (overlapping fields)",
                 "{w = 0, x = 1, y = 2} & {y = 1, x = 2}",
-                """|1:1:error: record concatenation has overlapping fields x, y
+                """|1:1:error: record concatenation has overlapping field(s) x, y
                    |{w = 0, x = 1, y = 2} & {y = 1, x = 2}
                    |^
                    |"""

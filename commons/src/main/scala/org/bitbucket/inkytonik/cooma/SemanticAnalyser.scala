@@ -81,7 +81,7 @@ class SemanticAnalyser(
     }
 
     def checkExpressionType(e : Expression) : Messages =
-        (tipe(e), expectedType(e)) match {
+        (unaliasedType(e), unalias(expectedType(e))) match {
             case (Some(t), Some(u)) if !subtype(t, u) =>
                 error(e, s"expected ${show(u)}, got ${show(e)} of type ${show(t)}")
             case _ =>
@@ -89,7 +89,7 @@ class SemanticAnalyser(
         }
 
     def checkApplication(f : Expression, as : Vector[Expression]) : Messages =
-        tipe(f) match {
+        unaliasedType(f) match {
             case Some(FunT(ps, _)) =>
                 if (ps.length < as.length)
                     ps.length match {
@@ -133,7 +133,7 @@ class SemanticAnalyser(
         }
 
     def checkCaseVariants(c : Case, m : Mat) : Messages =
-        tipe(m.expression) match {
+        unaliasedType(m.expression) match {
             case Some(t @ VarT(fieldTypes)) =>
                 fieldTypes.find(f => f.identifier == c.identifier) match {
                     case None =>
@@ -148,14 +148,14 @@ class SemanticAnalyser(
     def checkConcat(e : Cat, l : Expression, r : Expression) : Messages = {
         checkRecordUse(l) ++
             checkRecordUse(r) ++
-            ((tipe(l), tipe(r)) match {
+            ((unaliasedType(l), unaliasedType(r)) match {
                 case (Some(RecT(rl)), Some(RecT(rr))) =>
                     val overlap = overlappingFields(rl, rr)
                     if (overlap.isEmpty)
                         noMessages
                     else {
                         val fieldsMsg = overlap.mkString(", ")
-                        error(e, s"record concatenation has overlapping fields $fieldsMsg")
+                        error(e, s"record concatenation has overlapping field(s) $fieldsMsg")
                     }
                 case _ =>
                     noMessages
@@ -163,17 +163,15 @@ class SemanticAnalyser(
     }
 
     def checkMatch(e : Expression, cs : Vector[CaseScope]) : Messages =
-        checkMathDiscType(e) ++
+        checkMatchDiscType(e) ++
             checkMatchCaseNum(e, cs)
 
-    def checkMathDiscType(e : Expression) : Messages =
-        tipe(e) match {
-            case Some(VarT(_)) =>
+    def checkMatchDiscType(e : Expression) : Messages =
+        unaliasedType(e) match {
+            case Some(VarT(_)) | None =>
                 noMessages
             case Some(t) =>
                 error(e, s"match of non-variant type ${show(t)}")
-            case None =>
-                noMessages
         }
 
     def checkMatchCaseNum(e : Expression, cs : Vector[CaseScope]) : Messages =
@@ -185,7 +183,7 @@ class SemanticAnalyser(
         }
 
     def checkRecordUse(e : Expression) : Messages =
-        tipe(e) match {
+        unaliasedType(e) match {
             case Some(RecT(_)) | None =>
                 noMessages
             case Some(t) =>
@@ -194,7 +192,7 @@ class SemanticAnalyser(
 
     def checkFieldUse(e : Expression, f : FieldUse) : Messages = {
         val i = f.identifier
-        tipe(e) match {
+        unaliasedType(e) match {
             case Some(t @ RecT(fields)) =>
                 if (fields.map(_.identifier) contains i)
                     noMessages
@@ -333,9 +331,9 @@ class SemanticAnalyser(
                     case Some(FunT(ts, t)) =>
                         val numArgs = as.length
                         if (numArgs == ts.length)
-                            unalias(t)
+                            Some(t)
                         else
-                            unaliasFunT(ts.drop(numArgs), t)
+                            Some(FunT(ts.drop(numArgs), t))
                     case _ =>
                         None
                 }
@@ -357,7 +355,7 @@ class SemanticAnalyser(
             case Fun(Arguments(as), e) =>
                 tipe(e) match {
                     case Some(t) =>
-                        unaliasFunT(as.map(_.expression), t)
+                        Some(FunT(as.map(_.expression), t))
                     case None =>
                         None
                 }
@@ -386,7 +384,7 @@ class SemanticAnalyser(
                 primitivesTypesTable.get(i) match {
                     case Some(FunT(ts, t)) =>
                         if (args.length == ts.length)
-                            unalias(t)
+                            Some(t)
                         else
                             None
                     case _ =>
@@ -407,7 +405,7 @@ class SemanticAnalyser(
                                 i == f
                         } match {
                             case Some(FieldType(i, t)) =>
-                                unalias(t)
+                                Some(t)
                             case None =>
                                 None
                         }
@@ -442,25 +440,21 @@ class SemanticAnalyser(
         if (ts contains None)
             None
         else {
-            unaliases(ts.map(_.get)) match {
-                case Some(us) =>
-                    val ids = fields.map(_.identifier)
-                    val fieldTypes =
-                        (ids.zip(us)).map {
-                            case (i, u) =>
-                                FieldType(i, u)
-                        }
-                    Some(fieldTypes)
-                case None =>
-                    None
-            }
+            val us = ts.map(_.get)
+            val ids = fields.map(_.identifier)
+            val fieldTypes =
+                (ids.zip(us)).map {
+                    case (i, u) =>
+                        FieldType(i, u)
+                }
+            Some(fieldTypes)
         }
     }
 
     val entityType : CoomaEntity => Option[Expression] =
         attr {
             case ArgumentEntity(Argument(_, t)) =>
-                unalias(t)
+                Some(t)
             case CaseValueEntity(tree.parent.pair(c, tree.parent(Mat(e, _)))) =>
                 tipe(e) match {
                     case Some(VarT(r)) if tree.index(c) < r.length =>
@@ -471,9 +465,11 @@ class SemanticAnalyser(
             case FieldEntity(Field(_, e)) =>
                 tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
-                unaliasFunT(as.map(_.expression), t)
-            case ValueEntity(Val(_, e)) =>
+                Some(FunT(as.map(_.expression), t))
+            case ValueEntity(Val(_, None, e)) =>
                 tipe(e)
+            case ValueEntity(Val(_, t, e)) =>
+                t
             case _ =>
                 None
         }
@@ -488,7 +484,7 @@ class SemanticAnalyser(
                 val caseTypes =
                     m.caseScopes.map {
                         case CaseScope(Case(_, _, e)) =>
-                            tipe(e)
+                            unaliasedType(e)
                     }.distinct
                 if (caseTypes contains None)
                     OkCases(None)
@@ -498,11 +494,20 @@ class SemanticAnalyser(
                     OkCases(caseTypes(0))
         }
 
+    val unaliasedType : Expression => Option[Expression] =
+        attr {
+            case e =>
+                unalias(tipe(e))
+        }
+
+    def unalias(optType : Option[Expression]) : Option[Expression] =
+        optType.flatMap(unalias)
+
     def unalias(t : Expression) : Option[Expression] =
         t match {
             case Idn(u @ IdnUse(x)) =>
                 lookup(env(u), x, UnknownEntity()) match {
-                    case ValueEntity(Val(_, v)) if t != v =>
+                    case ValueEntity(Val(_, _, v)) if t != v =>
                         unalias(v)
                     case _ =>
                         None
@@ -571,7 +576,7 @@ class SemanticAnalyser(
                 val argnum = tree.index(a) - 1
                 tipe(e) match {
                     case Some(FunT(ts, _)) if ts.length > argnum =>
-                        unalias(ts(argnum))
+                        Some(ts(argnum))
                     case _ =>
                         None
                 }
@@ -580,7 +585,7 @@ class SemanticAnalyser(
                 Some(TypT())
 
             case tree.parent.pair(a, Body(_, t, e)) if a eq e =>
-                unalias(t)
+                Some(t)
 
             case tree.parent.pair(a, Body(_, t, _)) if a eq t =>
                 Some(TypT())
@@ -595,7 +600,7 @@ class SemanticAnalyser(
                 val argnum = tree.index(a)
                 primitivesTypesTable.get(i) match {
                     case Some(FunT(ts, _)) if ts.length > argnum =>
-                        unalias(ts(argnum))
+                        Some(ts(argnum))
                     case _ =>
                         None
                 }
