@@ -880,6 +880,14 @@ class SemanticTests extends Tests {
                    |{w = 0, x = 1, y = 2} & {y = 1, x = 2}
                    |^
                    |"""
+            ),
+            SemanticTest(
+                "non-existent primitive",
+                "prim DoesNotExist(1, 2)",
+                """|1:1:error: primitive DoesNotExist not found
+                   |prim DoesNotExist(1, 2)
+                   |^
+                   |"""
             )
         ) ++ Primitives.allIntPrimBinOps.flatMap(op => {
                 def underscoreToCamel(name : String) = s"${name.head.toUpper}${name.tail}"
@@ -895,9 +903,9 @@ class SemanticTests extends Tests {
                     ),
                     SemanticTest(
                         s"Wrong number of arguments for int binary ${primOp} op primitive (less)",
-                        s"prim  ${primOp}(2)",
+                        s"prim ${primOp}(2)",
                         s"""|1:1:error: primitive expects 2 arguments, provided 1.
-                            |prim  ${primOp}(2)
+                            |prim ${primOp}(2)
                             |^
                             |"""
                     ),
