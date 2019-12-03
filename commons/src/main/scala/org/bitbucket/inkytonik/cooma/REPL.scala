@@ -134,7 +134,8 @@ trait REPL extends REPLBase[Config] {
             config.output().emitln(layout(any(input2), 5))
         val tree = new Tree[ASTNode, REPLInput](input2)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
-        currentStaticEnv = analyser.env(input2)
+        if (analyser.errors.isEmpty)
+            currentStaticEnv = analyser.env(input2)
         (analyser.errors, input2, analyser.replType(input2))
     }
 
