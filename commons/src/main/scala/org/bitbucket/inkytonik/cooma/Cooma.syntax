@@ -88,10 +88,7 @@ StringLit : Token =
   '"' StringChar* '"'.
 
 StringChar : String =
-  '\\' ([btnfr] / '\\' / '"' / "'" /
-        OctDigit OctDigit OctDigit /
-        OctDigit OctDigit /
-        OctDigit OctDigit) /
+  '\\' ([btnfr] / '\\' / '"') /
   !'"' _.
 
 OctDigit : String =
