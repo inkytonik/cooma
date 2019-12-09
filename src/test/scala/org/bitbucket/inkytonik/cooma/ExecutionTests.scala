@@ -17,7 +17,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
     with ScalaCheckDrivenPropertyChecks {
 
-    // import java.io.{ByteArrayOutputStream, PrintStream}
+    import java.io.{ByteArrayOutputStream, PrintStream}
     import java.io.{ByteArrayOutputStream}
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
@@ -40,11 +40,14 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
     val backends =
         List(
-            Backend("Reference", Seq(), new ReferenceFrontend)
-        // Backend(
-        //     "GraalVM", Seq("-g"),
-        //     new TruffleFrontend(out = new PrintStream(truffleOutContent))
-        // )
+            Backend(
+                "Reference", Seq(),
+                new ReferenceFrontend
+            ),
+            Backend(
+                "GraalVM", Seq("-g"),
+                new TruffleFrontend(out = new PrintStream(truffleOutContent))
+            )
         )
 
     for (backend <- backends) {
