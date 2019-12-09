@@ -42,7 +42,7 @@ CaseScope =
   Case.
 
 Case =
-  "case" Identifier sp IdnDef sp "=>" Expression sp.
+  "case" Identifier '(' IdnDef ")" "=>" Expression sp.
 
 Field =
   Identifier sp "=" Expression.

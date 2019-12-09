@@ -271,7 +271,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ),
                 ExecTest(
                     "basic match",
-                    "<x = 1> match { case x a => a }",
+                    "<x = 1> match { case x(a) => a }",
                     "1",
                     "Int"
                 ),
@@ -279,7 +279,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "multi-case match (first case, same order)",
                     """{
                         def f () <x : Int, y : Int> = <x = 3>
-                        f () match { case x a => 1 case y b => 2 }
+                        f () match { case x(a) => 1 case y(b) => 2 }
                     }""",
                     "1",
                     "Int"
@@ -288,7 +288,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "multi-case match (later case, same order)",
                     """{
                         def f () <x : Int, y : Int> = <y = 3>
-                        f () match { case x a => 1 case y b => 2 }
+                        f () match { case x(a) => 1 case y(b) => 2 }
                     }""",
                     "2",
                     "Int"
@@ -297,7 +297,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "multi-case match (first case, different order)",
                     """{
                         def f () <x : Int, y : Int> = <y = 3>
-                        f () match { case y b => 1 case x a => 2 }
+                        f () match { case y(b) => 1 case x(a) => 2 }
                     }""",
                     "1",
                     "Int"
@@ -306,7 +306,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "multi-case match (later case, different order)",
                     """{
                         def f () <x : Int, y : Int> = <x = 3>
-                        f () match { case y b => 1 case x a => 2 }
+                        f () match { case y(b) => 1 case x(a) => 2 }
                     }""",
                     "2",
                     "Int"
@@ -316,8 +316,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """{
                         def f (b : Boolean) Unit =
                             b match {
-                                case false x => x
-                                case true x => x
+                                case false(x) => x
+                                case true(x) => x
                             }
                         {a = f(<false = {}>), b = f(<true = {}>)}
                     }""",

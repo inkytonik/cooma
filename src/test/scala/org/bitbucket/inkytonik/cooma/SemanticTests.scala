@@ -324,7 +324,7 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "boolean is a variant with false and true fields",
-                "fun (b : Boolean) b match { case false x => 0 case true x => 1}",
+                "fun (b : Boolean) b match { case false(x) => 0 case true(x) => 1}",
                 ""
             ),
             SemanticTest(
@@ -458,49 +458,49 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "basic match",
-                "<x = 1> match { case x a => a }",
+                "<x = 1> match { case x(a) => a }",
                 ""
             ),
             SemanticTest(
                 "basic match correct type",
                 """{
-                     def f () Int = <x = 1> match { case x a => a }
+                     def f () Int = <x = 1> match { case x(a) => a }
                      f ()
                    }""",
                 ""
             ),
             SemanticTest(
                 "match of non-variant",
-                "3 match { case x a => a }",
+                "3 match { case x(a) => a }",
                 """|1:1:error: match of non-variant type Int
-                   |3 match { case x a => a }
+                   |3 match { case x(a) => a }
                    |^
                    |"""
             ),
             SemanticTest(
                 "basic match wrong result type",
                 """{
-                  |  def f () String = <x = 1> match { case x a => a }
+                  |  def f () String = <x = 1> match { case x(a) => a }
                   |  f ()
                   |}""",
-                """|2:21:error: expected String, got <x = 1> match { case x a => a } of type Int
-                   |  def f () String = <x = 1> match { case x a => a }
+                """|2:21:error: expected String, got <x = 1> match { case x(a) => a } of type Int
+                   |  def f () String = <x = 1> match { case x(a) => a }
                    |                    ^
                    |"""
             ),
             SemanticTest(
                 "non-declared name in match case",
-                "<x = 1> match { case x a => y }",
-                """|1:29:error: y is not declared
-                   |<x = 1> match { case x a => y }
-                   |                            ^
+                "<x = 1> match { case x(a) => y }",
+                """|1:30:error: y is not declared
+                   |<x = 1> match { case x(a) => y }
+                   |                             ^
                    |"""
             ),
             SemanticTest(
                 "correct number and type of cases for match",
                 """{
                     def f () <x : Int, y : Int> = <x = 3>
-                    f () match { case x a => 1 case y b => 2 }
+                    f () match { case x(a) => 1 case y(b) => 2 }
                 }""",
                 ""
             ),
@@ -508,24 +508,24 @@ class SemanticTests extends Tests {
                 "correct number of cases but wrong type for match",
                 """{
                   |  def f () <x : Int, y : Int> = <x = 3>
-                  |  f () match { case x a => 1 case y b => "hi" }
+                  |  f () match { case x(a) => 1 case y(b) => "hi" }
                   |}""",
-                """|3:28:error: case expression types are not the same
-                   |  f () match { case x a => 1 case y b => "hi" }
-                   |                           ^
-                   |3:42:error: case expression types are not the same
-                   |  f () match { case x a => 1 case y b => "hi" }
-                   |                                         ^
+                """|3:29:error: case expression types are not the same
+                   |  f () match { case x(a) => 1 case y(b) => "hi" }
+                   |                            ^
+                   |3:44:error: case expression types are not the same
+                   |  f () match { case x(a) => 1 case y(b) => "hi" }
+                   |                                           ^
                    |"""
             ),
             SemanticTest(
                 "incorrect number of cases for match",
                 """{
                   |  def f () <x : Int, y : Int> = <x = 3>
-                  |  f () match { case x a => 1 }
+                  |  f () match { case x(a) => 1 }
                   |}""",
                 """|3:16:error: expected 2 cases, got 1
-                   |  f () match { case x a => 1 }
+                   |  f () match { case x(a) => 1 }
                    |               ^
                    |"""
             ),
@@ -533,24 +533,24 @@ class SemanticTests extends Tests {
                 "duplicate cases for match",
                 """{
                   |  def f () <x : Int, y : Int> = <x = 3>
-                  |  f () match { case x a => 1 case x b => 2 }
+                  |  f () match { case x(a) => 1 case x(b) => 2 }
                   |}""",
                 """|3:16:error: duplicate case for variant x
-                   |  f () match { case x a => 1 case x b => 2 }
+                   |  f () match { case x(a) => 1 case x(b) => 2 }
                    |               ^
-                   |3:30:error: duplicate case for variant x
-                   |  f () match { case x a => 1 case x b => 2 }
-                   |                             ^
+                   |3:31:error: duplicate case for variant x
+                   |  f () match { case x(a) => 1 case x(b) => 2 }
+                   |                              ^
                    |"""
             ),
             SemanticTest(
                 "incorrect variant for match",
                 """{
                   |  def f () <x : Int, y : Int> = <x = 3>
-                  |  f () match { case w a => 1 case y b => 2 }
+                  |  f () match { case w(a) => 1 case y(b) => 2 }
                   |}""",
                 """|3:16:error: variant w not present in matched type <x : Int, y : Int>
-                   |  f () match { case w a => 1 case y b => 2 }
+                   |  f () match { case w(a) => 1 case y(b) => 2 }
                    |               ^
                    |"""
             ),
@@ -666,7 +666,7 @@ class SemanticTests extends Tests {
                 """{
                       val Foo = <f : Unit>
                       def m (x : Foo) Int =
-                         x match { case f a => 10 }
+                         x match { case f(a) => 10 }
                       0
                    }""",
                 ""
@@ -676,11 +676,11 @@ class SemanticTests extends Tests {
                 """{
                   |   val Foo = <f : Unit>
                   |   def m (x : Foo) Int =
-                  |     x match { case g a => 10 }
+                  |     x match { case g(a) => 10 }
                   |   0
                   |}""",
                 """|4:16:error: variant g not present in matched type <f : Unit>
-                   |     x match { case g a => 10 }
+                   |     x match { case g(a) => 10 }
                    |               ^
                    |"""
             ),
@@ -690,7 +690,7 @@ class SemanticTests extends Tests {
                       val Foo = Int
                       val Bar = Int
                       def m (v : <a : Int, b : Int>, x : Foo, y : Bar) Int =
-                        v match { case a c => x case b d => y }
+                        v match { case a(c) => x case b(d) => y }
                       0
                    }""",
                 ""
@@ -701,15 +701,15 @@ class SemanticTests extends Tests {
                   |   val Foo = Int
                   |   val Bar = String
                   |   def m (v : <a : Int, b : Int>, x : Foo, y : Bar) Int =
-                  |      v match { case a c => x case b d => y }
+                  |      v match { case a(c) => x case b(d) => y }
                   |   0
                   |}""",
-                """|5:29:error: case expression types are not the same
-                   |      v match { case a c => x case b d => y }
-                   |                            ^
-                   |5:43:error: case expression types are not the same
-                   |      v match { case a c => x case b d => y }
-                   |                                          ^
+                """|5:30:error: case expression types are not the same
+                   |      v match { case a(c) => x case b(d) => y }
+                   |                             ^
+                   |5:45:error: case expression types are not the same
+                   |      v match { case a(c) => x case b(d) => y }
+                   |                                            ^
                    |"""
             ),
             SemanticTest(

@@ -105,9 +105,9 @@ object SymbolTable extends Environments[CoomaEntity] {
 
                 def not (b : Boolean) Boolean =
                    b match {
-                       case false x =>
+                       case false(x) =>
                            true
-                       case true x =>
+                       case true(x) =>
                            false
                    }
 
