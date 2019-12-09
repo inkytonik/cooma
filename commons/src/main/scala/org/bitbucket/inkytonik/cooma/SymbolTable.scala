@@ -103,13 +103,13 @@ object SymbolTable extends Environments[CoomaEntity] {
                 val false : Boolean = <false = {}>
                 val true : Boolean = <true = {}>
 
-                // def not (b : Boolean) Boolean =
-                //    b match {
-                //        case false x =>
-                //            true
-                //        case true x =>
-                //            false
-                //    }
+                def not (b : Boolean) Boolean =
+                   b match {
+                       case false x =>
+                           true
+                       case true x =>
+                           false
+                   }
 
                 // Capability types
                 val Reader = {read : () String}

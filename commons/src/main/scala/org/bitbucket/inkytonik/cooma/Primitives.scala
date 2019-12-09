@@ -408,7 +408,41 @@ object Primitives {
             }
         }
 
+        val notValue = {
+            val closurek = fresh("primk")
+            val letvk1 = fresh("primk")
+            val letvk2 = fresh("primk")
+            val x = fresh("primx")
+            val y = fresh("primx")
+            val z = fresh("primx")
+            val t = fresh("primt")
+            val f = fresh("primf")
+            val u = fresh("primu")
+
+            interp.clsR(
+                interp.emptyEnv, closurek, x,
+                interp.letV(u, interp.recV(Vector()),
+                    interp.letC(letvk1, y,
+                        interp.letV(t, interp.varV("true", u),
+                            interp.appC(closurek, t)),
+                        interp.letC(letvk2, z,
+                            interp.letV(f, interp.varV("false", u),
+                                interp.appC(closurek, f)),
+                            interp.casV(
+                                x,
+                                Vector(
+                                    interp.caseTerm("false", letvk1),
+                                    interp.caseTerm("true", letvk2)
+                                )
+                            ))))
+            )
+        }
+
         Map(
+            "false" -> interp.falseR(),
+            "true" -> interp.trueR(),
+            "not" -> notValue,
+
             "Ints" ->
                 interp.recR(
                     (for { op <- allIntPrimBinOps }
@@ -416,6 +450,7 @@ object Primitives {
                         (for { op <- allIntPrimRelOps }
                             yield generateField(op, interp.intRelP(op)))
                 ),
+
             "Strings" ->
                 interp.recR(
                     for { op <- allStrPrimOps }

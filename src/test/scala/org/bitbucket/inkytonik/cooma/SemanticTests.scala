@@ -318,6 +318,46 @@ class SemanticTests extends Tests {
             // Pre-defined uses
 
             SemanticTest(
+                "Boolean is defined",
+                "Boolean",
+                ""
+            ),
+            SemanticTest(
+                "boolean is a variant with false and true fields",
+                "fun (b : Boolean) b match { case false x => 0 case true x => 1}",
+                ""
+            ),
+            SemanticTest(
+                "false is defined",
+                "false",
+                ""
+            ),
+            SemanticTest(
+                "false is Boolean",
+                "{fun (b : Boolean) 0}(false)",
+                ""
+            ),
+            SemanticTest(
+                "true is defined",
+                "true",
+                ""
+            ),
+            SemanticTest(
+                "true is Boolean",
+                "{fun (b : Boolean) 0}(true)",
+                ""
+            ),
+            SemanticTest(
+                "not is defined",
+                "not",
+                ""
+            ),
+            SemanticTest(
+                "not is (Boolean) Boolean",
+                "{ def f (b : Boolean) Boolean = not(b) 0 }",
+                ""
+            ),
+            SemanticTest(
                 "Reader is a record with a read field",
                 "fun (r : Reader) r.read()",
                 ""

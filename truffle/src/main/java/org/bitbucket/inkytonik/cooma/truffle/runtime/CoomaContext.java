@@ -42,14 +42,11 @@ public final class CoomaContext {
     }
 
     private Rho predefRho() {
-        val rho = new Rho();
-        Rho extendedRho =  rho.extend("false", (RuntimeValue) truffleBackend.falseR())
-                    .extend("true", (RuntimeValue) truffleBackend.trueR());
+        Rho rho = new Rho();
 		for (Map.Entry<String, Object> entry : JavaConverters.mapAsJavaMap(Primitives.generateDynamicRuntime(truffleBackend)).entrySet()) {
-			extendedRho = extendedRho.extend(entry.getKey(), (RuntimeValue) entry.getValue());
+			rho = rho.extend(entry.getKey(), (RuntimeValue) entry.getValue());
 		}
-
-        return extendedRho;
+        return rho;
     }
 
     public TruffleLanguage.Env getEnv() {

@@ -615,6 +615,18 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<false = {}>",
                     "Boolean",
                     "false"
+                ),
+                ExecTest(
+                    "not(false)",
+                    "not(false)",
+                    "<true = {}>",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "not(true)",
+                    "not(true)",
+                    "<false = {}>",
+                    "Boolean"
                 )
 
             ) ++ allIntPrimBinOps.flatMap(op => {

@@ -45,24 +45,11 @@ class Interpreter(config : Config) {
     def falseR = VarR("false", unit)
     def trueR = VarR("true", unit)
 
-    //add to the backend the values for true and false
-
-    val predef =
-        Vector(
-            ("false", falseR), //add these two for the Backend
-            ("true", trueR)
-        )
-
-    val predefEnv = {
-        val initEnv = predef.foldLeft(emptyEnv) {
+    val predefEnv =
+        Primitives.generateDynamicRuntime(this).foldLeft(emptyEnv) {
             case (env, (i, v)) =>
                 consEnv(env, i, v)
         }
-        Primitives.generateDynamicRuntime(this).foldLeft(initEnv) {
-            case (env, (i, v)) =>
-                consEnv(env, i, v)
-        }
-    }
 
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
         interpret(term, predefEnv, args, config) match {
