@@ -247,13 +247,17 @@ object Primitives {
             try {
                 operands match {
                     case Vector(l, r) =>
-                        interp.intR(op match {
-                            case ADD => l + r
-                            case SUB => l - r
-                            case MUL => l * r
-                            case DIV => l / r
-                            case POW => l.pow(r.toInt)
-                        })
+                        op match {
+                            case ADD => interp.intR(l + r)
+                            case SUB => interp.intR(l - r)
+                            case MUL => interp.intR(l * r)
+                            case DIV => interp.intR(l / r)
+                            case POW =>
+                                if (r < 0)
+                                    interp.errR(s"$show: illegal negative power $r given")
+                                else
+                                    interp.intR(l.pow(r.toInt))
+                        }
                     case _ =>
                         sys.error(s"$show $op: unexpectedly got operands $operands")
                 }

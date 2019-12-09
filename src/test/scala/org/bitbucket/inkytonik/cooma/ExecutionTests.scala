@@ -751,16 +751,30 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             }
         }
 
-        // {
-        //     val primName = "IntPow"
-        //     val func = (l : BigInt, r : BigInt) => l.pow(r.toInt)
+        {
+            val primName = "IntPow"
+            val func = (l : BigInt, r : Int) => l.pow(r)
 
-        //     test(s"${backend.name}: prim $primName") {
-        //         forAll { (l : BigInt, r : Int) =>
-        //             runIntBinPrimTest(primName, func, l, r)
-        //         }
-        //     }
-        // }
+            test(s"${backend.name}: prim $primName (non-negative)") {
+                forAll { (l : BigInt) =>
+                    forAll(Gen.choose(0, 30)) { (r : Int) =>
+                        whenever(r >= 0) {
+                            runPrimTest(s"prim $primName", s"$l, $r", "Int", s"${func(l, r)}")
+                        }
+                    }
+                }
+            }
+
+            test(s"${backend.name}: prim $primName (negative)") {
+                forAll { (l : BigInt) =>
+                    forAll(Gen.choose(-30, -1)) { (r : Int) =>
+                        whenever(r < 0) {
+                            runBadPrimTest(s"prim $primName", s"$l, $r", s"cooma: IntPow: illegal negative power $r given")
+                        }
+                    }
+                }
+            }
+        }
 
         case class IntRelPrimTest(
             op : PrimOp,
