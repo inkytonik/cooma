@@ -36,24 +36,24 @@ trait Compiler {
     /**
      * Case class and map that stores primitives metadata.
      */
-    case class PrimitiveMeta(prm : Primitive, expectedType : Expression)
+    case class PrimitiveMeta(prm : Primitive)
 
     val primitivesTable = Map(
-        "IntAdd" -> PrimitiveMeta(intBinP(ADD), IntT()),
-        "IntSub" -> PrimitiveMeta(intBinP(SUB), IntT()),
-        "IntMul" -> PrimitiveMeta(intBinP(MUL), IntT()),
-        "IntDiv" -> PrimitiveMeta(intBinP(DIV), IntT()),
-        "IntPow" -> PrimitiveMeta(intBinP(POW), IntT()),
-        "IntEq" -> PrimitiveMeta(intRelP(EQINT), IntT()),
-        "IntNeq" -> PrimitiveMeta(intRelP(NEQINT), IntT()),
-        "IntGt" -> PrimitiveMeta(intRelP(GT), IntT()),
-        "IntGte" -> PrimitiveMeta(intRelP(GTE), IntT()),
-        "IntLt" -> PrimitiveMeta(intRelP(LT), IntT()),
-        "IntLte" -> PrimitiveMeta(intRelP(LTE), IntT()),
-        "StrConcat" -> PrimitiveMeta(stringP(CONCAT), StrT()),
-        "StrEq" -> PrimitiveMeta(stringP(EQSTR), StrT()),
-        "StrLength" -> PrimitiveMeta(stringP(LENGTH), StrT()),
-        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR), StrT())
+        "IntAdd" -> PrimitiveMeta(intBinP(ADD)),
+        "IntSub" -> PrimitiveMeta(intBinP(SUB)),
+        "IntMul" -> PrimitiveMeta(intBinP(MUL)),
+        "IntDiv" -> PrimitiveMeta(intBinP(DIV)),
+        "IntPow" -> PrimitiveMeta(intBinP(POW)),
+        "IntEq" -> PrimitiveMeta(intRelP(EQ)),
+        "IntNeq" -> PrimitiveMeta(intRelP(NEQ)),
+        "IntGt" -> PrimitiveMeta(intRelP(GT)),
+        "IntGte" -> PrimitiveMeta(intRelP(GTE)),
+        "IntLt" -> PrimitiveMeta(intRelP(LT)),
+        "IntLte" -> PrimitiveMeta(intRelP(LTE)),
+        "StrConcat" -> PrimitiveMeta(stringP(CONCAT)),
+        "StrEquals" -> PrimitiveMeta(stringP(EQUALS)),
+        "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
+        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR))
     )
 
     /**

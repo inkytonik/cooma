@@ -953,65 +953,222 @@ class SemanticTests extends Tests {
                    |"""
             )
         ) ++ Primitives.allIntPrimBinOps.flatMap(op => {
-                def underscoreToCamel(name : String) = s"${name.head.toUpper}${name.tail}"
-                val primOp = s"Int${underscoreToCamel(op.toString.toLowerCase)}"
+                val primOp = op.primName
                 Vector(
                     SemanticTest(
-                        s"Wrong number of arguments for int binary ${primOp} op primitive (no args)",
-                        s"prim ${primOp}()",
-                        s"""|1:1:error: primitive expects 2 arguments, provided 0.
-                            |prim ${primOp}()
+                        s"Wrong number of arguments for $primOp primitive (no args)",
+                        s"prim $primOp()",
+                        s"""|1:1:error: primitive $primOp expects 2 arguments got 0
+                            |prim $primOp()
                             |^
                             |"""
                     ),
                     SemanticTest(
-                        s"Wrong number of arguments for int binary ${primOp} op primitive (less)",
-                        s"prim ${primOp}(2)",
-                        s"""|1:1:error: primitive expects 2 arguments, provided 1.
-                            |prim ${primOp}(2)
+                        s"Wrong number of arguments for $primOp primitive (less)",
+                        s"prim $primOp(2)",
+                        s"""|1:1:error: primitive $primOp expects 2 arguments got 1
+                            |prim $primOp(2)
                             |^
                             |"""
                     ),
-
                     SemanticTest(
-                        s"Wrong number of arguments for int binary ${primOp} primitive (more)",
-                        s"prim ${primOp}(2,2,2)",
-                        s"""|1:1:error: primitive expects 2 arguments, provided 3.
-                           |prim ${primOp}(2,2,2)
+                        s"Wrong number of arguments for $primOp primitive (more)",
+                        s"prim $primOp(2,2,2)",
+                        s"""|1:1:error: primitive $primOp expects 2 arguments got 3
+                           |prim $primOp(2,2,2)
                            |^
                            |"""
                     ),
-
                     SemanticTest(
-                        s"Wrong argument type for int binary ${primOp} primitive",
-                        s"""prim ${primOp}(\"2\",2)""",
+                        s"Wrong argument type for $primOp primitive",
+                        s"""prim $primOp(\"2\",2)""",
                         s"""|1:13:error: expected Int, got "2" of type String
-                           |prim ${primOp}("2",2)
+                           |prim $primOp("2",2)
                            |            ^
                            |"""
                     ),
-
                     SemanticTest(
-                        s"Wrong argument type (cont) for int binary ${primOp} op primitive",
-                        s"""prim ${primOp}(2,\"2\")""",
+                        s"Wrong argument type (cont) for $primOp primitive",
+                        s"""prim $primOp(2,\"2\")""",
                         s"""|1:15:error: expected Int, got "2" of type String
-                           |prim ${primOp}(2,"2")
+                           |prim $primOp(2,"2")
                            |              ^
                            |"""
                     ),
-
                     SemanticTest(
-                        s"Wrong argument type and number of arguments for int binary ${primOp} primitive",
-                        s"""prim ${primOp}(2,\"2\",2)""",
-                        s"""|1:1:error: primitive expects 2 arguments, provided 3.
-                           |prim ${primOp}(2,"2",2)
+                        s"Wrong argument type and number of arguments for $primOp primitive",
+                        s"""prim $primOp(2,\"2\",2)""",
+                        s"""|1:1:error: primitive $primOp expects 2 arguments got 3
+                           |prim $primOp(2,"2",2)
                            |^
                            |1:15:error: expected Int, got "2" of type String
-                           |prim ${primOp}(2,"2",2)
+                           |prim $primOp(2,"2",2)
                            |              ^
                            |"""
                     )
                 )
+            }) ++ Primitives.allIntPrimRelOps.flatMap(op => {
+                val primOp = op.primName
+                val primCol = 7 + primOp.length
+                val primInd = " " * (primCol - 1)
+                Vector(
+                    SemanticTest(
+                        s"Wrong number of arguments for $primOp primitive (no args)",
+                        s"prim $primOp()",
+                        s"""|1:1:error: primitive $primOp expects 2 arguments got 0
+                            |prim $primOp()
+                            |^
+                            |"""
+                    ),
+                    SemanticTest(
+                        s"Wrong number of arguments for $primOp primitive (less)",
+                        s"prim $primOp(2)",
+                        s"""|1:1:error: primitive $primOp expects 2 arguments got 1
+                            |prim $primOp(2)
+                            |^
+                            |"""
+                    ),
+                    SemanticTest(
+                        s"Wrong number of arguments for $primOp primitive (more)",
+                        s"prim $primOp(2,2,2)",
+                        s"""|1:1:error: primitive $primOp expects 2 arguments got 3
+                           |prim $primOp(2,2,2)
+                           |^
+                           |"""
+                    ),
+                    SemanticTest(
+                        s"Wrong argument type for $primOp primitive",
+                        s"""prim $primOp(\"2\",2)""",
+                        s"""|1:$primCol:error: expected Int, got "2" of type String
+                           |prim $primOp("2",2)
+                           |$primInd^
+                           |"""
+                    ),
+                    SemanticTest(
+                        s"Wrong argument type (cont) for $primOp primitive",
+                        s"""prim $primOp(2,\"2\")""",
+                        s"""|1:${primCol + 2}:error: expected Int, got "2" of type String
+                           |prim $primOp(2,"2")
+                           |$primInd  ^
+                           |"""
+                    ),
+                    SemanticTest(
+                        s"Wrong argument type and number of arguments for $primOp primitive",
+                        s"""prim $primOp(2,\"2\",2)""",
+                        s"""|1:1:error: primitive $primOp expects 2 arguments got 3
+                           |prim $primOp(2,"2",2)
+                           |^
+                           |1:${primCol + 2}:error: expected Int, got "2" of type String
+                           |prim $primOp(2,"2",2)
+                           |$primInd  ^
+                           |"""
+                    )
+                )
+            }) ++ Primitives.allStrPrimOps.flatMap(op => {
+                val primOp = op.primName
+                Vector(
+                    SemanticTest(
+                        s"Wrong number of arguments for $primOp primitive (no args)",
+                        s"prim $primOp()",
+                        s"""|1:1:error: primitive $primOp expects ${op.numArgs} arguments got 0
+                            |prim $primOp()
+                            |^
+                            |"""
+                    ),
+                    if (op.numArgs == 1)
+                        SemanticTest(
+                        s"Wrong number of arguments for $primOp primitive (one arg)",
+                        s"""prim $primOp("hello", "there")""",
+                        s"""|1:1:error: primitive $primOp expects ${op.numArgs} arguments got 2
+                                |prim $primOp("hello", "there")
+                                |^
+                                |"""
+                    )
+                    else
+                        SemanticTest(
+                            s"Wrong number of arguments for $primOp primitive (one arg)",
+                            s"""prim $primOp("hello")""",
+                            s"""|1:1:error: primitive $primOp expects ${op.numArgs} arguments got 1
+                                |prim $primOp("hello")
+                                |^
+                                |"""
+                        )
+                ) ++
+                    (op match {
+                        case Primitives.LENGTH =>
+                            Vector(
+                                SemanticTest(
+                                    s"Wrong number of arguments for $primOp primitive (more)",
+                                    s"""prim $primOp("hello", 3, "bob")""",
+                                    s"""|1:1:error: primitive $primOp expects ${op.numArgs} arguments got 3
+                                        |prim $primOp("hello", 3, "bob")
+                                        |^
+                                        |"""
+                                ),
+                                SemanticTest(
+                                    s"Wrong argument type for $primOp primitive",
+                                    s"""prim $primOp(2)""",
+                                    s"""|1:16:error: expected String, got 2 of type Int
+                                       |prim $primOp(2)
+                                       |               ^
+                                       |"""
+                                )
+                            )
+                        case Primitives.SUBSTR =>
+                            Vector(
+                                SemanticTest(
+                                    s"Wrong number of arguments for $primOp primitive (more)",
+                                    s"""prim $primOp("hello", 3, "bob")""",
+                                    s"""|1:1:error: primitive $primOp expects ${op.numArgs} arguments got 3
+                                        |prim $primOp("hello", 3, "bob")
+                                        |^
+                                        |"""
+                                ),
+                                SemanticTest(
+                                    s"Wrong argument type for $primOp primitive",
+                                    s"""prim $primOp(2,2)""",
+                                    s"""|1:16:error: expected String, got 2 of type Int
+                                        |prim $primOp(2,2)
+                                        |               ^
+                                        |"""
+                                ),
+                                SemanticTest(
+                                    s"Wrong argument type for $primOp primitive (more)",
+                                    s"""prim $primOp(\"2\",\"2\")""",
+                                    s"""|1:20:error: expected Int, got "2" of type String
+                                        |prim $primOp("2","2")
+                                        |                   ^
+                                        |"""
+                                )
+                            )
+                        case _ =>
+                            Vector(
+                                SemanticTest(
+                                    s"Wrong number of arguments for $primOp primitive (more)",
+                                    s"""prim $primOp("hello", "there", "bob")""",
+                                    s"""|1:1:error: primitive $primOp expects ${op.numArgs} arguments got 3
+                                        |prim $primOp("hello", "there", "bob")
+                                        |^
+                                        |"""
+                                ),
+                                SemanticTest(
+                                    s"Wrong argument type for $primOp primitive",
+                                    s"""prim $primOp(2,"2")""",
+                                    s"""|1:16:error: expected String, got 2 of type Int
+                                        |prim $primOp(2,"2")
+                                        |               ^
+                                        |"""
+                                ),
+                                SemanticTest(
+                                    s"Wrong argument type for $primOp primitive (more)",
+                                    s"""prim $primOp(\"2\",2)""",
+                                    s"""|1:20:error: expected String, got 2 of type Int
+                                        |prim $primOp("2",2)
+                                        |                   ^
+                                        |"""
+                                )
+                            )
+                    })
             })
 
     for (aTest <- semanticTests) {

@@ -72,7 +72,7 @@ class SemanticAnalyser(
         primitivesTypesTable.get(prm.identifier) match {
             case Some(funT) =>
                 if (prm.optExpressions.length != funT.optExpressions.length)
-                    error(prm, s"primitive expects ${funT.optExpressions.length} arguments, provided ${prm.optExpressions.length}.")
+                    error(prm, s"primitive ${prm.identifier} expects ${funT.optExpressions.length} arguments got ${prm.optExpressions.length}")
                 else
                     noMessages
             case None =>

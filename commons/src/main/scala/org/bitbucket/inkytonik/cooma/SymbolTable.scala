@@ -72,7 +72,8 @@ object SymbolTable extends Environments[CoomaEntity] {
         override val isError = true
     }
 
-    val boolT = VarT(Vector(FieldType("false", UniT()), FieldType("true", UniT())))
+    val boolT = Idn(IdnUse("Boolean"))
+
     val primitivesTypesTable = Map(
         "IntAdd" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntSub" -> FunT(Vector(IntT(), IntT()), IntT()),
@@ -89,7 +90,7 @@ object SymbolTable extends Environments[CoomaEntity] {
         "IntAbs" -> FunT(Vector(IntT()), IntT()),
         "StrLength" -> FunT(Vector(StrT()), IntT()),
         "StrConcat" -> FunT(Vector(StrT(), StrT()), StrT()),
-        "StrEq" -> FunT(Vector(StrT(), StrT()), boolT),
+        "StrEquals" -> FunT(Vector(StrT(), StrT()), boolT),
         "StrSubstr" -> FunT(Vector(StrT(), IntT()), StrT())
     )
 
@@ -134,7 +135,7 @@ object SymbolTable extends Environments[CoomaEntity] {
 			        length = fun (x : String) prim StrLength(x),
 		            concat = fun (x : String, y : String) prim StrConcat(x, y),
 			        substr = fun (x : String, y : Int) prim StrSubstr(x, y),
-			        eq     = fun (x : String, y : String) prim StrEq(x, y)
+			        equals = fun (x : String, y : String) prim StrEquals(x, y)
                 }
                 0
             }

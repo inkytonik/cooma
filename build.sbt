@@ -33,7 +33,8 @@ lazy val commonsettings = Seq(
 		),
 	resolvers ++= Seq (
 		Resolver.sonatypeRepo ("releases"),
-		Resolver.sonatypeRepo ("snapshots")
+		Resolver.sonatypeRepo ("snapshots"),
+		Resolver.bintrayRepo("wolfendale", "maven")
 	),
 
 	buildInfoKeys := Seq[BuildInfoKey](name, version),
@@ -109,7 +110,8 @@ lazy val root = (project in file("."))
 		libraryDependencies ++= Seq(
 			"org.scalatest" %% "scalatest" % "3.0.8" % "test",
 			"org.scalatestplus" %% "scalatestplus-scalacheck" % "1.0.0-SNAP8" % "test",
-			"org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
+			"org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2"
 		) ++ kiamaDependencies
 	)
 	.dependsOn(

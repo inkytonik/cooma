@@ -221,11 +221,15 @@ object Primitives {
     trait PrimOp {
         self : Product =>
         def numArgs : Int
+        def prefix : String
         val name = productPrefix.toLowerCase
+        val camelName = s"${name.head.toUpper}${name.tail}"
+        lazy val primName = s"$prefix$camelName"
     }
 
     sealed abstract class IntPrimBinOp extends Product with PrimOp {
         val numArgs = 2
+        val prefix = "Int"
     }
     case object ADD extends IntPrimBinOp
     case object SUB extends IntPrimBinOp
@@ -237,6 +241,7 @@ object Primitives {
 
     case class IntBinOpP[I <: Backend](op : IntPrimBinOp) extends IntPrimitive[I] {
         val numArgs = op.numArgs
+        def show = op.primName
 
         def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR = {
             try {
@@ -257,35 +262,35 @@ object Primitives {
                     interp.errR(s"Error executing integer ${op.name}: ${e.getMessage}")
             }
         }
-
-        def show = "intBinOp"
     }
 
     sealed abstract class IntPrimRelOp extends Product with PrimOp {
         val numArgs = 2
+        val prefix = "Int"
     }
-    case object EQINT extends IntPrimRelOp
-    case object NEQINT extends IntPrimRelOp
+    case object EQ extends IntPrimRelOp
+    case object NEQ extends IntPrimRelOp
     case object GT extends IntPrimRelOp
     case object GTE extends IntPrimRelOp
     case object LT extends IntPrimRelOp
     case object LTE extends IntPrimRelOp
 
-    val allIntPrimRelOps = Vector(EQINT, NEQINT, GT, GTE, LT, LTE)
+    val allIntPrimRelOps = Vector(EQ, NEQ, GT, GTE, LT, LTE)
 
     case class IntRelOp[I <: Backend](op : IntPrimRelOp) extends IntPrimitive[I] {
         val numArgs = op.numArgs
+        def show = op.primName
 
         def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR =
             operands match {
                 case Vector(left, right) =>
                     if (op match {
-                        case EQINT  => left == right
-                        case NEQINT => left != right
-                        case GT     => left > right
-                        case GTE    => left >= right
-                        case LT     => left < right
-                        case LTE    => left <= right
+                        case EQ  => left == right
+                        case NEQ => left != right
+                        case GT  => left > right
+                        case GTE => left >= right
+                        case LT  => left < right
+                        case LTE => left <= right
                     }) {
                         interp.trueR()
                     } else {
@@ -294,53 +299,61 @@ object Primitives {
                 case _ =>
                     sys.error(s"$show $op: unexpectedly got operands $operands")
             }
-
-        def show = "intRelOp"
     }
 
-    sealed abstract class StrPrimOp(val numArgs : Int) extends Product with PrimOp
+    sealed abstract class StrPrimOp(val numArgs : Int) extends Product with PrimOp {
+        val prefix = "Str"
+    }
     case object CONCAT extends StrPrimOp(2)
     case object LENGTH extends StrPrimOp(1)
-    case object EQSTR extends StrPrimOp(2)
+    case object EQUALS extends StrPrimOp(2)
     case object SUBSTR extends StrPrimOp(2)
 
-    val allStrPrimOps = Vector(CONCAT, EQSTR, LENGTH, SUBSTR)
+    val allStrPrimOps = Vector(CONCAT, EQUALS, LENGTH, SUBSTR)
 
     case class StringPrimitive[I <: Backend](op : StrPrimOp) extends Primitive[I] {
         val numArgs = op.numArgs
-
-        def show = "strOp"
+        def show = op.primName
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
 
-            val extractStrParams = {
-                xs.map(s => interp.isStrR(interp.lookupR(rho, s)) match {
+            def extractStrParam(x : String) : String =
+                interp.isStrR(interp.lookupR(rho, x)) match {
                     case Some(v) => v
-                    case _       => sys.error(s"$show: can't find string operand $s")
-                })
-            }
-
-            (op, extractStrParams) match {
-                case (CONCAT, Vector(l, r)) =>
-                    interp.strR(l + r)
-
-                case (EQSTR, Vector(l, r)) =>
-                    if (l == r) interp.trueR() else interp.falseR()
-
-                case (LENGTH, Vector(v)) =>
-                    interp.intR(v.length)
-
-                case (SUBSTR, Vector(l, None)) => {
-                    val r = interp.isIntR((interp.lookupR(rho, xs(1)))) match {
-                        case Some(v) =>
-                            v
-                        case _ =>
-                            sys.error(s"$show $op: can't find int operand ${xs(1)}")
-                    }
-                    interp.strR(l.substring(r.toInt))
+                    case _       => sys.error(s"$show: can't find string operand $x")
                 }
 
-                case (_, _) =>
+            def extractIntParam(x : String) : BigInt =
+                interp.isIntR(interp.lookupR(rho, x)) match {
+                    case Some(v) => v
+                    case _       => sys.error(s"$show: can't find integer operand $x")
+                }
+
+            (op, xs) match {
+                case (CONCAT, Vector(lx, rx)) =>
+                    val l = extractStrParam(lx)
+                    val r = extractStrParam(rx)
+                    interp.strR(l + r)
+
+                case (EQUALS, Vector(lx, rx)) =>
+                    val l = extractStrParam(lx)
+                    val r = extractStrParam(rx)
+                    if (l == r) interp.trueR() else interp.falseR()
+
+                case (LENGTH, Vector(sx)) =>
+                    val s = extractStrParam(sx)
+                    interp.intR(s.length)
+
+                case (SUBSTR, Vector(sx, ix)) => {
+                    val s = extractStrParam(sx)
+                    val i = extractIntParam(ix)
+                    if ((i < 0) || (i > s.length))
+                        interp.errR(s"""$show: index $i out of range for string "$s"""")
+                    else
+                        interp.strR(s.substring(i.toInt))
+                }
+
+                case _ =>
                     sys.error(s"$show $op: unexpectedly got arguments $xs")
             }
         }

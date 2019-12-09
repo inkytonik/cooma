@@ -12,10 +12,13 @@ package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
 import org.bitbucket.inkytonik.kiama.util.TestCompilerWithConfig
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
+class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config]
+    with ScalaCheckDrivenPropertyChecks {
 
-    import java.io.{ByteArrayOutputStream, PrintStream}
+    // import java.io.{ByteArrayOutputStream, PrintStream}
+    import java.io.{ByteArrayOutputStream}
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
     import org.bitbucket.inkytonik.cooma.Primitives._
@@ -24,6 +27,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
     import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
     import org.rogach.scallop.throwError
+    import wolfendale.scalacheck.regexp.RegexpGen
+    import org.scalacheck.Gen
 
     case class Backend(
         name : String,
@@ -35,11 +40,11 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
     val backends =
         List(
-            Backend("Reference", Seq(), new ReferenceFrontend),
-            Backend(
-                "GraalVM", Seq("-g"),
-                new TruffleFrontend(out = new PrintStream(truffleOutContent))
-            )
+            Backend("Reference", Seq(), new ReferenceFrontend)
+        // Backend(
+        //     "GraalVM", Seq("-g"),
+        //     new TruffleFrontend(out = new PrintStream(truffleOutContent))
+        // )
         )
 
     for (backend <- backends) {
@@ -55,7 +60,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         )
 
         val ExecTests =
-            List(
+            Vector(
                 // Primitive values
 
                 ExecTest(
@@ -610,24 +615,62 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 )
 
             ) ++ allIntPrimBinOps.flatMap(op => {
-                    val primOp = s"Int${op.name.head.toUpper}${op.name.tail}"
                     Vector(
                         ExecTest(
-                            s"Execution of primitive through prim Keyword - ${primOp}",
-                            s"prim ${primOp}(2, 2)",
-                            op match {
-                                case ADD => "4"
-                                case SUB => "0"
-                                case MUL => "4"
-                                case DIV => "1"
-                                case POW => "4"
-                            },
-                            "Int"
+                            s"Pre-defined Ints.${op.name} has the correct type",
+                            s"Ints.${op.name}",
+                            "<function>",
+                            "(Int, Int) Int"
+                        ),
+                        ExecTest(
+                            s"Pre-defined Ints.${op.name} partial application has the correct type",
+                            s"Ints.${op.name}(1)",
+                            "<function>",
+                            "(Int) Int"
                         )
                     )
-                })
 
-        // Compile and run tests
+                }) ++ allIntPrimRelOps.flatMap(op => {
+                    Vector(
+                        ExecTest(
+                            s"Pre-defined Ints.${op.name} has the correct type",
+                            s"Ints.${op.name}",
+                            "<function>",
+                            "(Int, Int) Boolean"
+                        ),
+                        ExecTest(
+                            s"Pre-defined Ints.${op.name} partial application has the correct type",
+                            s"Ints.${op.name}(1)",
+                            "<function>",
+                            "(Int) Boolean"
+                        )
+                    )
+                }) ++ Vector(
+                    ExecTest(
+                        s"Pre-defined Strings.concat has the correct type",
+                        "Strings.concat",
+                        "<function>",
+                        "(String, String) String"
+                    ),
+                    ExecTest(
+                        s"Pre-defined Strings.concat partial application has the correct type",
+                        """Strings.concat("hi")""",
+                        "<function>",
+                        "(String) String"
+                    ),
+                    ExecTest(
+                        s"Pre-defined Strings.equals has the correct type",
+                        "Strings.equals",
+                        "<function>",
+                        "(String, String) Boolean"
+                    ),
+                    ExecTest(
+                        s"Pre-defined Strings.equals partial application has the correct type",
+                        """Strings.equals("hi")""",
+                        "<function>",
+                        "(String) Boolean"
+                    )
+                )
 
         for (aTest <- ExecTests) {
             test(s"${backend.name} run: ${aTest.name}") {
@@ -639,6 +682,196 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 result shouldBe s"${aTest.expectedCompiledResult}\n"
             }
         }
+
+        // Primitive properties
+
+        def runPrimTest(name : String, args : String, tipe : String, answer : String) : Unit = {
+            val code = s"$name($args)"
+            val result1 = runString(name, code, backend.options, backend)
+            result1 shouldBe ""
+            val result2 = runString(name, code, Seq("-r") ++ backend.options, backend)
+            result2 shouldBe s"$answer\n"
+            val result3 = runREPLOnLine(code, backend.options)
+            result3 shouldBe s"""res0 : $tipe = $answer\n"""
+        }
+
+        def runBadPrimTest(name : String, args : String, error : String) : Unit = {
+            val code = s"$name($args)"
+            val result1 = runString(name, code, backend.options, backend)
+            result1 shouldBe s"$error\n"
+            val result2 = runString(name, code, Seq("-r") ++ backend.options, backend)
+            result2 shouldBe s"$error\n"
+            val result3 = runREPLOnLine(code, backend.options)
+            result3 shouldBe s"$error\n"
+        }
+
+        def expectedBool(b : Boolean) : String =
+            s"""<${if (b) "true" else "false"} = {}>"""
+
+        case class IntBinPrimTest(
+            op : PrimOp,
+            func : (BigInt, BigInt) => BigInt
+        )
+
+        val intBinPrimTests =
+            Vector(
+                IntBinPrimTest(ADD, _ + _),
+                IntBinPrimTest(MUL, _ * _),
+                IntBinPrimTest(SUB, _ - _)
+            )
+
+        for (aTest <- intBinPrimTests) {
+            val primName = aTest.op.primName
+            test(s"${backend.name} run: prim $primName") {
+                forAll { (l : BigInt, r : BigInt) =>
+                    runPrimTest(s"prim $primName", s"$l, $r", "Int", s"${aTest.func(l, r)}")
+                }
+            }
+        }
+
+        {
+            val primName = "IntDiv"
+            val func = (l : BigInt, r : BigInt) => l / r
+
+            test(s"${backend.name} run: prim $primName") {
+                forAll { (l : BigInt, r : BigInt) =>
+                    whenever(r != 0) {
+                        runPrimTest(s"prim $primName", s"$l, $r", "Int", s"${func(l, r)}")
+                    }
+                }
+            }
+
+            test(s"${backend.name} run: prim $primName by zero") {
+                forAll { (l : BigInt) =>
+                    val name = s"prim $primName"
+                    val code = s"prim $primName($l, 0)"
+                    val result1 = runString(name, code, backend.options, backend)
+                    result1 shouldBe "cooma: Error executing integer div: BigInteger divide by zero\n"
+                }
+            }
+        }
+
+        // {
+        //     val primName = "IntPow"
+        //     val func = (l : BigInt, r : BigInt) => l.pow(r.toInt)
+
+        //     test(s"${backend.name}: prim $primName") {
+        //         forAll { (l : BigInt, r : Int) =>
+        //             runIntBinPrimTest(primName, func, l, r)
+        //         }
+        //     }
+        // }
+
+        case class IntRelPrimTest(
+            op : PrimOp,
+            func : (BigInt, BigInt) => Boolean
+        )
+
+        val intRelPrimTests =
+            Vector(
+                IntRelPrimTest(EQ, _ == _),
+                IntRelPrimTest(NEQ, _ != _),
+                IntRelPrimTest(GT, _ > _),
+                IntRelPrimTest(GTE, _ >= _),
+                IntRelPrimTest(LT, _ < _),
+                IntRelPrimTest(LTE, _ <= _)
+            )
+
+        for (aTest <- intRelPrimTests) {
+            val primName = aTest.op.primName
+            test(s"${backend.name} run: prim $primName") {
+                forAll { (l : BigInt, r : BigInt) =>
+                    runPrimTest(s"prim $primName", s"$l, $r", "Boolean", expectedBool(aTest.func(l, r)))
+                }
+            }
+        }
+
+        val stringLitREStr = """((\\([btnfr]|\\|"))|\w| ){0,40}"""
+        val stringLitRE = stringLitREStr.r
+        def isStringLit(s : String) = stringLitRE.matches(s)
+        val stringLit : Gen[String] = RegexpGen.from(stringLitREStr)
+
+        {
+            val primName = "StrConcat"
+            val func = (l : String, r : String) => Util.escape(Util.unescape(l) + Util.unescape(r))
+
+            test(s"${backend.name} run: prim $primName") {
+                forAll(stringLit, stringLit) { (l : String, r : String) =>
+                    whenever(isStringLit(l) && isStringLit(r)) {
+                        runPrimTest(s"prim $primName", s""""$l", "$r"""", "String", s""""${func(l, r)}"""")
+                    }
+                }
+            }
+        }
+
+        {
+            val primName = "StrEquals"
+            val func = (l : String, r : String) => Util.unescape(l) == Util.unescape(r)
+
+            test(s"${backend.name} run: prim $primName") {
+                forAll(stringLit, stringLit) { (l : String, r : String) =>
+                    whenever(isStringLit(l) && isStringLit(r)) {
+                        runPrimTest(s"prim $primName", s""""$l", "$r"""", "Boolean", expectedBool(func(l, r)))
+                    }
+                }
+            }
+        }
+
+        {
+            val primName = "StrLength"
+            val func = (s : String) => Util.unescape(s).length
+
+            test(s"${backend.name} run: prim $primName") {
+                forAll(stringLit) { (s : String) =>
+                    whenever(isStringLit(s)) {
+                        runPrimTest(s"prim $primName", s""""$s"""", "Int", s"${func(s)}")
+                    }
+                }
+            }
+        }
+
+        {
+            val primName = "StrSubstr"
+            val func = (s : String, i : BigInt) => Util.escape(s.substring(i.toInt))
+            def indexesOf(s : String) : Gen[Int] =
+                for {
+                    n <- Gen.choose(0, s.length)
+                } yield n
+            def notIndexesOf(s : String) : Gen[Int] =
+                for {
+                    n <- Gen.oneOf(Gen.negNum[Int], Gen.posNum[Int] suchThat (_ > s.length))
+                } yield n
+
+            test(s"${backend.name} run: prim $primName") {
+                forAll(stringLit) { (l : String) =>
+                    whenever(isStringLit(l)) {
+                        val s = Util.unescape(l)
+                        forAll(indexesOf(s)) { (i : Int) =>
+                            whenever((i >= 0) && (i <= s.length)) {
+                                runPrimTest(s"prim $primName", s""""$l", $i""", "String", s""""${func(s, i)}"""")
+                            }
+                        }
+                    }
+                }
+            }
+
+            test(s"${backend.name} run: prim $primName bad index") {
+                forAll(stringLit) { (l : String) =>
+                    whenever(isStringLit(l)) {
+                        val s = Util.unescape(l)
+                        forAll(notIndexesOf(s)) { (i : Int) =>
+                            whenever((i < 0) || (i > s.length)) {
+                                runBadPrimTest(s"prim $primName", s""""$l", $i""",
+                                    s"""cooma: StrSubstr: index $i out of range for string "$s"""")
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+        // Options
 
         {
             val resourcesPath = "src/test/resources"
@@ -690,7 +923,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
         for (aTest <- ExecTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
-                val result = runREPLOnLine(aTest.name, aTest.program, backend.options)
+                val result = runREPLOnLine(aTest.program, backend.options)
                 val expectedResult = s"${aTest.expectedREPLVar} : ${aTest.expectedREPLType} = ${aTest.expectedCompiledResult}\n"
                 result shouldBe expectedResult
             }
@@ -703,7 +936,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         )
 
         val replTests =
-            List(
+            Vector(
                 REPLTest(
                     "single evaluation (int)",
                     """
@@ -853,82 +1086,12 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "pre-defined value",
                     "true",
                     "true : Boolean = <true = {}>"
-                ),
-
-                //Primitives
-
-                REPLTest(
-                    "Ints primitives - integer addition",
-                    "Ints.add(10, 3)",
-                    "res0 : Int = 13"
-                ),
-
-                REPLTest(
-                    "Ints primitives - integer substraction",
-                    "Ints.sub(10, 3)",
-                    "res0 : Int = 7"
-                ),
-
-                REPLTest(
-                    "Ints primitives - integer substraction, negative result",
-                    "Ints.sub(3, 10)",
-                    "res0 : Int = -7"
-                ),
-
-                REPLTest(
-                    "Ints primitives - integer multiplication",
-                    "Ints.mul(10, 3)",
-                    "res0 : Int = 30"
-                ),
-
-                REPLTest(
-                    "Ints primitives - integer division",
-                    "Ints.div(10, 3)",
-                    "res0 : Int = 3"
-                ),
-
-                REPLTest(
-                    "Ints primitives - division by zero",
-                    "Ints.div(2, 0)",
-                    "cooma: Error executing integer div: BigInteger divide by zero"
                 )
-            ) ++ allIntPrimBinOps.map(op => {
-                    REPLTest(
-                        s"Primitive ${op} has the correct type",
-                        s"Ints.${op.name}",
-                        "res0 : (Int, Int) Int = <function>"
-                    )
-                }) ++ allIntPrimBinOps.map(op => {
-                    REPLTest(
-                        s"Primitive ${op} partial application has the correct type",
-                        s"Ints.${op.name}(1)",
-                        "res0 : (Int) Int = <function>"
-                    )
-                }) ++ allIntPrimBinOps.flatMap(op => {
-                    Vector(
-                        REPLTest(
-                            s"Primitive ${op} produces the expected result",
-                            s"Ints.${op.name}(2,2)",
-                            s"res0 : Int = ${
-                                op match {
-                                    case ADD => "4"
-                                    case SUB => "0"
-                                    case MUL => "4"
-                                    case DIV => "1"
-                                    case POW => "4"
-                                }
-                            }"
-                        )
-                    )
-                })
-
-        /**
-         * check((i: BigInt, j:BigInt) =>  primitive call == i + J
-         */
+            )
 
         for (aTest <- replTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
-                val result = runREPLOnLines(aTest.name, aTest.program, backend.options)
+                val result = runREPLOnLines(aTest.program, backend.options)
                 result shouldBe s"${aTest.expectedResult}\n"
             }
         }
@@ -1130,7 +1293,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         config
     }
 
-    def runTest(name : String, tester : Config => Unit, options : Seq[String], args : Seq[String]) : String = {
+    def runTest(tester : Config => Unit, options : Seq[String], args : Seq[String]) : String = {
         val config = makeConfig(args)
         try {
             tester(config)
@@ -1152,15 +1315,15 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
     def runString(name : String, program : String, options : Seq[String], backend : Backend) : String = {
 
         val allArgs = Seq("--Koutput", "string") ++ options :+ "test.cooma"
-        runTest(name, backend.frontend.interpret(name, program, _), options, allArgs)
+        runTest(backend.frontend.interpret(name, program, _), options, allArgs)
     }
 
     def runFile(program : String, options : Seq[String], backend : Backend, args : Seq[String]) : String = {
         val allArgs = Seq("--Koutput", "string") ++ options ++ (program +: args)
-        runTest(name, backend.frontend.interpret, options, allArgs)
+        runTest(backend.frontend.interpret, options, allArgs)
     }
 
-    def runREPLTest(name : String, cmd : String, input : String, options : Seq[String]) : String = {
+    def runREPLTest(cmd : String, input : String, options : Seq[String]) : String = {
         val allArgs = Seq("--Koutput", "string") ++ options
         val config = makeConfig(allArgs)
         val replInput =
@@ -1170,14 +1333,14 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 s"$cmd\n$input\n:end"
         val console = new StringConsole(replInput)
         val repl = createREPL(config)
-        runTest(name, repl.processconsole(console, "dummy", _), options, allArgs)
+        runTest(repl.processconsole(console, "dummy", _), options, allArgs)
     }
 
-    def runREPLOnLine(name : String, input : String, options : Seq[String]) : String =
-        runREPLTest(name, ":paste", input, options)
+    def runREPLOnLine(input : String, options : Seq[String]) : String =
+        runREPLTest(":paste", input, options)
 
-    def runREPLOnLines(name : String, input : String, options : Seq[String]) : String =
-        runREPLTest(name, ":lines", input, options)
+    def runREPLOnLines(input : String, options : Seq[String]) : String =
+        runREPLTest(":lines", input, options)
 
     override def createREPL(config : Config) : REPL with Compiler with org.bitbucket.inkytonik.cooma.Backend = {
         val repl =
