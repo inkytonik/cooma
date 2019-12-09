@@ -60,9 +60,9 @@ trait REPL extends REPLBase[Config] {
 			  |val x = exp                add new value definition
 			  |def f(x : Int) Int = exp   add new function definition
 			  |:help                      print this message
-			  |:lines                     enter multiple separate input lines until :end
-			  |:paste                     enter single multi-line input until :end
-			  |:quit                      quit the REPL (also Control-D)
+			  |:lines                     enter multiple separate input lines until :end or EOF
+			  |:paste                     enter single multi-line input until :end or EOF
+			  |:quit                      quit the REPL (also EOF)
 			  |""".stripMargin
         )
     }
@@ -70,7 +70,7 @@ trait REPL extends REPLBase[Config] {
     def getLines(console : Console) : String = {
         val buf = ListBuffer[String]()
         var line = console.readLine("")
-        while (line.trim != ":end") {
+        while (line != null && line.trim != ":end") {
             buf.append(line + "\n")
             line = console.readLine("")
         }
