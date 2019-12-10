@@ -159,7 +159,7 @@ object SymbolTable extends Environments[CoomaEntity] {
                 case Vector() =>
                     analyser.deepEnv(program.expression)
                 case messages =>
-                    println("Cooma: processing program found errors:\n")
+                    println("Cooma: processing predef found errors:\n")
                     println(messaging.formatMessages(messages))
                     sys.exit(1)
             }

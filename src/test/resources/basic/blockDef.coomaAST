@@ -1,40 +1,41 @@
 Program(
     Blk(
         LetDef(
-            Vector(
-                Def(
-                    IdnDef(
-                        "f"),
-                    Body(
-                        Arguments(
-                            Vector(
-                                Argument(
-                                    IdnDef(
-                                        "x"),
-                                    IntT()))),
-                        IntT(),
-                        Idn(
-                            IdnUse(
-                                "x")))),
-                Def(
-                    IdnDef(
-                        "g"),
-                    Body(
-                        Arguments(
-                            Vector(
-                                Argument(
-                                    IdnDef(
-                                        "y"),
-                                    IntT()))),
-                        IntT(),
-                        App(
+            Defs(
+                Vector(
+                    Def(
+                        IdnDef(
+                            "f"),
+                        Body(
+                            Arguments(
+                                Vector(
+                                    Argument(
+                                        IdnDef(
+                                            "x"),
+                                        IntT()))),
+                            IntT(),
                             Idn(
                                 IdnUse(
-                                    "f")),
-                            Vector(
+                                    "x")))),
+                    Def(
+                        IdnDef(
+                            "g"),
+                        Body(
+                            Arguments(
+                                Vector(
+                                    Argument(
+                                        IdnDef(
+                                            "y"),
+                                        IntT()))),
+                            IntT(),
+                            App(
                                 Idn(
                                     IdnUse(
-                                        "y"))))))),
+                                        "f")),
+                                Vector(
+                                    Idn(
+                                        IdnUse(
+                                            "y")))))))),
             Return(
                 App(
                     Idn(

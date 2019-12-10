@@ -130,7 +130,7 @@ trait Compiler {
                 kappa(i)
 
             case Mat(e, cs) =>
-                compileMatch(e, cs.map(_.caseField), kappa)
+                compileMatch(e, cs, kappa)
 
             case Num(i) =>
                 val x = fresh("x")
@@ -209,7 +209,7 @@ trait Compiler {
         be match {
             case LetDef(ds, be2) =>
                 letF(
-                    ds.map(compileDef),
+                    ds.defs.map(compileDef),
                     compileBlockExp(be2, kappa)
                 )
 
@@ -320,7 +320,7 @@ trait Compiler {
                 appC(k, x)
 
             case Mat(e, cs) =>
-                tailCompileMatch(e, cs.map(_.caseField), k)
+                tailCompileMatch(e, cs, k)
 
             case Num(i) =>
                 val x = fresh("x")
@@ -390,7 +390,7 @@ trait Compiler {
         be match {
             case LetDef(ds, be2) =>
                 letF(
-                    ds.map(compileDef),
+                    ds.defs.map(compileDef),
                     tailCompileBlockExp(be2, k)
                 )
 

@@ -32,10 +32,10 @@ class SemanticAnalyser(
 
     lazy val errors : Messages =
         collectMessages(tree) {
-            case d @ IdnDef(i) =>
-                lookup(env(d), i, UnknownEntity()) match {
+            case tree.parent.pair(d @ IdnDef(i), p) =>
+                lookup(env(p), i, UnknownEntity()) match {
                     case MultipleEntity() =>
-                        error(d, s"$i is declared more than once")
+                        error(d, s"re-declaration of $i")
                     case _ =>
                         noMessages
                 }
@@ -110,7 +110,7 @@ class SemanticAnalyser(
 
     def checkCase(c : Case) : Messages =
         c match {
-            case tree.parent(tree.parent(m : Mat)) =>
+            case tree.parent(m : Mat) =>
                 checkCaseDup(c, m) ++
                     checkCaseExpressionTypes(c, m) ++
                     checkCaseVariants(c, m)
@@ -162,7 +162,7 @@ class SemanticAnalyser(
             })
     }
 
-    def checkMatch(e : Expression, cs : Vector[CaseScope]) : Messages =
+    def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
         checkMatchDiscType(e) ++
             checkMatchCaseNum(e, cs)
 
@@ -174,7 +174,7 @@ class SemanticAnalyser(
                 error(e, s"match of non-variant type ${show(t)}")
         }
 
-    def checkMatchCaseNum(e : Expression, cs : Vector[CaseScope]) : Messages =
+    def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
         tipe(e) match {
             case Some(VarT(fields)) if fields.length != cs.length =>
                 error(cs(0), s"expected ${fields.length} cases, got ${cs.length}")
@@ -208,7 +208,7 @@ class SemanticAnalyser(
     object Scope {
         def unapply(n : ASTNode) : Boolean =
             n match {
-                case _ : Body | _ : CaseScope | _ : Fun | _ : LetDef |
+                case _ : Body | _ : Case | _ : Fun | _ : LetDef |
                     _ : LetVal | _ : REPLDef | _ : REPLExp |
                     _ : REPLVal =>
                     true
@@ -217,12 +217,17 @@ class SemanticAnalyser(
             }
     }
 
-    lazy val defenv : Chain[Environment] =
-        chain(defenvin, defenvout)
+    lazy val env : Chain[Environment] =
+        chain(envin, envout)
 
-    def defenvin(in : ASTNode => Environment) : ASTNode ==> Environment = {
+    def envin(in : ASTNode => Environment) : ASTNode ==> Environment = {
         case _ : Program | _ : REPLInput =>
             rootenv
+
+        // Bodies of defs get all the bindings of the Defs group
+        case tree.parent.pair(_ : Body, tree.parent(p : Defs)) =>
+            enter(env.out(p))
+
         case n @ Scope() =>
             enter(in(n))
     }
@@ -230,40 +235,26 @@ class SemanticAnalyser(
     def isWildcard(i : String) : Boolean =
         i == "_"
 
-    def defenvout(out : ASTNode => Environment) : ASTNode ==> Environment = {
+    def envout(out : ASTNode => Environment) : ASTNode ==> Environment = {
+        // Avoid cycle where Defs group bindings involve themselves
+        case tree.parent.pair(_ : Body, Def(d, _)) =>
+            env.out(d)
+
         case n @ Scope() =>
             leave(out(n))
+
         case n @ Argument(IdnDef(i), _) if !isWildcard(i) =>
-            defineArgument(out(n), n)
-        case n @ Case(_, IdnDef(i), _) if !isWildcard(i) =>
-            defineCaseValue(out(n), n)
-        case n @ Def(IdnDef(i), _) if !isWildcard(i) =>
-            defineFunction(out(n), n)
+            defineIfNew(out(n), i, MultipleEntity(), ArgumentEntity(n))
+
+        case tree.parent.pair(n @ IdnDef(i), c : Case) if !isWildcard(i) =>
+            defineIfNew(out(n), i, MultipleEntity(), CaseValueEntity(c))
+
+        case tree.parent.pair(n @ IdnDef(i), d : Def) if !isWildcard(i) =>
+            defineIfNew(out(n), i, MultipleEntity(), FunctionEntity(d))
+
         case n @ Val(IdnDef(i), _, _) if !isWildcard(i) =>
-            defineValue(out(n), n)
+            defineIfNew(out(n), i, MultipleEntity(), ValueEntity(n))
     }
-
-    def defineArgument(e : Environment, a : Argument) : Environment =
-        defineIfNew(e, a.idnDef.identifier, MultipleEntity(), ArgumentEntity(a))
-
-    def defineCaseValue(e : Environment, c : Case) : Environment =
-        defineIfNew(e, c.idnDef.identifier, MultipleEntity(), CaseValueEntity(c))
-
-    def defineFunction(e : Environment, d : Def) : Environment =
-        defineIfNew(e, d.idnDef.identifier, MultipleEntity(), FunctionEntity(d))
-
-    def defineValue(e : Environment, v : Val) : Environment =
-        defineIfNew(e, v.idnDef.identifier, MultipleEntity(), ValueEntity(v))
-
-    lazy val env : ASTNode => Environment =
-        attr {
-            case tree.lastChild.pair(_ : Program | Scope(), c) =>
-                defenv(c)
-            case tree.parent.pair(e, p : Val) =>
-                leave(env(p))
-            case tree.parent(p) =>
-                env(p)
-        }
 
     /**
      * The "deepest" env of an expression, defined to be the env
@@ -291,7 +282,7 @@ class SemanticAnalyser(
         }
 
     def isDuplicateCase(c : Case, m : Mat) =
-        m.caseScopes.map(_.caseField.identifier).count(_ == c.identifier) > 1
+        m.cases.map(_.identifier).count(_ == c.identifier) > 1
 
     lazy val fieldNames : Rec => Vector[String] =
         attr {
@@ -458,10 +449,10 @@ class SemanticAnalyser(
         attr {
             case ArgumentEntity(Argument(_, t)) =>
                 Some(t)
-            case CaseValueEntity(tree.parent.pair(c, tree.parent(Mat(e, _)))) =>
+            case CaseValueEntity(tree.parent.pair(c, Mat(e, _))) =>
                 tipe(e) match {
-                    case Some(VarT(r)) if tree.index(c) < r.length =>
-                        Some(r(tree.index(c)).expression)
+                    case Some(VarT(r)) if tree.index(c) - 1 < r.length =>
+                        Some(r(tree.index(c) - 1).expression)
                     case _ =>
                         None
                 }
@@ -485,8 +476,8 @@ class SemanticAnalyser(
         attr {
             case m =>
                 val caseTypes =
-                    m.caseScopes.map {
-                        case CaseScope(Case(_, _, e)) =>
+                    m.cases.map {
+                        case Case(_, _, e) =>
                             unaliasedType(e)
                     }.distinct
                 if (caseTypes contains None)

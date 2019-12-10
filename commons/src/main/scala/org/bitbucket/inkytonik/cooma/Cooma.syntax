@@ -13,7 +13,7 @@ Program =
 Expression {paren} =
     "fun" '(' Arguments ")" Expression          {Fun, right, 4}
   | '(' Expression ** "," ")" Expression        {FunT, right, 4}
-  | Expression sp "match" "{" CaseScope+ '}'    {Mat, left, 3}
+  | Expression sp "match" "{" Case+ '}'         {Mat, left, 3}
   | Expression "&" Expression                   {Cat, left, 2}
   | Expression '(' Expression ** "," ')'        {App, left, 1}
   | Expression '.' FieldUse                     {Sel, left, 1}
@@ -38,9 +38,6 @@ Arguments =
 Argument =
   IdnDef sp ":" Expression.
 
-CaseScope =
-  Case.
-
 Case =
   "case" Identifier '(' IdnDef ")" "=>" Expression sp.
 
@@ -51,9 +48,12 @@ FieldUse =
   Identifier.
 
 BlockExp =
-    Def+ BlockExp   {LetDef}
+    Defs BlockExp   {LetDef}
   | Val BlockExp    {LetVal}
   | Expression      {Return}.
+
+Defs =
+  Def+.
 
 Def =
   "def" IdnDef sp Body \n.

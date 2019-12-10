@@ -46,12 +46,9 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
-                "duplicated argument names (fun)",
+                "duplicated argument name (fun)",
                 "fun (x : Int, x : Int) x",
-                """|1:6:error: x is declared more than once
-                   |fun (x : Int, x : Int) x
-                   |     ^
-                   |1:15:error: x is declared more than once
+                """|1:15:error: re-declaration of x
                    |fun (x : Int, x : Int) x
                    |              ^
                    |"""
@@ -112,10 +109,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "duplicate function names in same group",
                 "{ def f (i : Int) Int = i def f (i : Int) Int = i 0 }",
-                """|1:7:error: f is declared more than once
-                   |{ def f (i : Int) Int = i def f (i : Int) Int = i 0 }
-                   |      ^
-                   |1:31:error: f is declared more than once
+                """|1:31:error: re-declaration of f
                    |{ def f (i : Int) Int = i def f (i : Int) Int = i 0 }
                    |                              ^
                    |"""
@@ -133,10 +127,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "duplicated argument names (def)",
                 "{ def f (x : Int, x : Int) Int = x 0 }",
-                """|1:10:error: x is declared more than once
-                   |{ def f (x : Int, x : Int) Int = x 0 }
-                   |         ^
-                   |1:19:error: x is declared more than once
+                """|1:19:error: re-declaration of x
                    |{ def f (x : Int, x : Int) Int = x 0 }
                    |                  ^
                    |"""
@@ -144,6 +135,22 @@ class SemanticTests extends Tests {
 
             // Uses
 
+            SemanticTest(
+                "val not usable in its own type",
+                "{ val x : x = 0 1 }",
+                """|1:11:error: x is not declared
+                   |{ val x : x = 0 1 }
+                   |          ^
+                   |"""
+            ),
+            SemanticTest(
+                "val not usable in its own definition",
+                "{ val x = x 1 }",
+                """|1:11:error: x is not declared
+                   |{ val x = x 1 }
+                   |          ^
+                   |"""
+            ),
             SemanticTest(
                 "underscore val not usable",
                 "{ val _ = 3 _ }",
@@ -230,6 +237,14 @@ class SemanticTests extends Tests {
                 "declared argument name",
                 "fun (x : Int) x",
                 ""
+            ),
+            SemanticTest(
+                "argument name not in argument type scope",
+                "fun (x : x) 0",
+                """|1:10:error: x is not declared
+                   |fun (x : x) 0
+                   |         ^
+                   |"""
             ),
             SemanticTest(
                 "not-declared use in no argument function",
@@ -319,6 +334,49 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "overriding function names in different group",
                 "{ def f (i : String) Int = 0 val x = 1 def f (i : Int) Int = i f(0) }",
+                ""
+            ),
+            SemanticTest(
+                "ok self reference function in same group",
+                "{ def f(x : Int) Int = f(x) f(10) }",
+                ""
+            ),
+            SemanticTest(
+                "def use (far, one group)",
+                "{ def f(x : Int) Int = x def g(x : Int) Int = x f(10) }",
+                ""
+            ),
+            SemanticTest(
+                "def use (near, one group)",
+                "{ def f(x : Int) Int = x def g(x : Int) Int = x g(10) }",
+                ""
+            ),
+            SemanticTest(
+                "def use (far, two groups)",
+                "{ def f(x : Int) Int = x val x = 1 def g(x : Int) Int = x f(10) }",
+                ""
+            ),
+            SemanticTest(
+                "ok forward reference function in same group",
+                "{ def f(x : Int) Int = g(x) def g(x : Int) Int = x f(10) }",
+                ""
+            ),
+            SemanticTest(
+                "bad forward reference function to different group",
+                "{ def f(x : Int) Int = g(x) val x = 1 def g(x : Int) Int = x f(10) }",
+                """|1:24:error: g is not declared
+                   |{ def f(x : Int) Int = g(x) val x = 1 def g(x : Int) Int = x f(10) }
+                   |                       ^
+                   |"""
+            ),
+            SemanticTest(
+                "ok backward reference function in same group",
+                "{ def f(x : Int) Int = x def g(x : Int) Int = f(x) g(10) }",
+                ""
+            ),
+            SemanticTest(
+                "ok backward reference function to different group",
+                "{ def f(x : Int) Int = x val x = 1 def g(x : Int) Int = f(x) g(10) }",
                 ""
             ),
 

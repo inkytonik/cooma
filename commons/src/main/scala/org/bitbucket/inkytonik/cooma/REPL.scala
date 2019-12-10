@@ -184,7 +184,7 @@ trait REPL extends REPLBase[Config] {
      * Process a user-entered function definition binding.
      */
     def processDef(i : String, fd : Def, tipe : Expression, config : Config) : Unit = {
-        val program = Program(Blk(LetDef(Vector(fd), Return(Idn(IdnUse(i))))))
+        val program = Program(Blk(LetDef(Defs(Vector(fd)), Return(Idn(IdnUse(i))))))
         process(program, i, tipe, config)
     }
 

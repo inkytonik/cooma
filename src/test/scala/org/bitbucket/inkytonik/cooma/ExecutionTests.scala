@@ -18,7 +18,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
     with ScalaCheckDrivenPropertyChecks {
 
     import java.io.{ByteArrayOutputStream, PrintStream}
-    import java.io.{ByteArrayOutputStream}
     import java.nio.file.{Files, Paths}
     import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
     import org.bitbucket.inkytonik.cooma.Primitives._
@@ -504,6 +503,42 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         f(10)
                     }""",
                     "20",
+                    "Int"
+                ),
+                ExecTest(
+                    "def block (self reference, tail call)",
+                    """{
+                        def f(x : Int) Int =
+                            Ints.eq(x, 0) match {
+                                case true(_)  => 20
+                                case false(_) => f(Ints.sub(x, 1))
+                            }
+                        f(10)
+                    }""",
+                    "20",
+                    "Int"
+                ),
+                ExecTest(
+                    "def block (accumulator, tail call)",
+                    """{
+                        def f(s : Int, x : Int) Int =
+                            Ints.eq(x, 0) match {
+                                case true(_)  => s
+                                case false(_) => f(Ints.add(s, x), Ints.sub(x, 1))
+                            }
+                        f(0, 10)
+                    }""",
+                    "55",
+                    "Int"
+                ),
+                ExecTest(
+                    "def block (multi forward reference)",
+                    """{
+                        def f(x : Int) Int = g(x)
+                        def g(y : Int) Int = y
+                        f(10)
+                    }""",
+                    "10",
                     "Int"
                 ),
                 ExecTest(
