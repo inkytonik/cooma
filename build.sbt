@@ -48,7 +48,7 @@ lazy val commonsettings = Seq(
 	},
 	testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
 	logBuffered in Test := false,
-	//fork := true,
+	fork := true,
 	connectInput in run := true,
 	outputStrategy in run := Some(StdoutOutput),
 
