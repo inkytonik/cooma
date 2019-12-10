@@ -36,12 +36,17 @@ class SemanticTests extends Tests {
             // Definitions
 
             SemanticTest(
-                "distinct argument names",
+                "distinct argument names (fun)",
                 "fun (x : Int, y : Int) x",
                 ""
             ),
             SemanticTest(
-                "duplicated argument names",
+                "duplicated underscore argument names (fun)",
+                "fun (_ : Int, _ : Int) 3",
+                ""
+            ),
+            SemanticTest(
+                "duplicated argument names (fun)",
                 "fun (x : Int, x : Int) x",
                 """|1:6:error: x is declared more than once
                    |fun (x : Int, x : Int) x
@@ -57,7 +62,7 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
-                "duplicate fields",
+                "duplicate normal fields",
                 "{x = 1, x = 1}",
                 """|1:2:error: duplicate field x
                    |{x = 1, x = 1}
@@ -95,6 +100,11 @@ class SemanticTests extends Tests {
                    |"""
             ),
             SemanticTest(
+                "underscore val",
+                "{ val _ = 3 0 }",
+                ""
+            ),
+            SemanticTest(
                 "distinct function names",
                 "{ def f (i : Int) Int = i def g (i : Int) Int = i 0 }",
                 ""
@@ -110,9 +120,62 @@ class SemanticTests extends Tests {
                    |                              ^
                    |"""
             ),
+            SemanticTest(
+                "distinct argument names (def)",
+                "{ def f (x : Int, y : Int) Int = x 0 }",
+                ""
+            ),
+            SemanticTest(
+                "duplicated underscore argument names (def)",
+                "{ def f (_ : Int, _ : Int) Int = 0 0 }",
+                ""
+            ),
+            SemanticTest(
+                "duplicated argument names (def)",
+                "{ def f (x : Int, x : Int) Int = x 0 }",
+                """|1:10:error: x is declared more than once
+                   |{ def f (x : Int, x : Int) Int = x 0 }
+                   |         ^
+                   |1:19:error: x is declared more than once
+                   |{ def f (x : Int, x : Int) Int = x 0 }
+                   |                  ^
+                   |"""
+            ),
 
             // Uses
 
+            SemanticTest(
+                "underscore val not usable",
+                "{ val _ = 3 _ }",
+                """|1:13:error: _ is not declared
+                   |{ val _ = 3 _ }
+                   |            ^
+                   |"""
+            ),
+            SemanticTest(
+                "underscore argument not usable (fun)",
+                "fun (_ : Int) _",
+                """|1:15:error: _ is not declared
+                   |fun (_ : Int) _
+                   |              ^
+                   |"""
+            ),
+            SemanticTest(
+                "underscore argument not usable (def)",
+                "{ def f (_ : Int) Int = _ 0 }",
+                """|1:25:error: _ is not declared
+                   |{ def f (_ : Int) Int = _ 0 }
+                   |                        ^
+                   |"""
+            ),
+            SemanticTest(
+                "underscore def not usable",
+                "{ def _ (x : Int) Int = 0 _(1) }",
+                """|1:27:error: _ is not declared
+                   |{ def _ (x : Int) Int = 0 _(1) }
+                   |                          ^
+                   |"""
+            ),
             SemanticTest(
                 "lone name",
                 "x",
@@ -457,9 +520,22 @@ class SemanticTests extends Tests {
             // Matching
 
             SemanticTest(
-                "basic match",
+                "basic match (bind)",
                 "<x = 1> match { case x(a) => a }",
                 ""
+            ),
+            SemanticTest(
+                "basic match (wildcard)",
+                "<x = 1> match { case x(_) => 1 }",
+                ""
+            ),
+            SemanticTest(
+                "basic match (wildcard not usable)",
+                "<x = 1> match { case x(_) => _ }",
+                """|1:30:error: _ is not declared
+                   |<x = 1> match { case x(_) => _ }
+                   |                             ^
+                   |"""
             ),
             SemanticTest(
                 "basic match correct type",

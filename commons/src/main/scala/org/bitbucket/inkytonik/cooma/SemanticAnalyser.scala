@@ -227,16 +227,19 @@ class SemanticAnalyser(
             enter(in(n))
     }
 
+    def isWildcard(i : String) : Boolean =
+        i == "_"
+
     def defenvout(out : ASTNode => Environment) : ASTNode ==> Environment = {
         case n @ Scope() =>
             leave(out(n))
-        case n : Argument =>
+        case n @ Argument(IdnDef(i), _) if !isWildcard(i) =>
             defineArgument(out(n), n)
-        case n : Case =>
+        case n @ Case(_, IdnDef(i), _) if !isWildcard(i) =>
             defineCaseValue(out(n), n)
-        case n : Def =>
+        case n @ Def(IdnDef(i), _) if !isWildcard(i) =>
             defineFunction(out(n), n)
-        case n : Val =>
+        case n @ Val(IdnDef(i), _, _) if !isWildcard(i) =>
             defineValue(out(n), n)
     }
 
