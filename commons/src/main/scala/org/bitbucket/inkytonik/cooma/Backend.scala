@@ -49,8 +49,9 @@ trait Backend {
     def clsR(env : Env, f : String, x : String, e : Term) : ValueR
     def recR(fields : Vector[FldR]) : ValueR
 
-    def falseR() : ValueR
-    def trueR() : ValueR
+    def unitR() : ValueR = recR(Vector())
+    def falseR() : ValueR = varR("false", unitR())
+    def trueR() : ValueR = varR("true", unitR())
 
     def isErrR(value : ValueR) : Option[String]
     def isStrR(value : ValueR) : Option[String]

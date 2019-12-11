@@ -131,10 +131,6 @@ class TruffleBackend(config : Config) extends Backend {
     def varR(c : String, v : ValueR) : ValueR =
         new VarRuntimeValue(c, v)
 
-    val unit = new RecRuntimeValue(Array.empty[FieldValueRuntime])
-    def falseR = new VarRuntimeValue("false", unit)
-    def trueR = new VarRuntimeValue("true", unit)
-
     def clsR(env : Env, f : String, x : String, e : Term) : ValueR =
         new FunctionClosure(env, f, x, e)
 

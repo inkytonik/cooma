@@ -40,11 +40,6 @@ class Interpreter(config : Config) {
     def consEnv(env : Env, i : String, v : ValueR) : Env =
         ConsVE(env, i, v)
 
-    val unit = RecR(Vector())
-
-    def falseR = VarR("false", unit)
-    def trueR = VarR("true", unit)
-
     val predefEnv =
         Primitives.generateDynamicRuntime(this).foldLeft(emptyEnv) {
             case (env, (i, v)) =>
