@@ -1036,12 +1036,28 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """res0 : String = "Hello""""
                 ),
                 REPLTest(
-                    "single evaluation (function and use)",
+                    "single evaluation (function)",
                     """
                         fun (x : Int) x
                         res0(10)
                     """,
                     "res0 : (Int) Int = <function>\nres1 : Int = 10"
+                ),
+                REPLTest(
+                    "single evaluation (function using type alias)",
+                    """
+                        fun (x : Boolean) x
+                        res0(true)
+                    """,
+                    "res0 : (Boolean) Boolean = <function>\nres1 : Boolean = <true = {}>"
+                ),
+                REPLTest(
+                    "single evaluation (function using type alias that needs to be expanded)",
+                    """
+                        fun (x : Reader) x.read()
+                        res0({read = fun () "hello"})
+                    """,
+                    "res0 : (Reader) String = <function>\nres1 : String = \"hello\""
                 ),
                 REPLTest(
                     "multiple evaluations",
@@ -1397,7 +1413,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
     }
 
     def runString(name : String, program : String, options : Seq[String], backend : Backend) : String = {
-
         val allArgs = Seq("--Koutput", "string") ++ options :+ "test.cooma"
         runTest(backend.frontend.interpret(name, program, _), options, allArgs)
     }

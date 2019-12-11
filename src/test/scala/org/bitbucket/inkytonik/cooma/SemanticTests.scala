@@ -572,6 +572,11 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
+                "existent field use (type alias)",
+                "fun (r : Reader) Strings.length(r.read())",
+                ""
+            ),
+            SemanticTest(
                 "non-existent field (type alias)",
                 "fun (r : Reader) r.foo",
                 """|1:20:error: foo is not a field of record type {read : () String}
