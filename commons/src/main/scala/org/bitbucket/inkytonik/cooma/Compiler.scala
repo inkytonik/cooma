@@ -193,17 +193,12 @@ trait Compiler {
             kappa(f))
     }
 
-    def compileFun(x : String, t : Expression, e : Expression, kappa : String => Term) : Term =
-        t match {
-            case Idn(IdnUse(n)) if isCapabilityName(n) =>
-                compileCapFun(n, x, e, kappa)
-
-            case _ =>
-                val f = fresh("f")
-                val k = fresh("k")
-                letV(f, funV(k, x, tailCompile(e, k)),
-                    kappa(f))
-        }
+    def compileFun(x : String, t : Expression, e : Expression, kappa : String => Term) : Term = {
+        val f = fresh("f")
+        val k = fresh("k")
+        letV(f, funV(k, x, tailCompile(e, k)),
+            kappa(f))
+    }
 
     def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
         be match {
@@ -233,11 +228,6 @@ trait Compiler {
         fd match {
             case Def(IdnDef(f), Body(Arguments(Vector()), t, e)) =>
                 compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), UniT()))), t, e)))
-
-            case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), Idn(IdnUse(n))) +: otherArgs), _, e)) if isCapabilityName(n) =>
-                val y = fresh("y")
-                defTerm(f, k, y, letV(x, prmV(capabilityP(n), Vector(y)),
-                    compileDefBody(otherArgs, e, k)))
 
             case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _) +: otherArgs), _, e)) =>
                 defTerm(f, k, x, compileDefBody(otherArgs, e, k))
@@ -374,17 +364,12 @@ trait Compiler {
             appC(k, x))
     }
 
-    def tailCompileFun(x : String, t : Expression, e : Expression, k : String) : Term =
-        t match {
-            case Idn(IdnUse(n)) if isCapabilityName(n) =>
-                tailCompileCapFun(n, x, e, k)
-
-            case _ =>
-                val f = fresh("f")
-                val j = fresh("j")
-                letV(f, funV(j, x, tailCompile(e, j)),
-                    appC(k, f))
-        }
+    def tailCompileFun(x : String, t : Expression, e : Expression, k : String) : Term = {
+        val f = fresh("f")
+        val j = fresh("j")
+        letV(f, funV(j, x, tailCompile(e, j)),
+            appC(k, f))
+    }
 
     def tailCompileBlockExp(be : BlockExp, k : String) : Term =
         be match {
