@@ -152,9 +152,8 @@ trait REPL extends REPLBase[Config] {
                     }
                 Right((input2, inputType))
 
-            case (messages, None) =>
-                sys.error(s"cooma: couldn't find REPL type for $input")
-                Left(messages)
+            case (Vector(), None) =>
+                sys.error(s"checkInput: couldn't find REPL type for $input")
 
             case (messages, _) =>
                 Left(messages)
