@@ -399,6 +399,26 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<function>",
                     "(Int) Int"
                 ),
+                ExecTest(
+                    "type application",
+                    "{fun (t : Type, x : t) x}(Int, 10)",
+                    "10",
+                    "t"
+                ),
+                ExecTest(
+                    "type application at different types",
+                    """{
+                        def id(t : Type, x : t) t = x
+                        {
+                            b = id(Boolean, true),
+                            i = id(Int, 10),
+                            s = id(String, "hello"),
+                            r = id(Reader, {read = fun () "hello"})
+                        }
+                    }""",
+                    """{b = <true = {}>, i = 10, s = "hello", r = {read = <function>}}""",
+                    "{b : t, i : t, s : t, r : t}"
+                ),
 
                 // Blocks
 

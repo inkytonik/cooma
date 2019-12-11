@@ -439,10 +439,18 @@ object Primitives {
         }
 
         Map(
+            // Booleans
+            "Boolean" -> interp.unitR(),
             "false" -> interp.falseR(),
             "true" -> interp.trueR(),
             "not" -> notValue,
 
+            // Capability types
+            "Reader" -> interp.unitR(),
+            "ReaderWriter" -> interp.unitR(),
+            "Writer" -> interp.unitR(),
+
+            // Primitives
             "Ints" ->
                 interp.recR(
                     (for { op <- allIntPrimBinOps }
