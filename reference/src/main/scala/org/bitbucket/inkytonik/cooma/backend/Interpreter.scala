@@ -198,17 +198,19 @@ class Interpreter(config : Config) {
     def toDocRuntimeValue(v : ValueR) : Doc =
         v match {
             case ClsR(v1, v2, v3, v4) =>
-                text("<function>")
+                "<function>"
             case ErrR(msg) =>
-                text(s"cooma: $msg")
+                s"cooma: $msg"
             case IntR(i) =>
                 value(i)
+            case RecR(Vector()) =>
+                "{}"
             case RecR(v1) =>
-                text("{") <> ssep(v1.map(toDocField), text(",") <> space) <> text("}")
+                "{" <+> ssep(v1.map(toDocField), "," <> space) <+> "}"
             case StrR(v1) =>
-                text("\"") <> value(escape(v1)) <> text("\"")
+                "\"" <> value(escape(v1)) <> "\""
             case VarR(v1, v2) =>
-                text("<") <> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <> text(">")
+                "<" <+> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <+> ">"
         }
 
     def toDocField(field : FldR) : Doc =

@@ -142,33 +142,33 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ),
                 ExecTest(
                     "record (single int field)",
-                    "{x = 65}",
-                    "{x = 65}",
-                    "{x : Int}"
+                    "{ x = 65 }",
+                    "{ x = 65 }",
+                    "{ x : Int }"
                 ),
                 ExecTest(
                     "record (single string field)",
-                    """{name = "Harold"}""",
-                    """{name = "Harold"}""",
-                    "{name : String}"
+                    """{ name = "Harold" }""",
+                    """{ name = "Harold" }""",
+                    "{ name : String }"
                 ),
                 ExecTest(
                     "record (two fields)",
-                    "{a = 1, b = 2}",
-                    "{a = 1, b = 2}",
-                    "{a : Int, b : Int}"
+                    "{ a = 1, b = 2 }",
+                    "{ a = 1, b = 2 }",
+                    "{ a : Int, b : Int }"
                 ),
                 ExecTest(
                     "record (many fields)",
-                    """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
-                    """{name = "Bob", age = 24, year = 1998, sex = "F"}""",
-                    "{name : String, age : Int, year : Int, sex : String}"
+                    """{ name = "Bob", age = 24, year = 1998, sex = "F" }""",
+                    """{ name = "Bob", age = 24, year = 1998, sex = "F" }""",
+                    "{ name : String, age : Int, year : Int, sex : String }"
                 ),
                 ExecTest(
                     "record (eval field)",
-                    "{a = {fun (x : Int) x}(3), b = 2}",
-                    "{a = 3, b = 2}",
-                    "{a : Int, b : Int}"
+                    "{ a = {fun (x : Int) x}(3), b = 2 }",
+                    "{ a = 3, b = 2 }",
+                    "{ a : Int, b : Int }"
                 ),
                 ExecTest(
                     "multi-line record",
@@ -176,54 +176,54 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         name = "Bob",
                         age = 24
                     }""",
-                    """{name = "Bob", age = 24}""",
-                    "{name : String, age : Int}"
+                    """{ name = "Bob", age = 24 }""",
+                    "{ name : String, age : Int }"
                 ),
                 ExecTest(
                     "field select (first of one)",
-                    """{s = "Hi"}.s""",
+                    """{ s = "Hi" }.s""",
                     """"Hi"""",
                     "String"
                 ),
                 ExecTest(
                     "field select (first of two)",
-                    """{s = "Hi", t = 10}.s""",
+                    """{ s = "Hi", t = 10 }.s""",
                     """"Hi"""",
                     "String"
                 ),
                 ExecTest(
                     "field select (second of two)",
-                    """{s = "Hi", t = 10}.t""",
+                    """{ s = "Hi", t = 10 }.t""",
                     "10",
                     "Int"
                 ),
                 ExecTest(
                     "field select (many fields)",
-                    """{name = "Bob", age = 24, year = 1998, sex = "F"}.sex""",
+                    """{ name = "Bob", age = 24, year = 1998, sex = "F" }.sex""",
                     """"F"""",
                     "String"
                 ),
                 ExecTest(
                     "nested field select",
-                    "{r = {y = 42}}.r.y",
+                    "{ r = { y = 42 } }.r.y",
                     "42",
                     "Int"
                 ),
                 ExecTest(
                     "record concatenation",
                     """{
-                        val r = {x = 10, y = 20}
-                        val s = {a = "Hi"}
+                        val r = { x = 10, y = 20 }
+                        val s = { a = "Hi" }
                         r & s
                     }""",
-                    """{x = 10, y = 20, a = "Hi"}""",
-                    "{x : Int, y : Int, a : String}"
+                    """{ x = 10, y = 20, a = "Hi" }""",
+                    "{ x : Int, y : Int, a : String }"
                 ),
                 ExecTest(
                     "select from record concatenation (left)",
                     """{
-                       val r = {x = 10, y = 20}
-                        val s = {a = "Hi"}
+                       val r = { x = 10, y = 20 }
+                       val s = { a = "Hi" }
                        {r & s}.x
                    }""",
                     "10",
@@ -232,9 +232,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "select from record concatenation (right)",
                     """{
-                       val r = {x = 10, y = 20}
-                       val s = {a = "Hi"}
-                        {r & s}.a
+                       val r = { x = 10, y = 20 }
+                       val s = { a = "Hi" }
+                       {r & s}.a
                    }""",
                     """"Hi"""",
                     "String"
@@ -865,7 +865,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             val primName = aTest.op.primName
             test(s"${backend.name} run: prim $primName") {
                 forAll { (l : BigInt, r : BigInt) =>
-                    runPrimTest(s"prim $primName", s"$l, $r", "Boolean", expectedBool(aTest.func(l, r)))
+                    runPrimTest(s"prim $primName", s"$l, $r", "< false : Unit, true : Unit >", expectedBool(aTest.func(l, r)))
                 }
             }
         }
@@ -895,7 +895,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             test(s"${backend.name} run: prim $primName") {
                 forAll(stringLit, stringLit) { (l : String, r : String) =>
                     whenever(isStringLit(l) && isStringLit(r)) {
-                        runPrimTest(s"prim $primName", s""""$l", "$r"""", "Boolean", expectedBool(func(l, r)))
+                        runPrimTest(s"prim $primName", s""""$l", "$r"""", "< false : Unit, true : Unit >", expectedBool(func(l, r)))
                     }
                 }
             }
