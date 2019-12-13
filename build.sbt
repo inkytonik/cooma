@@ -51,6 +51,8 @@ lazy val commonsettings = Seq(
 	fork := true,
 	connectInput in run := true,
 	outputStrategy in run := Some(StdoutOutput),
+	javaOptions in run ++= Seq("-Xss16m", "-Xmx1G"),
+	javaOptions in Test ++= Seq("-Xss16m", "-Xmx1G"),
 
 	// sbt-rats
 	ratsScalaRepetitionType := Some(VectorType),
