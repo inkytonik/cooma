@@ -51,7 +51,11 @@ public class RecRuntimeValue extends RuntimeValue<RecRuntimeValue> implements Tr
 
     @Override
     public String print() {
-        return String.format("{%s}", this.toString()) ;
+        val fields = this.toString();
+        if (fields.isEmpty())
+            return "{}";
+        else
+            return String.format("{ %s }", this.toString());
     }
 
     public static RecRuntimeValue empty(){

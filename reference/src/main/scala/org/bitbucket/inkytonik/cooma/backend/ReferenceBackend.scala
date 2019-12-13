@@ -229,12 +229,14 @@ class ReferenceBackend(
                 value(i)
             case PrmV(p, xs) =>
                 p.show <> hcat(xs.map(x => space <> x))
+            case RecV(Vector()) =>
+                "{}"
             case RecV(fs) =>
-                "{" <> ssep(fs.map(toDocFieldValue), "," <> space) <> text("}")
+                "{" <+> ssep(fs.map(toDocFieldValue), "," <> space) <+> text("}")
             case StrV(v1) =>
                 "\"" <> value(escape(v1)) <> text("\"")
             case VarV(v1, v2) =>
-                "<" <> value(v1) <+> "=" <+> value(v2) <> text(">")
+                "<" <+> value(v1) <+> "=" <+> value(v2) <+> text(">")
         }
 
     def toDocFieldValue(field : FieldValue) : Doc =

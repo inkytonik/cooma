@@ -11,26 +11,26 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Arguments ")" Expression          {Fun, right, 4}
-  | '(' Expression ** "," ")" Expression        {FunT, right, 4}
-  | Expression sp "match" "{" Case+ '}'         {Mat, left, 3}
-  | Expression "&" Expression                   {Cat, left, 2}
-  | Expression '(' Expression ** "," ')'        {App, left, 1}
-  | Expression '.' FieldUse                     {Sel, left, 1}
-  | '{' '}'                                     {Uni}
-  | '{' nestnl (BlockExp) \n '}'                {Blk}
-  | '{' Field ++ "," '}'                        {Rec}
-  | '{' FieldType ++ "," '}'                    {RecT}
-  | '<' Field '>'                               {Var}
-  | '<' FieldType ++ "," '>'                    {VarT}
-  | IntLit                                      {Num, 1: BigInt.apply : BigInt}
-  | 'Int'                                       {IntT}
-  | StringLit                                   {Str}
-  | 'String'                                    {StrT}
-  | 'Type'                                      {TypT}
-  | 'Unit'                                      {UniT}
-  | "prim" Identifier '(' Expression ** "," ')' {Prm}
-  | IdnUse                                      {Idn}.
+    "fun" '(' Arguments ")" Expression           {Fun, right, 4}
+  | '(' Expression ** "," ")" Expression         {FunT, right, 4}
+  | Expression sp "match" '{' nest(Case+) \n '}' {Mat, left, 3}
+  | Expression "&" Expression                    {Cat, left, 2}
+  | Expression '(' Expression ** "," ')'         {App, left, 1}
+  | Expression '.' FieldUse                      {Sel, left, 1}
+  | '{' '}'                                      {Uni}
+  | '{' nestnl(BlockExp) \n '}'                  {Blk}
+  | '{' nest(Field ++ ',') \n '}'                {Rec}
+  | '{' nest(FieldType ++ ',') \n '}'            {RecT}
+  | '<' nest(Field) \n '>'                       {Var}
+  | '<' nest(FieldType ++ ',') \n '>'            {VarT}
+  | IntLit                                       {Num, 1: BigInt.apply : BigInt}
+  | 'Int'                                        {IntT}
+  | StringLit                                    {Str}
+  | 'String'                                     {StrT}
+  | 'Type'                                       {TypT}
+  | 'Unit'                                       {UniT}
+  | "prim" Identifier '(' Expression ** "," ')'  {Prm}
+  | IdnUse                                       {Idn}.
 
 Arguments =
   Argument ** ",".
@@ -39,10 +39,10 @@ Argument =
   IdnDef sp ":" Expression.
 
 Case =
-  "case" Identifier '(' IdnDef ")" "=>" Expression sp.
+  \n "case" Identifier '(' IdnDef ")" '=>' nestnl(Expression).
 
 Field =
-  Identifier sp "=" Expression.
+  \n Identifier sp "=" Expression.
 
 FieldUse =
   Identifier.
@@ -65,7 +65,7 @@ Val =
   "val" IdnDef (":" Expression)? sp "=" Expression \n.
 
 FieldType =
-  Identifier sp ":" Expression.
+  \n Identifier sp ":" Expression.
 
 // Lexical syntax
 

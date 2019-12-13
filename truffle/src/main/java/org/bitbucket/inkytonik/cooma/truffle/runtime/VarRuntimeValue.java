@@ -32,7 +32,7 @@ public class VarRuntimeValue extends RuntimeValue<VarRuntimeValue> implements Tr
 
     @Override
     public String print() {
-        return String.format("<%s>", this.toString()) ;
+        return String.format("< %s >", this.toString()) ;
     }
 
 }

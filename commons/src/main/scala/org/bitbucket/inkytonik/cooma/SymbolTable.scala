@@ -99,9 +99,9 @@ object SymbolTable extends Environments[CoomaEntity] {
         new StringSource("""
             {
                 // Boolean
-                val Boolean = <false : Unit, true : Unit>
-                val false : Boolean = <false = {}>
-                val true : Boolean = <true = {}>
+                val Boolean = < false : Unit, true : Unit >
+                val false : Boolean = < false = {} >
+                val true : Boolean = < true = {} >
 
                 def not (b : Boolean) Boolean =
                    b match {
@@ -112,9 +112,9 @@ object SymbolTable extends Environments[CoomaEntity] {
                    }
 
                 // Capability types
-                val Reader = {read : () String}
-                val ReaderWriter = {read : () String, write : (String) Unit}
-                val Writer = {write : (String) Unit}
+                val Reader = { read : () String }
+                val ReaderWriter = { read : () String, write : (String) Unit }
+                val Writer = { write : (String) Unit }
 
                 // Primitives
                 val Ints = {

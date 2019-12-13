@@ -244,40 +244,40 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
                 ExecTest(
                     "variant (single int field)",
-                    "<x = 65>",
-                    "<x = 65>",
-                    "<x : Int>"
+                    "< x = 65 >",
+                    "< x = 65 >",
+                    "< x : Int >"
                 ),
                 ExecTest(
                     "variant (single string field)",
-                    """<name = "Harold">""",
-                    """<name = "Harold">""",
-                    "<name : String>"
+                    """< name = "Harold" >""",
+                    """< name = "Harold" >""",
+                    "< name : String >"
                 ),
                 ExecTest(
                     "variant (eval field)",
-                    "<a = {fun (x : Int) x}(3)>",
-                    "<a = 3>",
-                    "<a : Int>"
+                    "< a = {fun (x : Int) x}(3) >",
+                    "< a = 3 >",
+                    "< a : Int >"
                 ),
                 ExecTest(
                     "multi-line variant",
                     """<
                         name = "Bob"
                     >""",
-                    """<name = "Bob">""",
-                    "<name : String>"
+                    """< name = "Bob" >""",
+                    "< name : String> "
                 ),
                 ExecTest(
                     "basic match",
-                    "<x = 1> match { case x(a) => a }",
+                    "< x = 1 > match { case x(a) => a }",
                     "1",
                     "Int"
                 ),
                 ExecTest(
                     "multi-case match (first case, same order)",
                     """{
-                        def f () <x : Int, y : Int> = <x = 3>
+                        def f () < x : Int, y : Int > = < x = 3 >
                         f () match { case x(a) => 1 case y(b) => 2 }
                     }""",
                     "1",
@@ -286,7 +286,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "multi-case match (later case, same order)",
                     """{
-                        def f () <x : Int, y : Int> = <y = 3>
+                        def f () < x : Int, y : Int > = < y = 3 >
                         f () match { case x(a) => 1 case y(b) => 2 }
                     }""",
                     "2",
@@ -295,7 +295,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "multi-case match (first case, different order)",
                     """{
-                        def f () <x : Int, y : Int> = <y = 3>
+                        def f () < x : Int, y : Int > = < y = 3 >
                         f () match { case y(b) => 1 case x(a) => 2 }
                     }""",
                     "1",
@@ -304,7 +304,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "multi-case match (later case, different order)",
                     """{
-                        def f () <x : Int, y : Int> = <x = 3>
+                        def f () < x : Int, y : Int > = < x = 3>
                         f () match { case y(b) => 1 case x(a) => 2 }
                     }""",
                     "2",
@@ -318,10 +318,10 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                                 case false(x) => x
                                 case true(x) => x
                             }
-                        {a = f(<false = {}>), b = f(<true = {}>)}
+                        { a = f(< false = {} >), b = f(< true = {} >) }
                     }""",
-                    "{a = {}, b = {}}",
-                    "{a : Unit, b : Unit}"
+                    "{ a = {}, b = {} }",
+                    "{ a : Unit, b : Unit }"
                 ),
 
                 // Functions
@@ -365,21 +365,21 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ),
                 ExecTest(
                     "record argument",
-                    "{fun (r : {x : Int}) r.x}({x = 20})",
+                    "{fun (r : { x : Int }) r.x}({ x = 20 })",
                     "20",
                     "Int"
                 ),
                 ExecTest(
                     "single field record return",
-                    "{fun (x : Int) {a = x}}(9)",
-                    "{a = 9}",
-                    "{a : Int}"
+                    "{fun (x : Int) { a = x }}(9)",
+                    "{ a = 9 }",
+                    "{ a : Int }"
                 ),
                 ExecTest(
                     "variant argument (one)",
-                    "{fun (r : <x : Int>) r}(<x = 20>)",
-                    "<x = 20>",
-                    "<x : Int>"
+                    "{fun (r : < x : Int >) r}(< x = 20 >)",
+                    "< x = 20 >",
+                    "< x : Int >"
                 ),
                 ExecTest(
                     "function argument",
@@ -416,8 +416,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             r = id(Reader, {read = fun () "hello"})
                         }
                     }""",
-                    """{b = <true = {}>, i = 10, s = "hello", r = {read = <function>}}""",
-                    "{b : t, i : t, s : t, r : t}"
+                    """{ b = < true = {} >, i = 10, s = "hello", r = { read = <function> } }""",
+                    "{ b : t, i : t, s : t, r : t }"
                 ),
 
                 // Blocks
@@ -647,12 +647,12 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "variant argument",
                     """{
-                        def f (r : <x : Int, y : Int, z : Int>) <x : Int, y : Int, z : Int> = r
-                        def g () <x : Int, y : Int> = <x = 3>
+                        def f (r : < x : Int, y : Int, z : Int >) < x : Int, y : Int, z : Int > = r
+                        def g () < x : Int, y : Int > = < x = 3 >
                         f(g())
                         }""",
-                    "<x = 3>",
-                    "<x : Int, y : Int, z : Int>"
+                    "< x = 3 >",
+                    "< x : Int, y : Int, z : Int >"
                 ),
 
                 // Predef
@@ -660,27 +660,27 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "true",
                     "true",
-                    "<true = {}>",
+                    "< true = {} >",
                     "Boolean",
                     "true"
                 ),
                 ExecTest(
                     "false",
                     "false",
-                    "<false = {}>",
+                    "< false = {} >",
                     "Boolean",
                     "false"
                 ),
                 ExecTest(
                     "not(false)",
                     "not(false)",
-                    "<true = {}>",
+                    "< true = {} >",
                     "Boolean"
                 ),
                 ExecTest(
                     "not(true)",
                     "not(true)",
-                    "<false = {}>",
+                    "< false = {} >",
                     "Boolean"
                 )
 
@@ -776,7 +776,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         def expectedBool(b : Boolean) : String =
-            s"""<${if (b) "true" else "false"} = {}>"""
+            s"""< ${if (b) "true" else "false"} = {} >"""
 
         case class IntBinPrimTest(
             op : PrimOp,
