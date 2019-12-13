@@ -73,7 +73,7 @@ class Interpreter(config : Config) {
                 case AppC(k, x) =>
                     lookupC(rho, k) match {
                         case ClsC(rho2, y, t) =>
-                            interpretAux(ConsVE(rho, y, lookupR(rho, x)), t)
+                            interpretAux(ConsVE(rho2, y, lookupR(rho, x)), t)
 
                         case v =>
                             sys.error(s"interpret AppC: $k is $v")
@@ -84,7 +84,7 @@ class Interpreter(config : Config) {
                         case ClsR(rho2, j, y, t) =>
                             interpretAux(
                                 ConsCE(
-                                    ConsVE(rho, y, lookupR(rho, x)),
+                                    ConsVE(rho2, y, lookupR(rho, x)),
                                     j,
                                     lookupC(rho, k)
                                 ),
