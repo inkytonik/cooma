@@ -82,7 +82,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
             if (config.typePrint())
                 analyser.tipe(program.expression) match {
                     case Some(t) =>
-                        config.output().emitln(show(t))
+                        config.output().emitln(show(analyser.alias(t)))
                     case None =>
                         config.output().emitln("unknown type")
                 }
