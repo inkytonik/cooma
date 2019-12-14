@@ -79,6 +79,13 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 // Do nothing
             }
             analysers(source) = analyser
+            if (config.typePrint())
+                analyser.tipe(program.expression) match {
+                    case Some(t) =>
+                        config.output().emitln(show(t))
+                    case None =>
+                        config.output().emitln("unknown type")
+                }
             analyser.errors
         }
 

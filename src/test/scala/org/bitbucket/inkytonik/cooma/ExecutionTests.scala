@@ -987,6 +987,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     OptionTest("Cooma AST print", "-C", "basic/blockDef", "coomaAST"),
                     OptionTest("IR print", "-i", "basic/blockDef", "IR"),
                     OptionTest("IR AST print", "-I", "basic/blockDef", "IRAST"),
+                    OptionTest("Type print", "-t", "basic/boolean", "type"),
+                    OptionTest("Type print", "-t", "capability/readerCmdArg", "type", Seq("/dev/null")),
                     OptionTest("Cooma AST print", "-C", "capability/writerCmdArg", "coomaAST", Seq("/dev/null")),
                     OptionTest("IR print", "-i", "capability/writerCmdArg", "IR", Seq("/dev/null")),
                     OptionTest("IR AST print", "-I", "capability/writerCmdArg", "IRAST", Seq("/dev/null"))
