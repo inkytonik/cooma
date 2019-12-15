@@ -15,7 +15,7 @@ import org.bitbucket.inkytonik.kiama.util.CompilerBase
 
 abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, pretty}
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, pretty, show}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.{Messages, noMessages}
