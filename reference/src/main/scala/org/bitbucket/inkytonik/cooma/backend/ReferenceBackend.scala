@@ -23,7 +23,6 @@ class ReferenceBackend(
     import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
-    import scala.annotation.tailrec
 
     override def backendName : String = "Reference"
 
@@ -241,33 +240,6 @@ class ReferenceBackend(
 
     def toDocFieldValue(field : FieldValue) : Doc =
         value(field.f) <+> text("=") <+> value(field.x)
-
-    @tailrec
-    final def lookupR(rho : Env, x : String) : ValueR =
-        rho match {
-            case ConsCE(rho2, _, _) =>
-                lookupR(rho2, x)
-
-            case ConsFE(rho2, rho2f, ds) =>
-                ds.collectFirst {
-                    case DefTerm(f, k, y, e) if x == f =>
-                        ClsR(rho2f(), k, y, e)
-                } match {
-                    case Some(v) =>
-                        v
-                    case None =>
-                        lookupR(rho2, x)
-                }
-
-            case ConsVE(rho2, y, v) if x == y =>
-                v
-
-            case ConsVE(rho2, _, _) =>
-                lookupR(rho2, x)
-
-            case NilE() =>
-                sys.error(s"lookupR: can't find value $x")
-        }
 
     def getConfig : Config = config
 
