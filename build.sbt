@@ -112,7 +112,7 @@ lazy val root = (project in file("."))
 		libraryDependencies ++= Seq(
 			"org.scalatest" %% "scalatest" % "3.0.8" % "test",
 			"org.scalatestplus" %% "scalatestplus-scalacheck" % "1.0.0-SNAP8" % "test",
-			"org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+			"org.scalacheck" %% "scalacheck" % "1.14.3" % "test",
 			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2"
 		) ++ kiamaDependencies
 	)
