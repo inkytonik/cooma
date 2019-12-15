@@ -21,16 +21,17 @@ trait TruffleREPL extends REPL {
     def process(
         program : Program,
         i : String,
-        tipe : Expression,
+        optTypeValue : Option[Expression],
+        aliasedType : Expression,
         config : Config
     ) : Unit = {
-        execute(i, tipe, config, {
+        execute(i, optTypeValue, aliasedType, config, {
             val line = format(program).layout
             val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
             if (CoomaLanguage.Type.Error.value.equals(result.getMetaObject.toString)) {
                 errorOutput(Some(result), config)
             } else {
-                output(i, tipe, Some(result), config)
+                output(i, optTypeValue, aliasedType, Some(result), config)
             }
         })
     }

@@ -19,7 +19,8 @@ trait ReferenceREPL extends REPL {
     def process(
         program : Program,
         i : String,
-        tipe : Expression,
+        optTypeValue : Option[Expression],
+        aliasedType : Expression,
         config : Config
     ) : Unit = {
         val term = compileStandalone(program)
@@ -29,7 +30,7 @@ trait ReferenceREPL extends REPL {
         if (config.irASTPrint())
             config.output().emitln(layout(any(term), 5))
 
-        execute(i, tipe, config, {
+        execute(i, optTypeValue, aliasedType, config, {
             val args = config.filenames()
             val result = interpret(term, currentDynamicEnv, args, config)
             isErrR(result) match {
@@ -37,7 +38,7 @@ trait ReferenceREPL extends REPL {
                     errorOutput(Some(result), config)
                 case None => {
                     currentDynamicEnv = consEnv(currentDynamicEnv, i, result)
-                    output(i, tipe, Some(result), config)
+                    output(i, optTypeValue, aliasedType, Some(result), config)
                 }
             }
         })

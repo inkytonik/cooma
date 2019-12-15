@@ -1177,12 +1177,12 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 REPLTest(
                     "built-in Int type",
                     "Int",
-                    "res0 : Type"
+                    "Int : Type = Int"
                 ),
                 REPLTest(
                     "built-in Boolean type",
                     "Boolean",
-                    "Boolean : Type"
+                    "Boolean : Type = < False : Unit, True : Unit >"
                 )
             )
 

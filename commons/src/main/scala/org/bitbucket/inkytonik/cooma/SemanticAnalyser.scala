@@ -713,6 +713,14 @@ class SemanticAnalyser(
                 t
         }
 
+    lazy val replTypeValue : REPLInput => Option[Expression] =
+        attr {
+            case REPLExp(e) =>
+                unalias(e, e)
+            case _ =>
+                None
+        }
+
     lazy val aliasedReplType : REPLInput => Option[Expression] =
         attr {
             case input =>
