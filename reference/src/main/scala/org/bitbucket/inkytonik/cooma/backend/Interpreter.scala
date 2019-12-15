@@ -40,14 +40,8 @@ class Interpreter(config : Config) {
     def consEnv(env : Env, i : String, v : ValueR) : Env =
         ConsVE(env, i, v)
 
-    val predefEnv =
-        Primitives.generateDynamicRuntime(this).foldLeft(emptyEnv) {
-            case (env, (i, v)) =>
-                consEnv(env, i, v)
-        }
-
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
-        interpret(term, predefEnv, args, config) match {
+        interpret(term, emptyEnv, args, config) match {
             case err @ ErrR(msg) =>
                 config.output().emitln(showRuntimeValue(err))
                 if (config.server()) {

@@ -49,7 +49,7 @@ trait REPL extends REPLBase[Config] {
      * Initialise REPL state.
      */
     def initialise() : Unit = {
-        currentStaticEnv = predef
+        currentStaticEnv = rootenv()
         nResults = 0
     }
 
@@ -121,6 +121,17 @@ trait REPL extends REPLBase[Config] {
         REPLVal(v)
     }
 
+    object AlreadyBoundIdn {
+        def unapply(e : Expression) : Boolean =
+            e match {
+                case BoolT() | False() | Idn(IdnUse(_)) | Ints() | ReaderT() |
+                    ReaderWriterT() | WriterT() | Strings() | True() =>
+                    true
+                case _ =>
+                    false
+            }
+    }
+
     def checkInput(
         input : REPLInput,
         config : Config
@@ -129,14 +140,14 @@ trait REPL extends REPLBase[Config] {
             config.output().emitln(layout(any(input), 5))
         val tree = new Tree[ASTNode, REPLInput](input)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
-        (analyser.errors, analyser.replType(input)) match {
+        (analyser.errors, analyser.aliasedReplType(input)) match {
             case (Vector(), Some(inputType)) =>
                 val input2 =
                     input match {
                         case REPLDef(Def(IdnDef(i), Body(as, t, e))) =>
                             defineVal(i, inputType, Fun(as, e))
 
-                        case REPLExp(Idn(IdnUse(_))) =>
+                        case REPLExp(AlreadyBoundIdn()) =>
                             input
 
                         case REPLExp(e) =>
@@ -167,8 +178,8 @@ trait REPL extends REPLBase[Config] {
         input match {
             case REPLDef(fd @ Def(IdnDef(i), _)) =>
                 processDef(i, fd, tipe, config)
-            case REPLExp(e @ Idn(IdnUse(i))) =>
-                processIdn(i, e, tipe, config)
+            case REPLExp(e @ AlreadyBoundIdn()) =>
+                processIdn(show(input), e, tipe, config)
             case REPLVal(vd @ Val(IdnDef(i), _, e)) =>
                 processVal(i, vd, tipe, config)
             case _ =>

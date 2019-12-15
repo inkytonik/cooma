@@ -65,13 +65,19 @@ trait Compiler {
 
     def compileTop(exp : Expression, nArg : Int) : Term = {
 
-        def compileTopArg(a : String, t : Expression, e : Expression) : Term =
+        def compileTopArg(a : String, t : Expression, e : Expression) : Term = {
+
+            def compileCapArg(n : String) : Term = {
+                val x = fresh("x")
+                letV(x, prmV(argumentP(nArg), Vector()),
+                    letV(a, prmV(capabilityP(n), Vector(x)),
+                        compileTop(e, nArg + 1)))
+            }
+
             t match {
-                case Idn(IdnUse(n)) if isCapabilityName(n) =>
-                    val x = fresh("x")
-                    letV(x, prmV(argumentP(nArg), Vector()),
-                        letV(a, prmV(capabilityP(n), Vector(x)),
-                            compileTop(e, nArg + 1)))
+                case ReaderT()       => compileCapArg("Reader")
+                case ReaderWriterT() => compileCapArg("ReaderWriter")
+                case WriterT()       => compileCapArg("Writer")
 
                 case StrT() =>
                     letV(a, prmV(argumentP(nArg), Vector()),
@@ -80,6 +86,8 @@ trait Compiler {
                 case _ =>
                     sys.error(s"compileTopArg: ${show(t)} arguments not supported")
             }
+
+        }
 
         exp match {
             case Fun(Arguments(Vector(Argument(IdnDef(a), t))), e) =>
@@ -90,6 +98,62 @@ trait Compiler {
                 compileHalt(exp)
         }
     }
+
+    val not =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("b"), BoolT())
+            )),
+            Mat(
+                Idn(IdnUse("b")),
+                Vector(
+                    Case("False", IdnDef("_"), True()),
+                    Case("True", IdnDef("_"), False())
+                )
+            )
+        )
+
+    def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
+        val argNames = (1 to argTypes.length).map(i => s"arg$i")
+        val args = argNames.zip(argTypes).map { case (n, t) => Argument(IdnDef(n), t) }
+        val params = argNames.map(n => Idn(IdnUse(n))).toVector
+        Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
+    }
+
+    def mkInt2PrimField(fieldName : String, primName : String) : Field =
+        mkPrimField(fieldName, Vector(IntT(), IntT()), primName)
+
+    def mkStr1PrimField(fieldName : String, primName : String) : Field =
+        mkPrimField(fieldName, Vector(StrT()), primName)
+
+    def mkStr2PrimField(fieldName : String, primName : String) : Field =
+        mkPrimField(fieldName, Vector(StrT(), StrT()), primName)
+
+    def mkStrIntPrimField(fieldName : String, primName : String) : Field =
+        mkPrimField(fieldName, Vector(StrT(), IntT()), primName)
+
+    val ints =
+        Rec(Vector(
+            mkInt2PrimField("add", "IntAdd"),
+            mkInt2PrimField("div", "IntDiv"),
+            mkInt2PrimField("mul", "IntMul"),
+            mkInt2PrimField("pow", "IntPow"),
+            mkInt2PrimField("sub", "IntSub"),
+            mkInt2PrimField("eq", "IntEq"),
+            mkInt2PrimField("neq", "IntNeq"),
+            mkInt2PrimField("lt", "IntLt"),
+            mkInt2PrimField("lte", "IntLte"),
+            mkInt2PrimField("gt", "IntGt"),
+            mkInt2PrimField("gte", "IntGte")
+        ))
+
+    val strings =
+        Rec(Vector(
+            mkStr2PrimField("concat", "StrConcat"),
+            mkStr2PrimField("equals", "StrEquals"),
+            mkStr1PrimField("length", "StrLength"),
+            mkStrIntPrimField("substr", "StrSubstr")
+        ))
 
     def compile(exp : Expression, kappa : String => Term) : Term =
         exp match {
@@ -117,6 +181,9 @@ trait Compiler {
                         letV(x, prmV(recConcatP(), Vector(y, z)),
                             kappa(x))))
 
+            case False() =>
+                compile(Var(Field("False", Uni())), kappa)
+
             case Fun(Arguments(Vector()), e) =>
                 compileFun("_", UniT(), e, kappa)
 
@@ -129,8 +196,14 @@ trait Compiler {
             case Idn(IdnUse(i)) =>
                 kappa(i)
 
+            case Ints() =>
+                compile(ints, kappa)
+
             case Mat(e, cs) =>
                 compileMatch(e, cs, kappa)
+
+            case Not() =>
+                compile(not, kappa)
 
             case Num(i) =>
                 val x = fresh("x")
@@ -157,6 +230,12 @@ trait Compiler {
                 letV(x, strV(unescape(s.tail.init)),
                     kappa(x))
 
+            case Strings() =>
+                compile(strings, kappa)
+
+            case True() =>
+                compile(Var(Field("True", Uni())), kappa)
+
             case Uni() =>
                 val x = fresh("x")
                 letV(x, recV(Vector()),
@@ -176,7 +255,9 @@ trait Compiler {
     object IsType {
         def unapply(e : Expression) : Boolean =
             e match {
-                case _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT | _ : UniT | _ : VarT =>
+                case BoolT() | ReaderT() | ReaderWriterT() | WriterT() |
+                    _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT |
+                    _ : UniT | _ : VarT =>
                     true
                 case _ =>
                     false
@@ -294,6 +375,9 @@ trait Compiler {
                         letV(x, prmV(recConcatP(), Vector(y, z)),
                             appC(k, x))))
 
+            case False() =>
+                tailCompile(Var(Field("False", Uni())), k)
+
             case Fun(Arguments(Vector()), e) =>
                 tailCompileFun("_", UniT(), e, k)
 
@@ -309,8 +393,14 @@ trait Compiler {
             case Idn(IdnUse(x)) =>
                 appC(k, x)
 
+            case Ints() =>
+                tailCompile(ints, k)
+
             case Mat(e, cs) =>
                 tailCompileMatch(e, cs, k)
+
+            case Not() =>
+                tailCompile(not, k)
 
             case Num(i) =>
                 val x = fresh("x")
@@ -337,6 +427,12 @@ trait Compiler {
                 val x = fresh("x")
                 letV(x, strV(unescape(s.tail.init)),
                     appC(k, x))
+
+            case Strings() =>
+                tailCompile(strings, k)
+
+            case True() =>
+                tailCompile(Var(Field("True", Uni())), k)
 
             case Uni() =>
                 val x = fresh("x")

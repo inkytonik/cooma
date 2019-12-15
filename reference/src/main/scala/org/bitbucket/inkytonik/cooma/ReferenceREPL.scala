@@ -13,7 +13,7 @@ trait ReferenceREPL extends REPL {
 
     override def initialise() : Unit = {
         super.initialise()
-        currentDynamicEnv = predefEnv
+        currentDynamicEnv = emptyEnv
     }
 
     def process(

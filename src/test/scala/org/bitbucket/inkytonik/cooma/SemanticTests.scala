@@ -436,7 +436,7 @@ class SemanticTests extends Tests {
                    |"""
             ),
 
-            // Pre-defined uses
+            // Built-in uses
 
             SemanticTest(
                 "Boolean is defined",
@@ -444,8 +444,8 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
-                "boolean is a variant with false and true fields",
-                "fun (b : Boolean) b match { case false(x) => 0 case true(x) => 1}",
+                "boolean is a variant with False and True fields",
+                "fun (b : Boolean) b match { case False(x) => 0 case True(x) => 1}",
                 ""
             ),
             SemanticTest(
@@ -474,9 +474,12 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
-                "not is (Boolean) Boolean",
-                "{ def f (b : Boolean) Boolean = not(b) 0 }",
-                ""
+                "aliases are used in type error messages",
+                "{fun (b : Boolean) 0}(0)",
+                """|1:23:error: expected Boolean, got 0 of type Int
+                   |{fun (b : Boolean) 0}(0)
+                   |                      ^
+                   |"""
             ),
             SemanticTest(
                 "Reader is a record with a read field",
@@ -491,13 +494,13 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "Reader doesn't have non-read field",
                 "fun (r : Reader) r.foo",
-                """|1:20:error: foo is not a field of record type { read : () String }
+                """|1:20:error: foo is not a field of record type Reader
                    |fun (r : Reader) r.foo
                    |                   ^
                    |"""
             ),
             SemanticTest(
-                "Writer is pre-defined record type",
+                "Writer is built-in record type",
                 """fun (w : Writer) w.write("hello")""",
                 ""
             ),
@@ -509,13 +512,13 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "Writer doesn't have non-write field",
                 "fun (w : Writer) w.foo",
-                """|1:20:error: foo is not a field of record type { write : (String) Unit }
+                """|1:20:error: foo is not a field of record type Writer
                    |fun (w : Writer) w.foo
                    |                   ^
                    |"""
             ),
             SemanticTest(
-                "ReaderWriter is pre-defined record type",
+                "ReaderWriter is built-in record type",
                 "fun (rw : ReaderWriter) { val s = rw.read() rw.write(s) }",
                 ""
             ),
@@ -532,7 +535,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "ReaderWriter doesn't have non-write field",
                 "fun (rw : ReaderWriter) rw.foo",
-                """|1:28:error: foo is not a field of record type { read : () String, write : (String) Unit }
+                """|1:28:error: foo is not a field of record type ReaderWriter
                    |fun (rw : ReaderWriter) rw.foo
                    |                           ^
                    |"""
@@ -564,24 +567,6 @@ class SemanticTests extends Tests {
                 """|1:25:error: w is not a field of record type { x : Int, y : Int, z : Int }
                    |{ x = 3, y = 4, z = 5 }.w
                    |                        ^
-                   |"""
-            ),
-            SemanticTest(
-                "existent field (type alias)",
-                "fun (r : Reader) r.read",
-                ""
-            ),
-            SemanticTest(
-                "existent field use (type alias)",
-                "fun (r : Reader) Strings.length(r.read())",
-                ""
-            ),
-            SemanticTest(
-                "non-existent field (type alias)",
-                "fun (r : Reader) r.foo",
-                """|1:20:error: foo is not a field of record type { read : () String }
-                   |fun (r : Reader) r.foo
-                   |                   ^
                    |"""
             ),
             SemanticTest(

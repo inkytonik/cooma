@@ -14,8 +14,8 @@
             choose =
                 fun (b : Boolean)
                     b match {
-                        case true(_)  => {read = r2.read1}
-                        case false(_) => {read = r2.read2}
+                        case True(_)  => {read = r2.read1}
+                        case False(_) => {read = r2.read2}
                     }
         }
     }

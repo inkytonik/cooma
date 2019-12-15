@@ -50,8 +50,8 @@ trait Backend {
     def recR(fields : Vector[FldR]) : ValueR
 
     def unitR() : ValueR = recR(Vector())
-    def falseR() : ValueR = varR("false", unitR())
-    def trueR() : ValueR = varR("true", unitR())
+    def falseR() : ValueR = varR("False", unitR())
+    def trueR() : ValueR = varR("True", unitR())
 
     def isErrR(value : ValueR) : Option[String]
     def isStrR(value : ValueR) : Option[String]

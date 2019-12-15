@@ -17,7 +17,7 @@ import org.bitbucket.inkytonik.kiama.relation.Tree
 
 class SemanticAnalyser(
     val tree : Tree[ASTNode, ASTNode],
-    rootenv : Environment = predef
+    predef : Environment = rootenv()
 ) extends Attribution {
 
     import org.bitbucket.inkytonik.kiama.==>
@@ -26,6 +26,7 @@ class SemanticAnalyser(
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.SemanticAnalysis.subtype
+    import org.bitbucket.inkytonik.cooma.SymbolTable.primitivesTypesTable
 
     val decorators = new Decorators(tree)
     import decorators._
@@ -81,15 +82,15 @@ class SemanticAnalyser(
     }
 
     def checkExpressionType(e : Expression) : Messages =
-        (unaliasedType(e), unalias(e, expectedType(e))) match {
+        (tipe(e), expectedType(e)) match {
             case (Some(t), Some(u)) if !subtype(t, u) =>
-                error(e, s"expected ${show(u)}, got ${show(e)} of type ${show(t)}")
+                error(e, s"expected ${show(alias(u))}, got ${show(e)} of type ${show(alias(t))}")
             case _ =>
                 noMessages
         }
 
     def checkApplication(f : Expression, as : Vector[Expression]) : Messages =
-        unaliasedType(f) match {
+        tipe(f) match {
             case Some(FunT(ps, _)) =>
                 if (ps.length < as.length)
                     ps.length match {
@@ -103,7 +104,7 @@ class SemanticAnalyser(
                 else
                     noMessages
             case Some(t) =>
-                error(f, s"application of non-function type ${show(t)}")
+                error(f, s"application of non-function type ${show(alias(t))}")
             case _ =>
                 noMessages
         }
@@ -133,11 +134,11 @@ class SemanticAnalyser(
         }
 
     def checkCaseVariants(c : Case, m : Mat) : Messages =
-        unaliasedType(m.expression) match {
+        tipe(m.expression) match {
             case Some(t @ VarT(fieldTypes)) =>
                 fieldTypes.find(f => f.identifier == c.identifier) match {
                     case None =>
-                        error(c, s"variant ${c.identifier} not present in matched type ${show(t)}")
+                        error(c, s"variant ${c.identifier} not present in matched type ${show(alias(t))}")
                     case _ =>
                         noMessages
                 }
@@ -148,7 +149,7 @@ class SemanticAnalyser(
     def checkConcat(e : Cat, l : Expression, r : Expression) : Messages = {
         checkRecordUse(l) ++
             checkRecordUse(r) ++
-            ((unaliasedType(l), unaliasedType(r)) match {
+            ((tipe(l), tipe(r)) match {
                 case (Some(RecT(rl)), Some(RecT(rr))) =>
                     val overlap = overlappingFields(rl, rr)
                     if (overlap.isEmpty)
@@ -167,11 +168,11 @@ class SemanticAnalyser(
             checkMatchCaseNum(e, cs)
 
     def checkMatchDiscType(e : Expression) : Messages =
-        unaliasedType(e) match {
+        tipe(e) match {
             case Some(VarT(_)) | None =>
                 noMessages
             case Some(t) =>
-                error(e, s"match of non-variant type ${show(t)}")
+                error(e, s"match of non-variant type ${show(alias(t))}")
         }
 
     def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
@@ -183,23 +184,23 @@ class SemanticAnalyser(
         }
 
     def checkRecordUse(e : Expression) : Messages =
-        unaliasedType(e) match {
+        tipe(e) match {
             case Some(RecT(_)) | None =>
                 noMessages
             case Some(t) =>
-                error(e, s"expected record type, got ${show(t)}")
+                error(e, s"expected record type, got ${show(alias(t))}")
         }
 
     def checkFieldUse(e : Expression, f : FieldUse) : Messages = {
         val i = f.identifier
-        unaliasedType(e) match {
+        tipe(e) match {
             case Some(t @ RecT(fields)) =>
                 if (fields.map(_.identifier) contains i)
                     noMessages
                 else
-                    error(f, s"$i is not a field of record type ${show(t)}")
+                    error(f, s"$i is not a field of record type ${show(alias(t))}")
             case Some(t) =>
-                error(f, s"selection of $i field from non-record type ${show(t)}")
+                error(f, s"selection of $i field from non-record type ${show(alias(t))}")
             case None =>
                 noMessages
         }
@@ -222,7 +223,7 @@ class SemanticAnalyser(
 
     def envin(in : ASTNode => Environment) : ASTNode ==> Environment = {
         case _ : Program | _ : REPLInput =>
-            rootenv
+            predef
 
         // Bodies of defs get all the bindings of the Defs group
         case tree.parent.pair(_ : Body, tree.parent(p : Defs)) =>
@@ -318,6 +319,9 @@ class SemanticAnalyser(
         r1names.intersect(r2names)
     }
 
+    def mkIntPrimType(retType : Expression) : Expression =
+        FunT(Vector(IntT(), IntT()), retType)
+
     lazy val tipe : Expression => Option[Expression] =
         attr {
             case App(f, as) =>
@@ -325,15 +329,18 @@ class SemanticAnalyser(
                     case Some(FunT(ts, t)) =>
                         val numArgs = as.length
                         if (numArgs == ts.length)
-                            Some(t)
+                            unalias(f, t)
                         else
-                            Some(FunT(ts.drop(numArgs), t))
+                            unaliasFunT(f, ts.drop(numArgs), t)
                     case _ =>
                         None
                 }
 
             case Blk(b) =>
                 blockTipe(b)
+
+            case BoolT() =>
+                Some(TypT())
 
             case Cat(e1, e2) =>
                 (tipe(e1), tipe(e2)) match {
@@ -346,10 +353,13 @@ class SemanticAnalyser(
                         None
                 }
 
+            case False() =>
+                Some(boolT)
+
             case Fun(Arguments(as), e) =>
                 tipe(e) match {
                     case Some(t) =>
-                        Some(FunT(as.map(_.expression), t))
+                        unaliasFunT(e, as.map(_.expression), t)
                     case None =>
                         None
                 }
@@ -359,6 +369,21 @@ class SemanticAnalyser(
 
             case u @ Idn(IdnUse(x)) =>
                 entityType(lookup(env(u), x, UnknownEntity()))
+
+            case Ints() =>
+                Some(RecT(Vector(
+                    FieldType("add", mkIntPrimType(IntT())),
+                    FieldType("div", mkIntPrimType(IntT())),
+                    FieldType("mul", mkIntPrimType(IntT())),
+                    FieldType("pow", mkIntPrimType(IntT())),
+                    FieldType("sub", mkIntPrimType(IntT())),
+                    FieldType("eq", mkIntPrimType(BoolT())),
+                    FieldType("neq", mkIntPrimType(BoolT())),
+                    FieldType("lt", mkIntPrimType(BoolT())),
+                    FieldType("lte", mkIntPrimType(BoolT())),
+                    FieldType("gt", mkIntPrimType(BoolT())),
+                    FieldType("gte", mkIntPrimType(BoolT()))
+                )))
 
             case IntT() =>
                 Some(TypT())
@@ -371,19 +396,28 @@ class SemanticAnalyser(
                         None
                 }
 
+            case Not() =>
+                Some(FunT(Vector(boolT), boolT))
+
             case _ : Num =>
                 Some(IntT())
 
-            case Prm(i, args) =>
+            case n @ Prm(i, args) =>
                 primitivesTypesTable.get(i) match {
                     case Some(FunT(ts, t)) =>
                         if (args.length == ts.length)
-                            Some(t)
+                            unalias(n, t)
                         else
                             None
                     case _ =>
                         None
                 }
+
+            case ReaderT() =>
+                Some(TypT())
+
+            case ReaderWriterT() =>
+                Some(TypT())
 
             case Rec(fields) =>
                 makeRow(fields).map(RecT)
@@ -410,8 +444,19 @@ class SemanticAnalyser(
             case _ : Str =>
                 Some(StrT())
 
+            case Strings() =>
+                Some(RecT(Vector(
+                    FieldType("concat", FunT(Vector(StrT(), StrT()), StrT())),
+                    FieldType("equals", FunT(Vector(StrT(), StrT()), BoolT())),
+                    FieldType("length", FunT(Vector(StrT()), IntT())),
+                    FieldType("substr", FunT(Vector(StrT(), IntT()), StrT()))
+                )))
+
             case StrT() =>
                 Some(TypT())
+
+            case True() =>
+                Some(boolT)
 
             case TypT() =>
                 Some(TypT())
@@ -424,6 +469,9 @@ class SemanticAnalyser(
 
             case Var(field) =>
                 makeRow(Vector(field)).map(VarT)
+
+            case WriterT() =>
+                Some(TypT())
 
             case _ : VarT =>
                 Some(TypT())
@@ -447,8 +495,8 @@ class SemanticAnalyser(
 
     val entityType : CoomaEntity => Option[Expression] =
         attr {
-            case ArgumentEntity(Argument(_, t)) =>
-                Some(t)
+            case ArgumentEntity(n @ Argument(_, t)) =>
+                unalias(n, t)
             case CaseValueEntity(tree.parent.pair(c, Mat(e, _))) =>
                 tipe(e) match {
                     case Some(VarT(r)) if tree.index(c) - 1 < r.length =>
@@ -459,11 +507,11 @@ class SemanticAnalyser(
             case FieldEntity(Field(_, e)) =>
                 tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
-                Some(FunT(as.map(_.expression), t))
+                unaliasFunT(e, as.map(_.expression), t)
             case ValueEntity(Val(i, None, e)) =>
                 tipe(e)
             case ValueEntity(Val(_, t, e)) =>
-                t
+                unalias(e, t)
             case _ =>
                 None
         }
@@ -478,7 +526,7 @@ class SemanticAnalyser(
                 val caseTypes =
                     m.cases.map {
                         case Case(_, _, e) =>
-                            unaliasedType(e)
+                            tipe(e)
                     }.distinct
                 if (caseTypes contains None)
                     OkCases(None)
@@ -488,46 +536,96 @@ class SemanticAnalyser(
                     OkCases(caseTypes(0))
         }
 
+    val boolT : Expression =
+        VarT(Vector(FieldType("False", UniT()), FieldType("True", UniT())))
+
+    val readerT : Expression =
+        RecT(Vector(
+            FieldType("read", FunT(Vector(), StrT()))
+        ))
+
+    val readerWriterT : Expression =
+        RecT(Vector(
+            FieldType("read", FunT(Vector(), StrT())),
+            FieldType("write", FunT(Vector(StrT()), UniT())),
+        ))
+
+    val writerT : Expression =
+        RecT(Vector(
+            FieldType("write", FunT(Vector(StrT()), UniT())),
+        ))
+
+    def alias(e : Expression) : Expression =
+        e match {
+            case `boolT`         => BoolT()
+            case `readerT`       => ReaderT()
+            case `readerWriterT` => ReaderWriterT()
+            case `writerT`       => WriterT()
+            case FunT(as, t)     => FunT(as.map(alias), alias(t))
+            case RecT(fs)        => RecT(aliasFieldTypes(fs))
+            case VarT(fs)        => VarT(aliasFieldTypes(fs))
+            case _               => e
+        }
+
+    def aliasFieldTypes(fs : Vector[FieldType]) : Vector[FieldType] =
+        fs.map{ case FieldType(n, t) => FieldType(n, alias(t)) }
+
     val unaliasedType : Expression => Option[Expression] =
         attr {
             case e =>
                 unalias(e, tipe(e))
         }
 
-    def unalias(e : Expression, optType : Option[Expression]) : Option[Expression] =
-        optType.flatMap(t => unalias(e, t))
+    def unalias(n : ASTNode, optType : Option[Expression]) : Option[Expression] =
+        optType.flatMap(t => unalias(n, t))
 
-    def unalias(e : Expression, t : Expression) : Option[Expression] =
+    def unalias(n : ASTNode, t : Expression) : Option[Expression] =
         t match {
+            case BoolT() =>
+                Some(boolT)
+
             case Idn(IdnUse(x)) =>
-                lookup(env(e), x, UnknownEntity()) match {
+                lookup(env(n), x, UnknownEntity()) match {
                     case ValueEntity(Val(_, _, v)) if t != v =>
-                        unalias(e, v)
+                        unalias(n, v)
                     case _ =>
                         None
                 }
+
             case FunT(us, u) =>
-                unaliasFunT(e, us, u)
+                unaliasFunT(n, us, u)
+
+            case ReaderT() =>
+                Some(readerT)
+
+            case ReaderWriterT() =>
+                Some(readerWriterT)
+
             case RecT(fieldTypes) =>
-                unaliasRecT(e, fieldTypes)
+                unaliasRecT(n, fieldTypes)
+
             case VarT(fieldTypes) =>
-                unaliasVarT(e, fieldTypes)
+                unaliasVarT(n, fieldTypes)
+
+            case WriterT() =>
+                Some(writerT)
+
             case _ =>
                 Some(t)
         }
 
-    def unaliases(e : Expression, ts : Vector[Expression]) : Option[Vector[Expression]] = {
-        val us = ts.map(t => unalias(e, t))
+    def unaliases(n : ASTNode, ts : Vector[Expression]) : Option[Vector[Expression]] = {
+        val us = ts.map(t => unalias(n, t))
         if (us.forall(_.isDefined))
             Some(us.map(_.get))
         else
             None
     }
 
-    def unaliasFunT(e : Expression, ts : Vector[Expression], t : Expression) : Option[FunT] =
-        unaliases(e, ts) match {
+    def unaliasFunT(n : ASTNode, ts : Vector[Expression], t : Expression) : Option[FunT] =
+        unaliases(n, ts) match {
             case Some(us) =>
-                unalias(e, t) match {
+                unalias(n, t) match {
                     case Some(u) =>
                         Some(FunT(us, u))
                     case None =>
@@ -537,10 +635,10 @@ class SemanticAnalyser(
                 None
         }
 
-    def unaliasFieldTypes(e : Expression, fts : Vector[FieldType]) : Option[Vector[FieldType]] = {
+    def unaliasFieldTypes(n : ASTNode, fts : Vector[FieldType]) : Option[Vector[FieldType]] = {
         val is = fts.map(_.identifier)
         val ts = fts.map(_.expression)
-        unaliases(e, ts) match {
+        unaliases(n, ts) match {
             case Some(us) =>
                 Some(is.zip(us).map {
                     case (i, t) =>
@@ -551,11 +649,11 @@ class SemanticAnalyser(
         }
     }
 
-    def unaliasRecT(e : Expression, fts : Vector[FieldType]) : Option[RecT] =
-        unaliasFieldTypes(e, fts).map(RecT)
+    def unaliasRecT(n : ASTNode, fts : Vector[FieldType]) : Option[RecT] =
+        unaliasFieldTypes(n, fts).map(RecT)
 
-    def unaliasVarT(e : Expression, fts : Vector[FieldType]) : Option[VarT] =
-        unaliasFieldTypes(e, fts).map(VarT)
+    def unaliasVarT(n : ASTNode, fts : Vector[FieldType]) : Option[VarT] =
+        unaliasFieldTypes(n, fts).map(VarT)
 
     lazy val blockTipe : BlockExp => Option[Expression] =
         attr {
@@ -570,7 +668,7 @@ class SemanticAnalyser(
                 val argnum = tree.index(a) - 1
                 tipe(e) match {
                     case Some(FunT(ts, _)) if ts.length > argnum =>
-                        Some(ts(argnum))
+                        unalias(a, ts(argnum))
                     case _ =>
                         None
                 }
@@ -579,7 +677,7 @@ class SemanticAnalyser(
                 Some(TypT())
 
             case tree.parent.pair(a, Body(_, t, e)) if a eq e =>
-                Some(t)
+                unalias(e, t)
 
             case tree.parent.pair(a, Body(_, t, _)) if a eq t =>
                 Some(TypT())
@@ -590,11 +688,11 @@ class SemanticAnalyser(
             case tree.parent(_ : FunT) =>
                 Some(TypT())
 
-            case tree.parent.pair(a, Prm(i, _)) =>
+            case tree.parent.pair(a : Expression, Prm(i, _)) =>
                 val argnum = tree.index(a)
                 primitivesTypesTable.get(i) match {
                     case Some(FunT(ts, _)) if ts.length > argnum =>
-                        Some(ts(argnum))
+                        unalias(a, ts(argnum))
                     case _ =>
                         None
                 }
@@ -613,6 +711,12 @@ class SemanticAnalyser(
                 tipe(e)
             case REPLVal(Val(_, t, _)) =>
                 t
+        }
+
+    lazy val aliasedReplType : REPLInput => Option[Expression] =
+        attr {
+            case input =>
+                replType(input).map(alias)
         }
 
 }

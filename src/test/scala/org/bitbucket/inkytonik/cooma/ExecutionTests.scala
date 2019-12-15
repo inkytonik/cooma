@@ -266,7 +266,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         name = "Bob"
                     >""",
                     """< name = "Bob" >""",
-                    "< name : String> "
+                    "< name : String >"
                 ),
                 ExecTest(
                     "basic match",
@@ -315,10 +315,10 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """{
                         def f (b : Boolean) Unit =
                             b match {
-                                case false(x) => x
-                                case true(x) => x
+                                case False(x) => x
+                                case True(x) => x
                             }
-                        { a = f(< false = {} >), b = f(< true = {} >) }
+                        { a = f(< False = {} >), b = f(< True = {} >) }
                     }""",
                     "{ a = {}, b = {} }",
                     "{ a : Unit, b : Unit }"
@@ -399,26 +399,26 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<function>",
                     "(Int) Int"
                 ),
-                ExecTest(
-                    "type application",
-                    "{fun (t : Type, x : t) x}(Int, 10)",
-                    "10",
-                    "t"
-                ),
-                ExecTest(
-                    "type application at different types",
-                    """{
-                        def id(t : Type, x : t) t = x
-                        {
-                            b = id(Boolean, true),
-                            i = id(Int, 10),
-                            s = id(String, "hello"),
-                            r = id(Reader, {read = fun () "hello"})
-                        }
-                    }""",
-                    """{ b = < true = {} >, i = 10, s = "hello", r = { read = <function> } }""",
-                    "{ b : t, i : t, s : t, r : t }"
-                ),
+                // ExecTest(
+                //     "type application",
+                //     "{fun (t : Type, x : t) x}(Int, 10)",
+                //     "10",
+                //     "t"
+                // ),
+                // ExecTest(
+                //     "type application at different types",
+                //     """{
+                //         def id(t : Type, x : t) t = x
+                //         {
+                //             b = id(Boolean, true),
+                //             i = id(Int, 10),
+                //             s = id(String, "hello"),
+                //             r = id(Reader, { read = fun () "hello" })
+                //         }
+                //     }""",
+                //     """{ b = < True = {} >, i = 10, s = "hello", r = { read = <function> } }""",
+                //     "{ b : t, i : t, s : t, r : t }"
+                // ),
 
                 // Blocks
 
@@ -530,8 +530,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """{
                         def f(x : Int) Int =
                             Ints.eq(x, 0) match {
-                                case true(_)  => 20
-                                case false(_) => f(Ints.sub(x, 1))
+                                case True(_)  => 20
+                                case False(_) => f(Ints.sub(x, 1))
                             }
                         f(10)
                     }""",
@@ -543,8 +543,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """{
                         def f(s : Int, x : Int) Int =
                             Ints.eq(x, 0) match {
-                                case true(_)  => s
-                                case false(_) => f(Ints.add(s, x), Ints.sub(x, 1))
+                                case True(_)  => s
+                                case False(_) => f(Ints.add(s, x), Ints.sub(x, 1))
                             }
                         f(0, 10)
                     }""",
@@ -660,27 +660,27 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "true",
                     "true",
-                    "< true = {} >",
+                    "< True = {} >",
                     "Boolean",
                     "true"
                 ),
                 ExecTest(
                     "false",
                     "false",
-                    "< false = {} >",
+                    "< False = {} >",
                     "Boolean",
                     "false"
                 ),
                 ExecTest(
                     "not(false)",
                     "not(false)",
-                    "< true = {} >",
+                    "< True = {} >",
                     "Boolean"
                 ),
                 ExecTest(
                     "not(true)",
                     "not(true)",
-                    "< false = {} >",
+                    "< False = {} >",
                     "Boolean"
                 )
 
@@ -776,7 +776,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         def expectedBool(b : Boolean) : String =
-            s"""< ${if (b) "true" else "false"} = {} >"""
+            s"""< ${if (b) "True" else "False"} = {} >"""
 
         case class IntBinPrimTest(
             op : PrimOp,
@@ -865,7 +865,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             val primName = aTest.op.primName
             test(s"${backend.name} run: prim $primName") {
                 forAll { (l : BigInt, r : BigInt) =>
-                    runPrimTest(s"prim $primName", s"$l, $r", "< false : Unit, true : Unit >", expectedBool(aTest.func(l, r)))
+                    runPrimTest(s"prim $primName", s"$l, $r", "Boolean", expectedBool(aTest.func(l, r)))
                 }
             }
         }
@@ -895,7 +895,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             test(s"${backend.name} run: prim $primName") {
                 forAll(stringLit, stringLit) { (l : String, r : String) =>
                     whenever(isStringLit(l) && isStringLit(r)) {
-                        runPrimTest(s"prim $primName", s""""$l", "$r"""", "< false : Unit, true : Unit >", expectedBool(func(l, r)))
+                        runPrimTest(s"prim $primName", s""""$l", "$r"""", "Boolean", expectedBool(func(l, r)))
                     }
                 }
             }
@@ -1051,7 +1051,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         fun (x : Boolean) x
                         res0(true)
                     """,
-                    "res0 : (Boolean) Boolean = <function>\nres1 : Boolean = <true = {}>"
+                    "res0 : (Boolean) Boolean = <function>\nres1 : Boolean = < True = {} >"
                 ),
                 REPLTest(
                     "single evaluation (function using type alias that needs to be expanded)",
@@ -1175,19 +1175,14 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "res0 : Int = 10\nres1 : Int = 20\nres2 : Int = 30\nres2 : Int = 30"
                 ),
                 REPLTest(
-                    "built-in type",
+                    "built-in Int type",
                     "Int",
                     "res0 : Type"
                 ),
                 REPLTest(
-                    "pre-defined type",
+                    "built-in Boolean type",
                     "Boolean",
                     "Boolean : Type"
-                ),
-                REPLTest(
-                    "pre-defined value",
-                    "true",
-                    "true : Boolean = <true = {}>"
                 )
             )
 

@@ -38,15 +38,7 @@ public final class CoomaContext {
         this.config = config;
         this.config.verify();
         System.setOut(new PrintStream(env.out()));
-        this.rho = predefRho();
-    }
-
-    private Rho predefRho() {
-        Rho rho = new Rho();
-		for (Map.Entry<String, Object> entry : JavaConverters.mapAsJavaMap(Primitives.generateDynamicRuntime(truffleBackend)).entrySet()) {
-			rho = rho.extend(entry.getKey(), (RuntimeValue) entry.getValue());
-		}
-        return rho;
+        this.rho = new Rho();
     }
 
     public TruffleLanguage.Env getEnv() {

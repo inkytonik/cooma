@@ -5,9 +5,7 @@ Program(
                 Argument(
                     IdnDef(
                         "w"),
-                    Idn(
-                        IdnUse(
-                            "Writer"))))),
+                    WriterT()))),
         App(
             Sel(
                 Idn(
