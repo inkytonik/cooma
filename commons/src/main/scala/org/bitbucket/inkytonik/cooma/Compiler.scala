@@ -91,6 +91,8 @@ trait Compiler {
         }
 
         exp match {
+            case Fun(Arguments(Vector()), e) =>
+                compileHalt(e)
             case Fun(Arguments(Vector(Argument(IdnDef(a), t))), e) =>
                 compileTopArg(a, t, e)
             case Fun(Arguments(Argument(IdnDef(a), t) +: as), e) =>
