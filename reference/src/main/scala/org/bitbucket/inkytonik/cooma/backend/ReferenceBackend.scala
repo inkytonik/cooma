@@ -125,7 +125,7 @@ class ReferenceBackend(
         RecSelectP()
 
     def intBinP(op : Primitives.IntPrimBinOp) : Primitive =
-        Primitives.IntBinOpP(op)
+        Primitives.IntBinOp(op)
 
     def intRelP(op : Primitives.IntPrimRelOp) : Primitive =
         Primitives.IntRelOp(op)

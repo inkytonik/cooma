@@ -39,6 +39,7 @@ trait Compiler {
     case class PrimitiveMeta(prm : Primitive)
 
     val primitivesTable = Map(
+        "IntAbs" -> PrimitiveMeta(intBinP(ABS)),
         "IntAdd" -> PrimitiveMeta(intBinP(ADD)),
         "IntSub" -> PrimitiveMeta(intBinP(SUB)),
         "IntMul" -> PrimitiveMeta(intBinP(MUL)),
@@ -120,6 +121,9 @@ trait Compiler {
         Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
     }
 
+    def mkInt1PrimField(fieldName : String, primName : String) : Field =
+        mkPrimField(fieldName, Vector(IntT()), primName)
+
     def mkInt2PrimField(fieldName : String, primName : String) : Field =
         mkPrimField(fieldName, Vector(IntT(), IntT()), primName)
 
@@ -134,6 +138,7 @@ trait Compiler {
 
     val ints =
         Rec(Vector(
+            mkInt1PrimField("abs", "IntAbs"),
             mkInt2PrimField("add", "IntAdd"),
             mkInt2PrimField("div", "IntDiv"),
             mkInt2PrimField("mul", "IntMul"),

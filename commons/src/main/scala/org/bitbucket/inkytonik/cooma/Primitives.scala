@@ -227,9 +227,20 @@ object Primitives {
         lazy val primName = s"$prefix$camelName"
     }
 
-    sealed abstract class IntPrimBinOp extends Product with PrimOp {
-        val numArgs = 2
+    trait IntPrimOp extends PrimOp with Product {
         val prefix = "Int"
+    }
+
+    sealed abstract class IntPrimUnOp extends Product with IntPrimOp {
+        val numArgs = 1
+    }
+
+    sealed abstract class IntPrimBinOp extends Product with IntPrimOp {
+        val numArgs = 2
+    }
+
+    case object ABS extends IntPrimBinOp {
+        override val numArgs = 1
     }
     case object ADD extends IntPrimBinOp
     case object SUB extends IntPrimBinOp
@@ -237,27 +248,26 @@ object Primitives {
     case object DIV extends IntPrimBinOp
     case object POW extends IntPrimBinOp
 
-    val allIntPrimBinOps = Vector(ADD, SUB, MUL, DIV, POW)
+    val allInt1PrimBinOps = Vector(ABS)
+    val allInt2PrimBinOps = Vector(ADD, SUB, MUL, DIV, POW)
 
-    case class IntBinOpP[I <: Backend](op : IntPrimBinOp) extends IntPrimitive[I] {
+    case class IntBinOp[I <: Backend](op : IntPrimBinOp) extends IntPrimitive[I] {
         val numArgs = op.numArgs
         def show = op.primName
 
         def doRun(interp : I)(operands : Seq[BigInt]) : interp.ValueR = {
             try {
-                operands match {
-                    case Vector(l, r) =>
-                        op match {
-                            case ADD => interp.intR(l + r)
-                            case SUB => interp.intR(l - r)
-                            case MUL => interp.intR(l * r)
-                            case DIV => interp.intR(l / r)
-                            case POW =>
-                                if (r < 0)
-                                    interp.errR(s"$show: illegal negative power $r given")
-                                else
-                                    interp.intR(l.pow(r.toInt))
-                        }
+                (op, operands) match {
+                    case (ABS, Vector(i))    => interp.intR(i.abs)
+                    case (ADD, Vector(l, r)) => interp.intR(l + r)
+                    case (DIV, Vector(l, r)) => interp.intR(l / r)
+                    case (MUL, Vector(l, r)) => interp.intR(l * r)
+                    case (POW, Vector(l, r)) =>
+                        if (r < 0)
+                            interp.errR(s"$show: illegal negative power $r given")
+                        else
+                            interp.intR(l.pow(r.toInt))
+                    case (SUB, Vector(l, r)) => interp.intR(l - r)
                     case _ =>
                         sys.error(s"$show $op: unexpectedly got operands $operands")
                 }
@@ -268,9 +278,8 @@ object Primitives {
         }
     }
 
-    sealed abstract class IntPrimRelOp extends Product with PrimOp {
+    sealed abstract class IntPrimRelOp extends Product with IntPrimOp {
         val numArgs = 2
-        val prefix = "Int"
     }
     case object EQ extends IntPrimRelOp
     case object NEQ extends IntPrimRelOp

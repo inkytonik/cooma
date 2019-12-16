@@ -1129,7 +1129,35 @@ class SemanticTests extends Tests {
                    |^
                    |"""
             )
-        ) ++ Primitives.allIntPrimBinOps.flatMap(op => {
+        ) ++ Primitives.allInt1PrimBinOps.flatMap(op => {
+                val primOp = op.primName
+                Vector(
+                    SemanticTest(
+                        s"Wrong number of arguments for $primOp primitive (no args)",
+                        s"prim $primOp()",
+                        s"""|1:1:error: primitive $primOp expects 1 arguments got 0
+                            |prim $primOp()
+                            |^
+                            |"""
+                    ),
+                    SemanticTest(
+                        s"Wrong number of arguments for $primOp primitive (more)",
+                        s"prim $primOp(2,2)",
+                        s"""|1:1:error: primitive $primOp expects 1 arguments got 2
+                           |prim $primOp(2,2)
+                           |^
+                           |"""
+                    ),
+                    SemanticTest(
+                        s"Wrong argument type for $primOp primitive",
+                        s"""prim $primOp(\"2\")""",
+                        s"""|1:13:error: expected Int, got "2" of type String
+                           |prim $primOp("2")
+                           |            ^
+                           |"""
+                    )
+                )
+            }) ++ Primitives.allInt2PrimBinOps.flatMap(op => {
                 val primOp = op.primName
                 Vector(
                     SemanticTest(

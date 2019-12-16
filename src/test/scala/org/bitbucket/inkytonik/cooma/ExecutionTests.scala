@@ -684,7 +684,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Boolean"
                 )
 
-            ) ++ allIntPrimBinOps.flatMap(op => {
+            ) ++ allInt1PrimBinOps.flatMap(op => {
+                    Vector(
+                        ExecTest(
+                            s"Pre-defined Ints.${op.name} has the correct type",
+                            s"Ints.${op.name}",
+                            "<function>",
+                            "(Int) Int"
+                        )
+                    )
+                }) ++ allInt2PrimBinOps.flatMap(op => {
                     Vector(
                         ExecTest(
                             s"Pre-defined Ints.${op.name} has the correct type",
@@ -778,19 +787,38 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         def expectedBool(b : Boolean) : String =
             s"""< ${if (b) "True" else "False"} = {} >"""
 
-        case class IntBinPrimTest(
+        case class Int1PrimTest(
+            op : PrimOp,
+            func : (BigInt) => BigInt
+        )
+
+        case class Int2PrimTest(
             op : PrimOp,
             func : (BigInt, BigInt) => BigInt
         )
 
-        val intBinPrimTests =
+        val int1PrimTests =
             Vector(
-                IntBinPrimTest(ADD, _ + _),
-                IntBinPrimTest(MUL, _ * _),
-                IntBinPrimTest(SUB, _ - _)
+                Int1PrimTest(ABS, _.abs),
             )
 
-        for (aTest <- intBinPrimTests) {
+        for (aTest <- int1PrimTests) {
+            val primName = aTest.op.primName
+            test(s"${backend.name} run: prim $primName") {
+                forAll { (i: BigInt) =>
+                    runPrimTest(s"prim $primName", s"$i", "Int", s"${aTest.func(i)}")
+                }
+            }
+        }
+
+        val int2PrimTests =
+            Vector(
+                Int2PrimTest(ADD, _ + _),
+                Int2PrimTest(MUL, _ * _),
+                Int2PrimTest(SUB, _ - _)
+            )
+
+        for (aTest <- int2PrimTests) {
             val primName = aTest.op.primName
             test(s"${backend.name} run: prim $primName") {
                 forAll { (l : BigInt, r : BigInt) =>

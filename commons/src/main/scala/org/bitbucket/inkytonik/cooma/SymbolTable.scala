@@ -71,6 +71,7 @@ object SymbolTable extends Environments[CoomaEntity] {
     }
 
     val primitivesTypesTable = Map(
+        "IntAbs" -> FunT(Vector(IntT()), IntT()),
         "IntAdd" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntSub" -> FunT(Vector(IntT(), IntT()), IntT()),
         "IntMul" -> FunT(Vector(IntT(), IntT()), IntT()),
@@ -82,8 +83,6 @@ object SymbolTable extends Environments[CoomaEntity] {
         "IntGte" -> FunT(Vector(IntT(), IntT()), BoolT()),
         "IntLt" -> FunT(Vector(IntT(), IntT()), BoolT()),
         "IntLte" -> FunT(Vector(IntT(), IntT()), BoolT()),
-        "IntNeg" -> FunT(Vector(IntT()), IntT()),
-        "IntAbs" -> FunT(Vector(IntT()), IntT()),
         "StrLength" -> FunT(Vector(StrT()), IntT()),
         "StrConcat" -> FunT(Vector(StrT(), StrT()), StrT()),
         "StrEquals" -> FunT(Vector(StrT(), StrT()), BoolT()),

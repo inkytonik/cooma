@@ -319,7 +319,10 @@ class SemanticAnalyser(
         r1names.intersect(r2names)
     }
 
-    def mkIntPrimType(retType : Expression) : Expression =
+    def mkIntUnPrimType(retType : Expression) : Expression =
+        FunT(Vector(IntT()), retType)
+
+    def mkIntBinPrimType(retType : Expression) : Expression =
         FunT(Vector(IntT(), IntT()), retType)
 
     lazy val tipe : Expression => Option[Expression] =
@@ -372,17 +375,18 @@ class SemanticAnalyser(
 
             case Ints() =>
                 Some(RecT(Vector(
-                    FieldType("add", mkIntPrimType(IntT())),
-                    FieldType("div", mkIntPrimType(IntT())),
-                    FieldType("mul", mkIntPrimType(IntT())),
-                    FieldType("pow", mkIntPrimType(IntT())),
-                    FieldType("sub", mkIntPrimType(IntT())),
-                    FieldType("eq", mkIntPrimType(BoolT())),
-                    FieldType("neq", mkIntPrimType(BoolT())),
-                    FieldType("lt", mkIntPrimType(BoolT())),
-                    FieldType("lte", mkIntPrimType(BoolT())),
-                    FieldType("gt", mkIntPrimType(BoolT())),
-                    FieldType("gte", mkIntPrimType(BoolT()))
+                    FieldType("abs", mkIntUnPrimType(IntT())),
+                    FieldType("add", mkIntBinPrimType(IntT())),
+                    FieldType("div", mkIntBinPrimType(IntT())),
+                    FieldType("mul", mkIntBinPrimType(IntT())),
+                    FieldType("pow", mkIntBinPrimType(IntT())),
+                    FieldType("sub", mkIntBinPrimType(IntT())),
+                    FieldType("eq", mkIntBinPrimType(BoolT())),
+                    FieldType("neq", mkIntBinPrimType(BoolT())),
+                    FieldType("lt", mkIntBinPrimType(BoolT())),
+                    FieldType("lte", mkIntBinPrimType(BoolT())),
+                    FieldType("gt", mkIntBinPrimType(BoolT())),
+                    FieldType("gte", mkIntBinPrimType(BoolT()))
                 )))
 
             case IntT() =>
