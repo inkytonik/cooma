@@ -50,8 +50,8 @@ object SymbolTable extends Environments[CoomaEntity] {
         val desc = "function"
     }
 
-    case class ValueEntity(decl : Val) extends CoomaOkEntity {
-        val desc = "value"
+    case class LetEntity(decl : Let) extends CoomaOkEntity {
+        val desc = "let"
     }
 
     /**

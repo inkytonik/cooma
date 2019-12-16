@@ -283,13 +283,13 @@ trait Compiler {
 
     def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
         be match {
-            case LetDef(ds, be2) =>
+            case BlkDef(ds, be2) =>
                 letF(
                     ds.defs.map(compileDef),
                     compileBlockExp(be2, kappa)
                 )
 
-            case LetVal(Val(IdnDef(x), _, e), be2) =>
+            case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
                 val j = fresh("j")
                 letC(j, x, compileBlockExp(be2, kappa),
                     tailCompile(e, j))
@@ -469,13 +469,13 @@ trait Compiler {
 
     def tailCompileBlockExp(be : BlockExp, k : String) : Term =
         be match {
-            case LetDef(ds, be2) =>
+            case BlkDef(ds, be2) =>
                 letF(
                     ds.defs.map(compileDef),
                     tailCompileBlockExp(be2, k)
                 )
 
-            case LetVal(Val(IdnDef(x), _, e), be2) =>
+            case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
                 val j = fresh("j")
                 letC(j, x, tailCompileBlockExp(be2, k),
                     tailCompile(e, j))

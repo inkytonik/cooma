@@ -57,8 +57,8 @@ FieldUse =
   Identifier.
 
 BlockExp =
-    Defs BlockExp   {LetDef}
-  | Val BlockExp    {LetVal}
+    Defs BlockExp   {BlkDef}
+  | Let BlockExp    {BlkLet}
   | Expression      {Return}.
 
 Defs =
@@ -70,8 +70,12 @@ Def =
 Body =
   '(' Arguments ")" Expression sp '=' nestnl (Expression).
 
-Val =
-  "val" IdnDef (":" Expression)? sp "=" Expression \n.
+Let =
+  LetKind IdnDef (":" Expression)? sp "=" Expression \n.
+
+LetKind =
+    "type" {Type}
+  | "val" {Val}.
 
 FieldType =
   \n Identifier sp ":" Expression.
@@ -114,4 +118,4 @@ REPLInput =
 REPLEntry : REPLInput =
     Expression  {REPLExp}
   | Def         {REPLDef}
-  | Val         {REPLVal}.
+  | Let         {REPLLet}.

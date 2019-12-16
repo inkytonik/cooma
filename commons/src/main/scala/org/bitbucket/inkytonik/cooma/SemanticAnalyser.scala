@@ -209,9 +209,9 @@ class SemanticAnalyser(
     object Scope {
         def unapply(n : ASTNode) : Boolean =
             n match {
-                case _ : Body | _ : Case | _ : Fun | _ : LetDef |
-                    _ : LetVal | _ : REPLDef | _ : REPLExp |
-                    _ : REPLVal =>
+                case _ : Body | _ : Case | _ : Fun | _ : BlkDef |
+                    _ : BlkLet | _ : REPLDef | _ : REPLExp |
+                    _ : REPLLet =>
                     true
                 case _ =>
                     false
@@ -253,8 +253,8 @@ class SemanticAnalyser(
         case tree.parent.pair(n @ IdnDef(i), d : Def) if !isWildcard(i) =>
             defineIfNew(out(n), i, MultipleEntity(), FunctionEntity(d))
 
-        case n @ Val(IdnDef(i), _, _) if !isWildcard(i) =>
-            defineIfNew(out(n), i, MultipleEntity(), ValueEntity(n))
+        case n @ Let(_, IdnDef(i), _, _) if !isWildcard(i) =>
+            defineIfNew(out(n), i, MultipleEntity(), LetEntity(n))
     }
 
     /**
@@ -271,8 +271,8 @@ class SemanticAnalyser(
 
     lazy val blockEnv : BlockExp => Environment =
         attr {
-            case LetDef(_, b) => blockEnv(b)
-            case LetVal(_, b) => blockEnv(b)
+            case BlkDef(_, b) => blockEnv(b)
+            case BlkLet(_, b) => blockEnv(b)
             case Return(e)    => env(e)
         }
 
@@ -508,9 +508,9 @@ class SemanticAnalyser(
                 tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
                 unaliasFunT(e, as.map(_.expression), t)
-            case ValueEntity(Val(i, None, e)) =>
+            case LetEntity(Let(_, i, None, e)) =>
                 tipe(e)
-            case ValueEntity(Val(_, t, e)) =>
+            case LetEntity(Let(_, _, t, e)) =>
                 unalias(e, t)
             case _ =>
                 None
@@ -586,7 +586,7 @@ class SemanticAnalyser(
 
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {
-                    case ValueEntity(Val(_, _, v)) if t != v =>
+                    case LetEntity(Let(_, _, _, v)) if t != v =>
                         unalias(n, v)
                     case _ =>
                         None
@@ -657,8 +657,8 @@ class SemanticAnalyser(
 
     lazy val blockTipe : BlockExp => Option[Expression] =
         attr {
-            case LetDef(_, b) => blockTipe(b)
-            case LetVal(_, b) => blockTipe(b)
+            case BlkDef(_, b) => blockTipe(b)
+            case BlkLet(_, b) => blockTipe(b)
             case Return(e)    => tipe(e)
         }
 
@@ -707,9 +707,9 @@ class SemanticAnalyser(
                 tipe(e)
             case REPLDef(Def(_, Body(Arguments(as), t, e))) =>
                 Some(FunT(as.map(_.expression), t))
-            case REPLVal(Val(_, None, e)) =>
+            case REPLLet(Let(_, _, None, e)) =>
                 tipe(e)
-            case REPLVal(Val(_, t, _)) =>
+            case REPLLet(Let(_, _, t, _)) =>
                 t
         }
 

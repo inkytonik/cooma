@@ -115,10 +115,10 @@ trait REPL extends REPLBase[Config] {
         }
     }
 
-    def defineVal(i : String, t : Expression, e : Expression) : REPLVal = {
-        val v = Val(IdnDef(i), Some(t), e)
-        currentStaticEnv = define(enter(currentStaticEnv), i, ValueEntity(v))
-        REPLVal(v)
+    def defineLet(i : String, t : Expression, e : Expression) : REPLLet = {
+        val v = Let(Val(), IdnDef(i), Some(t), e)
+        currentStaticEnv = define(enter(currentStaticEnv), i, LetEntity(v))
+        REPLLet(v)
     }
 
     object AlreadyBoundIdn {
@@ -145,7 +145,7 @@ trait REPL extends REPLBase[Config] {
                 val input2 =
                     input match {
                         case REPLDef(Def(IdnDef(i), Body(as, t, e))) =>
-                            defineVal(i, aliasedInputType, Fun(as, e))
+                            defineLet(i, aliasedInputType, Fun(as, e))
 
                         case REPLExp(AlreadyBoundIdn()) =>
                             input
@@ -153,13 +153,13 @@ trait REPL extends REPLBase[Config] {
                         case REPLExp(e) =>
                             val i = s"res$nResults"
                             nResults = nResults + 1
-                            defineVal(i, aliasedInputType, e)
+                            defineLet(i, aliasedInputType, e)
 
-                        case REPLVal(Val(IdnDef(i), None, e)) =>
-                            defineVal(i, aliasedInputType, e)
+                        case REPLLet(Let(_, IdnDef(i), None, e)) =>
+                            defineLet(i, aliasedInputType, e)
 
-                        case REPLVal(Val(IdnDef(i), Some(t), e)) =>
-                            defineVal(i, t, e)
+                        case REPLLet(Let(_, IdnDef(i), Some(t), e)) =>
+                            defineLet(i, t, e)
                     }
                 Right((input2, optTypeValue, aliasedInputType))
 
@@ -180,8 +180,8 @@ trait REPL extends REPLBase[Config] {
                 processDef(i, fd, optTypeValue, aliasedType, config)
             case REPLExp(e @ AlreadyBoundIdn()) =>
                 processIdn(show(input), e, optTypeValue, aliasedType, config)
-            case REPLVal(vd @ Val(IdnDef(i), _, e)) =>
-                processVal(i, vd, optTypeValue, aliasedType, config)
+            case REPLLet(vd @ Let(_, IdnDef(i), _, e)) =>
+                processLet(i, vd, optTypeValue, aliasedType, config)
             case _ =>
                 sys.error(s"$input not supported for the moment")
         }
@@ -189,8 +189,8 @@ trait REPL extends REPLBase[Config] {
     /**
      * Process a user-entered value binding.
      */
-    def processVal(i : String, vd : Val, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
-        val program = Program(Blk(LetVal(vd, Return(Idn(IdnUse(i))))))
+    def processLet(i : String, ld : Let, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
+        val program = Program(Blk(BlkLet(ld, Return(Idn(IdnUse(i))))))
         process(program, i, optTypeValue, aliasedType, config)
     }
 
@@ -198,7 +198,7 @@ trait REPL extends REPLBase[Config] {
      * Process a user-entered function definition binding.
      */
     def processDef(i : String, fd : Def, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
-        val program = Program(Blk(LetDef(Defs(Vector(fd)), Return(Idn(IdnUse(i))))))
+        val program = Program(Blk(BlkDef(Defs(Vector(fd)), Return(Idn(IdnUse(i))))))
         process(program, i, optTypeValue, aliasedType, config)
     }
 

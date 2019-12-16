@@ -69,7 +69,7 @@ trait Server {
                     toDoc(c)
                 case f : Field =>
                     toDoc(f)
-                case v : Val =>
+                case v : Let =>
                     toDoc(v)
                 case _ =>
                     emptyDoc

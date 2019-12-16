@@ -1,14 +1,16 @@
 Program(
     Blk(
-        LetVal(
-            Val(
+        BlkLet(
+            Let(
+                Val(),
                 IdnDef(
                     "x"),
                 None,
                 Num(
                     10)),
-            LetVal(
-                Val(
+            BlkLet(
+                Let(
+                    Val(),
                     IdnDef(
                         "y"),
                     None,

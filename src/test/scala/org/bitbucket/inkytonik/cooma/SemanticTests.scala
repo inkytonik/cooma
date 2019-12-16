@@ -731,24 +731,24 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 "alias of simple type as argument",
-                "{ val Foo = Int {fun (x : Foo) 0}(1) }",
+                "{ type Foo = Int {fun (x : Foo) 0}(1) }",
                 ""
             ),
             SemanticTest(
                 "alias of simple type as return type",
-                "{ val Foo = Int def f (x : Int) Foo = 0 f(1) }",
+                "{ type Foo = Int def f (x : Int) Foo = 0 f(1) }",
                 ""
             ),
             SemanticTest(
                 "alias of record type",
-                "{ val Foo = { x : Int, y : String } fun (f : Foo) f.x }",
+                "{ type Foo = { x : Int, y : String } fun (f : Foo) f.x }",
                 ""
             ),
             SemanticTest(
                 "bad concat of aliased record types",
                 """{
-                  |   val Foo = { x : Int, y : String }
-                  |   val Bar = { x : Int }
+                  |   type Foo = { x : Int, y : String }
+                  |   type Bar = { x : Int }
                   |   fun (f : Foo, b : Bar) f & b
                   |}""",
                 """|4:27:error: record concatenation has overlapping field(s) x
@@ -758,19 +758,19 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "alias of function type",
-                "{ val Foo = (Int) String fun (f : Foo) f(0) }",
+                "{ type Foo = (Int) String fun (f : Foo) f(0) }",
                 ""
             ),
             SemanticTest(
                 "alias of alias of simple type",
-                "{ val Foo = Int val Bar = Foo {fun (x : Bar) 0}(1) }",
+                "{ type Foo = Int val Bar = Foo {fun (x : Bar) 0}(1) }",
                 ""
             ),
             SemanticTest(
                 "alias of record type of alias",
                 """{
-                      val Foo = Int
-                      val Bar = { f : Foo }
+                      type Foo = Int
+                      type Bar = { f : Foo }
                       def m (x : Bar) Int = x.f
                       0
                    }""",
@@ -779,8 +779,8 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "argument alias of record type with nested alias",
                 """{
-                      val Foo = Int
-                      val Bar = { f : (Foo) Int }
+                      type Foo = Int
+                      type Bar = { f : (Foo) Int }
                       def m (x : Bar) Int = x.f(1)
                       0
                    }""",
@@ -789,9 +789,9 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "return alias of variant type with nested alias",
                 """{
-                      val Foo = Int
-                      val Ble = { a : Int }
-                      val Bar = <f : (Foo) Ble>
+                      type Foo = Int
+                      type Ble = { a : Int }
+                      type Bar = <f : (Foo) Ble>
                       def m (x : Int) Bar =
                          <f = fun (y : Foo) {a = 3}>
                       0
@@ -801,7 +801,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "ok match alias of variant type",
                 """{
-                      val Foo = <f : Unit>
+                      type Foo = <f : Unit>
                       def m (x : Foo) Int =
                          x match { case f(a) => 10 }
                       0
@@ -811,7 +811,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad match alias of variant type",
                 """{
-                  |   val Foo = <f : Unit>
+                  |   type Foo = <f : Unit>
                   |   def m (x : Foo) Int =
                   |     x match { case g(a) => 10 }
                   |   0
@@ -824,8 +824,8 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "ok aliased case branches",
                 """{
-                      val Foo = Int
-                      val Bar = Int
+                      type Foo = Int
+                      type Bar = Int
                       def m (v : <a : Int, b : Int>, x : Foo, y : Bar) Int =
                         v match { case a(c) => x case b(d) => y }
                       0
@@ -835,8 +835,8 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad aliased case branches",
                 """{
-                  |   val Foo = Int
-                  |   val Bar = String
+                  |   type Foo = Int
+                  |   type Bar = String
                   |   def m (v : <a : Int, b : Int>, x : Foo, y : Bar) Int =
                   |      v match { case a(c) => x case b(d) => y }
                   |   0
@@ -852,8 +852,8 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "alias of function type of alias",
                 """{
-                      val Foo = Int
-                      val Bar = (Foo) Foo
+                      type Foo = Int
+                      type Bar = (Foo) Foo
                       def m (x : Bar) Int = x(0)
                       0
                    }""",
@@ -861,18 +861,18 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "alias of not-declared type",
-                "{ val Foo = Bar 0 }",
-                """|1:13:error: Bar is not declared
-                   |{ val Foo = Bar 0 }
-                   |            ^
+                "{ type Foo = Bar 0 }",
+                """|1:14:error: Bar is not declared
+                   |{ type Foo = Bar 0 }
+                   |             ^
                    |"""
             ),
             SemanticTest(
                 "alias of self",
-                "{ val Foo = Foo 0 }",
-                """|1:13:error: Foo is not declared
-                   |{ val Foo = Foo 0 }
-                   |            ^
+                "{ type Foo = Foo 0 }",
+                """|1:14:error: Foo is not declared
+                   |{ type Foo = Foo 0 }
+                   |             ^
                    |"""
             ),
 

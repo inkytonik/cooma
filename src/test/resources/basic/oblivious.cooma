@@ -1,7 +1,7 @@
 {
     // predef: val Reader = {read : () => String}
-    val Reader2 = {read1 : () String, read2 : () String}
-    val Chooser = {choose : (Boolean) Reader}
+    type Reader2 = {read1 : () String, read2 : () String}
+    type Chooser = {choose : (Boolean) Reader}
 
     def alice () Reader2 = {
         read1 = fun () "read1",
