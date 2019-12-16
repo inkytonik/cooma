@@ -551,12 +551,12 @@ class SemanticAnalyser(
     val readerWriterT : Expression =
         RecT(Vector(
             FieldType("read", FunT(Vector(), StrT())),
-            FieldType("write", FunT(Vector(StrT()), UniT())),
+            FieldType("write", FunT(Vector(StrT()), UniT()))
         ))
 
     val writerT : Expression =
         RecT(Vector(
-            FieldType("write", FunT(Vector(StrT()), UniT())),
+            FieldType("write", FunT(Vector(StrT()), UniT()))
         ))
 
     def alias(e : Expression) : Expression =
@@ -572,7 +572,7 @@ class SemanticAnalyser(
         }
 
     def aliasFieldTypes(fs : Vector[FieldType]) : Vector[FieldType] =
-        fs.map{ case FieldType(n, t) => FieldType(n, alias(t)) }
+        fs.map { case FieldType(n, t) => FieldType(n, alias(t)) }
 
     val unaliasedType : Expression => Option[Expression] =
         attr {
