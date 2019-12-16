@@ -1,0 +1,4 @@
+arguments:
+  r: a reader
+result type:
+  String

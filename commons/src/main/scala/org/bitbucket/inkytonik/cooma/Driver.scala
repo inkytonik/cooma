@@ -16,6 +16,7 @@ import org.bitbucket.inkytonik.kiama.util.CompilerBase
 abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, pretty, show}
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.{Messages, noMessages}
@@ -79,15 +80,60 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 // Do nothing
             }
             analysers(source) = analyser
-            if (config.typePrint())
-                analyser.tipe(program.expression) match {
-                    case Some(t) =>
-                        config.output().emitln(show(analyser.alias(t)))
-                    case None =>
+            analyser.tipe(program.expression) match {
+                case Some(tipe) =>
+                    if (config.typePrint())
+                        config.output().emitln(show(analyser.alias(tipe)))
+                    if (analyser.errors.isEmpty && config.usage())
+                        printUsage(program.expression, tipe, config)
+                case None =>
+                    if (config.typePrint())
                         config.output().emitln("unknown type")
-                }
+            }
             analyser.errors
         }
+
+    def printUsage(expression : Expression, tipe : Expression, config : Config) : Unit = {
+
+        def printArgument(argument : Argument) : Unit = {
+            config.output().emit(s"  ${argument.idnDef.identifier}: ")
+            argument.expression match {
+                case ReaderT() =>
+                    config.output().emit("a reader")
+                case ReaderWriterT() =>
+                    config.output().emit("a reader writer")
+                case StrT() =>
+                    config.output().emit("a string")
+                case WriterT() =>
+                    config.output().emit("a writer")
+                case tipe =>
+                    config.output().emit(s"unsupported argument type ${show(tipe)}")
+            }
+            config.output().emitln("")
+        }
+
+        def printArguments(arguments : Arguments) : Unit =
+            arguments.optArguments match {
+                case Vector() =>
+                    config.output().emitln("  none")
+                case arguments =>
+                    arguments.map(printArgument)
+            }
+
+        def printResultType(resultType : Expression) : Unit =
+            config.output().emitln(s"result type:\n  ${show(resultType)}")
+
+        config.output().emitln("arguments:")
+        (expression, tipe) match {
+            case (Fun(arguments, _), FunT(_, resultType)) =>
+                printArguments(arguments)
+                printResultType(resultType)
+            case _ =>
+                printArguments(Arguments(Vector()))
+                printResultType(tipe)
+        }
+
+    }
 
     override def format(prog : Program) : Document =
         CoomaParserPrettyPrinter.format(prog, 5)

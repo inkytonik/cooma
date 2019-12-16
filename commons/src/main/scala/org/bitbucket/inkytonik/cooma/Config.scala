@@ -42,4 +42,8 @@ class Config(args : Seq[String]) extends REPLConfig(args) {
         descr = "Print the program type in compiler mode (default: false)",
         default = Some(false))
 
+    lazy val usage = opt[Boolean]("usage", short = 'u',
+        descr = "Print the program's usage message (default: false)",
+        default = Some(false))
+
 }

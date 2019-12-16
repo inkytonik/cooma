@@ -58,7 +58,8 @@ class ReferenceDriver extends Driver {
                 config.filenames()
             else
                 config.filenames().tail
-        system.interpret(term, args, config)
+        if (!config.usage())
+            system.interpret(term, args, config)
     }
 
 }

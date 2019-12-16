@@ -23,8 +23,10 @@ public class TruffleDriver extends Driver {
 
     @Override
     public void process(Source source, CoomaParserSyntax.Program program, Config config) {
-        TruffleCompiler compiler = new TruffleCompiler(config);
-        setCurrentCompiledNode(compiler.compileCommand(program));
+        if (!config.usage().isSupplied()) {
+            TruffleCompiler compiler = new TruffleCompiler(config);
+            setCurrentCompiledNode(compiler.compileCommand(program));
+        }
     }
 
     public CoomaTermNode getCurrentCompiledNode() {
