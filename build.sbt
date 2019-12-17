@@ -111,7 +111,7 @@ lazy val root = (project in file("."))
 		mainClass in Compile := (mainClass in Compile in reference).value,
 		libraryDependencies ++= Seq(
 			"org.scalatest" %% "scalatest" % "3.1.0" % "test",
-			"org.scalatestplus" %% "scalatestplus-scalacheck" % "3.1.0.0-RC2" % "test",
+			"org.scalatestplus" %% "scalacheck-1-14" % "3.1.0.0" % "test",
 			"org.scalacheck" %% "scalacheck" % "1.14.3" % "test",
 			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2"
 		) ++ kiamaDependencies
