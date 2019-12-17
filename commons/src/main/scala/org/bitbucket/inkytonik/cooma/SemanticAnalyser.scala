@@ -41,9 +41,6 @@ class SemanticAnalyser(
                         noMessages
                 }
 
-            case u @ IdnUse(i) if entity(u) == UnknownEntity() =>
-                error(u, s"$i is not declared")
-
             case c : Case =>
                 checkCase(c)
 
@@ -54,12 +51,15 @@ class SemanticAnalyser(
                 error(f, s"duplicate type field $i")
 
             case e : Expression =>
-                checkExpressionType(e) ++
+                checkMainProgram(e) ++
+                    checkExpressionType(e) ++
                     check(e) {
                         case App(f, as) =>
                             checkApplication(f, as)
                         case a @ Cat(l, r) =>
                             checkConcat(a, l, r)
+                        case Idn(u @ IdnUse(i)) if entity(u) == UnknownEntity() =>
+                            error(u, s"$i is not declared")
                         case Mat(e, cs) =>
                             checkMatch(e, cs)
                         case Sel(e, f) =>
@@ -205,6 +205,27 @@ class SemanticAnalyser(
                 noMessages
         }
     }
+
+    def checkMainProgram(e : Expression) : Messages =
+        e match {
+            case tree.parent(_ : Program) =>
+                e match {
+                    case Fun(Arguments(as), _) =>
+                        as.flatMap(checkMainArgument)
+                    case _ =>
+                        noMessages
+                }
+            case _ =>
+                noMessages
+        }
+
+    def checkMainArgument(arg : Argument) : Messages =
+        arg.expression match {
+            case ReaderT() | ReaderWriterT() | StrT() | WriterT() =>
+                noMessages
+            case _ =>
+                error(arg.expression, "illegal main program argument type")
+        }
 
     object Scope {
         def unapply(n : ASTNode) : Boolean =

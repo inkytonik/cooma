@@ -36,21 +36,45 @@ class SemanticTests extends Tests {
             // Definitions
 
             SemanticTest(
+                "illegal main program argument type (single)",
+                "fun (x : Int) x",
+                """|1:10:error: illegal main program argument type
+                   |fun (x : Int) x
+                   |         ^
+                   |"""
+            ),
+            SemanticTest(
+                "illegal main program argument type (multiple)",
+                "fun (x : Boolean, y : Int) x",
+                """|1:10:error: illegal main program argument type
+                   |fun (x : Boolean, y : Int) x
+                   |         ^
+                   |1:23:error: illegal main program argument type
+                   |fun (x : Boolean, y : Int) x
+                   |                      ^
+                   |"""
+            ),
+            SemanticTest(
+                "ok main program argument type (indirect)",
+                "{fun (x : Int) fun (_ : Int) x}(0)",
+                ""
+            ),
+            SemanticTest(
                 "distinct argument names (fun)",
-                "fun (x : Int, y : Int) x",
+                "{fun (x : Int, y : Int) x}(0, 0)",
                 ""
             ),
             SemanticTest(
                 "duplicated underscore argument names (fun)",
-                "fun (_ : Int, _ : Int) 3",
+                "{fun (_ : Int, _ : Int) 3}(0, 0)",
                 ""
             ),
             SemanticTest(
                 "duplicated argument name (fun)",
-                "fun (x : Int, x : Int) x",
-                """|1:15:error: re-declaration of x
-                   |fun (x : Int, x : Int) x
-                   |              ^
+                "{fun (x : Int, x : Int) x}(0, 0)",
+                """|1:16:error: re-declaration of x
+                   |{fun (x : Int, x : Int) x}(0, 0)
+                   |               ^
                    |"""
             ),
             SemanticTest(
@@ -71,29 +95,35 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "duplicated variant name in variant type",
-                "fun (a : < x : Int, x : Int, y : Int >) a",
-                """|1:12:error: duplicate type field x
-                   |fun (a : < x : Int, x : Int, y : Int >) a
-                   |           ^
-                   |1:21:error: duplicate type field x
-                   |fun (a : < x : Int, x : Int, y : Int >) a
-                   |                    ^
+                "{fun (a : < x : Int, x : Int, y : Int >) a}(<x = 3>)",
+                """|1:13:error: duplicate type field x
+                   |{fun (a : < x : Int, x : Int, y : Int >) a}(<x = 3>)
+                   |            ^
+                   |1:22:error: duplicate type field x
+                   |{fun (a : < x : Int, x : Int, y : Int >) a}(<x = 3>)
+                   |                     ^
                    |"""
             ),
             SemanticTest(
                 "distinct type fields",
-                "fun (a : { x : Int, y : Int }) 0",
+                "{fun (a : { x : Int, y : Int }) 0}({x = 1, y = 2})",
                 ""
             ),
             SemanticTest(
                 "duplicate type fields",
-                "fun (a : { x : Int, x : Int }) 0",
-                """|1:12:error: duplicate type field x
-                   |fun (a : { x : Int, x : Int }) 0
-                   |           ^
-                   |1:21:error: duplicate type field x
-                   |fun (a : { x : Int, x : Int }) 0
-                   |                    ^
+                "{fun (a : { x : Int, x : Int }) 0}({x = 1, x = 2})",
+                """|1:13:error: duplicate type field x
+                   |{fun (a : { x : Int, x : Int }) 0}({x = 1, x = 2})
+                   |            ^
+                   |1:22:error: duplicate type field x
+                   |{fun (a : { x : Int, x : Int }) 0}({x = 1, x = 2})
+                   |                     ^
+                   |1:37:error: duplicate field x
+                   |{fun (a : { x : Int, x : Int }) 0}({x = 1, x = 2})
+                   |                                    ^
+                   |1:44:error: duplicate field x
+                   |{fun (a : { x : Int, x : Int }) 0}({x = 1, x = 2})
+                   |                                           ^
                    |"""
             ),
             SemanticTest(
@@ -161,10 +191,10 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "underscore argument not usable (fun)",
-                "fun (_ : Int) _",
-                """|1:15:error: _ is not declared
-                   |fun (_ : Int) _
-                   |              ^
+                "{fun (_ : Int) _}(0)",
+                """|1:16:error: _ is not declared
+                   |{fun (_ : Int) _}(0)
+                   |               ^
                    |"""
             ),
             SemanticTest(
@@ -235,39 +265,39 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "declared argument name",
-                "fun (x : Int) x",
+                "{fun (x : Int) x}(0)",
                 ""
             ),
             SemanticTest(
                 "argument name not in argument type scope",
-                "fun (x : x) 0",
-                """|1:10:error: x is not declared
-                   |fun (x : x) 0
-                   |         ^
+                "{fun (x : x) 0}(0)",
+                """|1:11:error: x is not declared
+                   |{fun (x : x) 0}(0)
+                   |          ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use in no argument function",
-                "fun () x",
-                """|1:8:error: x is not declared
-                   |fun () x
-                   |       ^
+                "{fun () x}()",
+                """|1:9:error: x is not declared
+                   |{fun () x}()
+                   |        ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use in argument function",
-                "fun (x : Int) y",
-                """|1:15:error: y is not declared
-                   |fun (x : Int) y
-                   |              ^
+                "{fun (x : Int) y}(0)",
+                """|1:16:error: y is not declared
+                   |{fun (x : Int) y}(0)
+                   |               ^
                    |"""
             ),
             SemanticTest(
                 "not-declared use in nested expression",
-                "fun (x : { a : Int }) x & y",
-                """|1:27:error: y is not declared
-                   |fun (x : { a : Int }) x & y
-                   |                          ^
+                "{fun (x : { a : Int }) x & y}({a = 1})",
+                """|1:28:error: y is not declared
+                   |{fun (x : { a : Int }) x & y}({a = 1})
+                   |                           ^
                    |"""
             ),
             SemanticTest(
@@ -317,10 +347,10 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "not-declared use as type name in function",
-                "fun (x : Foo) 0",
-                """|1:10:error: Foo is not declared
-                   |fun (x : Foo) 0
-                   |         ^
+                "{fun (x : Foo) 0}(0)",
+                """|1:11:error: Foo is not declared
+                   |{fun (x : Foo) 0}(0)
+                   |          ^
                    |"""
             ),
             SemanticTest(
@@ -444,8 +474,8 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
-                "boolean is a variant with False and True fields",
-                "fun (b : Boolean) b match { case False(x) => 0 case True(x) => 1}",
+                "Boolean is a variant with False and True fields",
+                "{fun (b : Boolean) b match { case False(x) => 0 case True(x) => 1}}(true)",
                 ""
             ),
             SemanticTest(
@@ -470,7 +500,7 @@ class SemanticTests extends Tests {
             ),
             SemanticTest(
                 "not is defined",
-                "not",
+                "not(true)",
                 ""
             ),
             SemanticTest(
