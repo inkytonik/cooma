@@ -10,10 +10,10 @@ organization in ThisBuild := "org.bitbucket.inkytonik.cooma"
 scalaVersion in ThisBuild := "2.13.1"
 
 lazy val kiamaDependencies = Seq(
-	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
-	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
-	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
-	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests")
+	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0",
+	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0" % "test" classifier ("tests"),
+	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0",
+	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0" % "test" classifier ("tests")
 )
 
 lazy val commonsettings = Seq(
