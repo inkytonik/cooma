@@ -12,7 +12,7 @@ Program =
 
 Expression {paren} =
     "fun" '(' Arguments ")" Expression           {Fun, right, 4}
-  | '(' Expression ** "," ")" Expression         {FunT, right, 4}
+  | '(' ArgumentTypes ")" Expression             {FunT, right, 4}
   | Expression sp "match" '{' nest(Case+) \n '}' {Mat, left, 3}
   | Expression "&" Expression                    {Cat, left, 2}
   | Expression '(' Expression ** "," ')'         {App, left, 1}
@@ -46,6 +46,12 @@ Arguments =
 
 Argument =
   IdnDef sp ":" Expression.
+
+ArgumentTypes =
+  ArgumentType ** ",".
+
+ArgumentType =
+  (IdnDef sp ":")? Expression.
 
 Case =
   \n "case" Identifier '(' IdnDef ")" '=>' nestnl(Expression).

@@ -450,8 +450,8 @@ class SemanticTests extends Tests {
                    |"""
             ),
             SemanticTest(
-                "type application",
-                "{fun (t : Type, x : t) x}(Int, 10)",
+                "type argument",
+                "{fun (t : Type, x : t) x}",
                 ""
             ),
             SemanticTest(
@@ -976,7 +976,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad function argument type (function actual)",
                 "{fun (x : Int) x}(fun (y : Int) y)",
-                """|1:19:error: expected Int, got fun (y : Int) y of type (Int) Int
+                """|1:19:error: expected Int, got fun (y : Int) y of type (y : Int) Int
                    |{fun (x : Int) x}(fun (y : Int) y)
                    |                  ^
                    |"""
@@ -1024,7 +1024,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad function definition argument type (function actual)",
                 "{ def f (x : Int) Int = x f(fun (y : Int) y) }",
-                """|1:29:error: expected Int, got fun (y : Int) y of type (Int) Int
+                """|1:29:error: expected Int, got fun (y : Int) y of type (y : Int) Int
                    |{ def f (x : Int) Int = x f(fun (y : Int) y) }
                    |                            ^
                    |"""
@@ -1082,7 +1082,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad subtype function function argument",
                 "{fun (r : ({ x : Int }) Int) 0}(fun (s : { x : Int, y : Int }) s.x)",
-                """|1:33:error: expected ({ x : Int }) Int, got fun (s : { x : Int, y : Int }) s.x of type ({ x : Int, y : Int }) Int
+                """|1:33:error: expected ({ x : Int }) Int, got fun (s : { x : Int, y : Int }) s.x of type (s : { x : Int, y : Int }) Int
                    |{fun (r : ({ x : Int }) Int) 0}(fun (s : { x : Int, y : Int }) s.x)
                    |                                ^
                    |"""
@@ -1090,7 +1090,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad subtype function function definition argument",
                 "{ def f (r : ({ x : Int }) Int) Int = 0 f(fun (s : { x : Int, y : Int }) s.x) }",
-                """|1:43:error: expected ({ x : Int }) Int, got fun (s : { x : Int, y : Int }) s.x of type ({ x : Int, y : Int }) Int
+                """|1:43:error: expected ({ x : Int }) Int, got fun (s : { x : Int, y : Int }) s.x of type (s : { x : Int, y : Int }) Int
                    |{ def f (r : ({ x : Int }) Int) Int = 0 f(fun (s : { x : Int, y : Int }) s.x) }
                    |                                          ^
                    |"""
@@ -1489,10 +1489,15 @@ class SemanticTests extends Tests {
             Vector(
                 ("{x : Int, y : Int}", "{x : Int}"),
                 ("{x : Int, y : Int}", "{y : Int}"),
+                ("{x : {b : Int, a : Int}, y : Int}", "{x : {a : Int}}"),
+                ("{y : Int, x : <a : Int>}", "{x : <a : Int, b : Int>}"),
                 (
                     "({x : Int}, {y : String}) Int",
                     "({x : Int}, {x : Int, y : String}) Int"
                 ),
+                ("<x : Int>", "<x : Int, y : Int>"),
+                ("<x : {b : Int, a : Int}>", "<x : {a : Int}, y : Int>"),
+                ("<x : <a : Int>>", "<y : Int, x : <b : Int, a : Int>>"),
                 ("(Int) {x : Int, y : Int}", "(Int) {x : Int}")
             )
 
@@ -1510,7 +1515,8 @@ class SemanticTests extends Tests {
         val twowaySubtypeTests =
             Vector(
                 ("{x : Int, y : String}", "{y : String, x : Int}"),
-                ("{x : Int, w : Int, y : String}", "{w : Int, x : Int, y : String}")
+                ("{x : Int, w : Int, y : String}", "{w : Int, x : Int, y : String}"),
+                ("(Int) Int", "(x : Int) Int")
             )
 
         for ((tt, uu) <- twowaySubtypeTests) {

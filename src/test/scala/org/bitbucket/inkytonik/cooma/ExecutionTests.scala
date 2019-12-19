@@ -399,11 +399,23 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<function>",
                     "(Int) Int"
                 ),
+                ExecTest(
+                    "function program result (type arg)",
+                    "{fun (t : Type, x : t) x}",
+                    "<function>",
+                    "(t : Type, x : t) t"
+                ),
+                // ExecTest(
+                //     "partial type application",
+                //     "{fun (t : Type, x : t) x}(Int)",
+                //     "10",
+                //     "(x : Int) Int"
+                // ),
                 // ExecTest(
                 //     "type application",
                 //     "{fun (t : Type, x : t) x}(Int, 10)",
                 //     "10",
-                //     "t"
+                //     "Int"
                 // ),
                 // ExecTest(
                 //     "type application at different types",
@@ -417,7 +429,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 //         }
                 //     }""",
                 //     """{ b = < True = {} >, i = 10, s = "hello", r = { read = <function> } }""",
-                //     "{ b : t, i : t, s : t, r : t }"
+                //     "{ b : Boolean, i : Int, s : String, r : Reader }"
                 // ),
 
                 // Blocks
@@ -690,7 +702,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             s"Pre-defined Ints.${op.name} has the correct type",
                             s"Ints.${op.name}",
                             "<function>",
-                            "(Int) Int"
+                            "(x : Int) Int"
                         )
                     )
                 }) ++ allInt2PrimBinOps.flatMap(op => {
@@ -699,13 +711,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             s"Pre-defined Ints.${op.name} has the correct type",
                             s"Ints.${op.name}",
                             "<function>",
-                            "(Int, Int) Int"
+                            "(x : Int, y : Int) Int"
                         ),
                         ExecTest(
                             s"Pre-defined Ints.${op.name} partial application has the correct type",
                             s"Ints.${op.name}(1)",
                             "<function>",
-                            "(Int) Int"
+                            "(y : Int) Int"
                         )
                     )
 
@@ -715,13 +727,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             s"Pre-defined Ints.${op.name} has the correct type",
                             s"Ints.${op.name}",
                             "<function>",
-                            "(Int, Int) Boolean"
+                            "(x : Int, y : Int) Boolean"
                         ),
                         ExecTest(
                             s"Pre-defined Ints.${op.name} partial application has the correct type",
                             s"Ints.${op.name}(1)",
                             "<function>",
-                            "(Int) Boolean"
+                            "(y : Int) Boolean"
                         )
                     )
                 }) ++ Vector(
@@ -729,25 +741,43 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         s"Pre-defined Strings.concat has the correct type",
                         "Strings.concat",
                         "<function>",
-                        "(String, String) String"
+                        "(s : String, t : String) String"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.concat partial application has the correct type",
                         """Strings.concat("hi")""",
                         "<function>",
-                        "(String) String"
+                        "(t : String) String"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.equals has the correct type",
                         "Strings.equals",
                         "<function>",
-                        "(String, String) Boolean"
+                        "(s : String, t : String) Boolean"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.equals partial application has the correct type",
                         """Strings.equals("hi")""",
                         "<function>",
-                        "(String) Boolean"
+                        "(t : String) Boolean"
+                    ),
+                    ExecTest(
+                        s"Pre-defined Strings.length has the correct type",
+                        "Strings.length",
+                        "<function>",
+                        "(s : String) Int"
+                    ),
+                    ExecTest(
+                        s"Pre-defined Strings.substr has the correct type",
+                        "Strings.substr",
+                        "<function>",
+                        "(s : String, i : Int) String"
+                    ),
+                    ExecTest(
+                        s"Pre-defined Strings.substr partial application has the correct type",
+                        """Strings.substr("hi")""",
+                        "<function>",
+                        "(i : Int) String"
                     )
                 )
 
@@ -1073,7 +1103,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         fun (x : Int) x
                         res0(10)
                     """,
-                    "res0 : (Int) Int = <function>\nres1 : Int = 10"
+                    "res0 : (x : Int) Int = <function>\nres1 : Int = 10"
                 ),
                 REPLTest(
                     "single evaluation (function using type alias)",
@@ -1081,7 +1111,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         fun (x : Boolean) x
                         res0(true)
                     """,
-                    "res0 : (Boolean) Boolean = <function>\nres1 : Boolean = < True = {} >"
+                    "res0 : (x : Boolean) Boolean = <function>\nres1 : Boolean = < True = {} >"
                 ),
                 REPLTest(
                     "single evaluation (function using type alias that needs to be expanded)",
@@ -1089,7 +1119,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         fun (x : Reader) x.read()
                         res0({read = fun () "hello"})
                     """,
-                    "res0 : (Reader) String = <function>\nres1 : String = \"hello\""
+                    "res0 : (x : Reader) String = <function>\nres1 : String = \"hello\""
                 ),
                 REPLTest(
                     "multiple evaluations",
@@ -1140,7 +1170,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         def f(x : Int) Int = x
                         f(10)
                     """,
-                    "f : (Int) Int = <function>\nres0 : Int = 10"
+                    "f : (x : Int) Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "value and function definition",
@@ -1149,7 +1179,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         def f(y : Int) Int = x
                         f(20)
                     """,
-                    "x : Int = 10\nf : (Int) Int = <function>\nres0 : Int = 10"
+                    "x : Int = 10\nf : (y : Int) Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "multiple function definitions (upper)",
@@ -1158,7 +1188,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         def g(y : Int) Int = 20
                         f(1)
                     """,
-                    "f : (Int) Int = <function>\ng : (Int) Int = <function>\nres0 : Int = 10"
+                    "f : (x : Int) Int = <function>\ng : (y : Int) Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "multiple function definitions (lower)",
@@ -1167,7 +1197,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         def g(y : Int) Int = 20
                         g(1)
                     """,
-                    "f : (Int) Int = <function>\ng : (Int) Int = <function>\nres0 : Int = 20"
+                    "f : (x : Int) Int = <function>\ng : (y : Int) Int = <function>\nres0 : Int = 20"
                 ),
                 REPLTest(
                     "multiple function definitions (chain)",
@@ -1176,7 +1206,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         def g(y : Int) Int = f(y)
                         g(1)
                     """,
-                    "f : (Int) Int = <function>\ng : (Int) Int = <function>\nres0 : Int = 10"
+                    "f : (x : Int) Int = <function>\ng : (y : Int) Int = <function>\nres0 : Int = 10"
                 ),
                 REPLTest(
                     "single result name binding from constant",

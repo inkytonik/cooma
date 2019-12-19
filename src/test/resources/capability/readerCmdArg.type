@@ -1,1 +1,1 @@
-(Reader) String
+(r : Reader) String

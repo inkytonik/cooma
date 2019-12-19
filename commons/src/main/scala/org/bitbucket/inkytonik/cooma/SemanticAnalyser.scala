@@ -72,8 +72,10 @@ class SemanticAnalyser(
     def checkPrimitive(prm : Prm) : Messages = {
         primitivesTypesTable.get(prm.identifier) match {
             case Some(funT) =>
-                if (prm.optExpressions.length != funT.optExpressions.length)
-                    error(prm, s"primitive ${prm.identifier} expects ${funT.optExpressions.length} arguments got ${prm.optExpressions.length}")
+                val numArgs = prm.optExpressions.length
+                val expectedNumArgs = funT.argumentTypes.optArgumentTypes.length
+                if (numArgs != expectedNumArgs)
+                    error(prm, s"primitive ${prm.identifier} expects $expectedNumArgs arguments got ${numArgs}")
                 else
                     noMessages
             case None =>
@@ -91,7 +93,7 @@ class SemanticAnalyser(
 
     def checkApplication(f : Expression, as : Vector[Expression]) : Messages =
         tipe(f) match {
-            case Some(FunT(ps, _)) =>
+            case Some(FunT(ArgumentTypes(ps), _)) =>
                 if (ps.length < as.length)
                     ps.length match {
                         case 0 =>
@@ -340,17 +342,14 @@ class SemanticAnalyser(
         r1names.intersect(r2names)
     }
 
-    def mkIntUnPrimType(retType : Expression) : Expression =
-        FunT(Vector(IntT()), retType)
-
-    def mkIntBinPrimType(retType : Expression) : Expression =
-        FunT(Vector(IntT(), IntT()), retType)
+    def argsToArgTypes(as : Vector[Argument]) : Vector[ArgumentType] =
+        as.map(a => ArgumentType(Some(a.idnDef), a.expression))
 
     lazy val tipe : Expression => Option[Expression] =
         attr {
             case App(f, as) =>
                 tipe(f) match {
-                    case Some(FunT(ts, t)) =>
+                    case Some(ft @ FunT(ArgumentTypes(ts), t)) =>
                         val numArgs = as.length
                         if (numArgs == ts.length)
                             unalias(f, t)
@@ -383,7 +382,7 @@ class SemanticAnalyser(
             case Fun(Arguments(as), e) =>
                 tipe(e) match {
                     case Some(t) =>
-                        unaliasFunT(e, as.map(_.expression), t)
+                        unaliasFunT(e, argsToArgTypes(as), t)
                     case None =>
                         None
                 }
@@ -396,18 +395,18 @@ class SemanticAnalyser(
 
             case Ints() =>
                 Some(RecT(Vector(
-                    FieldType("abs", mkIntUnPrimType(IntT())),
-                    FieldType("add", mkIntBinPrimType(IntT())),
-                    FieldType("div", mkIntBinPrimType(IntT())),
-                    FieldType("mul", mkIntBinPrimType(IntT())),
-                    FieldType("pow", mkIntBinPrimType(IntT())),
-                    FieldType("sub", mkIntBinPrimType(IntT())),
-                    FieldType("eq", mkIntBinPrimType(BoolT())),
-                    FieldType("neq", mkIntBinPrimType(BoolT())),
-                    FieldType("lt", mkIntBinPrimType(BoolT())),
-                    FieldType("lte", mkIntBinPrimType(BoolT())),
-                    FieldType("gt", mkIntBinPrimType(BoolT())),
-                    FieldType("gte", mkIntBinPrimType(BoolT()))
+                    FieldType("abs", primitivesTypesTable("IntAbs")),
+                    FieldType("add", primitivesTypesTable("IntAdd")),
+                    FieldType("div", primitivesTypesTable("IntDiv")),
+                    FieldType("mul", primitivesTypesTable("IntMul")),
+                    FieldType("pow", primitivesTypesTable("IntPow")),
+                    FieldType("sub", primitivesTypesTable("IntSub")),
+                    FieldType("eq", primitivesTypesTable("IntEq")),
+                    FieldType("neq", primitivesTypesTable("IntNeq")),
+                    FieldType("lt", primitivesTypesTable("IntLt")),
+                    FieldType("lte", primitivesTypesTable("IntLte")),
+                    FieldType("gt", primitivesTypesTable("IntGt")),
+                    FieldType("gte", primitivesTypesTable("IntGte"))
                 )))
 
             case IntT() =>
@@ -422,14 +421,14 @@ class SemanticAnalyser(
                 }
 
             case Not() =>
-                Some(FunT(Vector(boolT), boolT))
+                Some(mkPrimType(Vector(("b", boolT)), boolT))
 
             case _ : Num =>
                 Some(IntT())
 
             case n @ Prm(i, args) =>
                 primitivesTypesTable.get(i) match {
-                    case Some(FunT(ts, t)) =>
+                    case Some(FunT(ArgumentTypes(ts), t)) =>
                         if (args.length == ts.length)
                             unalias(n, t)
                         else
@@ -471,10 +470,10 @@ class SemanticAnalyser(
 
             case Strings() =>
                 Some(RecT(Vector(
-                    FieldType("concat", FunT(Vector(StrT(), StrT()), StrT())),
-                    FieldType("equals", FunT(Vector(StrT(), StrT()), BoolT())),
-                    FieldType("length", FunT(Vector(StrT()), IntT())),
-                    FieldType("substr", FunT(Vector(StrT(), IntT()), StrT()))
+                    FieldType("concat", primitivesTypesTable("StrConcat")),
+                    FieldType("equals", primitivesTypesTable("StrEquals")),
+                    FieldType("length", primitivesTypesTable("StrLength")),
+                    FieldType("substr", primitivesTypesTable("StrSubstr"))
                 )))
 
             case StrT() =>
@@ -532,7 +531,7 @@ class SemanticAnalyser(
             case FieldEntity(Field(_, e)) =>
                 tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
-                unaliasFunT(e, as.map(_.expression), t)
+                unaliasFunT(e, argsToArgTypes(as), t)
             case LetEntity(Let(_, i, None, e)) =>
                 tipe(e)
             case LetEntity(Let(_, _, t, e)) =>
@@ -561,36 +560,20 @@ class SemanticAnalyser(
                     OkCases(caseTypes(0))
         }
 
-    val boolT : Expression =
-        VarT(Vector(FieldType("False", UniT()), FieldType("True", UniT())))
-
-    val readerT : Expression =
-        RecT(Vector(
-            FieldType("read", FunT(Vector(), StrT()))
-        ))
-
-    val readerWriterT : Expression =
-        RecT(Vector(
-            FieldType("read", FunT(Vector(), StrT())),
-            FieldType("write", FunT(Vector(StrT()), UniT()))
-        ))
-
-    val writerT : Expression =
-        RecT(Vector(
-            FieldType("write", FunT(Vector(StrT()), UniT()))
-        ))
-
     def alias(e : Expression) : Expression =
         e match {
-            case `boolT`         => BoolT()
-            case `readerT`       => ReaderT()
-            case `readerWriterT` => ReaderWriterT()
-            case `writerT`       => WriterT()
-            case FunT(as, t)     => FunT(as.map(alias), alias(t))
-            case RecT(fs)        => RecT(aliasFieldTypes(fs))
-            case VarT(fs)        => VarT(aliasFieldTypes(fs))
-            case _               => e
+            case `boolT`                    => BoolT()
+            case `readerT`                  => ReaderT()
+            case `readerWriterT`            => ReaderWriterT()
+            case `writerT`                  => WriterT()
+            case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
+            case RecT(fs)                   => RecT(aliasFieldTypes(fs))
+            case VarT(fs)                   => VarT(aliasFieldTypes(fs))
+            case _                          => e
         }
+
+    def aliasArgType(a : ArgumentType) : ArgumentType =
+        ArgumentType(a.optIdnDef, alias(a.expression))
 
     def aliasFieldTypes(fs : Vector[FieldType]) : Vector[FieldType] =
         fs.map { case FieldType(n, t) => FieldType(n, alias(t)) }
@@ -617,7 +600,7 @@ class SemanticAnalyser(
                         None
                 }
 
-            case FunT(us, u) =>
+            case FunT(ArgumentTypes(us), u) =>
                 unaliasFunT(n, us, u)
 
             case ReaderT() =>
@@ -647,12 +630,28 @@ class SemanticAnalyser(
             None
     }
 
-    def unaliasFunT(n : ASTNode, ts : Vector[Expression], t : Expression) : Option[FunT] =
-        unaliases(n, ts) match {
+    def unaliasArg(n : ASTNode, a : ArgumentType) : Option[ArgumentType] =
+        unalias(n, a.expression) match {
+            case Some(e) =>
+                Some(ArgumentType(a.optIdnDef, e))
+            case None =>
+                None
+        }
+
+    def unaliasArgs(n : ASTNode, as : Vector[ArgumentType]) : Option[Vector[ArgumentType]] = {
+        val us = as.map(t => unaliasArg(n, t))
+        if (us.forall(_.isDefined))
+            Some(us.map(_.get))
+        else
+            None
+    }
+
+    def unaliasFunT(n : ASTNode, as : Vector[ArgumentType], t : Expression) : Option[FunT] =
+        unaliasArgs(n, as) match {
             case Some(us) =>
                 unalias(n, t) match {
                     case Some(u) =>
-                        Some(FunT(us, u))
+                        Some(FunT(ArgumentTypes(us), u))
                     case None =>
                         None
                 }
@@ -692,13 +691,16 @@ class SemanticAnalyser(
             case tree.parent.pair(a, App(e, _)) if a ne e =>
                 val argnum = tree.index(a) - 1
                 tipe(e) match {
-                    case Some(FunT(ts, _)) if ts.length > argnum =>
-                        unalias(a, ts(argnum))
+                    case Some(FunT(ArgumentTypes(ts), _)) if ts.length > argnum =>
+                        unalias(a, ts(argnum).expression)
                     case _ =>
                         None
                 }
 
             case tree.parent(_ : Argument) =>
+                Some(TypT())
+
+            case tree.parent(_ : ArgumentType) =>
                 Some(TypT())
 
             case tree.parent.pair(a, Body(_, t, e)) if a eq e =>
@@ -716,8 +718,8 @@ class SemanticAnalyser(
             case tree.parent.pair(a : Expression, Prm(i, _)) =>
                 val argnum = tree.index(a)
                 primitivesTypesTable.get(i) match {
-                    case Some(FunT(ts, _)) if ts.length > argnum =>
-                        unalias(a, ts(argnum))
+                    case Some(FunT(ArgumentTypes(ts), _)) if ts.length > argnum =>
+                        unalias(a, ts(argnum).expression)
                     case _ =>
                         None
                 }
@@ -731,7 +733,7 @@ class SemanticAnalyser(
             case REPLExp(e) =>
                 tipe(e)
             case REPLDef(Def(_, Body(Arguments(as), t, e))) =>
-                Some(FunT(as.map(_.expression), t))
+                Some(FunT(ArgumentTypes(argsToArgTypes(as)), t))
             case REPLLet(Let(_, _, None, e)) =>
                 tipe(e)
             case REPLLet(Let(_, _, t, _)) =>
@@ -758,18 +760,42 @@ object SemanticAnalysis {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
 
+    def fieldtypeNames(fts : Vector[FieldType]) : Vector[String] =
+        fts.map(_.identifier)
+
     def subtype(t : Expression, u : Expression) : Boolean =
         (t == u) ||
             ((t, u) match {
                 case (RecT(tr), RecT(ur)) =>
-                    ur.diff(tr).isEmpty
+                    val urn = fieldtypeNames(ur)
+                    urn.diff(fieldtypeNames(tr)).isEmpty && subtypesFields(urn, tr, ur)
                 case (VarT(tr), VarT(ur)) =>
-                    tr.diff(ur).isEmpty
-                case (FunT(ts, t), FunT(us, u)) =>
-                    subtypes(us, ts) && subtype(t, u)
+                    val trn = fieldtypeNames(tr)
+                    trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
+                case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
+                    subtypesArgs(us, ts) && subtype(t, u)
                 case _ =>
                     false
             })
+
+    def subtypesArgs(ts : Vector[ArgumentType], us : Vector[ArgumentType]) : Boolean =
+        (ts.length == us.length) &&
+            (ts.zip(us).forall {
+                case (t, u) =>
+                    subtype(t.expression, u.expression)
+            })
+
+    def fieldTypesToMap(ts : Vector[FieldType]) : Map[String, Expression] =
+        ts.map {
+            case FieldType(x, t) =>
+                (x, t)
+        }.toMap
+
+    def subtypesFields(ns : Vector[String], ts : Vector[FieldType], us : Vector[FieldType]) : Boolean = {
+        val tsm = fieldTypesToMap(ts)
+        val usm = fieldTypesToMap(us)
+        ns.forall(x => subtype(tsm(x), usm(x)))
+    }
 
     def subtypes(ts : Vector[Expression], us : Vector[Expression]) : Boolean =
         (ts.length == us.length) &&

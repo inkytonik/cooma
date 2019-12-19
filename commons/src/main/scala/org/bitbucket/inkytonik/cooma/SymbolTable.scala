@@ -70,23 +70,51 @@ object SymbolTable extends Environments[CoomaEntity] {
         override val isError = true
     }
 
+    val boolT : Expression =
+        VarT(Vector(FieldType("False", UniT()), FieldType("True", UniT())))
+
+    val readerT : Expression =
+        RecT(Vector(
+            FieldType("read", FunT(ArgumentTypes(Vector()), StrT()))
+        ))
+
+    val readerWriterT : Expression =
+        RecT(Vector(
+            FieldType("read", FunT(ArgumentTypes(Vector()), StrT())),
+            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), StrT()))), UniT()))
+        ))
+
+    val writerT : Expression =
+        RecT(Vector(
+            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), StrT()))), UniT()))
+        ))
+
+    def mkPrimType(args : Vector[(String, Expression)], retType : Expression) : FunT =
+        FunT(ArgumentTypes(args.map { case (x, e) => ArgumentType(Some(IdnDef(x)), e) }), retType)
+
+    def mkIntUnPrimType(retType : Expression) : FunT =
+        mkPrimType(Vector(("x", IntT())), retType)
+
+    def mkIntBinPrimType(retType : Expression) : FunT =
+        mkPrimType(Vector(("x", IntT()), ("y", IntT())), retType)
+
     val primitivesTypesTable = Map(
-        "IntAbs" -> FunT(Vector(IntT()), IntT()),
-        "IntAdd" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntSub" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntMul" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntDiv" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntPow" -> FunT(Vector(IntT(), IntT()), IntT()),
-        "IntEq" -> FunT(Vector(IntT(), IntT()), BoolT()),
-        "IntNeq" -> FunT(Vector(IntT(), IntT()), BoolT()),
-        "IntGt" -> FunT(Vector(IntT(), IntT()), BoolT()),
-        "IntGte" -> FunT(Vector(IntT(), IntT()), BoolT()),
-        "IntLt" -> FunT(Vector(IntT(), IntT()), BoolT()),
-        "IntLte" -> FunT(Vector(IntT(), IntT()), BoolT()),
-        "StrLength" -> FunT(Vector(StrT()), IntT()),
-        "StrConcat" -> FunT(Vector(StrT(), StrT()), StrT()),
-        "StrEquals" -> FunT(Vector(StrT(), StrT()), BoolT()),
-        "StrSubstr" -> FunT(Vector(StrT(), IntT()), StrT())
+        "IntAbs" -> mkIntUnPrimType(IntT()),
+        "IntAdd" -> mkIntBinPrimType(IntT()),
+        "IntSub" -> mkIntBinPrimType(IntT()),
+        "IntMul" -> mkIntBinPrimType(IntT()),
+        "IntDiv" -> mkIntBinPrimType(IntT()),
+        "IntPow" -> mkIntBinPrimType(IntT()),
+        "IntEq" -> mkIntBinPrimType(boolT),
+        "IntNeq" -> mkIntBinPrimType(boolT),
+        "IntGt" -> mkIntBinPrimType(boolT),
+        "IntGte" -> mkIntBinPrimType(boolT),
+        "IntLt" -> mkIntBinPrimType(boolT),
+        "IntLte" -> mkIntBinPrimType(boolT),
+        "StrConcat" -> mkPrimType(Vector(("s", StrT()), ("t", StrT())), StrT()),
+        "StrEquals" -> mkPrimType(Vector(("s", StrT()), ("t", StrT())), boolT),
+        "StrLength" -> mkPrimType(Vector(("s", StrT())), IntT()),
+        "StrSubstr" -> mkPrimType(Vector(("s", StrT()), ("i", IntT())), StrT())
     )
 
 }
