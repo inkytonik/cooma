@@ -835,7 +835,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         for (aTest <- int1PrimTests) {
             val primName = aTest.op.primName
             test(s"${backend.name} run: prim $primName") {
-                forAll { (i: BigInt) =>
+                forAll { (i : BigInt) =>
                     runPrimTest(s"prim $primName", s"$i", "Int", s"${aTest.func(i)}")
                 }
             }
