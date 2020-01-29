@@ -405,32 +405,44 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<function>",
                     "(t : Type, x : t) t"
                 ),
-                // ExecTest(
-                //     "partial type application",
-                //     "{fun (t : Type, x : t) x}(Int)",
-                //     "10",
-                //     "(x : Int) Int"
-                // ),
-                // ExecTest(
-                //     "type application",
-                //     "{fun (t : Type, x : t) x}(Int, 10)",
-                //     "10",
-                //     "Int"
-                // ),
-                // ExecTest(
-                //     "type application at different types",
-                //     """{
-                //         def id(t : Type, x : t) t = x
-                //         {
-                //             b = id(Boolean, true),
-                //             i = id(Int, 10),
-                //             s = id(String, "hello"),
-                //             r = id(Reader, { read = fun () "hello" })
-                //         }
-                //     }""",
-                //     """{ b = < True = {} >, i = 10, s = "hello", r = { read = <function> } }""",
-                //     "{ b : Boolean, i : Int, s : String, r : Reader }"
-                // ),
+                ExecTest(
+                    "partial type application",
+                    "{fun (t : Type, x : t) x}(Int)",
+                    "<function>",
+                    "(x : Int) Int"
+                ),
+                ExecTest(
+                    "type application (fun)",
+                    "{fun (t : Type, x : t) x}(Int, 10)",
+                    "10",
+                    "Int"
+                ),
+                ExecTest(
+                    "another type application (fun)",
+                    """{fun (t : Type, x : t) x}(String, "hi")""",
+                    """"hi"""",
+                    "String"
+                ),
+                ExecTest(
+                    "type application at different types",
+                    """{
+                        def id(t : Type, x : t) t = x
+                        {
+                            b = id(Boolean, true),
+                            i = id(Int, 10),
+                            s = id(String, "hello"),
+                            r = id(Reader, { read = fun () "hello" })
+                        }
+                    }""",
+                    """{ b = < True = {} >, i = 10, s = "hello", r = { read = <function> } }""",
+                    "{ b : Boolean, i : Int, s : String, r : Reader }"
+                ),
+                ExecTest(
+                    "type application (def)",
+                    """{def id(t : Type, x : t) t = x id(String, "hi")}""",
+                    """"hi"""",
+                    "String"
+                ),
 
                 // Blocks
 

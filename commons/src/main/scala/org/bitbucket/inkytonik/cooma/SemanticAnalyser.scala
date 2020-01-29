@@ -22,6 +22,7 @@ class SemanticAnalyser(
 
     import org.bitbucket.inkytonik.kiama.==>
     import org.bitbucket.inkytonik.kiama.attribution.Decorators
+    import org.bitbucket.inkytonik.kiama.rewriting.Rewriter.{everywhere, rewrite, rule}
     import org.bitbucket.inkytonik.kiama.util.Messaging.{check, collectMessages, error, Messages, noMessages}
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
@@ -349,12 +350,8 @@ class SemanticAnalyser(
         attr {
             case App(f, as) =>
                 tipe(f) match {
-                    case Some(ft @ FunT(ArgumentTypes(ts), t)) =>
-                        val numArgs = as.length
-                        if (numArgs == ts.length)
-                            unalias(f, t)
-                        else
-                            unaliasFunT(f, ts.drop(numArgs), t)
+                    case Some(FunT(ArgumentTypes(ts), t)) =>
+                        appType(f, ts, t, as)
                     case _ =>
                         None
                 }
@@ -501,6 +498,31 @@ class SemanticAnalyser(
                 Some(TypT())
         }
 
+    def substArgTypes[T](x : String, t : Expression, a : T) = {
+        val substArgType =
+            rule[Expression] {
+                case Idn(IdnUse(`x`)) =>
+                    t
+            }
+        rewrite(everywhere(substArgType))(a)
+    }
+
+    def appType(f : Expression, ts : Vector[ArgumentType], t : Expression, as : Vector[Expression]) : Option[Expression] =
+        if (as.isEmpty)
+            if (ts.isEmpty)
+                unalias(f, t)
+            else
+                unaliasFunT(f, ts, t)
+        else if (ts.isEmpty)
+            None
+        else
+            ts.head match {
+                case ArgumentType(Some(IdnDef(x)), TypT()) =>
+                    appType(f, substArgTypes(x, as.head, ts.tail), substArgTypes(x, as.head, t), as.tail)
+                case _ =>
+                    appType(f, ts.tail, t, as.tail)
+            }
+
     def makeRow(fields : Vector[Field]) : Option[Vector[FieldType]] = {
         val ts = fields.map(f => tipe(f.expression))
         if (ts contains None)
@@ -594,6 +616,8 @@ class SemanticAnalyser(
 
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {
+                    case ArgumentEntity(Argument(_, TypT())) =>
+                        Some(t)
                     case LetEntity(Let(_, _, _, v)) if t != v =>
                         unalias(n, v)
                     case _ =>
