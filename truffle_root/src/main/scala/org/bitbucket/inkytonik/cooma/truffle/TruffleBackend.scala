@@ -1,17 +1,18 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
-import java.io.PrintWriter
-import java.math.BigInteger
-
-import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
-import org.bitbucket.inkytonik.cooma.truffle.runtime._
-import org.bitbucket.inkytonik.cooma.{Backend, Config, Primitives}
+import org.bitbucket.inkytonik.cooma.{Backend, Config}
 
 class TruffleBackend(config : Config) extends Backend {
 
+    // import de.uka.ilkd.pp.{DataLayouter, StringBackend}
+    import java.io.PrintWriter
+    import java.math.BigInteger
+    import org.bitbucket.inkytonik.cooma.Primitives
     import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
+    import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
+    import org.bitbucket.inkytonik.cooma.truffle.runtime._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
-    import scala.math.BigInt;
+    import scala.math.BigInt
 
     override def backendName : String = "Graal"
 
@@ -111,16 +112,15 @@ class TruffleBackend(config : Config) extends Backend {
     def stringP(op : Primitives.StrPrimOp) : Primitive =
         Primitives.StringPrimitive(op)
 
-    //Runtime Values
+    // Runtime Values
 
     override type ValueR = RuntimeValue[_]
     override type OutputValueR = org.graalvm.polyglot.Value
     override type Env = Rho
     override type FldR = FieldValueRuntime
 
-    def showRuntimeValue(v : OutputValueR) : String = {
-        v.toString
-    }
+    def showRuntimeValue(v : OutputValueR) : String =
+        v.toString()
 
     def errR(msg : String) : ValueR =
         new ErrorRuntimeValue(msg)

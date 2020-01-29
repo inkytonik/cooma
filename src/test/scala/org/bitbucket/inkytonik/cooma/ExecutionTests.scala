@@ -694,6 +694,115 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "not(true)",
                     "< False = {} >",
                     "Boolean"
+                ),
+                ExecTest(
+                    "Ints",
+                    "Ints",
+                    """{
+                      |    abs = <function>,
+                      |    add = <function>,
+                      |    div = <function>,
+                      |    mul = <function>,
+                      |    pow = <function>,
+                      |    sub = <function>,
+                      |    eq = <function>,
+                      |    neq = <function>,
+                      |    lt = <function>,
+                      |    lte = <function>,
+                      |    gt = <function>,
+                      |    gte = <function>
+                      |}""".stripMargin,
+                    """{
+                      |    abs : (x : Int) Int,
+                      |    add : (x : Int, y : Int) Int,
+                      |    div : (x : Int, y : Int) Int,
+                      |    mul : (x : Int, y : Int) Int,
+                      |    pow : (x : Int, y : Int) Int,
+                      |    sub : (x : Int, y : Int) Int,
+                      |    eq : (x : Int, y : Int) Boolean,
+                      |    neq : (x : Int, y : Int) Boolean,
+                      |    lt : (x : Int, y : Int) Boolean,
+                      |    lte : (x : Int, y : Int) Boolean,
+                      |    gt : (x : Int, y : Int) Boolean,
+                      |    gte : (x : Int, y : Int) Boolean
+                      |}""".stripMargin,
+                    "Ints"
+                ),
+                ExecTest(
+                    "< v = Ints >",
+                    "< v = Ints >",
+                    """< v = {
+                       |    abs = <function>,
+                       |    add = <function>,
+                       |    div = <function>,
+                       |    mul = <function>,
+                       |    pow = <function>,
+                       |    sub = <function>,
+                       |    eq = <function>,
+                       |    neq = <function>,
+                       |    lt = <function>,
+                       |    lte = <function>,
+                       |    gt = <function>,
+                       |    gte = <function>
+                       |} >""".stripMargin,
+                    """<
+                       |    v : {
+                       |        abs : (x : Int) Int,
+                       |        add : (x : Int, y : Int) Int,
+                       |        div : (x : Int, y : Int) Int,
+                       |        mul : (x : Int, y : Int) Int,
+                       |        pow : (x : Int, y : Int) Int,
+                       |        sub : (x : Int, y : Int) Int,
+                       |        eq : (x : Int, y : Int) Boolean,
+                       |        neq : (x : Int, y : Int) Boolean,
+                       |        lt : (x : Int, y : Int) Boolean,
+                       |        lte : (x : Int, y : Int) Boolean,
+                       |        gt : (x : Int, y : Int) Boolean,
+                       |        gte : (x : Int, y : Int) Boolean
+                       |    }
+                       |>""".stripMargin,
+                ),
+                ExecTest(
+                    "{ x = { a = 1, b = Ints } }",
+                    "{ x = { a = 1, b = Ints } }",
+                    """{
+                       |    x = {
+                       |        a = 1,
+                       |        b = {
+                       |            abs = <function>,
+                       |            add = <function>,
+                       |            div = <function>,
+                       |            mul = <function>,
+                       |            pow = <function>,
+                       |            sub = <function>,
+                       |            eq = <function>,
+                       |            neq = <function>,
+                       |            lt = <function>,
+                       |            lte = <function>,
+                       |            gt = <function>,
+                       |            gte = <function>
+                       |        }
+                       |    }
+                       |}""".stripMargin,
+                    """{
+                       |    x : {
+                       |        a : Int,
+                       |        b : {
+                       |            abs : (x : Int) Int,
+                       |            add : (x : Int, y : Int) Int,
+                       |            div : (x : Int, y : Int) Int,
+                       |            mul : (x : Int, y : Int) Int,
+                       |            pow : (x : Int, y : Int) Int,
+                       |            sub : (x : Int, y : Int) Int,
+                       |            eq : (x : Int, y : Int) Boolean,
+                       |            neq : (x : Int, y : Int) Boolean,
+                       |            lt : (x : Int, y : Int) Boolean,
+                       |            lte : (x : Int, y : Int) Boolean,
+                       |            gt : (x : Int, y : Int) Boolean,
+                       |            gte : (x : Int, y : Int) Boolean
+                       |        }
+                       |    }
+                       |}""".stripMargin,
                 )
 
             ) ++ allInt1PrimBinOps.flatMap(op => {

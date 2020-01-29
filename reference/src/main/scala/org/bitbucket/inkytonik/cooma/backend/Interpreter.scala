@@ -212,7 +212,7 @@ class Interpreter(config : Config) {
 	 */
 
     def showRuntimeValue(v : ValueR) : String =
-        formatRuntimeValue(v, 5).layout
+        formatRuntimeValue(v).layout
 
     def formatRuntimeValue(v : ValueR, w : Width = defaultWidth) : Document =
         pretty(group(toDocRuntimeValue(v)), w)
@@ -228,7 +228,7 @@ class Interpreter(config : Config) {
             case RecR(Vector()) =>
                 "{}"
             case RecR(v1) =>
-                "{" <+> ssep(v1.map(toDocField), "," <> space) <+> "}"
+                "{" <> nest(line <> ssep(v1.map(toDocField), "," <> line)) <@> "}"
             case StrR(v1) =>
                 "\"" <> value(escape(v1)) <> "\""
             case VarR(v1, v2) =>

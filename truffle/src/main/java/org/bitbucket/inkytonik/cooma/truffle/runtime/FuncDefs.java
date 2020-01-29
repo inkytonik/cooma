@@ -1,11 +1,11 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
+import de.uka.ilkd.pp.DataLayouter;
 import lombok.Getter;
 import lombok.Setter;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Lazy;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value.CoomaDefTerm;
-
 import java.util.HashMap;
 
 public class FuncDefs  extends FunctionClosureHolder<FuncDefs> {
@@ -16,6 +16,10 @@ public class FuncDefs  extends FunctionClosureHolder<FuncDefs> {
     @Getter
     private final HashMap<String, CoomaDefTerm> defs = new HashMap<>();
 
+    @Override
+    public <Exc extends java.lang.Exception> void prettyPrint(DataLayouter<Exc> l) throws Exc {
+        l.print("funcdefs");
+    }
 
     @Override
     public FunctionClosure get(String key) {
@@ -27,4 +31,5 @@ public class FuncDefs  extends FunctionClosureHolder<FuncDefs> {
     public int compareTo(FuncDefs funcDefs) {
         return defs.entrySet().containsAll(funcDefs.getDefs().entrySet()) ? 0 : -1;
     }
+
 }

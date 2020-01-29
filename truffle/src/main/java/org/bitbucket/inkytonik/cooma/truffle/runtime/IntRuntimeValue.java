@@ -3,15 +3,15 @@ package org.bitbucket.inkytonik.cooma.truffle.runtime;
 import com.oracle.truffle.api.interop.*;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import de.uka.ilkd.pp.DataLayouter;
 import java.math.BigInteger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-
 @Getter
 @RequiredArgsConstructor
 @ExportLibrary(InteropLibrary.class)
-public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements TruffleObject{
+public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements TruffleObject {
     private final BigInteger innerValue;
 
     @Override
@@ -25,8 +25,8 @@ public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements Tr
     }
 
     @Override
-    public String print() {
-        return this.toString();
+    public <Exc extends java.lang.Exception> void prettyPrint(DataLayouter<Exc> l) throws Exc {
+        l.print(this.toString());
     }
 
     @SuppressWarnings("static-method")
