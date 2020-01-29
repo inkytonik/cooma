@@ -20,6 +20,7 @@ class ReferenceBackend(
     config : Config
 ) extends Interpreter(config) with Backend {
 
+    import org.bitbucket.inkytonik.cooma.Primitives._
     import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
@@ -101,7 +102,7 @@ class ReferenceBackend(
         FieldValue(f, x)
 
     // Primitives
-    import org.bitbucket.inkytonik.cooma.Primitives._
+
     def argumentP(i : Int) : Primitive =
         ArgumentP(i)
 
