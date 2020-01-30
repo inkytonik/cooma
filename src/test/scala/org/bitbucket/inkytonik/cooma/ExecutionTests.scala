@@ -553,7 +553,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "def block (self reference, tail call)",
                     """{
                         def f(x : Int) Int =
-                            Ints.eq(x, 0) match {
+                            equal(Int, x, 0) match {
                                 case True(_)  => 20
                                 case False(_) => f(Ints.sub(x, 1))
                             }
@@ -566,7 +566,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "def block (accumulator, tail call)",
                     """{
                         def f(s : Int, x : Int) Int =
-                            Ints.eq(x, 0) match {
+                            equal(Int, x, 0) match {
                                 case True(_)  => s
                                 case False(_) => f(Ints.add(s, x), Ints.sub(x, 1))
                             }
@@ -717,8 +717,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    mul = <function>,
                       |    pow = <function>,
                       |    sub = <function>,
-                      |    eq = <function>,
-                      |    neq = <function>,
                       |    lt = <function>,
                       |    lte = <function>,
                       |    gt = <function>,
@@ -731,8 +729,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    mul : (x : Int, y : Int) Int,
                       |    pow : (x : Int, y : Int) Int,
                       |    sub : (x : Int, y : Int) Int,
-                      |    eq : (x : Int, y : Int) Boolean,
-                      |    neq : (x : Int, y : Int) Boolean,
                       |    lt : (x : Int, y : Int) Boolean,
                       |    lte : (x : Int, y : Int) Boolean,
                       |    gt : (x : Int, y : Int) Boolean,
@@ -750,8 +746,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |    mul = <function>,
                        |    pow = <function>,
                        |    sub = <function>,
-                       |    eq = <function>,
-                       |    neq = <function>,
                        |    lt = <function>,
                        |    lte = <function>,
                        |    gt = <function>,
@@ -765,8 +759,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |        mul : (x : Int, y : Int) Int,
                        |        pow : (x : Int, y : Int) Int,
                        |        sub : (x : Int, y : Int) Int,
-                       |        eq : (x : Int, y : Int) Boolean,
-                       |        neq : (x : Int, y : Int) Boolean,
                        |        lt : (x : Int, y : Int) Boolean,
                        |        lte : (x : Int, y : Int) Boolean,
                        |        gt : (x : Int, y : Int) Boolean,
@@ -787,8 +779,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |            mul = <function>,
                        |            pow = <function>,
                        |            sub = <function>,
-                       |            eq = <function>,
-                       |            neq = <function>,
                        |            lt = <function>,
                        |            lte = <function>,
                        |            gt = <function>,
@@ -806,8 +796,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |            mul : (x : Int, y : Int) Int,
                        |            pow : (x : Int, y : Int) Int,
                        |            sub : (x : Int, y : Int) Int,
-                       |            eq : (x : Int, y : Int) Boolean,
-                       |            neq : (x : Int, y : Int) Boolean,
                        |            lt : (x : Int, y : Int) Boolean,
                        |            lte : (x : Int, y : Int) Boolean,
                        |            gt : (x : Int, y : Int) Boolean,
@@ -815,6 +803,90 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |        }
                        |    }
                        |}""".stripMargin,
+                ),
+                ExecTest(
+                    s"equal has the correct type",
+                    s"equal",
+                    "<function>",
+                    "(t : Type, t, t) Boolean"
+                ),
+                ExecTest(
+                    s"equality of integers (equal)",
+                    s"""equal(Int, 42, 42)""",
+                    "< True = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of integers (unequal)",
+                    s"""equal(Int, 42, 99)""",
+                    "< False = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of strings (equal)",
+                    s"""equal(String, "abc", "abc")""",
+                    "< True = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of strings (unequal)",
+                    s"""equal(String, "abc", "cba")""",
+                    "< False = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of records (equal, flat)",
+                    s"equal({x : Int, y : Int}, {x = 0, y = 1}, {y = 1, x = 0})",
+                    "< True = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of records (equal, nested)",
+                    s"equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 0, a = 0}})",
+                    "< True = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of records (unequal, flat",
+                    s"equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
+                    "< False = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of records (unequal, nested)",
+                    s"equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 1, a = 0}})",
+                    "< False = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (equal, flat)",
+                    s"equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
+                    "< True = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (equal, nested)",
+                    s"equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 1} >)",
+                    "< True = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (unequal, same constructor)",
+                    s"equal(< a : Int, v : Int >, < a = 1 >, < a = 2 >)",
+                    "< False = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (unequal, different constructor)",
+                    s"equal(< a : Int, v : Int >, < a = 1 >, < v = 2 >)",
+                    "< False = {} >",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (unequal, nested)",
+                    s"equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
+                    "< False = {} >",
+                    "Boolean"
                 )
 
             ) ++ allInt1PrimBinOps.flatMap(op => {
@@ -869,18 +941,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         """Strings.concat("hi")""",
                         "<function>",
                         "(t : String) String"
-                    ),
-                    ExecTest(
-                        s"Pre-defined Strings.equals has the correct type",
-                        "Strings.equals",
-                        "<function>",
-                        "(s : String, t : String) Boolean"
-                    ),
-                    ExecTest(
-                        s"Pre-defined Strings.equals partial application has the correct type",
-                        """Strings.equals("hi")""",
-                        "<function>",
-                        "(t : String) Boolean"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.length has the correct type",
@@ -1032,8 +1092,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
         val intRelPrimTests =
             Vector(
-                IntRelPrimTest(EQ, _ == _),
-                IntRelPrimTest(NEQ, _ != _),
                 IntRelPrimTest(GT, _ > _),
                 IntRelPrimTest(GTE, _ >= _),
                 IntRelPrimTest(LT, _ < _),
@@ -1045,6 +1103,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             test(s"${backend.name} run: prim $primName") {
                 forAll { (l : BigInt, r : BigInt) =>
                     runPrimTest(s"prim $primName", s"$l, $r", "Boolean", expectedBool(aTest.func(l, r)))
+                }
+            }
+        }
+
+        {
+            val primName = "Equal"
+
+            test(s"${backend.name} run: Int prim $primName") {
+                forAll { (l : BigInt, r : BigInt) =>
+                    runPrimTest(s"prim $primName", s"Int, $l, $r", "Boolean", expectedBool(l == r))
                 }
             }
         }
@@ -1068,13 +1136,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         {
-            val primName = "StrEquals"
+            val primName = "Equal"
             val func = (l : String, r : String) => Util.unescape(l) == Util.unescape(r)
 
-            test(s"${backend.name} run: prim $primName") {
+            test(s"${backend.name} run: String prim $primName") {
                 forAll(stringLit, stringLit) { (l : String, r : String) =>
                     whenever(isStringLit(l) && isStringLit(r)) {
-                        runPrimTest(s"prim $primName", s""""$l", "$r"""", "Boolean", expectedBool(func(l, r)))
+                        runPrimTest(s"prim $primName", s"""String, "$l", "$r"""", "Boolean", expectedBool(func(l, r)))
                     }
                 }
             }

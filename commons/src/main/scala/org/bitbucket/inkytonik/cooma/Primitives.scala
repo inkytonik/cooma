@@ -206,6 +206,61 @@ object Primitives {
         def show = "select"
     }
 
+    case class EqualP[I <: Backend]() extends Primitive[I] {
+        val numArgs = 3
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+
+            def getField(f : String, r : Vector[interp.FldR]) : Option[interp.FldR] =
+                r.find(interp.getFieldName(_) == f)
+
+            def equal(lvalue : interp.ValueR, rvalue : interp.ValueR) : Boolean = {
+                (interp.isIntR(lvalue), interp.isIntR(rvalue)) match {
+                    case (Some(li), Some(ri)) =>
+                        li == ri
+                    case _ =>
+                        (interp.isStrR(lvalue), interp.isStrR(rvalue)) match {
+                            case (Some(ls), Some(rs)) =>
+                                ls == rs
+                            case _ =>
+                                (interp.isRecR(lvalue), interp.isRecR(rvalue)) match {
+                                    case (Some(lfs), Some(rfs)) =>
+                                        lfs.forall(lfld => {
+                                            val f = interp.getFieldName(lfld)
+                                            getField(f, rfs) match {
+                                                case Some(rfld) =>
+                                                    equal(interp.getFieldValue(lfld), interp.getFieldValue(rfld))
+                                                case None =>
+                                                    sys.error(s"equal: can't find field $f in $rfs")
+                                            }
+                                        })
+                                    case _ =>
+                                        (interp.isVarR(lvalue), interp.isVarR(rvalue)) match {
+                                            case (Some((lc, lv)), Some((rc, rv))) =>
+                                                (lc == rc) && (equal(lv, rv))
+                                            case _ =>
+                                                false
+                                        }
+                                }
+                        }
+                }
+            }
+
+            xs match {
+                case Vector(_, l, r) =>
+                    if (equal(interp.lookupR(rho, l), interp.lookupR(rho, r)))
+                        interp.trueR()
+                    else
+                        interp.falseR()
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+
+        }
+
+        def show = "equal"
+    }
+
     abstract class IntPrimitive[I <: Backend] extends Primitive[I] {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val operands = xs.map(s => interp.isIntR(interp.lookupR(rho, s)) match {
@@ -281,14 +336,12 @@ object Primitives {
     sealed abstract class IntPrimRelOp extends Product with IntPrimOp {
         val numArgs = 2
     }
-    case object EQ extends IntPrimRelOp
-    case object NEQ extends IntPrimRelOp
     case object GT extends IntPrimRelOp
     case object GTE extends IntPrimRelOp
     case object LT extends IntPrimRelOp
     case object LTE extends IntPrimRelOp
 
-    val allIntPrimRelOps = Vector(EQ, NEQ, GT, GTE, LT, LTE)
+    val allIntPrimRelOps = Vector(GT, GTE, LT, LTE)
 
     case class IntRelOp[I <: Backend](op : IntPrimRelOp) extends IntPrimitive[I] {
         val numArgs = op.numArgs
@@ -298,8 +351,6 @@ object Primitives {
             operands match {
                 case Vector(left, right) =>
                     if (op match {
-                        case EQ  => left == right
-                        case NEQ => left != right
                         case GT  => left > right
                         case GTE => left >= right
                         case LT  => left < right
@@ -319,10 +370,9 @@ object Primitives {
     }
     case object CONCAT extends StrPrimOp(2)
     case object LENGTH extends StrPrimOp(1)
-    case object EQUALS extends StrPrimOp(2)
     case object SUBSTR extends StrPrimOp(2)
 
-    val allStrPrimOps = Vector(CONCAT, EQUALS, LENGTH, SUBSTR)
+    val allStrPrimOps = Vector(CONCAT, LENGTH, SUBSTR)
 
     case class StringPrimitive[I <: Backend](op : StrPrimOp) extends Primitive[I] {
         val numArgs = op.numArgs
@@ -347,11 +397,6 @@ object Primitives {
                     val l = extractStrParam(lx)
                     val r = extractStrParam(rx)
                     interp.strR(l + r)
-
-                case (EQUALS, Vector(lx, rx)) =>
-                    val l = extractStrParam(lx)
-                    val r = extractStrParam(rx)
-                    if (l == r) interp.trueR() else interp.falseR()
 
                 case (LENGTH, Vector(sx)) =>
                     val s = extractStrParam(sx)

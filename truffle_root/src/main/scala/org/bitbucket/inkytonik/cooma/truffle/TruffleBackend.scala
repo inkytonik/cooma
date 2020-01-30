@@ -4,10 +4,9 @@ import org.bitbucket.inkytonik.cooma.{Backend, Config}
 
 class TruffleBackend(config : Config) extends Backend {
 
-    // import de.uka.ilkd.pp.{DataLayouter, StringBackend}
     import java.io.PrintWriter
     import java.math.BigInteger
-    import org.bitbucket.inkytonik.cooma.Primitives
+    import org.bitbucket.inkytonik.cooma.Primitives._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
     import org.bitbucket.inkytonik.cooma.truffle.runtime._
@@ -86,31 +85,34 @@ class TruffleBackend(config : Config) extends Backend {
     type Primitive = org.bitbucket.inkytonik.cooma.Primitives.Primitive[TruffleBackend]
 
     def argumentP(i : Int) : Primitive =
-        Primitives.ArgumentP(i)
+        ArgumentP(i)
 
     def capabilityP(cap : String) : Primitive =
-        Primitives.CapabilityP(cap)
+        CapabilityP(cap)
 
     def writerWriteP(filename : String) : Primitive =
-        Primitives.WriterWriteP(filename, new PrintWriter(System.out))
+        WriterWriteP(filename, new PrintWriter(System.out))
 
     def readerReadP(filename : String) : Primitive =
-        Primitives.ReaderReadP(filename)
+        ReaderReadP(filename)
 
     def recConcatP() : Primitive =
-        Primitives.RecConcatP()
+        RecConcatP()
 
     def recSelectP() : Primitive =
-        Primitives.RecSelectP()
+        RecSelectP()
 
-    def intBinP(op : Primitives.IntPrimBinOp) : Primitive =
-        Primitives.IntBinOp(op)
+    def equalP : Primitive =
+        EqualP()
 
-    def intRelP(op : Primitives.IntPrimRelOp) : Primitive =
-        Primitives.IntRelOp(op)
+    def intBinP(op : IntPrimBinOp) : Primitive =
+        IntBinOp(op)
 
-    def stringP(op : Primitives.StrPrimOp) : Primitive =
-        Primitives.StringPrimitive(op)
+    def intRelP(op : IntPrimRelOp) : Primitive =
+        IntRelOp(op)
+
+    def stringP(op : StrPrimOp) : Primitive =
+        StringPrimitive(op)
 
     // Runtime Values
 
@@ -161,17 +163,29 @@ class TruffleBackend(config : Config) extends Backend {
             case _                     => None
         }
 
-    override def isRecR(value : RuntimeValue[_]) : Option[Vector[FieldValueRuntime]] =
+    def isRecR(value : RuntimeValue[_]) : Option[Vector[FieldValueRuntime]] =
         value match {
             case rec : RecRuntimeValue => Some(rec.getFields.toVector)
             case _                     => None
         }
 
-    override def isFldR(value : FieldValueRuntime) : Option[(String, RuntimeValue[_])] =
+    def isVarR(value : ValueR) : Option[(String, ValueR)] =
+        value match {
+            case varr : VarRuntimeValue => Some((varr.getC(), varr.getV()))
+            case _                      => None
+        }
+
+    def isFldR(value : FieldValueRuntime) : Option[(String, RuntimeValue[_])] =
         value match {
             case value : FieldValueRuntime => Some((value.getX, value.getV))
             case _                         => None
         }
+
+    def getFieldName(value : FldR) : String =
+        value.getX
+
+    def getFieldValue(value : FldR) : ValueR =
+        value.getV
 
     override def emptyEnv : Rho = new Rho
 

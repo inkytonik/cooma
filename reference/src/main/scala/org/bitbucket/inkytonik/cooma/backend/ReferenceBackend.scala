@@ -125,6 +125,9 @@ class ReferenceBackend(
     def recSelectP() : Primitive =
         RecSelectP()
 
+    def equalP : Primitive =
+        EqualP()
+
     def intBinP(op : Primitives.IntPrimBinOp) : Primitive =
         Primitives.IntBinOp(op)
 
@@ -134,7 +137,8 @@ class ReferenceBackend(
     def stringP(op : Primitives.StrPrimOp) : Primitive =
         Primitives.StringPrimitive(op)
 
-    //Value runtimes
+    // Runtime values
+
     def errR(msg : String) : ValueR =
         ErrR(msg)
 
@@ -174,17 +178,29 @@ class ReferenceBackend(
             case _       => None
         }
 
+    def isRecR(value : ValueR) : Option[Vector[FldR]] =
+        value match {
+            case RecR(fields) => Some(fields)
+            case _            => None
+        }
+
+    def isVarR(value : ValueR) : Option[(String, ValueR)] =
+        value match {
+            case VarR(c, v) => Some((c, v))
+            case _          => None
+        }
+
     def isFldR(value : FldR) : Option[(String, ValueR)] =
         value match {
             case FldR(x, v) => Some((x, v))
             case _          => None
         }
 
-    def isRecR(value : ValueR) : Option[Vector[FldR]] =
-        value match {
-            case RecR(fields) => Some(fields)
-            case _            => None
-        }
+    def getFieldName(value : FldR) : String =
+        value.x
+
+    def getFieldValue(value : FldR) : ValueR =
+        value.v
 
     /*
      * Custom IR pretty-printer that escapes string terms.

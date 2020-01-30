@@ -39,20 +39,18 @@ trait Compiler {
     case class PrimitiveMeta(prm : Primitive)
 
     val primitivesTable = Map(
+        "Equal" -> PrimitiveMeta(equalP),
         "IntAbs" -> PrimitiveMeta(intBinP(ABS)),
         "IntAdd" -> PrimitiveMeta(intBinP(ADD)),
         "IntSub" -> PrimitiveMeta(intBinP(SUB)),
         "IntMul" -> PrimitiveMeta(intBinP(MUL)),
         "IntDiv" -> PrimitiveMeta(intBinP(DIV)),
         "IntPow" -> PrimitiveMeta(intBinP(POW)),
-        "IntEq" -> PrimitiveMeta(intRelP(EQ)),
-        "IntNeq" -> PrimitiveMeta(intRelP(NEQ)),
         "IntGt" -> PrimitiveMeta(intRelP(GT)),
         "IntGte" -> PrimitiveMeta(intRelP(GTE)),
         "IntLt" -> PrimitiveMeta(intRelP(LT)),
         "IntLte" -> PrimitiveMeta(intRelP(LTE)),
         "StrConcat" -> PrimitiveMeta(stringP(CONCAT)),
-        "StrEquals" -> PrimitiveMeta(stringP(EQUALS)),
         "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
         "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR))
     )
@@ -138,6 +136,20 @@ trait Compiler {
     def mkStrIntPrimField(fieldName : String, primName : String) : Field =
         mkPrimField(fieldName, Vector(StrT(), IntT()), primName)
 
+    val equal =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("t"), TypT()),
+                Argument(IdnDef("l"), Idn(IdnUse("t"))),
+                Argument(IdnDef("r"), Idn(IdnUse("t")))
+            )),
+            Prm("Equal", Vector(
+                Idn(IdnUse("t")),
+                Idn(IdnUse("l")),
+                Idn(IdnUse("r"))
+            ))
+        )
+
     val ints =
         Rec(Vector(
             mkInt1PrimField("abs", "IntAbs"),
@@ -146,8 +158,6 @@ trait Compiler {
             mkInt2PrimField("mul", "IntMul"),
             mkInt2PrimField("pow", "IntPow"),
             mkInt2PrimField("sub", "IntSub"),
-            mkInt2PrimField("eq", "IntEq"),
-            mkInt2PrimField("neq", "IntNeq"),
             mkInt2PrimField("lt", "IntLt"),
             mkInt2PrimField("lte", "IntLte"),
             mkInt2PrimField("gt", "IntGt"),
@@ -157,7 +167,6 @@ trait Compiler {
     val strings =
         Rec(Vector(
             mkStr2PrimField("concat", "StrConcat"),
-            mkStr2PrimField("equals", "StrEquals"),
             mkStr1PrimField("length", "StrLength"),
             mkStrIntPrimField("substr", "StrSubstr")
         ))
@@ -187,6 +196,9 @@ trait Compiler {
                     compile(r, z =>
                         letV(x, prmV(recConcatP(), Vector(y, z)),
                             kappa(x))))
+
+            case Eql() =>
+                compile(equal, kappa)
 
             case False() =>
                 compile(Var(Field("False", Uni())), kappa)
@@ -381,6 +393,9 @@ trait Compiler {
                     compile(r, z =>
                         letV(x, prmV(recConcatP(), Vector(y, z)),
                             appC(k, x))))
+
+            case Eql() =>
+                tailCompile(equal, k)
 
             case False() =>
                 tailCompile(Var(Field("False", Uni())), k)

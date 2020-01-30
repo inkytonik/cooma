@@ -35,6 +35,7 @@ trait Backend {
     def recSelectP() : Primitive
     def writerWriteP(filename : String) : Primitive
 
+    def equalP : Primitive
     def intBinP(op : Primitives.IntPrimBinOp) : Primitive
     def intRelP(op : Primitives.IntPrimRelOp) : Primitive
     def stringP(op : Primitives.StrPrimOp) : Primitive
@@ -57,10 +58,13 @@ trait Backend {
     def isStrR(value : ValueR) : Option[String]
     def isIntR(value : ValueR) : Option[BigInt]
     def isRecR(value : ValueR) : Option[Vector[FldR]]
+    def isVarR(value : ValueR) : Option[(String, ValueR)]
 
     type FldR
     def fldR(x : String, v : ValueR) : FldR
     def isFldR(value : FldR) : Option[(String, ValueR)]
+    def getFieldName(value : FldR) : String
+    def getFieldValue(value : FldR) : ValueR
 
     def showRuntimeValue(v : OutputValueR) : String
 

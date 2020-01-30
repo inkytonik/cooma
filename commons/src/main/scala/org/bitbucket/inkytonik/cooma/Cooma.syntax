@@ -11,35 +11,36 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Arguments ")" Expression           {Fun, right, 4}
-  | '(' ArgumentTypes ")" Expression             {FunT, right, 4}
-  | Expression sp "match" '{' nest(Case+) \n '}' {Mat, left, 3}
-  | Expression "&" Expression                    {Cat, left, 2}
-  | Expression '(' Expression ** "," ')'         {App, left, 1}
-  | Expression '.' FieldUse                      {Sel, left, 1}
-  | '{' '}'                                      {Uni}
-  | '{' nestnl(BlockExp) \n '}'                  {Blk}
-  | '{' nest(Field ++ ',') \n '}'                {Rec}
-  | '{' nest(FieldType ++ ',') \n '}'            {RecT}
-  | '<' nest(Field) \n '>'                       {Var}
-  | '<' nest(FieldType ++ ',') \n '>'            {VarT}
-  | 'false'                                      {False}
-  | 'true'                                       {True}
-  | 'not'                                        {Not}
-  | 'Boolean'                                    {BoolT}
-  | IntLit                                       {Num, 1: BigInt.apply : BigInt}
-  | 'Int'                                        {IntT}
-  | 'Ints'                                       {Ints}
-  | 'Reader'                                     {ReaderT}
-  | 'ReaderWriter'                               {ReaderWriterT}
-  | 'Writer'                                     {WriterT}
-  | StringLit                                    {Str}
-  | 'String'                                     {StrT}
-  | 'Strings'                                    {Strings}
-  | 'Type'                                       {TypT}
-  | 'Unit'                                       {UniT}
-  | "prim" Identifier '(' Expression ** "," ')'  {Prm}
-  | IdnUse                                       {Idn}.
+    "fun" '(' Arguments ")" Expression                       {Fun, right, 4}
+  | '(' ArgumentTypes ")" Expression                         {FunT, right, 4}
+  | Expression sp "match" '{' nest(Case+) \n '}'             {Mat, left, 3}
+  | Expression "&" Expression                                {Cat, left, 2}
+  | Expression '(' Expression ** "," ')'                     {App, left, 1}
+  | Expression '.' FieldUse                                  {Sel, left, 1}
+  | '{' '}'                                                  {Uni}
+  | '{' nestnl(BlockExp) \n '}'                              {Blk}
+  | '{' nest(Field ++ ',') \n '}'                            {Rec}
+  | '{' nest(FieldType ++ ',') \n '}'                        {RecT}
+  | '<' nest(Field) \n '>'                                   {Var}
+  | '<' nest(FieldType ++ ',') \n '>'                        {VarT}
+  | 'false'                                                  {False}
+  | 'true'                                                   {True}
+  | 'not'                                                    {Not}
+  | 'Boolean'                                                {BoolT}
+  | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
+  | 'Int'                                                    {IntT}
+  | 'Ints'                                                   {Ints}
+  | 'Reader'                                                 {ReaderT}
+  | 'ReaderWriter'                                           {ReaderWriterT}
+  | 'Writer'                                                 {WriterT}
+  | StringLit                                                {Str}
+  | 'String'                                                 {StrT}
+  | 'Strings'                                                {Strings}
+  | 'Type'                                                   {TypT}
+  | 'Unit'                                                   {UniT}
+  | 'equal'                                                  {Eql}
+  | "prim" Identifier '(' Expression ** "," ')'              {Prm}
+  | IdnUse                                                   {Idn}.
 
 Arguments =
   Argument ** ",".

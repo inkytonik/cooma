@@ -373,6 +373,16 @@ class SemanticAnalyser(
                         None
                 }
 
+            case _ : Eql =>
+                Some(FunT(
+                    ArgumentTypes(Vector(
+                        ArgumentType(Some(IdnDef("t")), TypT()),
+                        ArgumentType(None, Idn(IdnUse("t"))),
+                        ArgumentType(None, Idn(IdnUse("t"))),
+                    )),
+                    boolT
+                ))
+
             case False() =>
                 Some(boolT)
 
@@ -398,8 +408,6 @@ class SemanticAnalyser(
                     FieldType("mul", primitivesTypesTable("IntMul")),
                     FieldType("pow", primitivesTypesTable("IntPow")),
                     FieldType("sub", primitivesTypesTable("IntSub")),
-                    FieldType("eq", primitivesTypesTable("IntEq")),
-                    FieldType("neq", primitivesTypesTable("IntNeq")),
                     FieldType("lt", primitivesTypesTable("IntLt")),
                     FieldType("lte", primitivesTypesTable("IntLte")),
                     FieldType("gt", primitivesTypesTable("IntGt")),
@@ -468,7 +476,6 @@ class SemanticAnalyser(
             case Strings() =>
                 Some(RecT(Vector(
                     FieldType("concat", primitivesTypesTable("StrConcat")),
-                    FieldType("equals", primitivesTypesTable("StrEquals")),
                     FieldType("length", primitivesTypesTable("StrLength")),
                     FieldType("substr", primitivesTypesTable("StrSubstr"))
                 )))
@@ -727,17 +734,23 @@ class SemanticAnalyser(
             case tree.parent(_ : ArgumentType) =>
                 Some(TypT())
 
-            case tree.parent.pair(a, Body(_, t, e)) if a eq e =>
-                unalias(e, t)
-
-            case tree.parent.pair(a, Body(_, t, _)) if a eq t =>
-                Some(TypT())
+            case tree.parent.pair(a, Body(_, t, e)) =>
+                if (a eq t)
+                    Some(TypT())
+                else
+                    unalias(e, t)
 
             case tree.parent(_ : FieldType) =>
                 Some(TypT())
 
             case tree.parent(_ : FunT) =>
                 Some(TypT())
+
+            case tree.parent.pair(a : Expression, Prm("Equal", Vector(t, l, r))) =>
+                if (a eq t)
+                    Some(TypT())
+                else
+                    unalias(t, t)
 
             case tree.parent.pair(a : Expression, Prm(i, _)) =>
                 val argnum = tree.index(a)
