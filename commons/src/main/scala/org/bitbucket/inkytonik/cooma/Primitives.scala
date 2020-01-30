@@ -249,9 +249,9 @@ object Primitives {
             xs match {
                 case Vector(_, l, r) =>
                     if (equal(interp.lookupR(rho, l), interp.lookupR(rho, r)))
-                        interp.trueR()
+                        interp.trueR
                     else
-                        interp.falseR()
+                        interp.falseR
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")
             }
@@ -356,9 +356,9 @@ object Primitives {
                         case LT  => left < right
                         case LTE => left <= right
                     }) {
-                        interp.trueR()
+                        interp.trueR
                     } else {
-                        interp.falseR()
+                        interp.falseR
                     }
                 case _ =>
                     sys.error(s"$show $op: unexpectedly got operands $operands")
