@@ -231,6 +231,8 @@ class Interpreter(config : Config) {
                 "{" <> nest(line <> ssep(v1.map(toDocField), "," <> line)) <@> "}"
             case StrR(v1) =>
                 "\"" <> value(escape(v1)) <> "\""
+            case VarR(c, `unitR`) =>
+                c.toLowerCase()
             case VarR(v1, v2) =>
                 "<" <+> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <+> ">"
         }

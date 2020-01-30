@@ -318,7 +318,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                                 case False(x) => x
                                 case True(x) => x
                             }
-                        { a = f(< False = {} >), b = f(< True = {} >) }
+                        { a = f(false), b = f(true) }
                     }""",
                     "{ a = {}, b = {} }",
                     "{ a : Unit, b : Unit }"
@@ -434,7 +434,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             r = id(Reader, { read = fun () "hello" })
                         }
                     }""",
-                    """{ b = < True = {} >, i = 10, s = "hello", r = { read = <function> } }""",
+                    """{ b = true, i = 10, s = "hello", r = { read = <function> } }""",
                     "{ b : Boolean, i : Int, s : String, r : Reader }"
                 ),
                 ExecTest(
@@ -684,27 +684,27 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "true",
                     "true",
-                    "< True = {} >",
+                    "true",
                     "Boolean",
                     "true"
                 ),
                 ExecTest(
                     "false",
                     "false",
-                    "< False = {} >",
+                    "false",
                     "Boolean",
                     "false"
                 ),
                 ExecTest(
                     "not(false)",
                     "not(false)",
-                    "< True = {} >",
+                    "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "not(true)",
                     "not(true)",
-                    "< False = {} >",
+                    "false",
                     "Boolean"
                 ),
                 ExecTest(
@@ -813,79 +813,79 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     s"equality of integers (equal)",
                     s"""equal(Int, 42, 42)""",
-                    "< True = {} >",
+                    "true",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of integers (unequal)",
                     s"""equal(Int, 42, 99)""",
-                    "< False = {} >",
+                    "false",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of strings (equal)",
                     s"""equal(String, "abc", "abc")""",
-                    "< True = {} >",
+                    "true",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of strings (unequal)",
                     s"""equal(String, "abc", "cba")""",
-                    "< False = {} >",
+                    "false",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of records (equal, flat)",
                     s"equal({x : Int, y : Int}, {x = 0, y = 1}, {y = 1, x = 0})",
-                    "< True = {} >",
+                    "true",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of records (equal, nested)",
                     s"equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 0, a = 0}})",
-                    "< True = {} >",
+                    "true",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of records (unequal, flat",
                     s"equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
-                    "< False = {} >",
+                    "false",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of records (unequal, nested)",
                     s"equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 1, a = 0}})",
-                    "< False = {} >",
+                    "false",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of variants (equal, flat)",
                     s"equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
-                    "< True = {} >",
+                    "true",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of variants (equal, nested)",
                     s"equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 1} >)",
-                    "< True = {} >",
+                    "true",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of variants (unequal, same constructor)",
                     s"equal(< a : Int, v : Int >, < a = 1 >, < a = 2 >)",
-                    "< False = {} >",
+                    "false",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of variants (unequal, different constructor)",
                     s"equal(< a : Int, v : Int >, < a = 1 >, < v = 2 >)",
-                    "< False = {} >",
+                    "false",
                     "Boolean"
                 ),
                 ExecTest(
                     s"equality of variants (unequal, nested)",
                     s"equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
-                    "< False = {} >",
+                    "false",
                     "Boolean"
                 )
 
@@ -996,7 +996,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         def expectedBool(b : Boolean) : String =
-            s"""< ${if (b) "True" else "False"} = {} >"""
+            b.toString
 
         case class Int1PrimTest(
             op : PrimOp,
@@ -1300,7 +1300,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         fun (x : Boolean) x
                         res0(true)
                     """,
-                    "res0 : (x : Boolean) Boolean = <function>\nres1 : Boolean = < True = {} >"
+                    "res0 : (x : Boolean) Boolean = <function>\nres1 : Boolean = true"
                 ),
                 REPLTest(
                     "single evaluation (function using type alias that needs to be expanded)",

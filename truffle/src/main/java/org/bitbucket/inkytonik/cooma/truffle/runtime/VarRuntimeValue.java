@@ -28,7 +28,11 @@ public class VarRuntimeValue extends RuntimeValue<VarRuntimeValue> implements Tr
 
     @Override
     public String toString() {
-        return String.format("< %s = %s >", c, v.print());
+        val vp = v.print();
+        if (vp.equals("{}"))
+            return c.toLowerCase();
+        else
+            return String.format("< %s = %s >", c, v.print());
     }
 
     @Override
