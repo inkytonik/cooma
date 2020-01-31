@@ -27,7 +27,7 @@ public class CoomaRootNode extends RootNode {
         return context;
     }
 
-    public CoomaRootNode(TruffleLanguage language, CoomaTermNode termNode) {
+    public CoomaRootNode(TruffleLanguage<CoomaContext> language, CoomaTermNode termNode) {
         super(language);
         this.context = language.getContextReference();
         this.termNode = termNode;
