@@ -191,3 +191,8 @@ lazy val trufflecomponent = (project in file("truffle-component"))
 			baseDirectory.value + "/install_component.sh" !
 		}
 	)
+
+// Custom tasks
+
+val testFailing = taskKey[Unit]("Launch tests, tracing only failures")
+testFailing := (testOnly in Test).toTask(" * -- -oC").value
