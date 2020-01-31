@@ -46,7 +46,7 @@ Arguments =
   Argument ** ",".
 
 Argument =
-  IdnDef sp ":" Expression.
+  IdnDef sp ":" Expression StringLit?.
 
 ArgumentTypes =
   ArgumentType ** ",".

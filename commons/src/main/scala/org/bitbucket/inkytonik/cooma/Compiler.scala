@@ -91,9 +91,9 @@ trait Compiler {
         exp match {
             case Fun(Arguments(Vector()), e) =>
                 compileHalt(e)
-            case Fun(Arguments(Vector(Argument(IdnDef(a), t))), e) =>
+            case Fun(Arguments(Vector(Argument(IdnDef(a), t, _))), e) =>
                 compileTopArg(a, t, e)
-            case Fun(Arguments(Argument(IdnDef(a), t) +: as), e) =>
+            case Fun(Arguments(Argument(IdnDef(a), t, _) +: as), e) =>
                 compileTopArg(a, t, Fun(Arguments(as), e))
             case _ =>
                 compileHalt(exp)
@@ -103,7 +103,7 @@ trait Compiler {
     val not =
         Fun(
             Arguments(Vector(
-                Argument(IdnDef("b"), BoolT())
+                Argument(IdnDef("b"), BoolT(), None)
             )),
             Mat(
                 Idn(IdnUse("b")),
@@ -116,7 +116,7 @@ trait Compiler {
 
     def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
         val argNames = (1 to argTypes.length).map(i => s"arg$i")
-        val args = argNames.zip(argTypes).map { case (n, t) => Argument(IdnDef(n), t) }
+        val args = argNames.zip(argTypes).map { case (n, t) => Argument(IdnDef(n), t, None) }
         val params = argNames.map(n => Idn(IdnUse(n))).toVector
         Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
     }
@@ -139,9 +139,9 @@ trait Compiler {
     val equal =
         Fun(
             Arguments(Vector(
-                Argument(IdnDef("t"), TypT()),
-                Argument(IdnDef("l"), Idn(IdnUse("t"))),
-                Argument(IdnDef("r"), Idn(IdnUse("t")))
+                Argument(IdnDef("t"), TypT(), None),
+                Argument(IdnDef("l"), Idn(IdnUse("t")), None),
+                Argument(IdnDef("r"), Idn(IdnUse("t")), None)
             )),
             Prm("Equal", Vector(
                 Idn(IdnUse("t")),
@@ -206,10 +206,10 @@ trait Compiler {
             case Fun(Arguments(Vector()), e) =>
                 compileFun("_", UniT(), e, kappa)
 
-            case Fun(Arguments(Vector(Argument(IdnDef(x), t))), e) =>
+            case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
                 compileFun(x, t, e, kappa)
 
-            case Fun(Arguments(Argument(IdnDef(x), t) +: as), e) =>
+            case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
                 compileFun(x, t, Fun(Arguments(as), e), kappa)
 
             case Idn(IdnUse(i)) =>
@@ -327,9 +327,9 @@ trait Compiler {
         val k = fresh("k")
         fd match {
             case Def(IdnDef(f), Body(Arguments(Vector()), t, e)) =>
-                compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), UniT()))), t, e)))
+                compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), UniT(), None))), t, e)))
 
-            case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _) +: otherArgs), _, e)) =>
+            case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _, None) +: otherArgs), _, e)) =>
                 defTerm(f, k, x, compileDefBody(otherArgs, e, k))
         }
     }
@@ -403,10 +403,10 @@ trait Compiler {
             case Fun(Arguments(Vector()), e) =>
                 tailCompileFun("_", UniT(), e, k)
 
-            case Fun(Arguments(Vector(Argument(IdnDef(x), t))), e) =>
+            case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
                 tailCompileFun(x, t, e, k)
 
-            case Fun(Arguments(Argument(IdnDef(x), t) +: as), e) =>
+            case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
                 tailCompileFun(x, t, Fun(Arguments(as), e), k)
 
             case Fun(Arguments(a +: as), e) =>

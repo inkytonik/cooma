@@ -268,7 +268,7 @@ class SemanticAnalyser(
         case n @ Scope() =>
             leave(out(n))
 
-        case n @ Argument(IdnDef(i), _) if !isWildcard(i) =>
+        case n @ Argument(IdnDef(i), _, _) if !isWildcard(i) =>
             defineIfNew(out(n), i, MultipleEntity(), ArgumentEntity(n))
 
         case tree.parent.pair(n @ IdnDef(i), c : Case) if !isWildcard(i) =>
@@ -548,7 +548,7 @@ class SemanticAnalyser(
 
     val entityType : CoomaEntity => Option[Expression] =
         attr {
-            case ArgumentEntity(n @ Argument(_, t)) =>
+            case ArgumentEntity(n @ Argument(_, t, _)) =>
                 unalias(n, t)
             case CaseValueEntity(tree.parent.pair(c, Mat(e, _))) =>
                 tipe(e) match {
@@ -623,7 +623,7 @@ class SemanticAnalyser(
 
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {
-                    case ArgumentEntity(Argument(_, TypT())) =>
+                    case ArgumentEntity(Argument(_, TypT(), _)) =>
                         Some(t)
                     case LetEntity(Let(_, _, _, v)) if t != v =>
                         unalias(n, v)

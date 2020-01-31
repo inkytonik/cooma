@@ -8,7 +8,8 @@ Program(
                             Argument(
                                 IdnDef(
                                     "x"),
-                                IntT()))),
+                                IntT(),
+                                None))),
                     Idn(
                         IdnUse(
                             "x"))))),
