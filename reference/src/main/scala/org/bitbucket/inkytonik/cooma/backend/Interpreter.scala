@@ -60,6 +60,8 @@ class Interpreter(config : Config) {
     }
 
     def interpret(term : Term, env : Env, args : Seq[String], config : Config) : ValueR = {
+
+        @tailrec
         def interpretAux(rho : Env, term : Term) : ValueR =
             term match {
                 case AppC("$halt", x) =>
