@@ -18,6 +18,7 @@ Expression {paren} =
   | Expression '(' Expression ** "," ')'                     {App, left, 1}
   | Expression '.' FieldUse                                  {Sel, left, 1}
   | '{' '}'                                                  {Uni}
+  | 'Unit'                                                   {UniT}
   | '{' nestnl(BlockExp) \n '}'                              {Blk}
   | '{' nest(Field ++ ',') \n '}'                            {Rec}
   | '{' nest(FieldType ++ ',') \n '}'                        {RecT}
@@ -37,7 +38,6 @@ Expression {paren} =
   | 'String'                                                 {StrT}
   | 'Strings'                                                {Strings}
   | 'Type'                                                   {TypT}
-  | 'Unit'                                                   {UniT}
   | 'equal'                                                  {Eql}
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
   | IdnUse                                                   {Idn}.
