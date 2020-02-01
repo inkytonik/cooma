@@ -1,5 +1,5 @@
 {
-    // predef: val Reader = {read : () => String}
+    // predef: val Reader = {read : () String}
     type Reader2 = {read1 : () String, read2 : () String}
     type Chooser = {choose : (Boolean) Reader}
 
