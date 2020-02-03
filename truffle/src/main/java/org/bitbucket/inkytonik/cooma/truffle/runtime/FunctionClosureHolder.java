@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
-public abstract class FunctionClosureHolder<T extends FunctionClosureHolder<T>> extends RuntimeValue<T>{
+public abstract class FunctionClosureHolder extends RuntimeValue{
     public abstract FunctionClosure get(String key);
 
     @Override

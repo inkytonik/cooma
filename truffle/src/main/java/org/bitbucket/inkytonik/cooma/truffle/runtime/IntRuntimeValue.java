@@ -5,13 +5,15 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import de.uka.ilkd.pp.DataLayouter;
 import java.math.BigInteger;
+import java.util.Comparator;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
 @ExportLibrary(InteropLibrary.class)
-public class IntRuntimeValue extends RuntimeValue<IntRuntimeValue> implements TruffleObject {
+public class IntRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<IntRuntimeValue>{
     private final BigInteger innerValue;
 
     @Override

@@ -9,7 +9,7 @@ import java.util.Comparator;
 
 @Getter
 @RequiredArgsConstructor
-public class ContinuationClosure extends RuntimeValue<ContinuationClosure> {
+public class ContinuationClosure extends RuntimeValue implements Comparable<ContinuationClosure>{
     private final Rho rho;
     private final String x;
     private final CoomaTermNode z;
@@ -24,8 +24,10 @@ public class ContinuationClosure extends RuntimeValue<ContinuationClosure> {
         l.print(this.toString());
     }
 
+
     @Override
     public int compareTo(ContinuationClosure continuationClosure) {
         return Comparator.comparing(ContinuationClosure::getX).compare(this, continuationClosure);
     }
+
 }

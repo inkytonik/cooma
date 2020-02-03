@@ -9,7 +9,7 @@ import lombok.val;
 
 @Value
 @EqualsAndHashCode(callSuper=false)
-public class VarRuntimeValue extends RuntimeValue<VarRuntimeValue> implements TruffleObject, Comparable<VarRuntimeValue> {
+public class VarRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<VarRuntimeValue>{
 
     private final String c;
     private final RuntimeValue v;
@@ -21,10 +21,9 @@ public class VarRuntimeValue extends RuntimeValue<VarRuntimeValue> implements Tr
 
     @Override
     public int compareTo(VarRuntimeValue varRuntimeValue) {
-        return Comparator.comparing(VarRuntimeValue::getC)
-                .thenComparing(VarRuntimeValue::getV)
-                .compare(this, varRuntimeValue);
+        return Comparator.comparing(VarRuntimeValue::getC).compare(this, varRuntimeValue);
     }
+
 
     @Override
     public String toString() {

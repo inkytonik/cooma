@@ -116,7 +116,7 @@ class TruffleBackend(config : Config) extends Backend {
 
     // Runtime Values
 
-    override type ValueR = RuntimeValue[_]
+    override type ValueR = RuntimeValue
     override type OutputValueR = org.graalvm.polyglot.Value
     override type Env = Rho
     override type FldR = FieldValueRuntime
@@ -145,25 +145,25 @@ class TruffleBackend(config : Config) extends Backend {
     def intR(num : BigInt) : ValueR =
         new IntRuntimeValue(new BigInteger(num.toByteArray))
 
-    def isErrR(value : RuntimeValue[_]) : Option[String] =
+    def isErrR(value : RuntimeValue) : Option[String] =
         value match {
             case error : ErrorRuntimeValue => Some(error.getMessage)
             case _                         => None
         }
 
-    def isStrR(value : RuntimeValue[_]) : Option[String] =
+    def isStrR(value : RuntimeValue) : Option[String] =
         value match {
             case string : StringRuntimeValue => Some(string.getInnerValue)
             case _                           => None
         }
 
-    def isIntR(value : RuntimeValue[_]) : Option[BigInt] =
+    def isIntR(value : RuntimeValue) : Option[BigInt] =
         value match {
             case int : IntRuntimeValue => Some(int.getInnerValue)
             case _                     => None
         }
 
-    def isRecR(value : RuntimeValue[_]) : Option[Vector[FieldValueRuntime]] =
+    def isRecR(value : RuntimeValue) : Option[Vector[FieldValueRuntime]] =
         value match {
             case rec : RecRuntimeValue => Some(rec.getFields.toVector)
             case _                     => None
@@ -175,7 +175,7 @@ class TruffleBackend(config : Config) extends Backend {
             case _                      => None
         }
 
-    def isFldR(value : FieldValueRuntime) : Option[(String, RuntimeValue[_])] =
+    def isFldR(value : FieldValueRuntime) : Option[(String, RuntimeValue)] =
         value match {
             case value : FieldValueRuntime => Some((value.getX, value.getV))
             case _                         => None
@@ -189,7 +189,7 @@ class TruffleBackend(config : Config) extends Backend {
 
     override def emptyEnv : Rho = new Rho
 
-    override def lookupR(rho : Rho, x : String) : RuntimeValue[_] = rho.get(x)
+    override def lookupR(rho : Rho, x : String) : RuntimeValue = rho.get(x)
 
     override def getConfig : Config = config
 

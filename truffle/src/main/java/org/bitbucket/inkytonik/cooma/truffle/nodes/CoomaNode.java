@@ -13,8 +13,7 @@ public class CoomaNode extends Node {
         return getContext().get().getRho();
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T extends RuntimeValue> T  obtainFromRho(String key) {
+    protected RuntimeValue obtainFromRho(String key) {
         return Utils.obtainFromRho(getContext().get(), key);
     }
 
