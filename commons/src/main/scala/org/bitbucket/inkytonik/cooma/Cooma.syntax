@@ -29,12 +29,15 @@ Expression {paren} =
   | 'not'                                                    {Not}
   | 'Boolean'                                                {BoolT}
   | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
+  | 'Int!'                                                   {SecIntT}
   | 'Int'                                                    {IntT}
   | 'Ints'                                                   {Ints}
+  | 'Reader!'                                                {SecReaderT}
   | 'Reader'                                                 {ReaderT}
   | 'ReaderWriter'                                           {ReaderWriterT}
   | 'Writer'                                                 {WriterT}
   | StringLit                                                {Str}
+  | 'String!'                                                {SecStrT}
   | 'String'                                                 {StrT}
   | 'Strings'                                                {Strings}
   | 'Type'                                                   {TypT}

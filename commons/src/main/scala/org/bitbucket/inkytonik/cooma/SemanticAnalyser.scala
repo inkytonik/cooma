@@ -86,6 +86,10 @@ class SemanticAnalyser(
 
     def checkExpressionType(e : Expression) : Messages =
         (tipe(e), expectedType(e)) match {
+            case (Some(SecStrT()), Some(StrT())) =>
+                error(e, s"expected secret String, got public String ${show(e)}")
+            case (Some(SecIntT()), Some(IntT())) =>
+                error(e, s"expected secret Integer, got public Integer ${show(e)}")
             case (Some(t), Some(u)) if !subtype(t, u) =>
                 error(e, s"expected ${show(alias(u))}, got ${show(e)} of type ${show(alias(t))}")
             case _ =>
@@ -417,6 +421,9 @@ class SemanticAnalyser(
             case IntT() =>
                 Some(TypT())
 
+            case SecIntT() =>
+                Some(TypT())
+
             case m : Mat =>
                 matchType(m) match {
                     case OkCases(optType) =>
@@ -443,6 +450,9 @@ class SemanticAnalyser(
                 }
 
             case ReaderT() =>
+                Some(TypT())
+
+            case SecReaderT() =>
                 Some(TypT())
 
             case ReaderWriterT() =>
@@ -481,6 +491,9 @@ class SemanticAnalyser(
                 )))
 
             case StrT() =>
+                Some(TypT())
+
+            case SecStrT() =>
                 Some(TypT())
 
             case True() =>
@@ -593,6 +606,7 @@ class SemanticAnalyser(
         e match {
             case `boolT`                    => BoolT()
             case `readerT`                  => ReaderT()
+            case `secReaderT`               => SecReaderT()
             case `readerWriterT`            => ReaderWriterT()
             case `writerT`                  => WriterT()
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
@@ -636,6 +650,9 @@ class SemanticAnalyser(
 
             case ReaderT() =>
                 Some(readerT)
+
+            case SecReaderT() =>
+                Some(secReaderT)
 
             case ReaderWriterT() =>
                 Some(readerWriterT)
@@ -803,14 +820,17 @@ object SemanticAnalysis {
     def subtype(t : Expression, u : Expression) : Boolean =
         (t == u) ||
             ((t, u) match {
-                case (RecT(tr), RecT(ur)) =>
+                case (RecT(tr), RecT(ur)) => // Records
                     val urn = fieldtypeNames(ur)
                     urn.diff(fieldtypeNames(tr)).isEmpty && subtypesFields(urn, tr, ur)
-                case (VarT(tr), VarT(ur)) =>
+                case (VarT(tr), VarT(ur)) => // Variants
                     val trn = fieldtypeNames(tr)
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
                 case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
                     subtypesArgs(us, ts) && subtype(t, u)
+                // Secret types
+                case (StrT(), SecStrT()) => true
+                case (IntT(), SecIntT()) => true
                 case _ =>
                     false
             })

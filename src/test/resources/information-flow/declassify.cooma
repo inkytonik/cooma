@@ -1,0 +1,5 @@
+{
+    def ident(x : String!) String = x
+    val x : String = "Hello"
+    ident(x)
+}
