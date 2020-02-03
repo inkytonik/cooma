@@ -114,6 +114,11 @@ trait Compiler {
             )
         )
 
+    val booleans =
+        Rec(Vector(
+            Field("not", not)
+        ))
+
     def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
         val argNames = (1 to argTypes.length).map(i => s"arg$i")
         val args = argNames.zip(argTypes).map { case (n, t) => Argument(IdnDef(n), t, None) }
@@ -190,6 +195,9 @@ trait Compiler {
             case Blk(be) =>
                 compileBlockExp(be, kappa)
 
+            case Booleans() =>
+                compile(booleans, kappa)
+
             case Cat(l, r) =>
                 val x = fresh("x")
                 compile(l, y =>
@@ -220,9 +228,6 @@ trait Compiler {
 
             case Mat(e, cs) =>
                 compileMatch(e, cs, kappa)
-
-            case Not() =>
-                compile(not, kappa)
 
             case Num(i) =>
                 val x = fresh("x")
@@ -387,6 +392,9 @@ trait Compiler {
             case Blk(be) =>
                 tailCompileBlockExp(be, k)
 
+            case Booleans() =>
+                tailCompile(booleans, k)
+
             case Cat(l, r) =>
                 val x = fresh("x")
                 compile(l, y =>
@@ -420,9 +428,6 @@ trait Compiler {
 
             case Mat(e, cs) =>
                 tailCompileMatch(e, cs, k)
-
-            case Not() =>
-                tailCompile(not, k)
 
             case Num(i) =>
                 val x = fresh("x")

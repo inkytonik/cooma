@@ -89,17 +89,20 @@ object SymbolTable extends Environments[CoomaEntity] {
             FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), StrT()))), UniT()))
         ))
 
-    def mkPrimType(args : Vector[(String, Expression)], retType : Expression) : FunT =
+    def mkPrimType(args : Vector[Expression], retType : Expression) : FunT =
+        FunT(ArgumentTypes(args.map { case e => ArgumentType(None, e) }), retType)
+
+    def mkPrimTypeWithArgNames(args : Vector[(String, Expression)], retType : Expression) : FunT =
         FunT(ArgumentTypes(args.map { case (x, e) => ArgumentType(Some(IdnDef(x)), e) }), retType)
 
     def mkIntUnPrimType(retType : Expression) : FunT =
-        mkPrimType(Vector(("x", IntT())), retType)
+        mkPrimType(Vector(IntT()), retType)
 
     def mkIntBinPrimType(retType : Expression) : FunT =
-        mkPrimType(Vector(("x", IntT()), ("y", IntT())), retType)
+        mkPrimType(Vector(IntT(), IntT()), retType)
 
     val primitivesTypesTable = Map(
-        "Equal" -> mkPrimType(Vector(("t", TypT()), ("l", Idn(IdnUse("t"))), ("l", Idn(IdnUse("t")))), boolT),
+        "Equal" -> mkPrimTypeWithArgNames(Vector(("t", TypT()), ("l", Idn(IdnUse("t"))), ("l", Idn(IdnUse("t")))), boolT),
         "IntAbs" -> mkIntUnPrimType(IntT()),
         "IntAdd" -> mkIntBinPrimType(IntT()),
         "IntSub" -> mkIntBinPrimType(IntT()),
@@ -110,9 +113,9 @@ object SymbolTable extends Environments[CoomaEntity] {
         "IntGte" -> mkIntBinPrimType(boolT),
         "IntLt" -> mkIntBinPrimType(boolT),
         "IntLte" -> mkIntBinPrimType(boolT),
-        "StrConcat" -> mkPrimType(Vector(("s", StrT()), ("t", StrT())), StrT()),
-        "StrLength" -> mkPrimType(Vector(("s", StrT())), IntT()),
-        "StrSubstr" -> mkPrimType(Vector(("s", StrT()), ("i", IntT())), StrT())
+        "StrConcat" -> mkPrimType(Vector(StrT(), StrT()), StrT()),
+        "StrLength" -> mkPrimType(Vector(StrT()), IntT()),
+        "StrSubstr" -> mkPrimType(Vector(StrT(), IntT()), StrT())
     )
 
 }

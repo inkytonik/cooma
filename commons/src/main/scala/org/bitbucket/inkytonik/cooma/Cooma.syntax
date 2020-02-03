@@ -26,8 +26,8 @@ Expression {paren} =
   | '<' nest(FieldType ++ ',') \n '>'                        {VarT}
   | 'false'                                                  {False}
   | 'true'                                                   {True}
-  | 'not'                                                    {Not}
   | 'Boolean'                                                {BoolT}
+  | 'Booleans'                                               {Booleans}
   | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
   | 'Int'                                                    {IntT}
   | 'Ints'                                                   {Ints}

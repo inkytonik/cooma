@@ -696,16 +696,23 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "false"
                 ),
                 ExecTest(
-                    "not(false)",
-                    "not(false)",
+                    "Booleans.not(false)",
+                    "Booleans.not(false)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    "not(true)",
-                    "not(true)",
+                    "Booleans.not(true)",
+                    "Booleans.not(true)",
                     "false",
                     "Boolean"
+                ),
+                ExecTest(
+                    "Booleans",
+                    "Booleans",
+                    "{ not = <function> }",
+                    "{ not : (Boolean) Boolean }",
+                    "Booleans"
                 ),
                 ExecTest(
                     "Ints",
@@ -723,16 +730,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    gte = <function>
                       |}""".stripMargin,
                     """{
-                      |    abs : (x : Int) Int,
-                      |    add : (x : Int, y : Int) Int,
-                      |    div : (x : Int, y : Int) Int,
-                      |    mul : (x : Int, y : Int) Int,
-                      |    pow : (x : Int, y : Int) Int,
-                      |    sub : (x : Int, y : Int) Int,
-                      |    lt : (x : Int, y : Int) Boolean,
-                      |    lte : (x : Int, y : Int) Boolean,
-                      |    gt : (x : Int, y : Int) Boolean,
-                      |    gte : (x : Int, y : Int) Boolean
+                      |    abs : (Int) Int,
+                      |    add : (Int, Int) Int,
+                      |    div : (Int, Int) Int,
+                      |    mul : (Int, Int) Int,
+                      |    pow : (Int, Int) Int,
+                      |    sub : (Int, Int) Int,
+                      |    lt : (Int, Int) Boolean,
+                      |    lte : (Int, Int) Boolean,
+                      |    gt : (Int, Int) Boolean,
+                      |    gte : (Int, Int) Boolean
                       |}""".stripMargin,
                     "Ints"
                 ),
@@ -753,16 +760,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |} >""".stripMargin,
                     """<
                        |    v : {
-                       |        abs : (x : Int) Int,
-                       |        add : (x : Int, y : Int) Int,
-                       |        div : (x : Int, y : Int) Int,
-                       |        mul : (x : Int, y : Int) Int,
-                       |        pow : (x : Int, y : Int) Int,
-                       |        sub : (x : Int, y : Int) Int,
-                       |        lt : (x : Int, y : Int) Boolean,
-                       |        lte : (x : Int, y : Int) Boolean,
-                       |        gt : (x : Int, y : Int) Boolean,
-                       |        gte : (x : Int, y : Int) Boolean
+                       |        abs : (Int) Int,
+                       |        add : (Int, Int) Int,
+                       |        div : (Int, Int) Int,
+                       |        mul : (Int, Int) Int,
+                       |        pow : (Int, Int) Int,
+                       |        sub : (Int, Int) Int,
+                       |        lt : (Int, Int) Boolean,
+                       |        lte : (Int, Int) Boolean,
+                       |        gt : (Int, Int) Boolean,
+                       |        gte : (Int, Int) Boolean
                        |    }
                        |>""".stripMargin,
                 ),
@@ -790,16 +797,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |    x : {
                        |        a : Int,
                        |        b : {
-                       |            abs : (x : Int) Int,
-                       |            add : (x : Int, y : Int) Int,
-                       |            div : (x : Int, y : Int) Int,
-                       |            mul : (x : Int, y : Int) Int,
-                       |            pow : (x : Int, y : Int) Int,
-                       |            sub : (x : Int, y : Int) Int,
-                       |            lt : (x : Int, y : Int) Boolean,
-                       |            lte : (x : Int, y : Int) Boolean,
-                       |            gt : (x : Int, y : Int) Boolean,
-                       |            gte : (x : Int, y : Int) Boolean
+                       |            abs : (Int) Int,
+                       |            add : (Int, Int) Int,
+                       |            div : (Int, Int) Int,
+                       |            mul : (Int, Int) Int,
+                       |            pow : (Int, Int) Int,
+                       |            sub : (Int, Int) Int,
+                       |            lt : (Int, Int) Boolean,
+                       |            lte : (Int, Int) Boolean,
+                       |            gt : (Int, Int) Boolean,
+                       |            gte : (Int, Int) Boolean
                        |        }
                        |    }
                        |}""".stripMargin,
@@ -895,7 +902,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             s"Pre-defined Ints.${op.name} has the correct type",
                             s"Ints.${op.name}",
                             "<function>",
-                            "(x : Int) Int"
+                            "(Int) Int"
                         )
                     )
                 }) ++ allInt2PrimBinOps.flatMap(op => {
@@ -904,13 +911,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             s"Pre-defined Ints.${op.name} has the correct type",
                             s"Ints.${op.name}",
                             "<function>",
-                            "(x : Int, y : Int) Int"
+                            "(Int, Int) Int"
                         ),
                         ExecTest(
                             s"Pre-defined Ints.${op.name} partial application has the correct type",
                             s"Ints.${op.name}(1)",
                             "<function>",
-                            "(y : Int) Int"
+                            "(Int) Int"
                         )
                     )
 
@@ -920,13 +927,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             s"Pre-defined Ints.${op.name} has the correct type",
                             s"Ints.${op.name}",
                             "<function>",
-                            "(x : Int, y : Int) Boolean"
+                            "(Int, Int) Boolean"
                         ),
                         ExecTest(
                             s"Pre-defined Ints.${op.name} partial application has the correct type",
                             s"Ints.${op.name}(1)",
                             "<function>",
-                            "(y : Int) Boolean"
+                            "(Int) Boolean"
                         )
                     )
                 }) ++ Vector(
@@ -934,31 +941,31 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         s"Pre-defined Strings.concat has the correct type",
                         "Strings.concat",
                         "<function>",
-                        "(s : String, t : String) String"
+                        "(String, String) String"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.concat partial application has the correct type",
                         """Strings.concat("hi")""",
                         "<function>",
-                        "(t : String) String"
+                        "(String) String"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.length has the correct type",
                         "Strings.length",
                         "<function>",
-                        "(s : String) Int"
+                        "(String) Int"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.substr has the correct type",
                         "Strings.substr",
                         "<function>",
-                        "(s : String, i : Int) String"
+                        "(String, Int) String"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.substr partial application has the correct type",
                         """Strings.substr("hi")""",
                         "<function>",
-                        "(i : Int) String"
+                        "(Int) String"
                     )
                 )
 
