@@ -696,6 +696,30 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "false"
                 ),
                 ExecTest(
+                    "Booleans.and(false, false)",
+                    "Booleans.and(false, false)",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "Booleans.and(false, true)",
+                    "Booleans.and(false, true)",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "Booleans.and(true, false)",
+                    "Booleans.and(true, false)",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "Booleans.and(true, true)",
+                    "Booleans.and(true, true)",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
                     "Booleans.not(false)",
                     "Booleans.not(false)",
                     "true",
@@ -707,11 +731,40 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "false",
                     "Boolean"
                 ),
+
+                ExecTest(
+                    "Booleans.or(false, false)",
+                    "Booleans.or(false, false)",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "Booleans.or(false, true)",
+                    "Booleans.or(false, true)",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "Booleans.or(true, false)",
+                    "Booleans.or(true, false)",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "Booleans.or(true, true)",
+                    "Booleans.or(true, true)",
+                    "true",
+                    "Boolean"
+                ),
                 ExecTest(
                     "Booleans",
                     "Booleans",
-                    "{ not = <function> }",
-                    "{ not : (Boolean) Boolean }",
+                    "{ and = <function>, not = <function>, or = <function> }",
+                    """{
+                       |    and : (Boolean, Boolean) Boolean,
+                       |    not : (Boolean) Boolean,
+                       |    or : (Boolean, Boolean) Boolean
+                       |}""".stripMargin,
                     "Booleans"
                 ),
                 ExecTest(

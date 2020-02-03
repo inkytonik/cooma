@@ -361,7 +361,9 @@ class SemanticAnalyser(
 
             case Booleans() =>
                 Some(RecT(Vector(
-                    FieldType("not", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT))), boolT))
+                    FieldType("and", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT)),
+                    FieldType("not", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT))), boolT)),
+                    FieldType("or", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT))
                 )))
 
             case BoolT() =>

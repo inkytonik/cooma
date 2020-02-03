@@ -100,6 +100,21 @@ trait Compiler {
         }
     }
 
+    val and =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("l"), BoolT(), None),
+                Argument(IdnDef("r"), BoolT(), None)
+            )),
+            Mat(
+                Idn(IdnUse("l")),
+                Vector(
+                    Case("False", IdnDef("_"), False()),
+                    Case("True", IdnDef("_"), Idn(IdnUse("r")))
+                )
+            )
+        )
+
     val not =
         Fun(
             Arguments(Vector(
@@ -114,9 +129,26 @@ trait Compiler {
             )
         )
 
+    val or =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("l"), BoolT(), None),
+                Argument(IdnDef("r"), BoolT(), None)
+            )),
+            Mat(
+                Idn(IdnUse("l")),
+                Vector(
+                    Case("False", IdnDef("_"), Idn(IdnUse("r"))),
+                    Case("True", IdnDef("_"), True())
+                )
+            )
+        )
+
     val booleans =
         Rec(Vector(
-            Field("not", not)
+            Field("and", and),
+            Field("not", not),
+            Field("or", or)
         ))
 
     def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
