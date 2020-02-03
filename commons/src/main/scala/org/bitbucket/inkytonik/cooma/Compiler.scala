@@ -100,6 +100,21 @@ trait Compiler {
         }
     }
 
+    val and =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("l"), BoolT(), None),
+                Argument(IdnDef("r"), BoolT(), None)
+            )),
+            Mat(
+                Idn(IdnUse("l")),
+                Vector(
+                    Case("False", IdnDef("_"), False()),
+                    Case("True", IdnDef("_"), Idn(IdnUse("r")))
+                )
+            )
+        )
+
     val not =
         Fun(
             Arguments(Vector(
@@ -113,6 +128,28 @@ trait Compiler {
                 )
             )
         )
+
+    val or =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("l"), BoolT(), None),
+                Argument(IdnDef("r"), BoolT(), None)
+            )),
+            Mat(
+                Idn(IdnUse("l")),
+                Vector(
+                    Case("False", IdnDef("_"), Idn(IdnUse("r"))),
+                    Case("True", IdnDef("_"), True())
+                )
+            )
+        )
+
+    val booleans =
+        Rec(Vector(
+            Field("and", and),
+            Field("not", not),
+            Field("or", or)
+        ))
 
     def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
         val argNames = (1 to argTypes.length).map(i => s"arg$i")
@@ -190,6 +227,9 @@ trait Compiler {
             case Blk(be) =>
                 compileBlockExp(be, kappa)
 
+            case Booleans() =>
+                compile(booleans, kappa)
+
             case Cat(l, r) =>
                 val x = fresh("x")
                 compile(l, y =>
@@ -220,9 +260,6 @@ trait Compiler {
 
             case Mat(e, cs) =>
                 compileMatch(e, cs, kappa)
-
-            case Not() =>
-                compile(not, kappa)
 
             case Num(i) =>
                 val x = fresh("x")
@@ -387,6 +424,9 @@ trait Compiler {
             case Blk(be) =>
                 tailCompileBlockExp(be, k)
 
+            case Booleans() =>
+                tailCompile(booleans, k)
+
             case Cat(l, r) =>
                 val x = fresh("x")
                 compile(l, y =>
@@ -420,9 +460,6 @@ trait Compiler {
 
             case Mat(e, cs) =>
                 tailCompileMatch(e, cs, k)
-
-            case Not() =>
-                tailCompile(not, k)
 
             case Num(i) =>
                 val x = fresh("x")

@@ -499,11 +499,6 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
-                "not is defined",
-                "not(true)",
-                ""
-            ),
-            SemanticTest(
                 "aliases are used in type error messages",
                 "{fun (b : Boolean) 0}(0)",
                 """|1:23:error: expected Boolean, got 0 of type Int

@@ -359,6 +359,13 @@ class SemanticAnalyser(
             case Blk(b) =>
                 blockTipe(b)
 
+            case Booleans() =>
+                Some(RecT(Vector(
+                    FieldType("and", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT)),
+                    FieldType("not", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT))), boolT)),
+                    FieldType("or", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT))
+                )))
+
             case BoolT() =>
                 Some(TypT())
 
@@ -424,9 +431,6 @@ class SemanticAnalyser(
                     case BadCases() =>
                         None
                 }
-
-            case Not() =>
-                Some(mkPrimType(Vector(("b", boolT)), boolT))
 
             case _ : Num =>
                 Some(IntT())
