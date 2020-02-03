@@ -158,7 +158,8 @@ lazy val truffle = (project in file("truffle"))
 				"org.graalvm.truffle" % "truffle-dsl-processor" % "19.0.0",
 				"com.thoughtworks.xstream" % "xstream" % "1.4.3",
 				"org.codehaus.jettison" % "jettison" % "1.3.7",
-				"org.apache.commons" % "commons-lang3" % "3.9"
+				"org.apache.commons" % "commons-lang3" % "3.9",
+				"com.io7m.jpplib" % "com.io7m.jpplib.core" % "0.8.0"
 			)
 	).dependsOn(commons)
 
@@ -190,3 +191,8 @@ lazy val trufflecomponent = (project in file("truffle-component"))
 			baseDirectory.value + "/install_component.sh" !
 		}
 	)
+
+// Custom tasks
+
+val testFailing = taskKey[Unit]("Launch tests, tracing only failures")
+testFailing := (testOnly in Test).toTask(" * -- -oC").value

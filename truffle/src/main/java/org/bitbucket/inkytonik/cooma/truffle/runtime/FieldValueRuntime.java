@@ -1,12 +1,12 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
-
+import de.uka.ilkd.pp.DataLayouter;
+import de.uka.ilkd.pp.PrettyPrintable;
 import lombok.Value;
-
 import java.util.Comparator;
 
 @Value
-public class FieldValueRuntime implements Comparable<FieldValueRuntime> {
+public class FieldValueRuntime implements Comparable<FieldValueRuntime>, PrettyPrintable{
     private final String x;
     private final RuntimeValue v;
 
@@ -21,4 +21,10 @@ public class FieldValueRuntime implements Comparable<FieldValueRuntime> {
                 .thenComparing(FieldValueRuntime::getV)
                 .compare(this, fieldValueRuntime);
     }
+
+    @Override
+    public <Exc extends java.lang.Exception> void prettyPrint(DataLayouter<Exc> l) throws Exc {
+        l.print(x).print(" = ").print(v);
+    }
+
 }

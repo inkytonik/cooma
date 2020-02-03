@@ -1,12 +1,10 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
 import com.oracle.truffle.api.interop.TruffleObject;
+import de.uka.ilkd.pp.DataLayouter;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.val;
-
-import java.util.Arrays;
-
 
 @Value
 @EqualsAndHashCode(callSuper=false)
@@ -36,29 +34,30 @@ public class RecRuntimeValue extends RuntimeValue<RecRuntimeValue> implements Tr
 
     }
 
-
     @Override
     public String toString() {
-        val builder = new StringBuilder();
-        for (int i = 0; i < fields.length; i++) {
-            builder.append(fields[i].toString());
-            if (i != fields.length - 1) {
-                builder.append(", ");
-            }
-        }
-        return builder.toString();
+        return this.pprint();
     }
 
     @Override
-    public String print() {
-        val fields = this.toString();
-        if (fields.isEmpty())
-            return "{}";
-        else
-            return String.format("{ %s }", this.toString());
+    public <Exc extends java.lang.Exception> void prettyPrint(DataLayouter<Exc> l) throws Exc {
+        if (fields.length == 0)
+            l.print("{}");
+        else {
+            l.beginCInd(0);
+            l.beginCInd().print("{").brk(1, 0);
+            for (int i = 0; i < fields.length; i++) {
+                l.print(fields[i]);
+                if (i != fields.length - 1)
+                    l.print(",").brk(1, 0);
+            }
+            l.end().brk(1, 0).print("}");
+            l.end();
+        }
     }
 
-    public static RecRuntimeValue empty(){
-        return new RecRuntimeValue(new FieldValueRuntime[]{});
+    public static RecRuntimeValue empty() {
+        return new RecRuntimeValue(new FieldValueRuntime[] {});
     }
+
 }

@@ -39,20 +39,18 @@ trait Compiler {
     case class PrimitiveMeta(prm : Primitive)
 
     val primitivesTable = Map(
+        "Equal" -> PrimitiveMeta(equalP),
         "IntAbs" -> PrimitiveMeta(intBinP(ABS)),
         "IntAdd" -> PrimitiveMeta(intBinP(ADD)),
         "IntSub" -> PrimitiveMeta(intBinP(SUB)),
         "IntMul" -> PrimitiveMeta(intBinP(MUL)),
         "IntDiv" -> PrimitiveMeta(intBinP(DIV)),
         "IntPow" -> PrimitiveMeta(intBinP(POW)),
-        "IntEq" -> PrimitiveMeta(intRelP(EQ)),
-        "IntNeq" -> PrimitiveMeta(intRelP(NEQ)),
         "IntGt" -> PrimitiveMeta(intRelP(GT)),
         "IntGte" -> PrimitiveMeta(intRelP(GTE)),
         "IntLt" -> PrimitiveMeta(intRelP(LT)),
         "IntLte" -> PrimitiveMeta(intRelP(LTE)),
         "StrConcat" -> PrimitiveMeta(stringP(CONCAT)),
-        "StrEquals" -> PrimitiveMeta(stringP(EQUALS)),
         "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
         "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR))
     )
@@ -93,9 +91,9 @@ trait Compiler {
         exp match {
             case Fun(Arguments(Vector()), e) =>
                 compileHalt(e)
-            case Fun(Arguments(Vector(Argument(IdnDef(a), t))), e) =>
+            case Fun(Arguments(Vector(Argument(IdnDef(a), t, _))), e) =>
                 compileTopArg(a, t, e)
-            case Fun(Arguments(Argument(IdnDef(a), t) +: as), e) =>
+            case Fun(Arguments(Argument(IdnDef(a), t, _) +: as), e) =>
                 compileTopArg(a, t, Fun(Arguments(as), e))
             case _ =>
                 compileHalt(exp)
@@ -105,7 +103,7 @@ trait Compiler {
     val not =
         Fun(
             Arguments(Vector(
-                Argument(IdnDef("b"), BoolT())
+                Argument(IdnDef("b"), BoolT(), None)
             )),
             Mat(
                 Idn(IdnUse("b")),
@@ -118,7 +116,7 @@ trait Compiler {
 
     def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
         val argNames = (1 to argTypes.length).map(i => s"arg$i")
-        val args = argNames.zip(argTypes).map { case (n, t) => Argument(IdnDef(n), t) }
+        val args = argNames.zip(argTypes).map { case (n, t) => Argument(IdnDef(n), t, None) }
         val params = argNames.map(n => Idn(IdnUse(n))).toVector
         Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
     }
@@ -138,6 +136,20 @@ trait Compiler {
     def mkStrIntPrimField(fieldName : String, primName : String) : Field =
         mkPrimField(fieldName, Vector(StrT(), IntT()), primName)
 
+    val equal =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("t"), TypT(), None),
+                Argument(IdnDef("l"), Idn(IdnUse("t")), None),
+                Argument(IdnDef("r"), Idn(IdnUse("t")), None)
+            )),
+            Prm("Equal", Vector(
+                Idn(IdnUse("t")),
+                Idn(IdnUse("l")),
+                Idn(IdnUse("r"))
+            ))
+        )
+
     val ints =
         Rec(Vector(
             mkInt1PrimField("abs", "IntAbs"),
@@ -146,8 +158,6 @@ trait Compiler {
             mkInt2PrimField("mul", "IntMul"),
             mkInt2PrimField("pow", "IntPow"),
             mkInt2PrimField("sub", "IntSub"),
-            mkInt2PrimField("eq", "IntEq"),
-            mkInt2PrimField("neq", "IntNeq"),
             mkInt2PrimField("lt", "IntLt"),
             mkInt2PrimField("lte", "IntLte"),
             mkInt2PrimField("gt", "IntGt"),
@@ -157,7 +167,6 @@ trait Compiler {
     val strings =
         Rec(Vector(
             mkStr2PrimField("concat", "StrConcat"),
-            mkStr2PrimField("equals", "StrEquals"),
             mkStr1PrimField("length", "StrLength"),
             mkStrIntPrimField("substr", "StrSubstr")
         ))
@@ -188,16 +197,19 @@ trait Compiler {
                         letV(x, prmV(recConcatP(), Vector(y, z)),
                             kappa(x))))
 
+            case Eql() =>
+                compile(equal, kappa)
+
             case False() =>
                 compile(Var(Field("False", Uni())), kappa)
 
             case Fun(Arguments(Vector()), e) =>
                 compileFun("_", UniT(), e, kappa)
 
-            case Fun(Arguments(Vector(Argument(IdnDef(x), t))), e) =>
+            case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
                 compileFun(x, t, e, kappa)
 
-            case Fun(Arguments(Argument(IdnDef(x), t) +: as), e) =>
+            case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
                 compileFun(x, t, Fun(Arguments(as), e), kappa)
 
             case Idn(IdnUse(i)) =>
@@ -315,9 +327,9 @@ trait Compiler {
         val k = fresh("k")
         fd match {
             case Def(IdnDef(f), Body(Arguments(Vector()), t, e)) =>
-                compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), UniT()))), t, e)))
+                compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), UniT(), None))), t, e)))
 
-            case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _) +: otherArgs), _, e)) =>
+            case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _, None) +: otherArgs), _, e)) =>
                 defTerm(f, k, x, compileDefBody(otherArgs, e, k))
         }
     }
@@ -382,16 +394,19 @@ trait Compiler {
                         letV(x, prmV(recConcatP(), Vector(y, z)),
                             appC(k, x))))
 
+            case Eql() =>
+                tailCompile(equal, k)
+
             case False() =>
                 tailCompile(Var(Field("False", Uni())), k)
 
             case Fun(Arguments(Vector()), e) =>
                 tailCompileFun("_", UniT(), e, k)
 
-            case Fun(Arguments(Vector(Argument(IdnDef(x), t))), e) =>
+            case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
                 tailCompileFun(x, t, e, k)
 
-            case Fun(Arguments(Argument(IdnDef(x), t) +: as), e) =>
+            case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
                 tailCompileFun(x, t, Fun(Arguments(as), e), k)
 
             case Fun(Arguments(a +: as), e) =>

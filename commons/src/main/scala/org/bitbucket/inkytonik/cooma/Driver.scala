@@ -109,7 +109,12 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 case tipe =>
                     config.output().emit(s"unsupported argument type ${show(tipe)}")
             }
-            config.output().emitln("")
+            argument.optStringLit match {
+                case Some(doc) =>
+                    config.output().emitln(s" $doc")
+                case None =>
+                    config.output().emitln("")
+            }
         }
 
         def printArguments(arguments : Arguments) : Unit =

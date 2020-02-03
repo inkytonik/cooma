@@ -60,6 +60,8 @@ class Interpreter(config : Config) {
     }
 
     def interpret(term : Term, env : Env, args : Seq[String], config : Config) : ValueR = {
+
+        @tailrec
         def interpretAux(rho : Env, term : Term) : ValueR =
             term match {
                 case AppC("$halt", x) =>
@@ -212,7 +214,7 @@ class Interpreter(config : Config) {
 	 */
 
     def showRuntimeValue(v : ValueR) : String =
-        formatRuntimeValue(v, 5).layout
+        formatRuntimeValue(v).layout
 
     def formatRuntimeValue(v : ValueR, w : Width = defaultWidth) : Document =
         pretty(group(toDocRuntimeValue(v)), w)
@@ -228,9 +230,11 @@ class Interpreter(config : Config) {
             case RecR(Vector()) =>
                 "{}"
             case RecR(v1) =>
-                "{" <+> ssep(v1.map(toDocField), "," <> space) <+> "}"
+                "{" <> nest(line <> ssep(v1.map(toDocField), "," <> line)) <@> "}"
             case StrR(v1) =>
                 "\"" <> value(escape(v1)) <> "\""
+            case VarR(c, `unitR`) =>
+                c.toLowerCase()
             case VarR(v1, v2) =>
                 "<" <+> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <+> ">"
         }

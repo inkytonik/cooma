@@ -318,7 +318,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                                 case False(x) => x
                                 case True(x) => x
                             }
-                        { a = f(< False = {} >), b = f(< True = {} >) }
+                        { a = f(false), b = f(true) }
                     }""",
                     "{ a = {}, b = {} }",
                     "{ a : Unit, b : Unit }"
@@ -405,32 +405,44 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "<function>",
                     "(t : Type, x : t) t"
                 ),
-                // ExecTest(
-                //     "partial type application",
-                //     "{fun (t : Type, x : t) x}(Int)",
-                //     "10",
-                //     "(x : Int) Int"
-                // ),
-                // ExecTest(
-                //     "type application",
-                //     "{fun (t : Type, x : t) x}(Int, 10)",
-                //     "10",
-                //     "Int"
-                // ),
-                // ExecTest(
-                //     "type application at different types",
-                //     """{
-                //         def id(t : Type, x : t) t = x
-                //         {
-                //             b = id(Boolean, true),
-                //             i = id(Int, 10),
-                //             s = id(String, "hello"),
-                //             r = id(Reader, { read = fun () "hello" })
-                //         }
-                //     }""",
-                //     """{ b = < True = {} >, i = 10, s = "hello", r = { read = <function> } }""",
-                //     "{ b : Boolean, i : Int, s : String, r : Reader }"
-                // ),
+                ExecTest(
+                    "partial type application",
+                    "{fun (t : Type, x : t) x}(Int)",
+                    "<function>",
+                    "(x : Int) Int"
+                ),
+                ExecTest(
+                    "type application (fun)",
+                    "{fun (t : Type, x : t) x}(Int, 10)",
+                    "10",
+                    "Int"
+                ),
+                ExecTest(
+                    "another type application (fun)",
+                    """{fun (t : Type, x : t) x}(String, "hi")""",
+                    """"hi"""",
+                    "String"
+                ),
+                ExecTest(
+                    "type application at different types",
+                    """{
+                        def id(t : Type, x : t) t = x
+                        {
+                            b = id(Boolean, true),
+                            i = id(Int, 10),
+                            s = id(String, "hello"),
+                            r = id(Reader, { read = fun () "hello" })
+                        }
+                    }""",
+                    """{ b = true, i = 10, s = "hello", r = { read = <function> } }""",
+                    "{ b : Boolean, i : Int, s : String, r : Reader }"
+                ),
+                ExecTest(
+                    "type application (def)",
+                    """{def id(t : Type, x : t) t = x id(String, "hi")}""",
+                    """"hi"""",
+                    "String"
+                ),
 
                 // Blocks
 
@@ -541,7 +553,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "def block (self reference, tail call)",
                     """{
                         def f(x : Int) Int =
-                            Ints.eq(x, 0) match {
+                            equal(Int, x, 0) match {
                                 case True(_)  => 20
                                 case False(_) => f(Ints.sub(x, 1))
                             }
@@ -554,7 +566,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "def block (accumulator, tail call)",
                     """{
                         def f(s : Int, x : Int) Int =
-                            Ints.eq(x, 0) match {
+                            equal(Int, x, 0) match {
                                 case True(_)  => s
                                 case False(_) => f(Ints.add(s, x), Ints.sub(x, 1))
                             }
@@ -672,27 +684,208 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "true",
                     "true",
-                    "< True = {} >",
+                    "true",
                     "Boolean",
                     "true"
                 ),
                 ExecTest(
                     "false",
                     "false",
-                    "< False = {} >",
+                    "false",
                     "Boolean",
                     "false"
                 ),
                 ExecTest(
                     "not(false)",
                     "not(false)",
-                    "< True = {} >",
+                    "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "not(true)",
                     "not(true)",
-                    "< False = {} >",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "Ints",
+                    "Ints",
+                    """{
+                      |    abs = <function>,
+                      |    add = <function>,
+                      |    div = <function>,
+                      |    mul = <function>,
+                      |    pow = <function>,
+                      |    sub = <function>,
+                      |    lt = <function>,
+                      |    lte = <function>,
+                      |    gt = <function>,
+                      |    gte = <function>
+                      |}""".stripMargin,
+                    """{
+                      |    abs : (x : Int) Int,
+                      |    add : (x : Int, y : Int) Int,
+                      |    div : (x : Int, y : Int) Int,
+                      |    mul : (x : Int, y : Int) Int,
+                      |    pow : (x : Int, y : Int) Int,
+                      |    sub : (x : Int, y : Int) Int,
+                      |    lt : (x : Int, y : Int) Boolean,
+                      |    lte : (x : Int, y : Int) Boolean,
+                      |    gt : (x : Int, y : Int) Boolean,
+                      |    gte : (x : Int, y : Int) Boolean
+                      |}""".stripMargin,
+                    "Ints"
+                ),
+                ExecTest(
+                    "< v = Ints >",
+                    "< v = Ints >",
+                    """< v = {
+                       |    abs = <function>,
+                       |    add = <function>,
+                       |    div = <function>,
+                       |    mul = <function>,
+                       |    pow = <function>,
+                       |    sub = <function>,
+                       |    lt = <function>,
+                       |    lte = <function>,
+                       |    gt = <function>,
+                       |    gte = <function>
+                       |} >""".stripMargin,
+                    """<
+                       |    v : {
+                       |        abs : (x : Int) Int,
+                       |        add : (x : Int, y : Int) Int,
+                       |        div : (x : Int, y : Int) Int,
+                       |        mul : (x : Int, y : Int) Int,
+                       |        pow : (x : Int, y : Int) Int,
+                       |        sub : (x : Int, y : Int) Int,
+                       |        lt : (x : Int, y : Int) Boolean,
+                       |        lte : (x : Int, y : Int) Boolean,
+                       |        gt : (x : Int, y : Int) Boolean,
+                       |        gte : (x : Int, y : Int) Boolean
+                       |    }
+                       |>""".stripMargin,
+                ),
+                ExecTest(
+                    "{ x = { a = 1, b = Ints } }",
+                    "{ x = { a = 1, b = Ints } }",
+                    """{
+                       |    x = {
+                       |        a = 1,
+                       |        b = {
+                       |            abs = <function>,
+                       |            add = <function>,
+                       |            div = <function>,
+                       |            mul = <function>,
+                       |            pow = <function>,
+                       |            sub = <function>,
+                       |            lt = <function>,
+                       |            lte = <function>,
+                       |            gt = <function>,
+                       |            gte = <function>
+                       |        }
+                       |    }
+                       |}""".stripMargin,
+                    """{
+                       |    x : {
+                       |        a : Int,
+                       |        b : {
+                       |            abs : (x : Int) Int,
+                       |            add : (x : Int, y : Int) Int,
+                       |            div : (x : Int, y : Int) Int,
+                       |            mul : (x : Int, y : Int) Int,
+                       |            pow : (x : Int, y : Int) Int,
+                       |            sub : (x : Int, y : Int) Int,
+                       |            lt : (x : Int, y : Int) Boolean,
+                       |            lte : (x : Int, y : Int) Boolean,
+                       |            gt : (x : Int, y : Int) Boolean,
+                       |            gte : (x : Int, y : Int) Boolean
+                       |        }
+                       |    }
+                       |}""".stripMargin,
+                ),
+                ExecTest(
+                    s"equal has the correct type",
+                    s"equal",
+                    "<function>",
+                    "(t : Type, t, t) Boolean"
+                ),
+                ExecTest(
+                    s"equality of integers (equal)",
+                    s"""equal(Int, 42, 42)""",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of integers (unequal)",
+                    s"""equal(Int, 42, 99)""",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of strings (equal)",
+                    s"""equal(String, "abc", "abc")""",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of strings (unequal)",
+                    s"""equal(String, "abc", "cba")""",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of records (equal, flat)",
+                    s"equal({x : Int, y : Int}, {x = 0, y = 1}, {y = 1, x = 0})",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of records (equal, nested)",
+                    s"equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 0, a = 0}})",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of records (unequal, flat",
+                    s"equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of records (unequal, nested)",
+                    s"equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 1, a = 0}})",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (equal, flat)",
+                    s"equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (equal, nested)",
+                    s"equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 1} >)",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (unequal, same constructor)",
+                    s"equal(< a : Int, v : Int >, < a = 1 >, < a = 2 >)",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (unequal, different constructor)",
+                    s"equal(< a : Int, v : Int >, < a = 1 >, < v = 2 >)",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    s"equality of variants (unequal, nested)",
+                    s"equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
+                    "false",
                     "Boolean"
                 )
 
@@ -750,18 +943,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "(t : String) String"
                     ),
                     ExecTest(
-                        s"Pre-defined Strings.equals has the correct type",
-                        "Strings.equals",
-                        "<function>",
-                        "(s : String, t : String) Boolean"
-                    ),
-                    ExecTest(
-                        s"Pre-defined Strings.equals partial application has the correct type",
-                        """Strings.equals("hi")""",
-                        "<function>",
-                        "(t : String) Boolean"
-                    ),
-                    ExecTest(
                         s"Pre-defined Strings.length has the correct type",
                         "Strings.length",
                         "<function>",
@@ -815,7 +996,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         def expectedBool(b : Boolean) : String =
-            s"""< ${if (b) "True" else "False"} = {} >"""
+            b.toString
 
         case class Int1PrimTest(
             op : PrimOp,
@@ -911,8 +1092,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
         val intRelPrimTests =
             Vector(
-                IntRelPrimTest(EQ, _ == _),
-                IntRelPrimTest(NEQ, _ != _),
                 IntRelPrimTest(GT, _ > _),
                 IntRelPrimTest(GTE, _ >= _),
                 IntRelPrimTest(LT, _ < _),
@@ -924,6 +1103,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             test(s"${backend.name} run: prim $primName") {
                 forAll { (l : BigInt, r : BigInt) =>
                     runPrimTest(s"prim $primName", s"$l, $r", "Boolean", expectedBool(aTest.func(l, r)))
+                }
+            }
+        }
+
+        {
+            val primName = "Equal"
+
+            test(s"${backend.name} run: Int prim $primName") {
+                forAll { (l : BigInt, r : BigInt) =>
+                    runPrimTest(s"prim $primName", s"Int, $l, $r", "Boolean", expectedBool(l == r))
                 }
             }
         }
@@ -947,13 +1136,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         {
-            val primName = "StrEquals"
+            val primName = "Equal"
             val func = (l : String, r : String) => Util.unescape(l) == Util.unescape(r)
 
-            test(s"${backend.name} run: prim $primName") {
+            test(s"${backend.name} run: String prim $primName") {
                 forAll(stringLit, stringLit) { (l : String, r : String) =>
                     whenever(isStringLit(l) && isStringLit(r)) {
-                        runPrimTest(s"prim $primName", s""""$l", "$r"""", "Boolean", expectedBool(func(l, r)))
+                        runPrimTest(s"prim $primName", s"""String, "$l", "$r"""", "Boolean", expectedBool(func(l, r)))
                     }
                 }
             }
@@ -1111,7 +1300,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         fun (x : Boolean) x
                         res0(true)
                     """,
-                    "res0 : (x : Boolean) Boolean = <function>\nres1 : Boolean = < True = {} >"
+                    "res0 : (x : Boolean) Boolean = <function>\nres1 : Boolean = true"
                 ),
                 REPLTest(
                     "single evaluation (function using type alias that needs to be expanded)",

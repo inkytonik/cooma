@@ -12,7 +12,8 @@ Program(
                                     Argument(
                                         IdnDef(
                                             "x"),
-                                        IntT()))),
+                                        IntT(),
+                                        None))),
                             IntT(),
                             Idn(
                                 IdnUse(
@@ -26,7 +27,8 @@ Program(
                                     Argument(
                                         IdnDef(
                                             "y"),
-                                        IntT()))),
+                                        IntT(),
+                                        None))),
                             IntT(),
                             App(
                                 Idn(

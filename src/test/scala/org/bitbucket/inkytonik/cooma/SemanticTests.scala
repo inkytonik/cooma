@@ -1151,6 +1151,65 @@ class SemanticTests extends Tests {
                    |^
                    |"""
             ),
+
+            // primitives
+
+            SemanticTest(
+                s"Partial apply equal (type only)",
+                s"equal(Int)",
+                ""
+            ),
+            SemanticTest(
+                s"Partial apply equal (type and arg)",
+                s"equal(Int, 1)",
+                ""
+            ),
+            SemanticTest(
+                s"Wrong number of arguments for Equal primitive (no args)",
+                s"prim Equal()",
+                s"""|1:1:error: primitive Equal expects 3 arguments got 0
+                    |prim Equal()
+                    |^
+                    |"""
+            ),
+            SemanticTest(
+                s"Wrong number of arguments for Equal primitive (more)",
+                s"prim Equal(Int)",
+                s"""|1:1:error: primitive Equal expects 3 arguments got 1
+                    |prim Equal(Int)
+                    |^
+                    |"""
+            ),
+            SemanticTest(
+                s"Wrong number of arguments for Equal primitive (more more)",
+                s"prim Equal(Int, 2)",
+                s"""|1:1:error: primitive Equal expects 3 arguments got 2
+                    |prim Equal(Int, 2)
+                    |^
+                    |"""
+            ),
+            SemanticTest(
+                s"Wrong argument type for Equal primitive (type)",
+                s"""prim Equal(1, 1, 1)""",
+                s"""|1:12:error: expected Type, got 1 of type Int
+                    |prim Equal(1, 1, 1)
+                    |           ^
+                    |1:15:error: expected 1, got 1 of type Int
+                    |prim Equal(1, 1, 1)
+                    |              ^
+                    |1:18:error: expected 1, got 1 of type Int
+                    |prim Equal(1, 1, 1)
+                    |                 ^
+                    |"""
+            ),
+            SemanticTest(
+                s"Wrong argument type for Equal primitive (value)",
+                s"""prim Equal(Int, 1, \"2\")""",
+                s"""|1:20:error: expected Int, got "2" of type String
+                    |prim Equal(Int, 1, "2")
+                    |                   ^
+                    |"""
+            ),
             SemanticTest(
                 "non-existent primitive",
                 "prim DoesNotExist(1, 2)",

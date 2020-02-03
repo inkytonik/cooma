@@ -22,6 +22,7 @@ class SemanticAnalyser(
 
     import org.bitbucket.inkytonik.kiama.==>
     import org.bitbucket.inkytonik.kiama.attribution.Decorators
+    import org.bitbucket.inkytonik.kiama.rewriting.Rewriter.{everywhere, rewrite, rule}
     import org.bitbucket.inkytonik.kiama.util.Messaging.{check, collectMessages, error, Messages, noMessages}
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
@@ -267,7 +268,7 @@ class SemanticAnalyser(
         case n @ Scope() =>
             leave(out(n))
 
-        case n @ Argument(IdnDef(i), _) if !isWildcard(i) =>
+        case n @ Argument(IdnDef(i), _, _) if !isWildcard(i) =>
             defineIfNew(out(n), i, MultipleEntity(), ArgumentEntity(n))
 
         case tree.parent.pair(n @ IdnDef(i), c : Case) if !isWildcard(i) =>
@@ -349,12 +350,8 @@ class SemanticAnalyser(
         attr {
             case App(f, as) =>
                 tipe(f) match {
-                    case Some(ft @ FunT(ArgumentTypes(ts), t)) =>
-                        val numArgs = as.length
-                        if (numArgs == ts.length)
-                            unalias(f, t)
-                        else
-                            unaliasFunT(f, ts.drop(numArgs), t)
+                    case Some(FunT(ArgumentTypes(ts), t)) =>
+                        appType(f, ts, t, as)
                     case _ =>
                         None
                 }
@@ -375,6 +372,16 @@ class SemanticAnalyser(
                     case _ =>
                         None
                 }
+
+            case _ : Eql =>
+                Some(FunT(
+                    ArgumentTypes(Vector(
+                        ArgumentType(Some(IdnDef("t")), TypT()),
+                        ArgumentType(None, Idn(IdnUse("t"))),
+                        ArgumentType(None, Idn(IdnUse("t"))),
+                    )),
+                    boolT
+                ))
 
             case False() =>
                 Some(boolT)
@@ -401,8 +408,6 @@ class SemanticAnalyser(
                     FieldType("mul", primitivesTypesTable("IntMul")),
                     FieldType("pow", primitivesTypesTable("IntPow")),
                     FieldType("sub", primitivesTypesTable("IntSub")),
-                    FieldType("eq", primitivesTypesTable("IntEq")),
-                    FieldType("neq", primitivesTypesTable("IntNeq")),
                     FieldType("lt", primitivesTypesTable("IntLt")),
                     FieldType("lte", primitivesTypesTable("IntLte")),
                     FieldType("gt", primitivesTypesTable("IntGt")),
@@ -471,7 +476,6 @@ class SemanticAnalyser(
             case Strings() =>
                 Some(RecT(Vector(
                     FieldType("concat", primitivesTypesTable("StrConcat")),
-                    FieldType("equals", primitivesTypesTable("StrEquals")),
                     FieldType("length", primitivesTypesTable("StrLength")),
                     FieldType("substr", primitivesTypesTable("StrSubstr"))
                 )))
@@ -501,6 +505,31 @@ class SemanticAnalyser(
                 Some(TypT())
         }
 
+    def substArgTypes[T](x : String, t : Expression, a : T) = {
+        val substArgType =
+            rule[Expression] {
+                case Idn(IdnUse(`x`)) =>
+                    t
+            }
+        rewrite(everywhere(substArgType))(a)
+    }
+
+    def appType(f : Expression, ts : Vector[ArgumentType], t : Expression, as : Vector[Expression]) : Option[Expression] =
+        if (as.isEmpty)
+            if (ts.isEmpty)
+                unalias(f, t)
+            else
+                unaliasFunT(f, ts, t)
+        else if (ts.isEmpty)
+            None
+        else
+            ts.head match {
+                case ArgumentType(Some(IdnDef(x)), TypT()) =>
+                    appType(f, substArgTypes(x, as.head, ts.tail), substArgTypes(x, as.head, t), as.tail)
+                case _ =>
+                    appType(f, ts.tail, t, as.tail)
+            }
+
     def makeRow(fields : Vector[Field]) : Option[Vector[FieldType]] = {
         val ts = fields.map(f => tipe(f.expression))
         if (ts contains None)
@@ -519,7 +548,7 @@ class SemanticAnalyser(
 
     val entityType : CoomaEntity => Option[Expression] =
         attr {
-            case ArgumentEntity(n @ Argument(_, t)) =>
+            case ArgumentEntity(n @ Argument(_, t, _)) =>
                 unalias(n, t)
             case CaseValueEntity(tree.parent.pair(c, Mat(e, _))) =>
                 tipe(e) match {
@@ -594,6 +623,8 @@ class SemanticAnalyser(
 
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {
+                    case ArgumentEntity(Argument(_, TypT(), _)) =>
+                        Some(t)
                     case LetEntity(Let(_, _, _, v)) if t != v =>
                         unalias(n, v)
                     case _ =>
@@ -703,17 +734,23 @@ class SemanticAnalyser(
             case tree.parent(_ : ArgumentType) =>
                 Some(TypT())
 
-            case tree.parent.pair(a, Body(_, t, e)) if a eq e =>
-                unalias(e, t)
-
-            case tree.parent.pair(a, Body(_, t, _)) if a eq t =>
-                Some(TypT())
+            case tree.parent.pair(a, Body(_, t, e)) =>
+                if (a eq t)
+                    Some(TypT())
+                else
+                    unalias(e, t)
 
             case tree.parent(_ : FieldType) =>
                 Some(TypT())
 
             case tree.parent(_ : FunT) =>
                 Some(TypT())
+
+            case tree.parent.pair(a : Expression, Prm("Equal", Vector(t, l, r))) =>
+                if (a eq t)
+                    Some(TypT())
+                else
+                    unalias(t, t)
 
             case tree.parent.pair(a : Expression, Prm(i, _)) =>
                 val argnum = tree.index(a)

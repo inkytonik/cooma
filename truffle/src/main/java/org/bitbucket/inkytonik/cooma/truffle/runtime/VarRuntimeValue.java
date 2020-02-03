@@ -1,6 +1,7 @@
 package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
 import com.oracle.truffle.api.interop.TruffleObject;
+import de.uka.ilkd.pp.DataLayouter;
 import java.util.Comparator;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -27,12 +28,16 @@ public class VarRuntimeValue extends RuntimeValue<VarRuntimeValue> implements Tr
 
     @Override
     public String toString() {
-        return String.format("%s = %s", c, v.print());
+        val vp = v.print();
+        if (vp.equals("{}"))
+            return c.toLowerCase();
+        else
+            return String.format("< %s = %s >", c, v.print());
     }
 
     @Override
-    public String print() {
-        return String.format("< %s >", this.toString()) ;
+    public <Exc extends java.lang.Exception> void prettyPrint(DataLayouter<Exc> l) throws Exc {
+        l.print(this.toString());
     }
 
 }

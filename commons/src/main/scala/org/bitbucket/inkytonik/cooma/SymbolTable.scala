@@ -99,20 +99,18 @@ object SymbolTable extends Environments[CoomaEntity] {
         mkPrimType(Vector(("x", IntT()), ("y", IntT())), retType)
 
     val primitivesTypesTable = Map(
+        "Equal" -> mkPrimType(Vector(("t", TypT()), ("l", Idn(IdnUse("t"))), ("l", Idn(IdnUse("t")))), boolT),
         "IntAbs" -> mkIntUnPrimType(IntT()),
         "IntAdd" -> mkIntBinPrimType(IntT()),
         "IntSub" -> mkIntBinPrimType(IntT()),
         "IntMul" -> mkIntBinPrimType(IntT()),
         "IntDiv" -> mkIntBinPrimType(IntT()),
         "IntPow" -> mkIntBinPrimType(IntT()),
-        "IntEq" -> mkIntBinPrimType(boolT),
-        "IntNeq" -> mkIntBinPrimType(boolT),
         "IntGt" -> mkIntBinPrimType(boolT),
         "IntGte" -> mkIntBinPrimType(boolT),
         "IntLt" -> mkIntBinPrimType(boolT),
         "IntLte" -> mkIntBinPrimType(boolT),
         "StrConcat" -> mkPrimType(Vector(("s", StrT()), ("t", StrT())), StrT()),
-        "StrEquals" -> mkPrimType(Vector(("s", StrT()), ("t", StrT())), boolT),
         "StrLength" -> mkPrimType(Vector(("s", StrT())), IntT()),
         "StrSubstr" -> mkPrimType(Vector(("s", StrT()), ("i", IntT())), StrT())
     )
