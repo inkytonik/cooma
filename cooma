@@ -3,7 +3,7 @@
 MAIN_CLASS="org.bitbucket.inkytonik.cooma.CoomaIRTruffleMain"
 SCRIPT_HOME="$(cd "$(dirname "$0")" && pwd -P)"
 
-VERSION="19.0.0"
+VERSION="19.3.1"
 GRAALVM_VERSION=$(grep "GRAALVM_VERSION" "$SCRIPT_HOME/../release" 2> /dev/null)
 
 #######################################################################
@@ -22,8 +22,8 @@ if [[ "$GRAALVM_VERSION" != "" ]]; then
         exit 1
     fi
 else
-    LANGUAGE_PATH="$SCRIPT_HOME/truffle/target/scala-2.12/truffle.jar"
-    LAUNCHER_PATH="$SCRIPT_HOME/truffle-launcher/target/scala-2.12/trufflelauncher.jar"
+    LANGUAGE_PATH="$SCRIPT_HOME/truffle/target/scala-2.13/truffle.jar"
+    LAUNCHER_PATH="$SCRIPT_HOME/truffle-launcher/target/scala-2.13/trufflelauncher.jar"
 
     # Check the GraalVM version in JAVA_HOME
     if [[ "$JAVA_HOME" != "" ]]; then
@@ -58,11 +58,8 @@ echo "Language path $LANGUAGE_PATH"
 # Parse arguments, prepare Java command and execute
 #######################################################################
 if [[ "$GRAALVM_VERSION" != "" ]]; then
-    echo "Running on GraalVM"
-    PROGRAM_ARGS=()
     JAVA_ARGS=()
-
-    "$JAVACMD" "${JAVA_ARGS[@]}" -Dtruffle.class.path.append="$LANGUAGE_PATH" -cp "$LAUNCHER_PATH" "$MAIN_CLASS" "${PROGRAM_ARGS[@]}"
+    "$JAVACMD" "${JAVA_ARGS[@]}" -Dtruffle.class.path.append="$LANGUAGE_PATH" -cp "$LAUNCHER_PATH" "$MAIN_CLASS" "$@"
 else
     echo "Warning: Could not find GraalVM on $JAVA_HOME. Running on JDK without support for compilation."
     echo

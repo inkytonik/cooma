@@ -12,14 +12,14 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="commons" exported="" />
+    <orderEntry type="library" name="sbt: org.graalvm.truffle:truffle-dsl-processor:19.3.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.graalvm.truffle:truffle-api:19.3.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.graalvm.sdk:graal-sdk:19.3.1:jar" level="project" />
     <orderEntry type="library" name="sbt: xtc:rats:2.3.1:jar" level="project" />
     <orderEntry type="library" name="sbt: xpp3:xpp3_min:1.1.4c:jar" level="project" />
     <orderEntry type="library" name="sbt: xmlpull:xmlpull:1.1.3.1:jar" level="project" />
     <orderEntry type="library" name="sbt: stax:stax-api:1.0.1:jar" level="project" />
     <orderEntry type="library" name="sbt: org.projectlombok:lombok:1.16.16:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.graalvm.truffle:truffle-dsl-processor:19.0.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.graalvm.truffle:truffle-api:19.0.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.graalvm.sdk:graal-sdk:19.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.codehaus.jettison:jettison:1.3.7:jar" level="project" />
     <orderEntry type="library" name="sbt: org.apache.commons:commons-lang3:3.9:jar" level="project" />
     <orderEntry type="library" name="sbt: junit:junit:4.8.2:jar" level="project" />
