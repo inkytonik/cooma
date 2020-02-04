@@ -1423,6 +1423,11 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "id : (t : Type, x : t) t = <function>\nres0 : Int = 3"
                 ),
                 REPLTest(
+                    "single value definition (nested type alias)",
+                    "{ type X = Int val x : X = 3 x }",
+                    "res0 : Int = 3"
+                ),
+                REPLTest(
                     "multiple value definitions (upper)",
                     """
                         val x = 1
@@ -1431,6 +1436,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """,
                     "x : Int = 1\ny : Int = 2\nx : Int = 1"
                 ),
+
                 REPLTest(
                     "multiple value definitions (lower)",
                     """
