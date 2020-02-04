@@ -12,24 +12,24 @@ LetV(
             Vector(
                 "x1")),
         LetV(
-            "x4",
+            "f4",
             PrmV(
                 RecSelectP(),
                 Vector(
                     "w",
                     "write")),
             LetV(
-                "x5",
+                "s5",
                 StrV(
                     "Hello world!
 "),
                 LetC(
                     "k2",
-                    "x3",
+                    "r3",
                     AppC(
                         "$halt",
-                        "x3"),
+                        "r3"),
                     AppF(
-                        "x4",
+                        "f4",
                         "k2",
-                        "x5"))))))
+                        "s5"))))))
