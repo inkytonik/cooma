@@ -903,6 +903,85 @@ class SemanticTests extends Tests {
 
             // Expected types
 
+            // - val definitions
+
+            SemanticTest(
+                "val explicit type must be a type",
+                "{ val x : 7 = 1 x }",
+                """|1:11:error: expected Type, got 7 of type Int
+                   |{ val x : 7 = 1 x }
+                   |          ^
+                   |1:15:error: expected 7, got 1 of type Int
+                   |{ val x : 7 = 1 x }
+                   |              ^
+                   |"""
+            ),
+            SemanticTest(
+                "val explicit simple type (ok)",
+                "{ val x : Int = 1 x }",
+                ""
+            ),
+            SemanticTest(
+                "val explicit simple type (bad)",
+                "{ val x : String = 1 x }",
+                """|1:20:error: expected String, got 1 of type Int
+                   |{ val x : String = 1 x }
+                   |                   ^
+                   |"""
+            ),
+            SemanticTest(
+                "val explicit function type (ok)",
+                "{ val f : (Int) Int = fun (x : Int) x f(0)}",
+                ""
+            ),
+            SemanticTest(
+                "val explicit function type (bad)",
+                """{ val f : (String) Int = fun (x : Int) x f("hi")}""",
+                """|1:26:error: expected (String) Int, got fun (x : Int) x of type (x : Int) Int
+                   |{ val f : (String) Int = fun (x : Int) x f("hi")}
+                   |                         ^
+                   |"""
+            ),
+            SemanticTest(
+                "val explicit record type (ok)",
+                "{ val x : { a : Int, b : Int } = { a = 1, b = 2 } x }",
+                ""
+            ),
+            SemanticTest(
+                "val explicit record type (bad)",
+                "{ val x : { a : Int, b : String } = { a = 1 } x }",
+                """|1:37:error: expected { a : Int, b : String }, got { a = 1 } of type { a : Int }
+                   |{ val x : { a : Int, b : String } = { a = 1 } x }
+                   |                                    ^
+                   |"""
+            ),
+            SemanticTest(
+                "val explicit variant type (ok)",
+                "{ val x : < a : Int, b : String > = < a = 1 > x }",
+                ""
+            ),
+            SemanticTest(
+                "val explicit variant type (bad)",
+                "{ val x : < a : Int, b : String > = < c = 1 > x }",
+                """|1:37:error: expected < a : Int, b : String >, got < c = 1 > of type < c : Int >
+                   |{ val x : < a : Int, b : String > = < c = 1 > x }
+                   |                                    ^
+                   |"""
+            ),
+            SemanticTest(
+                "val explicit pre=defined type (ok)",
+                "{ val x : Boolean = < True = {} > x }",
+                ""
+            ),
+            SemanticTest(
+                "val explicit pre=defined type (bad)",
+                "{ val x : Boolean = 1 x }",
+                """|1:21:error: expected Boolean, got 1 of type Int
+                   |{ val x : Boolean = 1 x }
+                   |                    ^
+                   |"""
+            ),
+
             // - ok arguments
 
             SemanticTest(
@@ -928,6 +1007,17 @@ class SemanticTests extends Tests {
 
             // - bad arguments
 
+            SemanticTest(
+                "function argument type that isn't a type",
+                "{fun (x : 3) x}(1)",
+                """|1:11:error: expected Type, got 3 of type Int
+                   |{fun (x : 3) x}(1)
+                   |          ^
+                   |1:17:error: expected 3, got 1 of type Int
+                   |{fun (x : 3) x}(1)
+                   |                ^
+                   |"""
+            ),
             SemanticTest(
                 "bad function argument type (one, simple)",
                 "{fun (x : String) x}(1)",
@@ -1028,10 +1118,46 @@ class SemanticTests extends Tests {
             // - return types
 
             SemanticTest(
+                "function definition return type that isn't a type",
+                "{ def f (x : Int) 1 = { x = 1 } f(0) }",
+                """|1:19:error: expected Type, got 1 of type Int
+                   |{ def f (x : Int) 1 = { x = 1 } f(0) }
+                   |                  ^
+                   |1:23:error: expected 1, got { x = 1 } of type { x : Int }
+                   |{ def f (x : Int) 1 = { x = 1 } f(0) }
+                   |                      ^
+                   |"""
+            ),
+            SemanticTest(
                 "bad function definition return type",
                 "{ def f (x : Int) Int = { x = 1 } f(0) }",
                 """|1:25:error: expected Int, got { x = 1 } of type { x : Int }
                    |{ def f (x : Int) Int = { x = 1 } f(0) }
+                   |                        ^
+                   |"""
+            ),
+
+            // - record and variant field types
+
+            SemanticTest(
+                "record field type that isn't a type",
+                "{fun (r : { x : 1 }) 0}({ x = 1 })",
+                """|1:17:error: expected Type, got 1 of type Int
+                   |{fun (r : { x : 1 }) 0}({ x = 1 })
+                   |                ^
+                   |1:25:error: expected { x : 1 }, got { x = 1 } of type { x : Int }
+                   |{fun (r : { x : 1 }) 0}({ x = 1 })
+                   |                        ^
+                   |"""
+            ),
+            SemanticTest(
+                "variant field type that isn't a type",
+                "{fun (r : < x : 1 >) 0}(< x = 1 >)",
+                """|1:17:error: expected Type, got 1 of type Int
+                   |{fun (r : < x : 1 >) 0}(< x = 1 >)
+                   |                ^
+                   |1:25:error: expected < x : 1 >, got < x = 1 > of type < x : Int >
+                   |{fun (r : < x : 1 >) 0}(< x = 1 >)
                    |                        ^
                    |"""
             ),

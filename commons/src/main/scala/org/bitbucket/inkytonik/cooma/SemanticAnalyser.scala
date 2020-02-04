@@ -750,6 +750,12 @@ class SemanticAnalyser(
             case tree.parent(_ : FunT) =>
                 Some(TypT())
 
+            case tree.parent.pair(a : Expression, Let(_, _, Some(t), e)) =>
+                if (a eq t)
+                    Some(TypT())
+                else
+                    unalias(e, t)
+
             case tree.parent.pair(a : Expression, Prm("Equal", Vector(t, l, r))) =>
                 if (a eq t)
                     Some(TypT())
