@@ -11,11 +11,9 @@ LANGUAGE_PATH="$COMPONENT_DIR/jre/languages/cooma"
 rm -rf COMPONENT_DIR
 
 mkdir -p "$LANGUAGE_PATH"
-mkdir -p "$LANGUAGE_PATH/launcher"
 mkdir -p "$LANGUAGE_PATH/bin"
 
 cp ../truffle_root/target/$SCALA_VERSION/truffle_root.jar "$LANGUAGE_PATH"
-cp ../truffle-launcher/target/$SCALA_VERSION/trufflelauncher.jar "$LANGUAGE_PATH/launcher/"
 cp ../cooma $LANGUAGE_PATH/bin/
 
 

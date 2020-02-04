@@ -132,7 +132,6 @@ lazy val root = (project in file("."))
 		reference,
 		truffle,
 		truffle_root,
-		trufflelauncher,
 		trufflecomponent
 	)
 	.aggregate(
@@ -140,7 +139,6 @@ lazy val root = (project in file("."))
 		reference,
 		truffle,
 		truffle_root,
-		trufflelauncher,
 		trufflecomponent
 	)
 
@@ -180,12 +178,6 @@ lazy val commons = (project in file("commons"))
 		commonsettings,
 		libraryDependencies ++= kiamaDependencies)
 
-lazy val trufflelauncher = (project in file("truffle-launcher"))
-	.settings(
-		assemblySettings,
-		libraryDependencies ++=
-			Seq("org.graalvm.sdk" % "graal-sdk" % "19.3.1")
-	).dependsOn(commons, truffle_root)
 
 lazy val buildComponent = taskKey[Unit]("Generates the component jar for GraalVM installation.")
 
@@ -194,7 +186,7 @@ lazy val installGraalVMComponent = taskKey[Unit]("Installs the generated compone
 lazy val trufflecomponent = (project in file("truffle-component"))
 	.settings(
 		buildComponent := {
-			val files = assembly.all(ScopeFilter(inProjects(truffle_root, trufflelauncher))).value
+			val files = assembly.all(ScopeFilter(inProjects(truffle_root))).value
 			baseDirectory.value + "/make_component.sh" !
 		},
 		installGraalVMComponent := {
