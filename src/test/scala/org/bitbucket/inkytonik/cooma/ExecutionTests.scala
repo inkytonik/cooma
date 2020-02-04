@@ -865,86 +865,98 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |}""".stripMargin,
                 ),
                 ExecTest(
-                    s"equal has the correct type",
-                    s"equal",
+                    "equal has the correct type",
+                    "equal",
                     "<function>",
                     "(t : Type, t, t) Boolean"
                 ),
                 ExecTest(
-                    s"equality of integers (equal)",
-                    s"""equal(Int, 42, 42)""",
+                    "equality of integers (equal)",
+                    "equal(Int, 42, 42)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of integers (unequal)",
-                    s"""equal(Int, 42, 99)""",
+                    "equality of integers (unequal)",
+                    "equal(Int, 42, 99)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of strings (equal)",
+                    "equality of strings (equal)",
                     s"""equal(String, "abc", "abc")""",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of strings (unequal)",
+                    "equality of strings (unequal)",
                     s"""equal(String, "abc", "cba")""",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of records (equal, flat)",
-                    s"equal({x : Int, y : Int}, {x = 0, y = 1}, {y = 1, x = 0})",
+                    "equality of Booleans (equal)",
+                    "equal(Boolean, true, true)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of records (equal, nested)",
-                    s"equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 0, a = 0}})",
+                    "equality of Booleans (unequal)",
+                    "equal(Boolean, true, false)",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "equality of records (equal, flat)",
+                    "equal({x : Int, y : Int}, {x = 0, y = 1}, {y = 1, x = 0})",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of records (unequal, flat",
-                    s"equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
-                    "false",
-                    "Boolean"
-                ),
-                ExecTest(
-                    s"equality of records (unequal, nested)",
-                    s"equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 1, a = 0}})",
-                    "false",
-                    "Boolean"
-                ),
-                ExecTest(
-                    s"equality of variants (equal, flat)",
-                    s"equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
+                    "equality of records (equal, nested)",
+                    "equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 0, a = 0}})",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of variants (equal, nested)",
-                    s"equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 1} >)",
+                    "equality of records (unequal, flat",
+                    "equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "equality of records (unequal, nested)",
+                    "equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 1, a = 0}})",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "equality of variants (equal, flat)",
+                    "equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of variants (unequal, same constructor)",
-                    s"equal(< a : Int, v : Int >, < a = 1 >, < a = 2 >)",
+                    "equality of variants (equal, nested)",
+                    "equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 1} >)",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "equality of variants (unequal, same constructor)",
+                    "equal(< a : Int, v : Int >, < a = 1 >, < a = 2 >)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of variants (unequal, different constructor)",
-                    s"equal(< a : Int, v : Int >, < a = 1 >, < v = 2 >)",
+                    "equality of variants (unequal, different constructor)",
+                    "equal(< a : Int, v : Int >, < a = 1 >, < v = 2 >)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
-                    s"equality of variants (unequal, nested)",
-                    s"equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
+                    "equality of variants (unequal, nested)",
+                    "equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
                     "false",
                     "Boolean"
                 )
@@ -1379,12 +1391,41 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "res0 : Int = 10\nres1 : Int = 20"
                 ),
                 REPLTest(
-                    "single value definition",
+                    "single value definition, implicit type (simple)",
                     """
                         val x = 1
-                    x
+                        x
                     """,
                     "x : Int = 1\nx : Int = 1"
+                ),
+                REPLTest(
+                    "single value definition, explicit type (simple)",
+                    """
+                        val x : Int = 1
+                        x
+                    """,
+                    "x : Int = 1\nx : Int = 1"
+                ),
+                REPLTest(
+                    "single value definition (complex, no type arg)",
+                    """
+                        val id = fun (x : Int) x
+                        id(3)
+                    """,
+                    "id : (x : Int) Int = <function>\nres0 : Int = 3"
+                ),
+                REPLTest(
+                    "single value definition (complex, type arg)",
+                    """
+                        val id = fun (t : Type, x : t) x
+                        id(Int, 3)
+                    """,
+                    "id : (t : Type, x : t) t = <function>\nres0 : Int = 3"
+                ),
+                REPLTest(
+                    "single value definition (nested type alias)",
+                    "{ type X = Int val x : X = 3 x }",
+                    "res0 : Int = 3"
                 ),
                 REPLTest(
                     "multiple value definitions (upper)",
@@ -1395,6 +1436,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     """,
                     "x : Int = 1\ny : Int = 2\nx : Int = 1"
                 ),
+
                 REPLTest(
                     "multiple value definitions (lower)",
                     """

@@ -115,8 +115,8 @@ trait REPL extends REPLBase[Config] {
         }
     }
 
-    def defineLet(i : String, t : Expression, e : Expression) : REPLLet = {
-        val v = Let(Val(), IdnDef(i), Some(t), e)
+    def defineLet(i : String, optT : Option[Expression], e : Expression) : REPLLet = {
+        val v = Let(Val(), IdnDef(i), optT, e)
         currentStaticEnv = define(enter(currentStaticEnv), i, LetEntity(v))
         REPLLet(v)
     }
@@ -140,35 +140,36 @@ trait REPL extends REPLBase[Config] {
             config.output().emitln(layout(any(input), 5))
         val tree = new Tree[ASTNode, REPLInput](input)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
-        (analyser.errors, analyser.replTypeValue(input), analyser.aliasedReplType(input)) match {
-            case (Vector(), optTypeValue, Some(aliasedInputType)) =>
-                val input2 =
-                    input match {
-                        case REPLDef(Def(IdnDef(i), Body(as, t, e))) =>
-                            defineLet(i, aliasedInputType, Fun(as, e))
+        (analyser.errors, analyser.replTypeValue(input),
+            analyser.replType(input), analyser.aliasedReplType(input)) match {
+                case (Vector(), optTypeValue, replType, Some(aliasedInputType)) =>
+                    val input2 =
+                        input match {
+                            case REPLDef(Def(IdnDef(i), Body(as, t, e))) =>
+                                defineLet(i, replType, Fun(as, e))
 
-                        case REPLExp(AlreadyBoundIdn()) =>
-                            input
+                            case REPLExp(AlreadyBoundIdn()) =>
+                                input
 
-                        case REPLExp(e) =>
-                            val i = s"res$nResults"
-                            nResults = nResults + 1
-                            defineLet(i, aliasedInputType, e)
+                            case REPLExp(e) =>
+                                val i = s"res$nResults"
+                                nResults = nResults + 1
+                                defineLet(i, replType, e)
 
-                        case REPLLet(Let(_, IdnDef(i), None, e)) =>
-                            defineLet(i, aliasedInputType, e)
+                            case REPLLet(Let(_, IdnDef(i), None, e)) =>
+                                defineLet(i, replType, e)
 
-                        case REPLLet(Let(_, IdnDef(i), Some(t), e)) =>
-                            defineLet(i, t, e)
-                    }
-                Right((input2, optTypeValue, aliasedInputType))
+                            case REPLLet(Let(_, IdnDef(i), Some(t), e)) =>
+                                defineLet(i, analyser.unalias(e, t), e)
+                        }
+                    Right((input2, optTypeValue, aliasedInputType))
 
-            case (Vector(), _, None) =>
-                sys.error(s"checkInput: couldn't find aliased REPL type for $input")
+                case (Vector(), _, _, None) =>
+                    sys.error(s"checkInput: couldn't find aliased REPL type for $input")
 
-            case (messages, _, _) =>
-                Left(messages)
-        }
+                case (messages, _, _, _) =>
+                    Left(messages)
+            }
     }
 
     /**
