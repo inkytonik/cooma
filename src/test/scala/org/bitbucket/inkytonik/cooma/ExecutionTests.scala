@@ -1391,12 +1391,36 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "res0 : Int = 10\nres1 : Int = 20"
                 ),
                 REPLTest(
-                    "single value definition",
+                    "single value definition, implicit type (simple)",
                     """
                         val x = 1
-                    x
+                        x
                     """,
                     "x : Int = 1\nx : Int = 1"
+                ),
+                REPLTest(
+                    "single value definition, explicit type (simple)",
+                    """
+                        val x : Int = 1
+                        x
+                    """,
+                    "x : Int = 1\nx : Int = 1"
+                ),
+                REPLTest(
+                    "single value definition (complex, no type arg)",
+                    """
+                        val id = fun (x : Int) x
+                        id(3)
+                    """,
+                    "id : (x : Int) Int = <function>\nres0 : Int = 3"
+                ),
+                REPLTest(
+                    "single value definition (complex, type arg)",
+                    """
+                        val id = fun (t : Type, x : t) x
+                        id(Int, 3)
+                    """,
+                    "id : (t : Type, x : t) t = <function>\nres0 : Int = 3"
                 ),
                 REPLTest(
                     "multiple value definitions (upper)",

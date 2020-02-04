@@ -568,7 +568,10 @@ class SemanticAnalyser(
             case LetEntity(Let(_, i, None, e)) =>
                 tipe(e)
             case LetEntity(Let(_, _, t, e)) =>
-                unalias(e, t)
+                if (tree.nodes.contains(e))
+                    unalias(e, t)
+                else
+                    t
             case _ =>
                 None
         }
@@ -780,11 +783,11 @@ class SemanticAnalyser(
             case REPLExp(e) =>
                 tipe(e)
             case REPLDef(Def(_, Body(Arguments(as), t, e))) =>
-                Some(FunT(ArgumentTypes(argsToArgTypes(as)), t))
+                unaliasFunT(e, argsToArgTypes(as), t)
             case REPLLet(Let(_, _, None, e)) =>
                 tipe(e)
-            case REPLLet(Let(_, _, t, _)) =>
-                t
+            case REPLLet(Let(_, _, t, e)) =>
+                unalias(e, t)
         }
 
     lazy val replTypeValue : REPLInput => Option[Expression] =
