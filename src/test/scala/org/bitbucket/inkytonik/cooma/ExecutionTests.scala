@@ -61,7 +61,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             expectedREPLVar : String = "res0"
         )
 
-        val ExecTests =
+        val execTests =
             Vector(
                 // Primitive values
 
@@ -764,7 +764,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |    and : (Boolean, Boolean) Boolean,
                        |    not : (Boolean) Boolean,
                        |    or : (Boolean, Boolean) Boolean
-                       |}""".stripMargin,
+                       |}""",
                     "Booleans"
                 ),
                 ExecTest(
@@ -781,7 +781,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    lte = <function>,
                       |    gt = <function>,
                       |    gte = <function>
-                      |}""".stripMargin,
+                      |}""",
                     """{
                       |    abs : (Int) Int,
                       |    add : (Int, Int) Int,
@@ -793,7 +793,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    lte : (Int, Int) Boolean,
                       |    gt : (Int, Int) Boolean,
                       |    gte : (Int, Int) Boolean
-                      |}""".stripMargin,
+                      |}""",
                     "Ints"
                 ),
                 ExecTest(
@@ -810,7 +810,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |    lte = <function>,
                        |    gt = <function>,
                        |    gte = <function>
-                       |} >""".stripMargin,
+                       |} >""",
                     """<
                        |    v : {
                        |        abs : (Int) Int,
@@ -824,7 +824,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |        gt : (Int, Int) Boolean,
                        |        gte : (Int, Int) Boolean
                        |    }
-                       |>""".stripMargin,
+                       |>"""
                 ),
                 ExecTest(
                     "{ x = { a = 1, b = Ints } }",
@@ -845,7 +845,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |            gte = <function>
                        |        }
                        |    }
-                       |}""".stripMargin,
+                       |}""",
                     """{
                        |    x : {
                        |        a : Int,
@@ -862,7 +862,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |            gte : (Int, Int) Boolean
                        |        }
                        |    }
-                       |}""".stripMargin,
+                       |}"""
                 ),
                 ExecTest(
                     "equal has the correct type",
@@ -1034,14 +1034,15 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     )
                 )
 
-        for (aTest <- ExecTests) {
+        for (aTest <- execTests) {
             test(s"${backend.name} run: ${aTest.name}") {
                 val result = runString(aTest.name, aTest.program, backend.options, backend)
                 result shouldBe ""
             }
             test(s"${backend.name} run: ${aTest.name}: result") {
                 val result = runString(aTest.name, aTest.program, Seq("-r") ++ backend.options, backend)
-                result shouldBe s"${aTest.expectedCompiledResult}\n"
+                val expectedValue = aTest.expectedCompiledResult.stripMargin
+                result shouldBe s"$expectedValue\n"
             }
         }
 
@@ -1328,10 +1329,12 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
         // REPL tests
 
-        for (aTest <- ExecTests) {
+        for (aTest <- execTests) {
             test(s"${backend.name} REPL: ${aTest.name}") {
                 val result = runREPLOnLine(aTest.program, backend.options)
-                val expectedResult = s"${aTest.expectedREPLVar} : ${aTest.expectedREPLType} = ${aTest.expectedCompiledResult}\n"
+                val expectedType = aTest.expectedREPLType.stripMargin
+                val expectedValue = aTest.expectedCompiledResult.stripMargin
+                val expectedResult = s"${aTest.expectedREPLVar} : $expectedType = $expectedValue\n"
                 result shouldBe expectedResult
             }
         }
