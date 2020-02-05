@@ -1,0 +1,5 @@
+letc k1 x = letc k2 y = $halt y
+            letv i3 = 20
+            k2 i3
+letv i4 = 10
+k1 i4

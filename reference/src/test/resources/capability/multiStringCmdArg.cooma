@@ -1,1 +1,0 @@
-fun (s : String, t : String) => t

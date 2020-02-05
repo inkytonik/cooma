@@ -7,18 +7,20 @@ import scala.sys.process._
 name := "cooma"
 version := "0.1.0"
 organization in ThisBuild := "org.bitbucket.inkytonik.cooma"
-scalaVersion in ThisBuild := "2.12.8"
+scalaVersion in ThisBuild := "2.13.1"
 
 lazy val kiamaDependencies = Seq(
-	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT",
-	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0-SNAPSHOT" % "test" classifier ("tests"),
-	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT",
-	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0-SNAPSHOT" % "test" classifier ("tests")
+	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0",
+	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0" % "test" classifier ("tests"),
+	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0",
+	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0" % "test" classifier ("tests")
 )
 
 lazy val commonsettings = Seq(
-	
-	unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.12/classes/org/bitbucket/inkytonik/cooma/truffle",
+	organization := "org.bitbucket.inkytonik.cooma",
+	scalaVersion := "2.13.1",
+
+	unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.13/classes/org/bitbucket/inkytonik/cooma/truffle",
 	scalacOptions ++=
 		Seq(
 			"-deprecation",
@@ -31,7 +33,8 @@ lazy val commonsettings = Seq(
 		),
 	resolvers ++= Seq (
 		Resolver.sonatypeRepo ("releases"),
-		Resolver.sonatypeRepo ("snapshots")
+		Resolver.sonatypeRepo ("snapshots"),
+		Resolver.bintrayRepo("wolfendale", "maven")
 	),
 
 	buildInfoKeys := Seq[BuildInfoKey](name, version),
@@ -44,9 +47,13 @@ lazy val commonsettings = Seq(
 				" " + scalaVersion.value + "> "
 	},
 	testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
+	logBuffered in Test := false,
 	fork := true,
 	connectInput in run := true,
 	outputStrategy in run := Some(StdoutOutput),
+	javaOptions in run ++= Seq("-Xss16m", "-Xmx1G"),
+	javaOptions in Test ++= Seq("-Xss16m", "-Xmx1G"),
+
 	// sbt-rats
 	ratsScalaRepetitionType := Some(VectorType),
 	ratsUseScalaOptions := true,
@@ -54,6 +61,7 @@ lazy val commonsettings = Seq(
 	ratsDefineASTClasses := true,
 	ratsDefinePrettyPrinter := true,
 	ratsUseKiama := 2,
+
 	// ScalariForm
 	scalariformPreferences := scalariformPreferences.value
 		.setPreference(AlignSingleLineCaseStatements, true)
@@ -61,6 +69,7 @@ lazy val commonsettings = Seq(
 		.setPreference(IndentSpaces, 4)
 		.setPreference(SpaceBeforeColon, true)
 		.setPreference(SpacesAroundMultiImports, false),
+
 	// License
 	// File headers
 	//  Use headerCheck to check which files need new headers
@@ -76,36 +85,53 @@ lazy val commonsettings = Seq(
 		   |file, You can obtain one at http://mozilla.org/MPL/2.0/.
 		   |""".stripMargin
 	)),
+	updateOptions := updateOptions.value.withCachedResolution(true)
 )
 
 // Assembly
 lazy val assemblySettings = Seq(
 	assemblyJarName in assembly := name.value + ".jar",
 	assemblyMergeStrategy in assembly := {
-		case PathList("META-INF", "truffle", "language") => MergeStrategy.first
+		case PathList("org","xmlpull", xs @ _*) => MergeStrategy.last
+		case PathList("META-INF", "truffle", "language") => MergeStrategy.deduplicate
+		case PathList("META-INF", "ECLIPSE_.RSA") => MergeStrategy.discard
 		case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
-		case PathList("META-INF", xs@_*) => MergeStrategy.first
-		case x => MergeStrategy.first
+		case x =>
+			val oldStrategy = (assemblyMergeStrategy in assembly).value
+			oldStrategy(x)
+	},
+	assemblyExcludedJars in assembly := {
+		val cp = (fullClasspath in assembly).value
+		cp filter { f =>
+			//f.data.getName.contains("truffle-api") ||
+			//f.data.getName.contains("truffle-tck")
+			f.data.getName.contains("truffle-dsl-processor") ||
+			f.data.getName.contains("graal-sdk")
+		}
 	},
 	test in assembly := {}
 )
 
 // Modules
 lazy val root = (project in file("."))
-	.disablePlugins(sbtassembly.AssemblyPlugin)
 	.settings(
 		name := "cooma",
 		version := "0.1.0",
-		organization := "org.bitbucket.inkytonik.cooma",
-		scalaVersion := "2.12.8",
+		assemblySettings,
 		commonsettings,
-		mainClass in Compile := (mainClass in Compile in reference).value
+		mainClass in Compile := (mainClass in Compile in reference).value,
+		libraryDependencies ++= Seq(
+			"org.scalatest" %% "scalatest" % "3.1.0" % "test",
+			"org.scalatestplus" %% "scalacheck-1-14" % "3.1.0.0" % "test",
+			"org.scalacheck" %% "scalacheck" % "1.14.3" % "test",
+			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2"
+		) ++ kiamaDependencies
 	)
 	.dependsOn(
+		commons,
 		reference,
 		truffle,
 		truffle_root,
-		trufflelauncher,
 		trufflecomponent
 	)
 	.aggregate(
@@ -113,25 +139,19 @@ lazy val root = (project in file("."))
 		reference,
 		truffle,
 		truffle_root,
-		trufflelauncher,
-		trufflecomponent,
+		trufflecomponent
 	)
 
 lazy val reference = (project in file("reference"))
-	.disablePlugins(sbtassembly.AssemblyPlugin)
 	.settings(
 		commonsettings,
-		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main"),
-		libraryDependencies ++= kiamaDependencies ++ Seq(
-				"org.scalatest" %% "scalatest" % "3.0.5" % "test",
-				"org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
-			)
-	) dependsOn (commons, truffle_root)
+		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main")
+	) dependsOn (commons)
 
 lazy val truffle_root = (project in file("truffle_root"))
 	.settings(
 		assemblySettings,
-		commonsettings,
+		commonsettings
 	)
     .aggregate(truffle)
 	.dependsOn(truffle)
@@ -141,13 +161,11 @@ lazy val truffle = (project in file("truffle"))
 		assemblySettings,
 		commonsettings,
 		compileOrder := CompileOrder.Mixed,
-		libraryDependencies ++= kiamaDependencies ++ Seq(
+		libraryDependencies ++= Seq(
 				"org.projectlombok" % "lombok" % "1.16.16",
-				"org.graalvm.truffle" % "truffle-api" % "19.0.0",
-				"org.graalvm.truffle" % "truffle-dsl-processor" % "19.0.0",
-				"com.thoughtworks.xstream" % "xstream" % "1.4.3",
-				"org.codehaus.jettison" % "jettison" % "1.3.7",
-				"org.apache.commons" % "commons-lang3" % "3.9"
+				"org.graalvm.truffle" % "truffle-api" % "19.3.1",
+				"org.graalvm.truffle" % "truffle-dsl-processor" % "19.3.1",
+				"com.io7m.jpplib" % "com.io7m.jpplib.core" % "0.8.0"
 			)
 	).dependsOn(commons)
 
@@ -157,12 +175,6 @@ lazy val commons = (project in file("commons"))
 		commonsettings,
 		libraryDependencies ++= kiamaDependencies)
 
-lazy val trufflelauncher = (project in file("truffle-launcher"))
-	.settings(
-		assemblySettings,
-		libraryDependencies ++=
-			Seq("org.graalvm.sdk" % "graal-sdk" % "19.0.0")
-	)
 
 lazy val buildComponent = taskKey[Unit]("Generates the component jar for GraalVM installation.")
 
@@ -171,7 +183,7 @@ lazy val installGraalVMComponent = taskKey[Unit]("Installs the generated compone
 lazy val trufflecomponent = (project in file("truffle-component"))
 	.settings(
 		buildComponent := {
-			val files = assembly.all(ScopeFilter(inProjects(truffle, trufflelauncher))).value
+			val files = assembly.all(ScopeFilter(inProjects(truffle_root))).value
 			baseDirectory.value + "/make_component.sh" !
 		},
 		installGraalVMComponent := {
@@ -179,3 +191,8 @@ lazy val trufflecomponent = (project in file("truffle-component"))
 			baseDirectory.value + "/install_component.sh" !
 		}
 	)
+
+// Custom tasks
+
+val testFailing = taskKey[Unit]("Launch tests, tracing only failures")
+testFailing := (testOnly in Test).toTask(" * -- -oC").value

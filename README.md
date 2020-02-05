@@ -7,8 +7,8 @@ The Cooma project at Macquarie University is investigating secure programming la
 ## Participants
 
 * Anthony Sloane (Anthony.Sloane@mq.edu.au)
-* Franck Cassez
 * Diego Ocampo Herrera
+* Cameron Pappas
 * Scott Buckley
 
 ## Sponsors
@@ -19,7 +19,7 @@ The Cooma project at Macquarie University is investigating secure programming la
 
 * Functional core compiled to a continuation-passing intermediate representation (["Compiling with continuations, continued", Kennedy, ICFP 2007](https://doi.org/10.1145/1291151.1291179))
 
-* Row-based data types capable of encoding types with variants and object-oriented style extension (["Abstracting extensible data types: or, rows by any other name", Morris and McKinna, POPL 2019](https://doi.org/10.1145/3290325))
+* Row-based data types capable of encoding record types with variants and object-oriented style extension (["Abstracting extensible data types: or, rows by any other name", Morris and McKinna, POPL 2019](https://doi.org/10.1145/3290325))
 
 * Fine-grained object capability-based effects (["A Study of Capability-Based Effect Systems", Liu, EPFL, 2016](https://github.com/liufengyun/stoic))
 
@@ -31,11 +31,14 @@ The Cooma project at Macquarie University is investigating secure programming la
 
 Specification and reference implementation is under way.
 
-* Functional core (tail call optimisation, but no polymorphism)
-* Row-based data types (literals, selection, concatenation, no variants)
-* Object capabilities via rows
-* Runtime-provided resource capabilities (Reader, Writer and ReaderWriter only)
+* Functional core with tail call optimisation
+* Row-based record and variant data types (literals, selection, concatenation, simple matching)
+* Object capabilities via records
+* Runtime-provided resource capabilities (I/O operations only)
 * Implicit argument resolution (not started)
+* Single shared frontend (parsing, semantic analysis, compilation to continuation-based IR)
+* Two IR backends (reference and Truffle/GraalVM)
+* File-based execution and read-eval-print loop (REPL)
 
 ### Related projects
 
@@ -57,49 +60,49 @@ Specification and reference implementation is under way.
 ### Running interactively (REPL mode)
 
 ```ml
-cooma 0.1.0 2.12.8> run
+root 0.1.0 2.12.8> run
 [info] ... sbt messages ...
-cooma 0.1.0 REPL
+roor 0.1.0 REPL - Reference backend
 
 Enter definitions or expressions (:help for commands)
 
 cooma> :help
 
-exp                    evaluate exp, print value
-val x = exp            add new value definition
-def f(x : Int) = exp   add new function definition
-:help                  print this message
-:lines                 enter multiple separate input lines until :end
-:paste                 enter single multi-line input until :end
-:quit                  quit the REPL (also Control-D)
+exp                         evaluate exp, print value
+val x = exp                 add new value definition
+def f (x : Int) Int = exp   add new function definition
+:help                       print this message
+:lines                      enter multiple separate input lines until :end
+:paste                      enter single multi-line input until :end
+:quit                       quit the REPL (also Control-D)
 
 cooma> 10
 res0 = 10
 
 cooma> res0
-res1 = 10
+res1 : Int = 10
 
 cooma> val x = 20
-x = 20
+x : Int = 20
 
 cooma> x
-res2 = 20
+res2 : Int = 20
 
-cooma> def f(x : Int) = x
-f
+cooma> def f (x : Int) Int = x
+f : (Int) Int = <function>
 
 cooma> f(20)
-res3 = 20
+res3 : Int = 20
 
 cooma> :lines
 val a = 1
 val b = 2
 :end
-a = 1
-b = 2
+a : Int = 1
+b : Int = 2
 
 cooma> a
-res4 = 1
+res4 : Int = 1
 
 cooma> :paste
 {
@@ -108,7 +111,7 @@ cooma> :paste
    c
 }
 :end
-res5 = 1
+res5 : Int = 1
 ```
 
 ### Running on files (compiler mode)
@@ -116,25 +119,25 @@ res5 = 1
 E.g., for the program `reference/src/test/resources/basic/multiArgCall.cooma` which is a simple multiple argument function call:
 
 ```ml
-{fun (x : Int, y : String) => x} (10, "hello")
+{fun (x : Int, y : String) x} (10, "hello")
 ```
 
 we get the following using the `-r` option to print the program result:
 
 ```ml
-
 cooma 0.1.0 2.12.8> run -r reference/src/test/resources/basic/multiArgCall.cooma`
 [info] ... sbt messages ...
 10
 ```
 
-Use `--help` to see all of the options for printing the source AST, IR and IR AST. E.g., use `-i` to print the IR AST:
+Use `run --help` to see all of the options for printing the source AST, IR and IR AST.
+E.g., use `-i` to print the IR AST:
 
 ```ml
 cooma 0.1.0 2.12.8> run -i -r reference/src/test/resources/basic/multiArgCall.cooma
 [info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r reference/src/test/resources/basic/multiArgCall.cooma
-letv f5 = fun k6 x => letv f7 = fun j8 y => j8 x
-                      k6 f7
+letv f5 = fun k6 x = letv f7 = fun j8 y = j8 x
+                     k6 f7
 letv x9 = 10
 letc k3 x4 = letv x10 = "hello"
              letc k1 x2 = $halt x2
@@ -166,8 +169,8 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 
 ```ml
 {
-    def f (x : Int) = x
-    def g (y : Int) = f(y)
+    def f (x : Int) Int = x
+    def g (y : Int) Int = f(y)
     g(10)
 }
 
@@ -175,16 +178,16 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 10
 ```
 
-### Row argument and field reference
+### Record argument and field reference
 
 ```ml
-{fun (r : {x : Int, y : Int, z : String}) => r.x} ({x = 20, y = 10, z = "Hi"})
+{fun (r : {x : Int, y : Int, z : String}) r.x} ({x = 20, y = 10, z = "Hi"})
 
-> run -r reference/src/test/resources/basic/rowArg.cooma
+> run -r reference/src/test/resources/basic/recordArg.cooma
 20
 ```
 
-### Row concatenation
+### Record concatenation
 
 ```ml
 {
@@ -193,38 +196,39 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     {r & s}.x
 }
 
-> run -r reference/src/test/resources/basic/rowConcat.cooma
+> run -r reference/src/test/resources/basic/recordConcat.cooma
 10
 ```
 
 ### String command-line arguments
 
 ```ml
-fun (s : String) => s
+fun (s : String) s
 
 > run -r reference/src/test/resources/capability/stringCmdArg.cooma hello
-hello
+"hello"
 
-fun (s : String, t : String) => t
+fun (s : String, t : String) t
 
 > run -r reference/src/test/resources/capability/multiStringCmdArg.cooma hello there
-there
+"there"
 ```
 
 ### Writer capability
 
 Capability arguments at the top-level are automatically linked with the command-line arguments and checked.
 E.g., a Writer capability allows the program to write to the named file or device.
+(The name "-" means standard output, or input for readers.)
 
 ```ml
-fun (w : Writer) => w.write("Hello world!\n")
+fun (w : Writer) w.write("Hello world!\n")
 
 > run -r reference/src/test/resources/capability/writerCmdArg.cooma /dev/tty
 Hello world!
 {}
 ```
 
-`{}` is the unit value returned by `c.write`.
+`{}` is the unit value returned by `w.write`.
 
 If the specified file name is not writeable, the runtime system causes the execution to fail.
 
@@ -236,10 +240,10 @@ cooma: Writer capability unavailable: can't write /does/not/exist
 ### Writer and Reader capabilities
 
 ```ml
-fun (w : Writer, r : Reader) => w.write(r.read({}))
+fun (w : Writer, r : Reader) w.write(r.read())
 
 > run -r reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty reference/src/test/resources/basic/multiArgCall.cooma
-(fun (x : Int, y : String) => x) (10, "hello")
+(fun (x : Int, y : String) x) (10, "hello")
 {}
 ```
 
@@ -247,18 +251,8 @@ A Reader capability is only provided if the designated file can be read.
 
 ```ml
 
-> run reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty /does/not/exist
+> run reference/src/test/resources/capability/consoleReaderCmdArg.cooma /dev/tty /does/not/exist
 cooma: Reader capability unavailable: can't read /does/not/exist
 ```
 
-A `ReaderWriter` capability combines the operations of `Reader` and `Writer`.
-
-### Internal capability
-
-Capabilities can also be used internally as the arguments to non-top-level functions.
-The value passed must be a string and the capability will be checked if and when the function is called.
-NOTE: this check is not currently implemented.
-
-```ml
-{fun (c : Writer) => c.write("Internal!\n")} ("/tmp/coomaTest.txt")
-```
+The built-in ReaderWriter capability combines Reader and Writer.

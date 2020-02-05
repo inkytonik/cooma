@@ -1,0 +1,4 @@
+{
+    val id = fun (t : Type, x : t) x
+    {i = id(Int, 10), s = id(String, "hello")}
+}

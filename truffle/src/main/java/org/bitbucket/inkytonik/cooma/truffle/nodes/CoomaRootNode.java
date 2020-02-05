@@ -6,9 +6,10 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.RootNode;
-import org.bitbucket.inkytonik.cooma.truffle.CoomaConstants;
+import org.bitbucket.inkytonik.cooma.CoomaConstants;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 /**
  * The root of all CoomaIR execution trees.
@@ -20,15 +21,15 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 public class CoomaRootNode extends RootNode {
 
     @Child private CoomaTermNode termNode;
-    private TruffleLanguage.ContextReference<CoomaContext> context;
+    private CoomaContext context;
 
-    public TruffleLanguage.ContextReference<CoomaContext> getContext() {
+    public CoomaContext getContext() {
         return context;
     }
 
-    public CoomaRootNode(TruffleLanguage language, CoomaTermNode termNode) {
+    public CoomaRootNode(TruffleLanguage<CoomaContext> language, CoomaContext coomaContext, CoomaTermNode termNode) {
         super(language);
-        this.context = language.getContextReference();
+        this.context = coomaContext;
         this.termNode = termNode;
     }
 
@@ -38,8 +39,6 @@ public class CoomaRootNode extends RootNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        FrameSlot frameSlot = frame.getFrameDescriptor().findOrAddFrameSlot( CoomaConstants.RHO,null, FrameSlotKind.Object);
-        frame.setObject(frameSlot, context.get().getRho());
         return termNode.executeGeneric(frame);
     }
 }

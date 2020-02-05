@@ -1,0 +1,35 @@
+LetV(
+    "x1",
+    PrmV(
+        ArgumentP(
+            0),
+        Vector()),
+    LetV(
+        "w",
+        PrmV(
+            CapabilityP(
+                "Writer"),
+            Vector(
+                "x1")),
+        LetV(
+            "f4",
+            PrmV(
+                RecSelectP(),
+                Vector(
+                    "w",
+                    "write")),
+            LetV(
+                "s5",
+                StrV(
+                    "Hello world!
+"),
+                LetC(
+                    "k2",
+                    "r3",
+                    AppC(
+                        "$halt",
+                        "r3"),
+                    AppF(
+                        "f4",
+                        "k2",
+                        "s5"))))))

@@ -1,0 +1,6 @@
+letv x1 = arg 0
+letv w = cap Writer x1
+letv f4 = select w write
+letv s5 = "Hello world!\n"
+letc k2 r3 = $halt r3
+f4 k2 s5

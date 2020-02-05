@@ -1,0 +1,7 @@
+letv f5 = fun k6 x = letv f7 = fun k8 y = k8 x
+                     k6 f7
+letv i9 = 10
+letc k3 r4 = letv s10 = "hello"
+             letc k1 r2 = $halt r2
+             r4 k1 s10
+f5 k3 i9

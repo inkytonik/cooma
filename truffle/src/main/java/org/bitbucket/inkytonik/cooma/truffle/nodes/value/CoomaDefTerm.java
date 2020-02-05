@@ -6,7 +6,7 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaNode;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 
 @Getter
-@NodeInfo(shortName = "defTerm", description = "LetF func. def. node")
+@NodeInfo(shortName = "defTerm", description = "A single function definition in letF")
 public class CoomaDefTerm extends CoomaNode {
 
     private final String f;
@@ -22,6 +22,5 @@ public class CoomaDefTerm extends CoomaNode {
         this.x = x;
         this.body = body;
     }
-
 
 }

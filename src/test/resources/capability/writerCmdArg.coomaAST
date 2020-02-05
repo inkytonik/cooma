@@ -1,0 +1,19 @@
+Program(
+    Fun(
+        Arguments(
+            Vector(
+                Argument(
+                    IdnDef(
+                        "w"),
+                    WriterT(),
+                    None))),
+        App(
+            Sel(
+                Idn(
+                    IdnUse(
+                        "w")),
+                FieldUse(
+                    "write")),
+            Vector(
+                Str(
+                    ""Hello world!\n"")))))

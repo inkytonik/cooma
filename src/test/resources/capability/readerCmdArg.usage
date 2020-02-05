@@ -1,0 +1,4 @@
+arguments:
+  r: a reader "source of data to read"
+result type:
+  String

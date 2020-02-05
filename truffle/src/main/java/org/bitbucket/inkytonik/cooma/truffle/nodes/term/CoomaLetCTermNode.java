@@ -5,7 +5,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
 
-@NodeInfo(shortName = "letc", description = "Continuation declaration")
+@NodeInfo(shortName = "letC", description = "Continuation binding")
 public class CoomaLetCTermNode extends CoomaTermNode {
 
     private final String identifier;

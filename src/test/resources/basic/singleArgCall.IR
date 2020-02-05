@@ -1,0 +1,4 @@
+letv f3 = fun k4 x = k4 x
+letv i5 = 10
+letc k1 r2 = $halt r2
+f3 k1 i5

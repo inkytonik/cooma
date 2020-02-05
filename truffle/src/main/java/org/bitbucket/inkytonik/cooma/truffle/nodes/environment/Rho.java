@@ -18,9 +18,8 @@ public final class Rho {
     }
 
 
-    @SuppressWarnings("unchecked")
-    public <T extends RuntimeValue> T  get(String key) {
-        return (T) rho.get(key);
+    public RuntimeValue get(String key) {
+        return rho.get(key);
     }
 
     public Rho extend(String key, RuntimeValue value){

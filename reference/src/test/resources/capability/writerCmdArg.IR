@@ -1,6 +1,0 @@
-letv x1 = arg 0
-letv w = cap Writer x1
-letv x4 = select w write
-letv x5 = "Hello world!\n"
-letc k2 x3 = $halt x3
-x4 k2 x5

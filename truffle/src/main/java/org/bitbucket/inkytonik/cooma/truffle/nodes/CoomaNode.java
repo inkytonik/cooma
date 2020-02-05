@@ -10,27 +10,26 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 public class CoomaNode extends Node {
 
     protected Rho obtainRho(){
-        return getContext().get().getRho();
+        return getContext().getRho();
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T extends RuntimeValue> T  obtainFromRho(String key) {
-        return Utils.obtainFromRho(getContext().get(), key);
+    protected RuntimeValue obtainFromRho(String key) {
+        return Utils.obtainFromRho(getContext(), key);
     }
 
     protected void extendRho(String key, RuntimeValue value) {
-        Utils.extendRho(getContext().get(), key, value);
+        Utils.extendRho(getContext(), key, value);
     }
 
     protected void replaceRho(Rho newRho) {
-        Utils.replaceRho(getContext().get(), newRho);
+        Utils.replaceRho(getContext(), newRho);
     }
 
-    protected TruffleLanguage.ContextReference<CoomaContext> getContext(){
+    protected CoomaContext getContext(){
         return ((CoomaRootNode) getRootNode()).getContext();
     }
 
     protected String[] getArgs(){
-        return getContext().get().getApplicationArguments();
+        return getContext().getApplicationArguments();
     }
 }

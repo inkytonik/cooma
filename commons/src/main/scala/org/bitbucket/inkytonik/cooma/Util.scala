@@ -4,7 +4,7 @@ object Util {
 
     private var freshCount = 0
 
-    def resetFresh() {
+    def resetFresh() : Unit = {
         freshCount = 0
     }
 
@@ -14,7 +14,7 @@ object Util {
     }
 
     def unescape(s : String) : String =
-        StringContext.treatEscapes(s)
+        StringContext.processEscapes(s)
 
     def escape(s : String) : String =
         s.flatMap(escapedChar)
@@ -29,12 +29,11 @@ object Util {
             case '"'  => "\\\""
             case '\'' => "\\\'"
             case '\\' => "\\\\"
-            case _ => if (ch.isControl) "\\" + Integer.toOctalString(ch.toInt)
-            else String.valueOf(ch)
+            case _    => String.valueOf(ch)
         }
 
     def getConfigFilenamesTail(config : Config) : Array[String] = {
-        import scala.collection.JavaConverters._
+        import scala.jdk.CollectionConverters._
         if (!config.filenames().isEmpty) {
             val tail = config.filenames().tail.asJava
             tail.toArray(new Array[String](tail.size()))

@@ -1,6 +1,0 @@
-letf
-    f k1 x = k1 x
-    g k2 y = f k2 y
-letv x5 = 10
-letc k3 x4 = $halt x4
-g k3 x5

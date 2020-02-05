@@ -1,0 +1,18 @@
+Program(
+    App(
+        Blk(
+            Return(
+                Fun(
+                    Arguments(
+                        Vector(
+                            Argument(
+                                IdnDef(
+                                    "x"),
+                                IntT(),
+                                None))),
+                    Idn(
+                        IdnUse(
+                            "x"))))),
+        Vector(
+            Num(
+                10))))

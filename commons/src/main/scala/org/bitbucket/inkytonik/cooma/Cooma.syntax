@@ -2,6 +2,7 @@ module org.bitbucket.inkytonik.cooma.CoomaParser;
 
 header {
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.*;
+    import scala.math.BigInt;
 }
 
 // Cooma source language
@@ -10,48 +11,89 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Argument ++ "," ")" "=>" Expression   {Fun, right, 4}
-  | Expression '(' Expression ++ "," ')'            {App, left, 3}
-  | Expression "&" Expression                       {And, left, 2}
-  | Expression '.' Identifier                       {Sel, left, 1}
-  | '{' Field ** "," '}'                            {Row}
-  | '{' nestnl (BlockExp) \n '}'                    {Blk}
-  | IntLit                                          {Num, 1: Integer.parseInt : Int}
-  | Identifier                                      {Var}
-  | StringLit                                       {Str}.
+    "fun" '(' Arguments ")" Expression                       {Fun, right, 4}
+  | '(' ArgumentTypes ")" Expression                         {FunT, right, 4}
+  | Expression sp "match" '{' nest(Case+) \n '}'             {Mat, left, 3}
+  | Expression "&" Expression                                {Cat, left, 2}
+  | Expression '(' Expression ** "," ')'                     {App, left, 1}
+  | Expression '.' FieldUse                                  {Sel, left, 1}
+  | '{' '}'                                                  {Uni}
+  | 'Unit'                                                   {UniT}
+  | '{' nestnl(BlockExp) \n '}'                              {Blk}
+  | '{' nest(Field ++ ',') \n '}'                            {Rec}
+  | '{' nest(FieldType ++ ',') \n '}'                        {RecT}
+  | '<' nest(Field) \n '>'                                   {Var}
+  | '<' nest(FieldType ++ ',') \n '>'                        {VarT}
+  | 'false'                                                  {False}
+  | 'true'                                                   {True}
+  | 'Boolean'                                                {BoolT}
+  | 'Booleans'                                               {Booleans}
+  | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
+  | 'Int'                                                    {IntT}
+  | 'Ints'                                                   {Ints}
+  | 'Reader'                                                 {ReaderT}
+  | 'ReaderWriter'                                           {ReaderWriterT}
+  | 'Writer'                                                 {WriterT}
+  | StringLit                                                {Str}
+  | 'String'                                                 {StrT}
+  | 'Strings'                                                {Strings}
+  | 'Type'                                                   {TypT}
+  | 'equal'                                                  {Eql}
+  | "prim" Identifier '(' Expression ** "," ')'              {Prm}
+  | IdnUse                                                   {Idn}.
+
+Arguments =
+  Argument ** ",".
 
 Argument =
-  Identifier sp ":" Type.
+  IdnDef sp ":" Expression StringLit?.
+
+ArgumentTypes =
+  ArgumentType ** ",".
+
+ArgumentType =
+  (IdnDef sp ":")? Expression.
+
+Case =
+  \n "case" Identifier '(' IdnDef ")" '=>' nestnl(Expression).
 
 Field =
-  Identifier sp "=" Expression.
+  \n Identifier sp "=" Expression.
+
+FieldUse =
+  Identifier.
 
 BlockExp =
-    FunctionDefinition+ BlockExp   {LetFun}
-  | ValueDefinition BlockExp       {LetVal}
-  | Expression                     {Return}.
+    Defs BlockExp   {BlkDef}
+  | Let BlockExp    {BlkLet}
+  | Expression      {Return}.
 
-FunctionDefinition =
-  "def" Identifier sp '(' Argument ++ "," ")" '='
-    nestnl (Expression) \n                {Def}.
+Defs =
+  Def+.
 
-ValueDefinition =
-  "val" Identifier sp "=" Expression \n   {Val}.
+Def =
+  "def" IdnDef sp Body \n.
 
-Type =
-    Type sp "=>" Type         {FunT, right, 1}
-  | RowType                   {PiT}
-  | 'Int'                     {IntT}
-  | 'String'                  {StrT}
-  | Identifier                {IdnT}.
+Body =
+  '(' Arguments ")" Expression sp '=' nestnl (Expression).
 
-RowType =
-  '{' FieldType ** "," '}'.
+Let =
+  LetKind IdnDef (":" Expression)? sp "=" Expression \n.
+
+LetKind =
+    "type" {Type}
+  | "val" {Val}.
 
 FieldType =
-  Identifier sp ":" Type.
+  \n Identifier sp ":" Expression.
 
 // Lexical syntax
+
+IdnDef =
+  Identifier.
+
+IdnUse =
+  Identifier.
 
 IntLit : Token =
   '-'? Digits.
@@ -66,10 +108,7 @@ StringLit : Token =
   '"' StringChar* '"'.
 
 StringChar : String =
-  '\\' ([btnfr] / '\\' / '"' / "'" /
-        OctDigit OctDigit OctDigit /
-        OctDigit OctDigit /
-        OctDigit OctDigit) /
+  '\\' ([btnfr] / '\\' / '"') /
   !'"' _.
 
 OctDigit : String =
@@ -84,6 +123,6 @@ REPLInput =
   Spacing REPLEntry EOF.
 
 REPLEntry : REPLInput =
-    Expression            {REPLExpression}
-  | FunctionDefinition    {REPLDef}
-  | ValueDefinition       {REPLVal}.
+    Expression  {REPLExp}
+  | Def         {REPLDef}
+  | Let         {REPLLet}.

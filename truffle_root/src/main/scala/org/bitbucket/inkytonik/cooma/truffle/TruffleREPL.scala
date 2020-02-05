@@ -1,49 +1,44 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, CoomaParserPrettyPrinter, REPL}
+import org.bitbucket.inkytonik.cooma._
 
 trait TruffleREPL extends REPL {
 
     self : Compiler with TruffleBackend =>
 
-    /*
-	* Embed an entry in a program and process it.
-	*/
-    override def processEntry(config : Config, input : REPLInput) = {
-        val res = s"res$nResults"
-        input match {
-            case REPLExpression(e) =>
-                nResults = nResults + 1
-                processProgram(config, CoomaParserPrettyPrinter.format(
-                    Program(Blk(LetVal(Val(res, e), Return(Var(res))))),
-                    5
-                ).layout, res, printValue = true)
+    import org.bitbucket.inkytonik.cooma.Config
+    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.format
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
+    import org.graalvm.polyglot.Context
 
-            case REPLDef(fd @ Def(i, _, _)) =>
-                processProgram(config, CoomaParserPrettyPrinter.format(
-                    Program(Blk(LetFun(Vector(fd), Return(Var(i))))),
-                    5
-                ).layout, i, printValue = false)
+    var currentDynamicEnv : Context = _
 
-            case REPLVal(Val(i, e)) =>
-                processProgram(config, CoomaParserPrettyPrinter.format(
-                    Program(Blk(LetVal(Val(i, e), Return(Var(i))))),
-                    5
-                ).layout, i, printValue = true)
-        }
+    override def initialise() : Unit = {
+        super.initialise()
+        currentDynamicEnv = Context.newBuilder(CoomaConstants.ID).build()
     }
 
-    def processProgram(config : Config, line : String, i : String, printValue : Boolean) : Unit = {
-        val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
-        if (printValue)
-            config.output().emitln(s"$i = ${showRuntimeValue(result)}")
-        else
-            config.output().emitln(i)
+    def process(
+        program : Program,
+        i : String,
+        optTypeValue : Option[Expression],
+        aliasedType : Expression,
+        config : Config
+    ) : Unit = {
+        execute(i, optTypeValue, aliasedType, config, {
+            val line = format(program).layout
+            val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
+            if (CoomaLanguage.Type.Error.value.equals(result.getMetaObject.toString)) {
+                errorOutput(Some(result), config)
+            } else {
+                output(i, optTypeValue, aliasedType, Some(result), config)
+            }
+        })
     }
 
 }
 
 object TruffleReplFrontendHolder {
-    def repl(config : Config) : REPL with Compiler with Backend = new TruffleBackend(config) with TruffleREPL with Compiler
+    def repl(config : Config) : REPL with Compiler with Backend =
+        new TruffleBackend(config) with TruffleREPL with Compiler
 }

@@ -6,9 +6,6 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 public abstract class CoomaValueNode extends CoomaNode {
 
-    /**
-     *
-     */
     public abstract RuntimeValue evaluate(VirtualFrame frame);
 
 }

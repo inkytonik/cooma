@@ -6,7 +6,7 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value.CoomaValueNode;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
-@NodeInfo(shortName = "letv", description = "Value bindings")
+@NodeInfo(shortName = "letV", description = "Value binding")
 public final class CoomaLetVTermNode extends CoomaTermNode {
 
     private final String identifier;
