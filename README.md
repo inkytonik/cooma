@@ -31,10 +31,17 @@ The Cooma project at Macquarie University is investigating secure programming la
 
 Specification and reference implementation is under way.
 
+<<<<<<< HEAD
 * Functional core with tail call optimisation
 * Row-based record and variant data types (literals, selection, concatenation, simple matching)
 * Object capabilities via records
 * Runtime-provided resource capabilities (I/O operations only)
+=======
+* Functional core (tail call optimisation, but no polymorphism)
+* Row-based data types (literals, selection, concatenation, no variants)
+* Object capabilities via rows
+* Runtime-provided resource capabilities (Reader, Writer and ReaderWriter only)
+>>>>>>> master
 * Implicit argument resolution (not started)
 * Single shared frontend (parsing, semantic analysis, compilation to continuation-based IR)
 * Two IR backends (reference and Truffle/GraalVM)
@@ -125,6 +132,10 @@ E.g., for the program `reference/src/test/resources/basic/multiArgCall.cooma` wh
 we get the following using the `-r` option to print the program result:
 
 ```ml
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 cooma 0.1.0 2.12.8> run -r reference/src/test/resources/basic/multiArgCall.cooma`
 [info] ... sbt messages ...
 10
@@ -136,8 +147,13 @@ E.g., use `-i` to print the IR AST:
 ```ml
 cooma 0.1.0 2.12.8> run -i -r reference/src/test/resources/basic/multiArgCall.cooma
 [info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r reference/src/test/resources/basic/multiArgCall.cooma
+<<<<<<< HEAD
 letv f5 = fun k6 x = letv f7 = fun j8 y = j8 x
                      k6 f7
+=======
+letv f5 = fun k6 x => letv f7 = fun j8 y => j8 x
+                      k6 f7
+>>>>>>> master
 letv x9 = 10
 letc k3 x4 = letv x10 = "hello"
              letc k1 x2 = $halt x2
@@ -183,7 +199,11 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ```ml
 {fun (r : {x : Int, y : Int, z : String}) r.x} ({x = 20, y = 10, z = "Hi"})
 
+<<<<<<< HEAD
 > run -r reference/src/test/resources/basic/recordArg.cooma
+=======
+> run -r reference/src/test/resources/basic/rowArg.cooma
+>>>>>>> master
 20
 ```
 
@@ -196,7 +216,11 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     {r & s}.x
 }
 
+<<<<<<< HEAD
 > run -r reference/src/test/resources/basic/recordConcat.cooma
+=======
+> run -r reference/src/test/resources/basic/rowConcat.cooma
+>>>>>>> master
 10
 ```
 
@@ -206,22 +230,36 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 fun (s : String) s
 
 > run -r reference/src/test/resources/capability/stringCmdArg.cooma hello
+<<<<<<< HEAD
 "hello"
+=======
+hello
+>>>>>>> master
 
 fun (s : String, t : String) t
 
 > run -r reference/src/test/resources/capability/multiStringCmdArg.cooma hello there
+<<<<<<< HEAD
 "there"
+=======
+there
+>>>>>>> master
 ```
 
 ### Writer capability
 
 Capability arguments at the top-level are automatically linked with the command-line arguments and checked.
 E.g., a Writer capability allows the program to write to the named file or device.
+<<<<<<< HEAD
 (The name "-" means standard output, or input for readers.)
 
 ```ml
 fun (w : Writer) w.write("Hello world!\n")
+=======
+
+```ml
+fun (w : Writer) => w.write("Hello world!\n")
+>>>>>>> master
 
 > run -r reference/src/test/resources/capability/writerCmdArg.cooma /dev/tty
 Hello world!
@@ -240,10 +278,17 @@ cooma: Writer capability unavailable: can't write /does/not/exist
 ### Writer and Reader capabilities
 
 ```ml
+<<<<<<< HEAD
 fun (w : Writer, r : Reader) w.write(r.read())
 
 > run -r reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty reference/src/test/resources/basic/multiArgCall.cooma
 (fun (x : Int, y : String) x) (10, "hello")
+=======
+fun (w : Writer, r : Reader) => w.write(r.read({}))
+
+> run -r reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty reference/src/test/resources/basic/multiArgCall.cooma
+(fun (x : Int, y : String) => x) (10, "hello")
+>>>>>>> master
 {}
 ```
 
@@ -251,8 +296,26 @@ A Reader capability is only provided if the designated file can be read.
 
 ```ml
 
+<<<<<<< HEAD
 > run reference/src/test/resources/capability/consoleReaderCmdArg.cooma /dev/tty /does/not/exist
 cooma: Reader capability unavailable: can't read /does/not/exist
 ```
 
 The built-in ReaderWriter capability combines Reader and Writer.
+=======
+> run reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty /does/not/exist
+cooma: Reader capability unavailable: can't read /does/not/exist
+```
+
+A `ReaderWriter` capability combines the operations of `Reader` and `Writer`.
+
+### Internal capability
+
+Capabilities can also be used internally as the arguments to non-top-level functions.
+The value passed must be a string and the capability will be checked if and when the function is called.
+NOTE: this check is not currently implemented.
+
+```ml
+{fun (c : Writer) => c.write("Internal!\n")} ("/tmp/coomaTest.txt")
+```
+>>>>>>> master
