@@ -35,6 +35,7 @@ Expression {paren} =
   | 'ReaderWriter'                                           {ReaderWriterT}
   | 'Writer'                                                 {WriterT}
   | StringLit                                                {Str}
+  | 'String!'                                                {SecT(StrT)}
   | 'String'                                                 {StrT}
   | 'Strings'                                                {Strings}
   | 'Type'                                                   {TypT}
