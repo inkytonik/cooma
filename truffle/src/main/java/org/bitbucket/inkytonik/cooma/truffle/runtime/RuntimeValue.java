@@ -3,14 +3,10 @@ package org.bitbucket.inkytonik.cooma.truffle.runtime;
 import com.oracle.truffle.api.interop.TruffleObject;
 import de.uka.ilkd.pp.*;
 
-public abstract class RuntimeValue<T extends RuntimeValue<T>> implements Comparable<T>, TruffleObject, PrettyPrintable {
+public abstract class RuntimeValue implements TruffleObject, PrettyPrintable {
 
     public Boolean isHostObject() {
         return true;
-    }
-
-    public RuntimeValue<T> getValue(){
-        return this;
     }
 
     public String print() {
@@ -19,6 +15,7 @@ public abstract class RuntimeValue<T extends RuntimeValue<T>> implements Compara
 
     public abstract <Exc extends java.lang.Exception> void prettyPrint(DataLayouter<Exc> l) throws Exc;
 
+    @SuppressWarnings("unchecked")
     public String pprint() {
         try {
             StringBackend backend = new StringBackend(80);
@@ -31,5 +28,4 @@ public abstract class RuntimeValue<T extends RuntimeValue<T>> implements Compara
             return e.getMessage();
         }
     }
-
 }

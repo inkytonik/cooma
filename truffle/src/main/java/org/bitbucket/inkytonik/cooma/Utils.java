@@ -7,7 +7,7 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 public class Utils {
 
     @SuppressWarnings("unchecked")
-    public static <T extends RuntimeValue> T  obtainFromRho(CoomaContext coomaContext, String key) {
+    public static RuntimeValue obtainFromRho(CoomaContext coomaContext, String key) {
         return coomaContext.getRho().get(key);
     }
 

@@ -6,36 +6,36 @@ LetV(
         LetV(
             "f7",
             FunV(
-                "j8",
+                "k8",
                 "y",
                 AppC(
-                    "j8",
+                    "k8",
                     "x")),
             AppC(
                 "k6",
                 "f7"))),
     LetV(
-        "x9",
+        "i9",
         IntV(
             10),
         LetC(
             "k3",
-            "x4",
+            "r4",
             LetV(
-                "x10",
+                "s10",
                 StrV(
                     "hello"),
                 LetC(
                     "k1",
-                    "x2",
+                    "r2",
                     AppC(
                         "$halt",
-                        "x2"),
+                        "r2"),
                     AppF(
-                        "x4",
+                        "r4",
                         "k1",
-                        "x10"))),
+                        "s10"))),
             AppF(
                 "f5",
                 "k3",
-                "x9"))))
+                "i9"))))

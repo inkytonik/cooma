@@ -8,7 +8,7 @@ import org.bitbucket.inkytonik.cooma.Util;
 
 @Getter
 @RequiredArgsConstructor
-public class StringRuntimeValue extends RuntimeValue<StringRuntimeValue> implements TruffleObject  {
+public class StringRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<StringRuntimeValue> {
     private final String innerValue;
 
     @Override

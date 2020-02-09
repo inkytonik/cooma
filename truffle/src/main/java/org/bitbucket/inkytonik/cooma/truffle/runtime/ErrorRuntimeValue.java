@@ -5,15 +5,17 @@ import de.uka.ilkd.pp.DataLayouter;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Comparator;
+
 @Getter
 @RequiredArgsConstructor
-public class ErrorRuntimeValue extends RuntimeValue<ErrorRuntimeValue> implements TruffleObject {
+public class ErrorRuntimeValue extends RuntimeValue implements TruffleObject,  Comparable<ErrorRuntimeValue> {
 
     private final String message;
 
     @Override
     public int compareTo(ErrorRuntimeValue errorRuntimeValue) {
-        return errorRuntimeValue.message.compareTo(this.message);
+        return Comparator.comparing(ErrorRuntimeValue::getMessage).compare(this, errorRuntimeValue);
     }
 
     @Override

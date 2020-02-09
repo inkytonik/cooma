@@ -10,7 +10,7 @@ import java.util.Comparator;
 
 @Getter
 @RequiredArgsConstructor
-public final class FunctionClosure extends FunctionClosureHolder<FunctionClosure> {
+public final class FunctionClosure extends FunctionClosureHolder implements Comparable<FunctionClosure>{
     private final Rho rho;
     private final String k;
     private final String x;
@@ -32,9 +32,8 @@ public final class FunctionClosure extends FunctionClosureHolder<FunctionClosure
     }
 
     @Override
-    public int compareTo(@NonNull FunctionClosure functionClosure) {
-        return Comparator.comparing(FunctionClosure::getK)
-                .thenComparing(FunctionClosure::getX).compare(this, functionClosure);
+    public int compareTo(FunctionClosure functionClosure) {
+        return Comparator.comparing(FunctionClosure::getX).compare(this, functionClosure);
     }
 
 }

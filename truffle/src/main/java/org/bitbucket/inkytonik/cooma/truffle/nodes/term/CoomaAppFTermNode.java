@@ -35,8 +35,7 @@ public abstract class CoomaAppFTermNode extends CoomaTermNode {
 
     @Specialization(guards = "isHalt()")
     Object executeHalt(VirtualFrame frame) {
-
-        FunctionClosureHolder value = obtainFromRho(f);
+        FunctionClosureHolder value = (FunctionClosureHolder) obtainFromRho(f);
         FunctionClosure closure = value.get(f);
         Rho p1 = closure.getRho()
                 .extend(closure.getK(),

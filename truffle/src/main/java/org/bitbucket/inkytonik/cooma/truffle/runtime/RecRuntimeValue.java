@@ -5,10 +5,13 @@ import de.uka.ilkd.pp.DataLayouter;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.val;
+import java.util.Arrays;
+import java.util.Comparator;
+
 
 @Value
 @EqualsAndHashCode(callSuper=false)
-public class RecRuntimeValue extends RuntimeValue<RecRuntimeValue> implements TruffleObject {
+public class RecRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<RecRuntimeValue>{
 
     private final FieldValueRuntime[] fields;
 
@@ -18,20 +21,7 @@ public class RecRuntimeValue extends RuntimeValue<RecRuntimeValue> implements Tr
 
     @Override
     public int compareTo(RecRuntimeValue recRuntimeValue) {
-
-        if (this.getFields().length == recRuntimeValue.getFields().length){
-            for (int i = 0; i < this.getFields().length ; i++) {
-                FieldValueRuntime local = this.getFields()[i];
-                FieldValueRuntime theirs = recRuntimeValue.getFields()[i];
-                if (local.compareTo(theirs) != 0) {
-                    return -1;
-                }
-            }
-            return 0;
-        } else{
-            return -1;
-        }
-
+        return Arrays.deepEquals(fields, recRuntimeValue.getFields()) ? 0 : -1;
     }
 
     @Override

@@ -359,6 +359,13 @@ class SemanticAnalyser(
             case Blk(b) =>
                 blockTipe(b)
 
+            case Booleans() =>
+                Some(RecT(Vector(
+                    FieldType("and", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT)),
+                    FieldType("not", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT))), boolT)),
+                    FieldType("or", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT))
+                )))
+
             case BoolT() =>
                 Some(TypT())
 
@@ -424,9 +431,6 @@ class SemanticAnalyser(
                     case BadCases() =>
                         None
                 }
-
-            case Not() =>
-                Some(mkPrimType(Vector(("b", boolT)), boolT))
 
             case _ : Num =>
                 Some(IntT())
@@ -564,7 +568,10 @@ class SemanticAnalyser(
             case LetEntity(Let(_, i, None, e)) =>
                 tipe(e)
             case LetEntity(Let(_, _, t, e)) =>
-                unalias(e, t)
+                if (tree.nodes.contains(e))
+                    unalias(e, t)
+                else
+                    t
             case _ =>
                 None
         }
@@ -746,6 +753,12 @@ class SemanticAnalyser(
             case tree.parent(_ : FunT) =>
                 Some(TypT())
 
+            case tree.parent.pair(a : Expression, Let(_, _, Some(t), e)) =>
+                if (a eq t)
+                    Some(TypT())
+                else
+                    unalias(e, t)
+
             case tree.parent.pair(a : Expression, Prm("Equal", Vector(t, l, r))) =>
                 if (a eq t)
                     Some(TypT())
@@ -770,11 +783,11 @@ class SemanticAnalyser(
             case REPLExp(e) =>
                 tipe(e)
             case REPLDef(Def(_, Body(Arguments(as), t, e))) =>
-                Some(FunT(ArgumentTypes(argsToArgTypes(as)), t))
+                unaliasFunT(e, argsToArgTypes(as), t)
             case REPLLet(Let(_, _, None, e)) =>
                 tipe(e)
-            case REPLLet(Let(_, _, t, _)) =>
-                t
+            case REPLLet(Let(_, _, t, e)) =>
+                unalias(e, t)
         }
 
     lazy val replTypeValue : REPLInput => Option[Expression] =

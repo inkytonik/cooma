@@ -21,15 +21,15 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 public class CoomaRootNode extends RootNode {
 
     @Child private CoomaTermNode termNode;
-    private TruffleLanguage.ContextReference<CoomaContext> context;
+    private CoomaContext context;
 
-    public TruffleLanguage.ContextReference<CoomaContext> getContext() {
+    public CoomaContext getContext() {
         return context;
     }
 
-    public CoomaRootNode(TruffleLanguage language, CoomaTermNode termNode) {
+    public CoomaRootNode(TruffleLanguage<CoomaContext> language, CoomaContext coomaContext, CoomaTermNode termNode) {
         super(language);
-        this.context = language.getContextReference();
+        this.context = coomaContext;
         this.termNode = termNode;
     }
 
