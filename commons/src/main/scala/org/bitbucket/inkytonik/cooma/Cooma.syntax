@@ -17,31 +17,34 @@ Expression {paren} =
   | Expression "&" Expression                                {Cat, left, 2}
   | Expression '(' Expression ** "," ')'                     {App, left, 1}
   | Expression '.' FieldUse                                  {Sel, left, 1}
+  | PredefType '!'                                           {SecT}
+  | PredefType                                               
   | '{' '}'                                                  {Uni}
-  | 'Unit'                                                   {UniT}
   | '{' nestnl(BlockExp) \n '}'                              {Blk}
   | '{' nest(Field ++ ',') \n '}'                            {Rec}
-  | '{' nest(FieldType ++ ',') \n '}'                        {RecT}
   | '<' nest(Field) \n '>'                                   {Var}
-  | '<' nest(FieldType ++ ',') \n '>'                        {VarT}
   | 'false'                                                  {False}
   | 'true'                                                   {True}
-  | 'Boolean'                                                {BoolT}
   | 'Booleans'                                               {Booleans}
   | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
-  | 'Int'                                                    {IntT}
   | 'Ints'                                                   {Ints}
-  | 'Reader'                                                 {ReaderT}
-  | 'ReaderWriter'                                           {ReaderWriterT}
-  | 'Writer'                                                 {WriterT}
   | StringLit                                                {Str}
-  | 'String!'                                                {SecT(StrT)}
-  | 'String'                                                 {StrT}
   | 'Strings'                                                {Strings}
-  | 'Type'                                                   {TypT}
   | 'equal'                                                  {Eql}
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
   | IdnUse                                                   {Idn}.
+
+PredefType : Expression =
+    'Unit'                            {UniT}
+  | '{' nest(FieldType ++ ',') \n '}' {RecT}
+  | '<' nest(FieldType ++ ',') \n '>' {VarT}
+  | 'Boolean'                         {BoolT}
+  | 'Int'                             {IntT}
+  | 'Reader'                          {ReaderT}
+  | 'ReaderWriter'                    {ReaderWriterT}
+  | 'Writer'                          {WriterT}
+  | 'String'                          {StrT}
+  | 'Type'                            {TypT}.
 
 Arguments =
   Argument ** ",".

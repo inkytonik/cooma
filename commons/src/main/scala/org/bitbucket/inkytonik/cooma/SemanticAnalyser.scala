@@ -197,6 +197,11 @@ class SemanticAnalyser(
     def checkFieldUse(e : Expression, f : FieldUse) : Messages = {
         val i = f.identifier
         tipe(e) match {
+            case Some(t @ SecT(RecT(fields))) =>
+                if (fields.map(_.identifier) contains i)
+                    noMessages
+                else
+                    error(f, s"$i is not a field of record type ${show(alias(t))}")
             case Some(t @ RecT(fields)) =>
                 if (fields.map(_.identifier) contains i)
                     noMessages
@@ -507,6 +512,9 @@ class SemanticAnalyser(
 
             case _ : VarT =>
                 Some(TypT())
+
+            case _ : SecT =>
+                Some(TypT())
         }
 
     def substArgTypes[T](x : String, t : Expression, a : T) = {
@@ -816,14 +824,22 @@ object SemanticAnalysis {
     def subtype(t : Expression, u : Expression) : Boolean =
         (t == u) ||
             ((t, u) match {
-                case (RecT(tr), RecT(ur)) => // Records
+                case (RecT(tr), RecT(ur)) =>
                     val urn = fieldtypeNames(ur)
                     urn.diff(fieldtypeNames(tr)).isEmpty && subtypesFields(urn, tr, ur)
-                case (VarT(tr), VarT(ur)) => // Variants
+                case (VarT(tr), VarT(ur)) =>
                     val trn = fieldtypeNames(tr)
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
                 case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
                     subtypesArgs(us, ts) && subtype(t, u)
+                // Aliased types
+                case (`boolT`, SecT(s)) =>
+                    subtype(BoolT(), s)
+                case (`readerT`, SecT(s)) =>
+                    subtype(ReaderT(), s)
+                // General case
+                case (_, SecT(s)) =>
+                    subtype(t, s)
                 case _ =>
                     false
             })

@@ -35,26 +35,38 @@ class InformationFlowTests extends Tests {
         Vector(
             // Definitions
             SemanticTest(
-                "private string can be defined",
+                "secret string can be defined",
                 "{ val x : String! = \"Hello\" 1 }",
                 ""
             ),
             SemanticTest(
-                "private integer can be defined",
-                "{ val x : Int! = 10 1}",
+                "secret integer can be defined",
+                "{ val x : Int! = 10 1 }",
                 ""
             ),
-            // SemanticTest( Need to wait till val is working properly
-            //     "private variable cannot be assigned to public variable",
-            //     "{ val x : Int! = 10 val y : Int = x 1}",
-            //     """|1:35:error: expected value of type Int but got Int!
-            //        |{ val x : Int! = 10 val y : Int = x 1}
-            //        |                                  ^
-            //        |"""
-            // ),
             SemanticTest(
-                "public variable can be used in secret variable argument",
-                "{ def iden(x : String!) String! = x iden(\"Hello\")}",
+                "secret boolean can be defined",
+                "{ val x : Boolean! = true 1 }",
+                ""
+            ),
+            SemanticTest(
+                "secret unit can be defined",
+                "{ val x : Unit! = {} 1}",
+                ""
+            ),
+            SemanticTest(
+                "secret record can be defined",
+                "{ val x : { a : Int! }! = { a = 10 } 1 }",
+                ""
+            ),
+            SemanticTest(
+                "secret variant can be defined",
+                "{ val x : < a : Int! >! = < a = 10 > 1 }",
+                ""
+            ),
+            SemanticTest(
+                "secret type can be defined",
+                "{ val x : Type! = Int 1 }",
                 ""
             )
         )
