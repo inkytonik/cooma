@@ -89,6 +89,23 @@ object SymbolTable extends Environments[CoomaEntity] {
             FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), StrT()))), UniT()))
         ))
 
+    // Secret capabilities
+    val secReaderT : Expression =
+        SecT(RecT(Vector(
+            FieldType("read", FunT(ArgumentTypes(Vector()), SecT(StrT())))
+        )))
+
+    val secReaderWriterT : Expression =
+        SecT(RecT(Vector(
+            FieldType("read", FunT(ArgumentTypes(Vector()), SecT(StrT()))),
+            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), SecT(StrT())))), UniT()))
+        )))
+
+    val secWriterT : Expression =
+        SecT(RecT(Vector(
+            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), SecT(StrT())))), UniT()))
+        )))
+
     def mkPrimType(args : Vector[Expression], retType : Expression) : FunT =
         FunT(ArgumentTypes(args.map { case e => ArgumentType(None, e) }), retType)
 

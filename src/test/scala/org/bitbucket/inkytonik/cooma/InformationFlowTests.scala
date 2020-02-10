@@ -68,6 +68,21 @@ class InformationFlowTests extends Tests {
                 "secret type can be defined",
                 "{ val x : Type! = Int 1 }",
                 ""
+            ),
+            SemanticTest(
+                "secret Reader capability can be defined",
+                "fun (r : Reader!) r.read()",
+                ""
+            ),
+            SemanticTest(
+                "secret ReaderWriter capability can be defined",
+                "fun (rw : ReaderWriter!) rw.write(rw.read())",
+                ""
+            ),
+            SemanticTest(
+                "secret Writer capability can be defined",
+                "fun (w : Writer!) w.write()",
+                ""
             )
         )
 

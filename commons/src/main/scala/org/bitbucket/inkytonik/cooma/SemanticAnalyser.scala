@@ -197,12 +197,13 @@ class SemanticAnalyser(
     def checkFieldUse(e : Expression, f : FieldUse) : Messages = {
         val i = f.identifier
         tipe(e) match {
-            case Some(t @ SecT(RecT(fields))) =>
+            case Some(t @ RecT(fields)) =>
                 if (fields.map(_.identifier) contains i)
                     noMessages
                 else
                     error(f, s"$i is not a field of record type ${show(alias(t))}")
-            case Some(t @ RecT(fields)) =>
+            // Secret row check - necessary for capabilities
+            case Some(t @ SecT(RecT(fields))) =>
                 if (fields.map(_.identifier) contains i)
                     noMessages
                 else
@@ -231,6 +232,13 @@ class SemanticAnalyser(
         arg.expression match {
             case ReaderT() | ReaderWriterT() | StrT() | WriterT() =>
                 noMessages
+            case SecT(t) =>
+                t match {
+                    case ReaderT() | ReaderWriterT() | StrT() | WriterT() =>
+                        noMessages
+                    case _ =>
+                        error(arg.expression, "illegal main program argument type")
+                }
             case _ =>
                 error(arg.expression, "illegal main program argument type")
         }
@@ -608,8 +616,11 @@ class SemanticAnalyser(
         e match {
             case `boolT`                    => BoolT()
             case `readerT`                  => ReaderT()
+            case `secReaderT`               => SecT(ReaderT())
             case `readerWriterT`            => ReaderWriterT()
+            case `secReaderWriterT`         => SecT(ReaderWriterT())
             case `writerT`                  => WriterT()
+            case `secWriterT`               => SecT(WriterT())
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
             case RecT(fs)                   => RecT(aliasFieldTypes(fs))
             case VarT(fs)                   => VarT(aliasFieldTypes(fs))
@@ -663,6 +674,16 @@ class SemanticAnalyser(
 
             case WriterT() =>
                 Some(writerT)
+
+            // Secret capabilities
+            case SecT(ReaderT()) =>
+                Some(secReaderT)
+
+            case SecT(ReaderWriterT()) =>
+                Some(secReaderWriterT)
+
+            case SecT(WriterT()) =>
+                Some(secWriterT)
 
             case _ =>
                 Some(t)
