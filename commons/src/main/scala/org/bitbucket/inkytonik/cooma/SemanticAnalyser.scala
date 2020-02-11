@@ -870,6 +870,10 @@ object SemanticAnalysis {
                     subtype(BoolT(), s)
                 case (`readerT`, SecT(s)) =>
                     subtype(ReaderT(), s)
+                case (`readerWriterT`, SecT(s)) =>
+                    subtype(ReaderWriterT(), s)
+                case (`writerT`, SecT(s)) =>
+                    subtype(WriterT(), s)
                 // General case
                 case (_, SecT(s)) =>
                     subtype(t, s)
