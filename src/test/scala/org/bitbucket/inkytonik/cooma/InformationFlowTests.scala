@@ -159,6 +159,27 @@ class InformationFlowTests extends Tests {
                    |"""
             ),
             InformationFlowTest(
+                "funciton can be used in secret record if aruments and return type are secret",
+                "{ val x : { a : (Int!) Int! }! = { a = fun(b : Int!) b } 0 }",
+                ""
+            ),
+            InformationFlowTest(
+                "secret record function arguments must be secret",
+                "{ val x : { a : (Int) Int! }! = { a = fun(b : Int) b } 0 }",
+                """|1:18:error: public argument type found in secret function
+                   |{ val x : { a : (Int) Int! }! = { a = fun(b : Int) b } 0 }
+                   |                 ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret record function return type must be secret",
+                "{ val x : { a : (Int!) Int }! = { a = fun(b : Int!) 10 } 0 }",
+                """|1:24:error: public return type found in secret function
+                   |{ val x : { a : (Int!) Int }! = { a = fun(b : Int!) 10 } 0 }
+                   |                       ^
+                   |"""
+            ),
+            InformationFlowTest(
                 "secret variant can only contain secret options",
                 "{ val x : < a : Int! >! = < a = 10 > 0 }",
                 ""
@@ -185,6 +206,27 @@ class InformationFlowTests extends Tests {
                 """|1:19:error: public field b found in secret < b : Int >
                    |{ val x : < a : < b : Int >! >! = < a = < b = 10 > > 0 }
                    |                  ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "function can be used in secret variant if arguments and return type are secret",
+                "{ val x : < a : (Int!) Int! > = < a = fun(b : Int!) b > 0 }",
+                ""
+            ),
+            InformationFlowTest(
+                "secret variant function arguments must be secret",
+                "{ val x : < a : (Int) Int! >! = < a = fun(b : Int) b > 0 }",
+                """|1:18:error: public argument type found in secret function
+                   |{ val x : < a : (Int) Int! >! = < a = fun(b : Int) b > 0 }
+                   |                 ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret variant function return type must be secret",
+                "{ val x : < a : (Int!) Int >! = < a = fun(b : Int!) 10 > 0 }",
+                """|1:24:error: public return type found in secret function
+                   |{ val x : < a : (Int!) Int >! = < a = fun(b : Int!) 10 > 0 }
+                   |                       ^
                    |"""
             )
         )

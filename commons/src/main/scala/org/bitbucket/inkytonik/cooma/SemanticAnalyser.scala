@@ -77,9 +77,22 @@ class SemanticAnalyser(
 
     def checkSecretFields(fs : Vector[FieldType], t : Expression) : Messages = {
         fs.flatMap(f => f.expression match {
-            case SecT(_) => noMessages
-            case _       => error(f, s"public field ${f.identifier} found in secret ${show(t)}")
+            case SecT(_)                    => noMessages
+            case FunT(ArgumentTypes(as), e) => checkSecretFunc(as, e)
+            case _                          => error(f, s"public field ${f.identifier} found in secret ${show(t)}")
         })
+    }
+
+    def checkSecretFunc(as : Vector[ArgumentType], r : Expression) : Messages = {
+        as.flatMap(a => a.expression match {
+            case SecT(_) => noMessages
+            case _       => error(a, s"public argument type found in secret function")
+        }) ++ {
+            r match {
+                case SecT(_) => noMessages
+                case _       => error(r, s"public return type found in secret function")
+            }
+        }
     }
 
     def checkPrimitive(prm : Prm) : Messages = {
