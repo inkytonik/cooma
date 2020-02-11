@@ -25,7 +25,7 @@ class InformationFlowTests extends Tests {
         newConfig
     }
 
-    case class SemanticTest(
+    case class InformationFlowTest(
         name : String,
         expression : String,
         expectedMessages : String
@@ -34,55 +34,98 @@ class InformationFlowTests extends Tests {
     val informationFlowTests =
         Vector(
             // Definitions
-            SemanticTest(
+            InformationFlowTest(
                 "secret string can be defined",
                 "{ val x : String! = \"Hello\" 1 }",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret integer can be defined",
                 "{ val x : Int! = 10 1 }",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret boolean can be defined",
                 "{ val x : Boolean! = true 1 }",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret unit can be defined",
                 "{ val x : Unit! = {} 1}",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret record can be defined",
                 "{ val x : { a : Int! }! = { a = 10 } 1 }",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret variant can be defined",
                 "{ val x : < a : Int! >! = < a = 10 > 1 }",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret type can be defined",
                 "{ val x : Type! = Int 1 }",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret Reader capability can be defined",
                 "fun (r : Reader!) r.read()",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret ReaderWriter capability can be defined",
                 "fun (rw : ReaderWriter!) rw.write(rw.read())",
                 ""
             ),
-            SemanticTest(
+            InformationFlowTest(
                 "secret Writer capability can be defined",
                 "fun (w : Writer!) w.write()",
                 ""
+            ),
+
+            // Capabilities
+            InformationFlowTest(
+                "secret Reader has correct return type",
+                "{ def f (r : Reader!) String! = r.read() 0 }",
+                ""
+            ),
+            InformationFlowTest(
+                "secret Writer can consume public data",
+                "{ def f (s : String, w : Writer!) Unit = w.write(s) 0 }",
+                ""
+            ),
+
+            // Information leaks
+            InformationFlowTest(
+                "public variable can be classified (assigned to secret variable",
+                "{ val x : Int! = 10 0 }",
+                ""
+            ),
+            InformationFlowTest(
+                "secret variable cannot be assigned to public variable (declassified)",
+                "{ val x : Int! = 10 val y : Int = x 0 }",
+                """|1:35:error: expected Int, got x of type Int!
+                   |{ val x : Int! = 10 val y : Int = x 0 }
+                   |                                  ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret Reader cannot produce public output",
+                "{ def f (r : Reader!) String = r.read() 0 }",
+                """|1:32:error: expected String, got r.read() of type String!
+                   |{ def f (r : Reader!) String = r.read() 0 }
+                   |                               ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret Reader data cannot be used by public Writer",
+                "{ def f (r : Reader!, w : Writer) Unit = w.write(r.read()) 0 }",
+                """|1:50:error: expected String, got r.read() of type String!
+                   |{ def f (r : Reader!, w : Writer) Unit = w.write(r.read()) 0 }
+                   |                                                 ^
+                   |"""
             )
         )
 

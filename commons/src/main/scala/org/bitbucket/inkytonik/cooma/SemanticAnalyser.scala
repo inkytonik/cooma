@@ -202,7 +202,7 @@ class SemanticAnalyser(
                     noMessages
                 else
                     error(f, s"$i is not a field of record type ${show(alias(t))}")
-            // Secret row check - necessary for capabilities
+            // Secret row check - necessary for capabilities and secret rows
             case Some(t @ SecT(RecT(fields))) =>
                 if (fields.map(_.identifier) contains i)
                     noMessages
@@ -482,6 +482,18 @@ class SemanticAnalyser(
                                 Some(t)
                             case None =>
                                 None
+                        }
+                    // Secret rows
+                    case Some(SecT(RecT(fieldTypes))) =>
+                        fieldTypes.find {
+                            case FieldType(i, t) =>
+                                i == f
+                        } match {
+                            case Some(FieldType(i, t)) =>
+                                Some(t)
+                            case None =>
+                                None
+
                         }
                     case _ =>
                         None
