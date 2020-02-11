@@ -126,6 +126,66 @@ class InformationFlowTests extends Tests {
                    |{ def f (r : Reader!, w : Writer) Unit = w.write(r.read()) 0 }
                    |                                                 ^
                    |"""
+            ),
+
+            // Secret record and variant checks
+            InformationFlowTest(
+                "secret record can only contain secret fields",
+                "{ val x : { a : Int! }! = { a = 10 } 0 }",
+                ""
+            ),
+            InformationFlowTest(
+                "secret record can only contain secret fields - public",
+                "{ val x : { a : Int }! = { a = 10 } 0 }",
+                """|1:13:error: public field a found in secret { a : Int }
+                   |{ val x : { a : Int }! = { a = 10 } 0 }
+                   |            ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret record can only contain secret field - multiple mixed",
+                "{ val x : { a : Int!, b : Int }! = { a = 10, b = 11 } 0 }",
+                """|1:23:error: public field b found in secret { a : Int!, b : Int }
+                   |{ val x : { a : Int!, b : Int }! = { a = 10, b = 11 } 0 }
+                   |                      ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret record can only contain secret fields - recursive public",
+                "{ val x : { a : { b : Int }! }! = { a = { b = 10 } } 0 }",
+                """|1:19:error: public field b found in secret { b : Int }
+                   |{ val x : { a : { b : Int }! }! = { a = { b = 10 } } 0 }
+                   |                  ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret variant can only contain secret options",
+                "{ val x : < a : Int! >! = < a = 10 > 0 }",
+                ""
+            ),
+            InformationFlowTest(
+                "secret variant can only contain secret options - public",
+                "{ val x : < a : Int >! = < a = 10 > 0 }",
+                """|1:13:error: public field a found in secret < a : Int >
+                   |{ val x : < a : Int >! = < a = 10 > 0 }
+                   |            ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret variant can only contain secret options - multiple mixed",
+                "{ val x : < a : Int!, b : Int >! = < a = 10 > 0 }",
+                """|1:23:error: public field b found in secret < a : Int!, b : Int >
+                   |{ val x : < a : Int!, b : Int >! = < a = 10 > 0 }
+                   |                      ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret variant can only contain secret options - recursive public",
+                "{ val x : < a : < b : Int >! >! = < a = < b = 10 > > 0 }",
+                """|1:19:error: public field b found in secret < b : Int >
+                   |{ val x : < a : < b : Int >! >! = < a = < b = 10 > > 0 }
+                   |                  ^
+                   |"""
             )
         )
 

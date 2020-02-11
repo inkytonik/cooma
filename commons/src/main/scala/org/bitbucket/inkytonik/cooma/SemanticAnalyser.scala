@@ -67,8 +67,20 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
+                        // Secret records and variants field check
+                        case SecT(t @ RecT(fs)) =>
+                            checkSecretFields(fs, t)
+                        case SecT(t @ VarT(fs)) =>
+                            checkSecretFields(fs, t)
                     }
         }
+
+    def checkSecretFields(fs : Vector[FieldType], t : Expression) : Messages = {
+        fs.flatMap(f => f.expression match {
+            case SecT(_) => noMessages
+            case _       => error(f, s"public field ${f.identifier} found in secret ${show(t)}")
+        })
+    }
 
     def checkPrimitive(prm : Prm) : Messages = {
         primitivesTypesTable.get(prm.identifier) match {
