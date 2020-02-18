@@ -1,21 +1,33 @@
-letc k1 x = letc k2 y = letc k3 z = $halt z
-                        letv r5 = concat x y
-                        letv f8 = select x get
-                        letv i9 = 0
-                        letc k6 r7 = letv f12 = select x append
-                                     letv i13 = 989
-                                     letc k10 r11 = letv f18 = select x put
-                                                    letv i19 = 0
-                                                    letc k16 r17 = letv i20 = 151
-                                                                   letc k14 r15 = letv r4 = { a = r5, b = r7, c = r11, d = r15 }
-                                                                                  k3 r4
-                                                                   r17 k14 i20
-                                                    f18 k16 i19
-                                     f12 k10 i13
-                        f8 k6 i9
-            letv i22 = 555
-            letv v21 = [i22]
-            k2 v21
-letv i24 = 999
-letv v23 = [i24]
-k1 v23
+letc k1 x = letc k2 y = letc k3 ab = letc k4 z = $halt z
+                                     letv r6 = concat x y
+                                     letv f9 = select x get
+                                     letv i10 = 0
+                                     letc k7 r8 = letv f13 = select x append
+                                                  letv i14 = 989
+                                                  letc k11 r12 = letv f19 = select x put
+                                                                 letv i20 = 0
+                                                                 letc k17 r18 = letv i21 = 151
+                                                                                letc k15 r16 = letv f26 = select ab slice
+                                                                                               letv i27 = 0
+                                                                                               letc k24 r25 = letv i28 = 4
+                                                                                                              letc k22 r23 = letv r5 = { a = r6, b = r8, c = r12, d = r16, e = r23 }
+                                                                                                                             k4 r5
+                                                                                                              r25 k22 i28
+                                                                                               f26 k24 i27
+                                                                                r18 k15 i21
+                                                                 f19 k17 i20
+                                                  f13 k11 i14
+                                     f9 k7 i10
+                        letv i30 = 1
+                        letv i31 = 2
+                        letv i32 = 3
+                        letv i33 = 4
+                        letv i34 = 5
+                        letv v29 = [i30,i31,i32,i33,i34]
+                        k3 v29
+            letv i36 = 555
+            letv v35 = [i36]
+            k2 v35
+letv i38 = 999
+letv v37 = [i38]
+k1 v37
