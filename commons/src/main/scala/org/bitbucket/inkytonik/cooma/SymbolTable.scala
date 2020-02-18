@@ -73,6 +73,10 @@ object SymbolTable extends Environments[CoomaEntity] {
     val boolT : Expression =
         VarT(Vector(FieldType("False", UniT()), FieldType("True", UniT())))
 
+    // Secret boolean
+    val secBoolT : Expression =
+        SecT(VarT(Vector(FieldType("False", SecT(UniT())), FieldType("True", SecT(UniT())))))
+
     val readerT : Expression =
         RecT(Vector(
             FieldType("read", FunT(ArgumentTypes(Vector()), StrT()))

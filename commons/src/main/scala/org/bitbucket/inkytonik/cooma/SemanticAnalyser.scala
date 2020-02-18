@@ -195,13 +195,16 @@ class SemanticAnalyser(
         checkMatchDiscType(e) ++
             checkMatchCaseNum(e, cs)
 
-    def checkMatchDiscType(e : Expression) : Messages =
+    def checkMatchDiscType(e : Expression) : Messages = {
+        System.out.println(e)
+        System.out.println(tipe(e))
         tipe(e) match {
-            case Some(VarT(_)) | None =>
+            case Some(VarT(_)) | Some(SecT(VarT(_))) | None =>
                 noMessages
             case Some(t) =>
                 error(e, s"match of non-variant type ${show(alias(t))}")
         }
+    }
 
     def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
         tipe(e) match {
@@ -636,14 +639,14 @@ class SemanticAnalyser(
     lazy val matchType : Mat => MatchType =
         attr {
             case m =>
-                val caseTypes =
+                val caseTypes = // Map over each case and get the tipe if its expression
                     m.cases.map {
                         case Case(_, _, e) =>
                             tipe(e)
                     }.distinct
                 if (caseTypes contains None)
                     OkCases(None)
-                else if (caseTypes.length > 1)
+                else if (caseTypes.length > 1) // All case types need to be the same, if we have more then 1 type no good
                     BadCases()
                 else
                     OkCases(caseTypes(0))
@@ -652,6 +655,7 @@ class SemanticAnalyser(
     def alias(e : Expression) : Expression =
         e match {
             case `boolT`                    => BoolT()
+            case `secBoolT`                 => SecT(BoolT())
             case `readerT`                  => ReaderT()
             case `secReaderT`               => SecT(ReaderT())
             case `readerWriterT`            => ReaderWriterT()
@@ -683,6 +687,9 @@ class SemanticAnalyser(
         t match {
             case BoolT() =>
                 Some(boolT)
+
+            case SecT(BoolT()) =>
+                Some(secBoolT)
 
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {
@@ -890,15 +897,13 @@ object SemanticAnalysis {
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
                 case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
                     subtypesArgs(us, ts) && subtype(t, u)
-                // Aliased types
-                case (`boolT`, SecT(s)) =>
-                    subtype(BoolT(), s)
-                case (`readerT`, SecT(s)) =>
-                    subtype(ReaderT(), s)
-                case (`readerWriterT`, SecT(s)) =>
-                    subtype(ReaderWriterT(), s)
-                case (`writerT`, SecT(s)) =>
-                    subtype(WriterT(), s)
+                // Aliased types ----- was able to remove bool (outlined in notes). Should be able to do same for following:
+                // case (`readerT`, SecT(s)) =>
+                //     subtype(ReaderT(), s)
+                // case (`readerWriterT`, SecT(s)) =>
+                //     subtype(ReaderWriterT(), s)
+                // case (`writerT`, SecT(s)) =>
+                //     subtype(WriterT(), s)
                 // General case
                 case (_, SecT(s)) =>
                     subtype(t, s)

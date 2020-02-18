@@ -1,0 +1,7 @@
+{
+    val x : Boolean! = true
+    x match {
+        case True(_)  => { 0 }
+        case False(_) => { 1 }
+    }
+}
