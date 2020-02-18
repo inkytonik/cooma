@@ -2,13 +2,10 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.Getter;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.FieldValueRuntime;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.VarRuntimeValue;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.ErrorRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
+import org.bitbucket.inkytonik.cooma.truffle.runtime.VarRuntimeValue;
 
 @Getter
 @NodeInfo(shortName = "varV", description = "Variant value")
@@ -24,7 +21,11 @@ public class CoomaVarValueNode extends CoomaValueNode {
 
     @Override
     public RuntimeValue evaluate(VirtualFrame frame) {
-        return new VarRuntimeValue(c, obtainFromRho(x));
+        RuntimeValue innerValue = obtainFromRho(x);
+        if (innerValue instanceof ErrorRuntimeValue) {
+            return innerValue;
+        }
+        return new VarRuntimeValue(c, innerValue);
     }
 
 }
