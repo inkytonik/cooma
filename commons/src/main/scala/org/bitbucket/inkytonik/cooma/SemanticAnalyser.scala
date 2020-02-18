@@ -191,20 +191,48 @@ class SemanticAnalyser(
             })
     }
 
+    // TODO: need to check function usage via Sel
+    def checkSecretCaseFunction(e : Expression) : Messages =
+        tipe(e) match {
+            case Some(FunT(ArgumentTypes(as), _)) => {
+                System.out.println("here")
+                as.flatMap(a => a.expression match {
+                    case SecT(_) => noMessages
+                    case _ =>
+                        error(a, s"function used in match on secret value cannot have public fields")
+                })
+            }
+            case _ => noMessages
+        }
+
+    // TODO: expand to check all blocks
+    def checkSecretCases(cs : Vector[Case]) : Messages =
+        cs.flatMap(c => tipe(c.expression) match {
+            case Some(Blk(b)) => b match {
+                case Return(e) => checkSecretCaseFunction(e)
+                case _         => noMessages
+            }
+            case _ => noMessages
+        })
+
+    def checkSecretMatch(e : Expression, cs : Vector[Case]) : Messages =
+        tipe(e) match {
+            case Some(SecT(_)) => checkSecretCases(cs)
+            case _             => noMessages
+        }
+
     def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
         checkMatchDiscType(e) ++
-            checkMatchCaseNum(e, cs)
+            checkMatchCaseNum(e, cs) ++
+            checkSecretMatch(e, cs)
 
-    def checkMatchDiscType(e : Expression) : Messages = {
-        System.out.println(e)
-        System.out.println(tipe(e))
+    def checkMatchDiscType(e : Expression) : Messages =
         tipe(e) match {
             case Some(VarT(_)) | Some(SecT(VarT(_))) | None =>
                 noMessages
             case Some(t) =>
                 error(e, s"match of non-variant type ${show(alias(t))}")
         }
-    }
 
     def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
         tipe(e) match {
@@ -649,7 +677,13 @@ class SemanticAnalyser(
                 else if (caseTypes.length > 1) // All case types need to be the same, if we have more then 1 type no good
                     BadCases()
                 else
-                    OkCases(caseTypes(0))
+                    tipe(m.expression) match {
+                        case Some(SecT(_)) => caseTypes(0) match { // Enforce return type is Sec
+                            case Some(t) => OkCases(Some(SecT(t)))
+                            case None    => OkCases(None) // Unreachable??
+                        }
+                        case _ => OkCases(caseTypes(0))
+                    }
         }
 
     def alias(e : Expression) : Expression =

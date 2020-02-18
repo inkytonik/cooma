@@ -1,7 +1,21 @@
 {
-    val x : Boolean! = true
-    x match {
-        case True(_)  => { 0 }
-        case False(_) => { 1 }
-    }
+    def declassify(b : Boolean!, w : Writer) Unit! =
+        b match {
+            case True(_)  => { w.write("It's true!") }
+            case False(_) => { w.write("It's false!") }
+        }
+    
+    // def d2Helper(b : String, w : Writer) Unit = {
+    //     w.write(b)
+    // }
+
+    // def declassify2(b : Boolean!) Unit! = {
+    //     b match {
+    //         case True(_)  => { d2Helper("true") }
+    //         case False(_) => { d2Helper("false") }
+    //     }
+    // }
+    
+    declassify(true)
+
 }
