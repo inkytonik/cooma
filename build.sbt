@@ -165,7 +165,8 @@ lazy val truffle = (project in file("truffle"))
 				"org.projectlombok" % "lombok" % "1.16.16",
 				"org.graalvm.truffle" % "truffle-api" % "19.3.1",
 				"org.graalvm.truffle" % "truffle-dsl-processor" % "19.3.1",
-				"com.io7m.jpplib" % "com.io7m.jpplib.core" % "0.8.0"
+				"com.io7m.jpplib" % "com.io7m.jpplib.core" % "0.8.0",
+				"org.slf4j" % "slf4j-log4j12" % "1.7.21"
 			)
 	).dependsOn(commons)
 
