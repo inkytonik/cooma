@@ -36,6 +36,7 @@ class ReferenceBackend(
     case class RecV(fs : Vector[FieldValue]) extends Value
     case class StrV(s : String) extends Value
     case class VarV(v : String, x : String) extends Value
+    case class VecV(e : Vector[String]) extends Value
 
     case class FieldValue(f : String, x : String)
 
@@ -98,6 +99,9 @@ class ReferenceBackend(
     def varV(v : String, x : String) : Value =
         VarV(v, x)
 
+    def vecV(e : Vector[String]) : Value =
+        VecV(e)
+
     def fieldValue(f : String, x : String) : FieldValue =
         FieldValue(f, x)
 
@@ -119,11 +123,20 @@ class ReferenceBackend(
     def readerReadP(filename : String) : Primitive =
         ReaderReadP(filename)
 
-    def recConcatP() : Primitive =
-        RecConcatP()
+    def concatP() : Primitive =
+        ConcatP()
 
-    def recSelectP() : Primitive =
-        RecSelectP()
+    def selectP() : Primitive =
+        SelectP()
+
+    def selectItemVector() : Primitive =
+        SelectItemVector()
+
+    def appendItemVector() : Primitive =
+        AppendItemVector()
+
+    def putItemVector() : Primitive =
+        PutItemVector()
 
     def equalP : Primitive =
         EqualP()
@@ -157,6 +170,9 @@ class ReferenceBackend(
     def recR(fields : Vector[FldR]) : ValueR =
         RecR(fields)
 
+    def vecR(e : Vector[ValueR]) : ValueR =
+        VecR(e)
+
     def fldR(x : String, v : ValueR) : FldR =
         FldR(x, v)
 
@@ -188,6 +204,12 @@ class ReferenceBackend(
         value match {
             case VarR(c, v) => Some((c, v))
             case _          => None
+        }
+
+    def isVecR(value : ValueR) : Option[Vector[ValueR]] =
+        value match {
+            case VecR(e) => Some(e)
+            case _       => None
         }
 
     def isFldR(value : FldR) : Option[(String, ValueR)] =
@@ -253,6 +275,8 @@ class ReferenceBackend(
                 "\"" <> value(escape(v1)) <> text("\"")
             case VarV(v1, v2) =>
                 "<" <+> value(v1) <+> "=" <+> value(v2) <+> text(">")
+            case VecV(vs) =>
+                "[" <> ssep(vs.map(text), ",") <> "]"
         }
 
     def toDocFieldValue(field : FieldValue) : Doc =

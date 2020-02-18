@@ -40,7 +40,9 @@ Expression {paren} =
   | 'Type'                                                   {TypT}
   | 'equal'                                                  {Eql}
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
-  | IdnUse                                                   {Idn}.
+  | IdnUse                                                   {Idn}
+  | 'Vector' '(' Expression ')'                              {VecT}
+  | '[' VecElems ']'                                         {VecLit}.
 
 Arguments =
   Argument ** ",".
@@ -113,6 +115,9 @@ StringChar : String =
 
 OctDigit : String =
   [0-7].
+
+VecElems =
+  Expression ** ",".
 
 // Constructs used by REPL parsing
 

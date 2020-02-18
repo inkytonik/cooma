@@ -18,6 +18,7 @@ class Interpreter(config : Config) {
     import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
+
     import scala.annotation.tailrec
 
     sealed abstract class ValueR
@@ -27,7 +28,7 @@ class Interpreter(config : Config) {
     case class RecR(fields : Vector[FldR]) extends ValueR
     case class StrR(str : String) extends ValueR
     case class VarR(c : String, v : ValueR) extends ValueR
-
+    case class VecR(e : Vector[ValueR]) extends ValueR
     case class FldR(x : String, v : ValueR)
 
     case class ClsC(env : Env, k : String, e : Term)
@@ -138,6 +139,7 @@ class Interpreter(config : Config) {
             }
 
         def interpretValue(value : Value, rho : Env) : ValueR =
+
             value match {
                 case FunV(k, x, t) =>
                     ClsR(rho, k, x, t)
@@ -149,16 +151,31 @@ class Interpreter(config : Config) {
                     p.eval(this)(rho, xs, args)
 
                 case RecV(fields) =>
-                    RecR(fields.map {
+                    val fieldsR = fields.map {
                         case FieldValue(f, v) =>
                             FldR(f, lookupR(rho, v))
-                    })
+                    }
+                    fieldsR.collectFirst { case FldR(_, v : ErrR) => v } match {
+                        case Some(v) => v
+                        case None    => RecR(fieldsR)
+                    }
 
                 case StrV(s) =>
                     StrR(s)
 
                 case VarV(c, v) =>
-                    VarR(c, lookupR(rho, v))
+                    lookupR(rho, v) match {
+                        case e : ErrR => e
+                        case v        => VarR(c, v)
+                    }
+
+                case VecV(e) =>
+                    val fieldsR = e.map(s => lookupR(rho, s))
+                    fieldsR.collectFirst { case v : ErrR => v } match {
+                        case Some(v) => v
+                        case None    => VecR(fieldsR)
+                    }
+
             }
 
         interpretAux(env, term)
@@ -237,6 +254,8 @@ class Interpreter(config : Config) {
                 c.toLowerCase()
             case VarR(v1, v2) =>
                 "<" <+> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <+> ">"
+            case VecR(elems) =>
+                "[" <> ssep(elems.map(toDocRuntimeValue), ",") <> "]"
         }
 
     def toDocField(field : FldR) : Doc =

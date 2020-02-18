@@ -234,7 +234,7 @@ trait Compiler {
                 val r = fresh("r")
                 compile(r1, y =>
                     compile(r2, z =>
-                        letV(r, prmV(recConcatP(), Vector(y, z)),
+                        letV(r, prmV(concatP(), Vector(y, z)),
                             kappa(r))))
 
             case Eql() =>
@@ -278,7 +278,7 @@ trait Compiler {
             case Sel(r, FieldUse(s)) =>
                 val f = fresh("f")
                 compile(r, z =>
-                    letV(f, prmV(recSelectP(), Vector(z, s)),
+                    letV(f, prmV(selectP(), Vector(z, s)),
                         kappa(f)))
 
             case Str(l) =>
@@ -303,6 +303,11 @@ trait Compiler {
                     letV(r, varV(field.identifier, z),
                         kappa(r)))
 
+            case VecLit(VecElems(e)) =>
+                val v = fresh("v")
+                compilePrimArgs(e, cElems =>
+                    letV(v, vecV(cElems), kappa(v)))
+
             // Types erase to unit
             case IsType() =>
                 compile(Uni(), kappa)
@@ -313,7 +318,7 @@ trait Compiler {
             e match {
                 case BoolT() | ReaderT() | ReaderWriterT() | WriterT() |
                     _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT |
-                    _ : UniT | _ : VarT =>
+                    _ : UniT | _ : VarT | _ : VecT =>
                     true
                 case _ =>
                     false
@@ -431,7 +436,7 @@ trait Compiler {
                 val r = fresh("r")
                 compile(r1, y =>
                     compile(r2, z =>
-                        letV(r, prmV(recConcatP(), Vector(y, z)),
+                        letV(r, prmV(concatP(), Vector(y, z)),
                             appC(k, r))))
 
             case Eql() =>
@@ -479,7 +484,7 @@ trait Compiler {
             case Sel(r, FieldUse(s)) =>
                 val f = fresh("f")
                 compile(r, z =>
-                    letV(f, prmV(recSelectP(), Vector(z, s)),
+                    letV(f, prmV(selectP(), Vector(z, s)),
                         appC(k, f)))
 
             case Str(l) =>
@@ -503,6 +508,11 @@ trait Compiler {
                 compile(field.expression, z =>
                     letV(r, varV(field.identifier, z),
                         appC(k, r)))
+
+            case VecLit(e) =>
+                val v = fresh("v")
+                compilePrimArgs(e.optExpressions, cElems =>
+                    letV(v, vecV(cElems), appC(k, v)))
 
             // Types erase to unit
             case IsType() =>

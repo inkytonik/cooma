@@ -1,0 +1,8 @@
+{
+    val r = {
+                 length = 10,
+                 get = fun (x : Int) x,
+                 append = fun (y : Int) {}
+             }
+    r.get(1)
+}

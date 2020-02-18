@@ -6,11 +6,13 @@ class TruffleBackend(config : Config) extends Backend {
 
     import java.io.PrintWriter
     import java.math.BigInteger
+
     import org.bitbucket.inkytonik.cooma.Primitives._
-    import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
-    import org.bitbucket.inkytonik.cooma.truffle.runtime._
+    import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
+    import org.bitbucket.inkytonik.cooma.truffle.runtime._
+
     import scala.math.BigInt
 
     override def backendName : String = "Graal"
@@ -68,6 +70,9 @@ class TruffleBackend(config : Config) extends Backend {
     def varV(c : String, x : String) : Value =
         new CoomaVarValueNode(c, x)
 
+    def vecV(e : Vector[String]) : Value =
+        new CoomaVecValueNode(e)
+
     override type FieldValue = org.bitbucket.inkytonik.cooma.truffle.nodes.value.FieldValue
 
     def fieldValue(f : String, x : String) : FieldValue =
@@ -96,11 +101,11 @@ class TruffleBackend(config : Config) extends Backend {
     def readerReadP(filename : String) : Primitive =
         ReaderReadP(filename)
 
-    def recConcatP() : Primitive =
-        RecConcatP()
+    def concatP() : Primitive =
+        ConcatP()
 
-    def recSelectP() : Primitive =
-        RecSelectP()
+    def selectP() : Primitive =
+        selectP()
 
     def equalP : Primitive =
         EqualP()
@@ -114,15 +119,23 @@ class TruffleBackend(config : Config) extends Backend {
     def stringP(op : StrPrimOp) : Primitive =
         StringPrimitive(op)
 
-    // Runtime Values
+    def selectItemVector() : Primitive =
+        SelectItemVector()
 
+    def appendItemVector() : Primitive =
+        AppendItemVector()
+
+    def putItemVector() : Primitive =
+        PutItemVector()
+
+    // Runtime Values
     override type ValueR = RuntimeValue
     override type OutputValueR = org.graalvm.polyglot.Value
     override type Env = Rho
     override type FldR = FieldValueRuntime
 
     def showRuntimeValue(v : OutputValueR) : String =
-        v.toString()
+        v.toString
 
     def errR(msg : String) : ValueR =
         new ErrorRuntimeValue(msg)
@@ -138,6 +151,9 @@ class TruffleBackend(config : Config) extends Backend {
 
     def recR(fields : Vector[FldR]) : ValueR =
         new RecRuntimeValue(fields.toArray)
+
+    def vecR(e : Vector[ValueR]) : ValueR =
+        new VecRuntimeValue(e)
 
     def fldR(x : String, v : ValueR) : FldR =
         new FieldValueRuntime(x, v)
@@ -171,7 +187,13 @@ class TruffleBackend(config : Config) extends Backend {
 
     def isVarR(value : ValueR) : Option[(String, ValueR)] =
         value match {
-            case varr : VarRuntimeValue => Some((varr.getC(), varr.getV()))
+            case varr : VarRuntimeValue => Some((varr.getC, varr.getV))
+            case _                      => None
+        }
+
+    def isVecR(value : ValueR) : Option[Vector[ValueR]] =
+        value match {
+            case varr : VecRuntimeValue => Some(varr.getVector)
             case _                      => None
         }
 

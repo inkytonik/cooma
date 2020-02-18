@@ -10,7 +10,7 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
 import org.bitbucket.inkytonik.cooma.SymbolTable._
 import org.bitbucket.inkytonik.kiama.attribution.Attribution
 import org.bitbucket.inkytonik.kiama.relation.Tree
@@ -20,14 +20,14 @@ class SemanticAnalyser(
     predef : Environment = rootenv()
 ) extends Attribution {
 
-    import org.bitbucket.inkytonik.kiama.==>
-    import org.bitbucket.inkytonik.kiama.attribution.Decorators
-    import org.bitbucket.inkytonik.kiama.rewriting.Rewriter.{everywhere, rewrite, rule}
-    import org.bitbucket.inkytonik.kiama.util.Messaging.{check, collectMessages, error, Messages, noMessages}
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.SemanticAnalysis.subtype
     import org.bitbucket.inkytonik.cooma.SymbolTable.primitivesTypesTable
+    import org.bitbucket.inkytonik.kiama.==>
+    import org.bitbucket.inkytonik.kiama.attribution.Decorators
+    import org.bitbucket.inkytonik.kiama.rewriting.Rewriter.{everywhere, rewrite, rule}
+    import org.bitbucket.inkytonik.kiama.util.Messaging._
 
     val decorators = new Decorators(tree)
     import decorators._
@@ -504,6 +504,12 @@ class SemanticAnalyser(
 
             case WriterT() =>
                 Some(TypT())
+
+            case VecLit(_) =>
+                None
+
+            case VecT(_) =>
+                None
 
             case _ : VarT =>
                 Some(TypT())

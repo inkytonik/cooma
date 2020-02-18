@@ -1,0 +1,21 @@
+letc k1 x = letc k2 y = letc k3 z = $halt z
+                        letv r5 = concat x y
+                        letv f8 = select x get
+                        letv i9 = 0
+                        letc k6 r7 = letv f12 = select x append
+                                     letv i13 = 989
+                                     letc k10 r11 = letv f18 = select x put
+                                                    letv i19 = 0
+                                                    letc k16 r17 = letv i20 = 151
+                                                                   letc k14 r15 = letv r4 = { a = r5, b = r7, c = r11, d = r15 }
+                                                                                  k3 r4
+                                                                   r17 k14 i20
+                                                    f18 k16 i19
+                                     f12 k10 i13
+                        f8 k6 i9
+            letv i22 = 555
+            letv v21 = [i22]
+            k2 v21
+letv i24 = 999
+letv v23 = [i24]
+k1 v23

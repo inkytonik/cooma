@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma
 
-import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter, IOException, InputStreamReader, Writer}
+import java.io._
 
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
@@ -19,6 +19,12 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR
 
         def show : String
+    }
+
+    abstract class PrimitiveArbParams[I <: Backend] extends Primitive[I] {
+        val numArgs : Int = -1
+        override def eval(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            run(interp)(rho, xs, args)
     }
 
     case class ArgumentP[I <: Backend](i : Int) extends Primitive[I] {
@@ -124,7 +130,7 @@ object Primitives {
         def show = s"cap $cap"
     }
 
-    case class RecConcatP[I <: Backend]() extends Primitive[I] {
+    case class ConcatP[I <: Backend]() extends Primitive[I] {
         val numArgs = 2
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
@@ -136,7 +142,13 @@ object Primitives {
                                 case Some(rFields) => interp.recR(lFields ++ rFields)
                                 case None          => sys.error(s"$show: right argument $r of & is non-record")
                             }
-                        case None => sys.error(s"$show: left argument $l of & is non-record")
+                        case None => interp.isVecR(interp.lookupR(rho, l)) match {
+                            case Some(lvec) => interp.isVecR(interp.lookupR(rho, r)) match {
+                                case Some(rvec) => interp.vecR(lvec ++ rvec)
+                                case None       => sys.error(s"$show: right argument $r of & is non-vector")
+                            }
+                            case None => sys.error(s"$show: left argument $l of & has to be of record or vector type")
+                        }
                     }
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")
@@ -178,7 +190,7 @@ object Primitives {
 
     }
 
-    case class RecSelectP[I <: Backend]() extends Primitive[I] {
+    case class SelectP[I <: Backend]() extends Primitive[I] {
         val numArgs = 2
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
@@ -194,9 +206,33 @@ object Primitives {
                                 case Some(v) => v
                                 case None    => sys.error(s"$show: can't find field $f1 in $fields")
                             }
-                        case None => interp.isErrR(value) match {
-                            case Some(_) => value
-                            case None    => sys.error(s"$show: $r is $value, looking for field $f1")
+                        case None => interp.isVecR(value) match {
+                            case Some(elems) => f1 match {
+                                case "length" => interp.intR(elems.length)
+                                case "get" => interp.clsR(rho, "k", "i", interp.letV(
+                                    "val",
+                                    interp.prmV(interp.selectItemVector(), Vector(r, "i")),
+                                    interp.appC("k", "val")
+                                ))
+                                case "append" => interp.clsR(rho, "k", "e", interp.letV(
+                                    "val",
+                                    interp.prmV(interp.appendItemVector(), Vector(r, "e")),
+                                    interp.appC("k", "val")
+                                ))
+                                case "put" => interp.clsR(rho, "k", "i",
+                                    interp.letV("f", interp.funV("j", "val",
+                                        interp.letV(
+                                            "letvk",
+                                            interp.prmV(interp.putItemVector(), Vector(r, "i", "val")),
+                                            interp.appC("j", "letvk")
+                                        )),
+                                        interp.appC("k", "f")))
+
+                            }
+                            case None => interp.isErrR(value) match {
+                                case Some(_) => value
+                                case None    => sys.error(s"$show: $r is $value, looking for field $f1")
+                            }
                         }
                     }
                 case _ =>
@@ -415,6 +451,103 @@ object Primitives {
                     sys.error(s"$show $op: unexpectedly got arguments $xs")
             }
         }
+    }
+
+    /**
+     * Returns the runtime value located at the given index in the given vector.
+     * The first argument is the name of the vecR.
+     * The Second argument is the name of the index.
+     * @tparam I
+     */
+    case class SelectItemVector[I <: Backend]() extends Primitive[I] {
+
+        def numArgs : Int = 2
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+
+            xs match {
+                case Vector(vec, i) => interp.isIntR(interp.lookupR(rho, i)) match {
+                    case Some(i) => interp.isVecR(interp.lookupR(rho, vec)) match {
+                        case Some(elems) =>
+                            val index = i.toInt
+                            if (elems.indices contains index) {
+                                elems(index)
+                            } else {
+                                interp.errR(s"Index out of bounds - size: ${elems.size}, index: $index")
+                            }
+                        case None => sys.error(s"$show: can't find vector operand $vec")
+                    }
+                    case _ => sys.error(s"$show: can't find integer (index) operand ${xs.head}")
+                }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+
+        }
+
+        def show : String = "SelectItemVector"
+
+    }
+
+    /**
+     * Appends the given runtime value to the end of the given vector.
+     * The first argument is the name of the vecR.
+     * The Second argument is the name of the runtime value.
+     * @tparam I
+     */
+    case class AppendItemVector[I <: Backend]() extends Primitive[I] {
+
+        def numArgs : Int = 2
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+
+            xs match {
+                case Vector(vec, i) => interp.isVecR(interp.lookupR(rho, vec)) match {
+                    case Some(elems) => interp.vecR(elems :+ interp.lookupR(rho, i))
+                    case None        => sys.error(s"$show: can't find vector operand $vec")
+                }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+        }
+
+        def show : String = "AppendItemVector"
+
+    }
+
+    /**
+     * Updates the given vector at the given index with the given value
+     * The first argument is the name of the vecR.
+     * The Second argument is the index
+     * The third argument is the name of the runtime value
+     * @tparam I
+     */
+    case class PutItemVector[I <: Backend]() extends Primitive[I] {
+
+        def numArgs : Int = 3
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+
+            xs match {
+                case Vector(vec, i, valr) => interp.isIntR(interp.lookupR(rho, i)) match {
+                    case Some(idx) => interp.isVecR(interp.lookupR(rho, vec)) match {
+                        case Some(elems) =>
+                            if (elems.indices contains idx) {
+                                interp.vecR(elems.updated(idx.intValue, interp.lookupR(rho, valr)))
+                            } else {
+                                interp.errR(s"Index out of bounds - size: ${elems.size}, index: $idx")
+                            }
+                        case None => sys.error(s"$show: can't find vector operand $vec")
+                    }
+                    case None => sys.error(s"$show: can't find index operand $i")
+                }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+        }
+
+        def show : String = "AppendItemVector"
+
     }
 
 }
