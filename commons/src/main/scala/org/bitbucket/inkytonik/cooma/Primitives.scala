@@ -227,6 +227,14 @@ object Primitives {
                                             interp.appC("j", "letvk")
                                         )),
                                         interp.appC("k", "f")))
+                                case "slice" => interp.clsR(rho, "k", "i",
+                                    interp.letV("f", interp.funV("j", "val",
+                                        interp.letV(
+                                            "letvk",
+                                            interp.prmV(interp.sliceVector(), Vector(r, "i", "val")),
+                                            interp.appC("j", "letvk")
+                                        )),
+                                        interp.appC("k", "f")))
 
                             }
                             case None => interp.isErrR(value) match {
@@ -547,6 +555,45 @@ object Primitives {
         }
 
         def show : String = "AppendItemVector"
+
+    }
+
+    /**
+     * Returns a slice of the given vector at the given index with the given value
+     * The first argument is the name of the vecR.
+     * The Second argument is the index from
+     * The third argument is the index to
+     * @tparam I
+     */
+    case class SliceVector[I <: Backend]() extends Primitive[I] {
+
+        def numArgs : Int = 3
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+
+            xs match {
+                case Vector(vec, from, to) => interp.isIntR(interp.lookupR(rho, from)) match {
+                    case Some(idxFrom) => interp.isIntR(interp.lookupR(rho, to)) match {
+                        case Some(idxTo) => interp.isVecR(interp.lookupR(rho, vec)) match {
+                            case Some(elems) =>
+                                if (elems.indices.containsSlice(idxFrom to idxTo - 1)) {
+                                    interp.vecR(elems.slice(idxFrom.intValue, idxTo.intValue))
+                                } else {
+                                    interp.errR(s"Index out of bounds for slice - elems range: [${elems.indices.min}:${elems.indices.max}], targeted range: [$idxFrom:$idxTo)")
+                                }
+                            case None => sys.error(s"$show: can't find vector operand $vec")
+                        }
+                        case None => sys.error(s"$show: can't find index operand $to")
+                    }
+
+                    case None => sys.error(s"$show: can't find index operand $from")
+                }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+        }
+
+        def show : String = "SliceVector"
 
     }
 

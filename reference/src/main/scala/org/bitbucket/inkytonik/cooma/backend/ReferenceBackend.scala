@@ -138,6 +138,9 @@ class ReferenceBackend(
     def putItemVector() : Primitive =
         PutItemVector()
 
+    def sliceVector() : Primitive =
+        SliceVector()
+
     def equalP : Primitive =
         EqualP()
 

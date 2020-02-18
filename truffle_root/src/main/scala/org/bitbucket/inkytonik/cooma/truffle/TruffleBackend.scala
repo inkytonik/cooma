@@ -105,7 +105,7 @@ class TruffleBackend(config : Config) extends Backend {
         ConcatP()
 
     def selectP() : Primitive =
-        selectP()
+        SelectP()
 
     def equalP : Primitive =
         EqualP()
@@ -127,6 +127,9 @@ class TruffleBackend(config : Config) extends Backend {
 
     def putItemVector() : Primitive =
         PutItemVector()
+
+    def sliceVector() : Primitive =
+        SliceVector()
 
     // Runtime Values
     override type ValueR = RuntimeValue
