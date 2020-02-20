@@ -221,22 +221,22 @@ class SemanticAnalyser(
                         checkSecretExpression(b)
                     case _ => noMessages
                 })
-            case s @ Sel(i @ Idn(IdnUse(x)), FieldUse(field)) => { // Functions that are part of records?
-                // System.out.println(lookup(env(i), x, UnknownEntity()))
-                (lookup(env(i), x, UnknownEntity())) match {
-                    case ArgumentEntity(Argument(_, exp, _)) => {
-                        System.out.println(unalias(s, exp))
-                        unalias(s, exp) match {
-                            case Some(RecT(fs)) => {
-                                System.out.println(unalias)
-                            }
-                        }
-                    }
-                    case _ =>
-                        noMessages
-                }
-                checkSecretExpression(i)
-            }
+            // case s @ Sel(i @ Idn(IdnUse(x)), FieldUse(field)) => { // Functions that are part of records?
+            //     // System.out.println(lookup(env(i), x, UnknownEntity()))
+            //     (lookup(env(i), x, UnknownEntity())) match {
+            //         case ArgumentEntity(Argument(_, exp, _)) => {
+            //             System.out.println(unalias(s, exp))
+            //             unalias(s, exp) match {
+            //                 case Some(RecT(fs)) => {
+            //                     System.out.println(unalias)
+            //                 }
+            //             }
+            //         }
+            //         case _ =>
+            //             noMessages
+            //     }
+            //     checkSecretExpression(i)
+            // }
             case _ =>
                 noMessages
         }
