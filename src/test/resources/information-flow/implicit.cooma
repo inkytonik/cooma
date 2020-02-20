@@ -1,20 +1,13 @@
 {
-    def declassify(b : Boolean!, w : Writer) Unit! =
-        b match {
-            case True(_)  => { w.write("It's true!") }
-            case False(_) => { w.write("It's false!") }
-        }
-    
-    // def d2Helper(b : String, w : Writer) Unit = {
-    //     w.write(b)
-    // }
+    def helper(s : String, w : Writer) Int! = { val x = w.write(s) 0 }
+    def isFalse() Int! = { val x = helper("False") 0 }
+    def isTrue() Int! = { val x = helper("True") 0 }
 
-    // def declassify2(b : Boolean!) Unit! = {
-    //     b match {
-    //         case True(_)  => { d2Helper("true") }
-    //         case False(_) => { d2Helper("false") }
-    //     }
-    // }
+    def declassify(b : Boolean!, w : Writer) Int! = 
+        b match { 
+            case True(_)  => isTrue()
+            case False(_) => isFalse()
+        }
     
     declassify(true)
 
