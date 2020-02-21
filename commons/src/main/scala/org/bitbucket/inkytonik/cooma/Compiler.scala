@@ -52,7 +52,8 @@ trait Compiler {
         "IntLte" -> PrimitiveMeta(intRelP(LTE)),
         "StrConcat" -> PrimitiveMeta(stringP(CONCAT)),
         "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
-        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR))
+        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR)),
+        "SelectItemVector" -> PrimitiveMeta(selectItemVector())
     )
 
     /**
@@ -208,6 +209,11 @@ trait Compiler {
             mkStrIntPrimField("substr", "StrSubstr")
         ))
 
+    val vectors =
+        Rec(Vector(
+            mkPrimField("get", Vector(VecT(None), IntT()), "SelectItemVector")
+        ))
+
     def compile(exp : Expression, kappa : String => Term) : Term =
         exp match {
             case App(f, Vector()) =>
@@ -302,6 +308,9 @@ trait Compiler {
                 compile(field.expression, z =>
                     letV(r, varV(field.identifier, z),
                         kappa(r)))
+
+            case Vectors() =>
+                compile(vectors, kappa)
 
             case VecLit(VecElems(e)) =>
                 val v = fresh("v")
@@ -513,6 +522,9 @@ trait Compiler {
                 val v = fresh("v")
                 compilePrimArgs(e.optExpressions, cElems =>
                     letV(v, vecV(cElems), appC(k, v)))
+
+            case Vectors() =>
+                tailCompile(vectors, k)
 
             // Types erase to unit
             case IsType() =>

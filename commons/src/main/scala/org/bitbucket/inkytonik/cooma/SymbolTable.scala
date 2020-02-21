@@ -115,7 +115,14 @@ object SymbolTable extends Environments[CoomaEntity] {
         "IntLte" -> mkIntBinPrimType(boolT),
         "StrConcat" -> mkPrimType(Vector(StrT(), StrT()), StrT()),
         "StrLength" -> mkPrimType(Vector(StrT()), IntT()),
-        "StrSubstr" -> mkPrimType(Vector(StrT(), IntT()), StrT())
+        "StrSubstr" -> mkPrimType(Vector(StrT(), IntT()), StrT()),
+        "SelectItemVector" -> FunT(ArgumentTypes(
+            Vector(
+                ArgumentType(Some(IdnDef("t")), TypT()),
+                ArgumentType(Some(IdnDef("v")), VecT(Some(Idn(IdnUse("t"))))),
+                ArgumentType(Some(IdnDef("i")), IntT()),
+            )
+        ), Idn(IdnUse("t")))
     )
 
 }

@@ -41,7 +41,8 @@ Expression {paren} =
   | 'equal'                                                  {Eql}
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
   | IdnUse                                                   {Idn}
-  | 'Vector' '(' Expression ')'                              {VecT}
+  | 'Vectors'                                                {Vectors}
+  | 'Vector' ('(' Expression ')')?                           {VecT}
   | '[' VecElems ']'                                         {VecLit}.
 
 Arguments =

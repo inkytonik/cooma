@@ -188,7 +188,7 @@ class SemanticAnalyser(
 
     def checkRecordUse(e : Expression) : Messages =
         tipe(e) match {
-            case Some(RecT(_)) | None =>
+            case Some(RecT(_)) | Some(VecT(_)) | None =>
                 noMessages
             case Some(t) =>
                 error(e, s"expected record type, got ${show(alias(t))}")
@@ -202,8 +202,13 @@ class SemanticAnalyser(
                     noMessages
                 else
                     error(f, s"$i is not a field of record type ${show(alias(t))}")
+
+            case Some(t @ VecT(_)) =>
+                //TODO: check that the field identifier is an actual vector primitive.
+                noMessages
+
             case Some(t) =>
-                error(f, s"selection of $i field from non-record type ${show(alias(t))}")
+                error(f, s"selection of $i field from non-record type or non-vector type ${show(alias(t))}")
             case None =>
                 noMessages
         }
@@ -470,6 +475,9 @@ class SemanticAnalyser(
                             case None =>
                                 None
                         }
+                    case Some(VecT(Some(e))) =>
+                        Some(e)
+
                     case _ =>
                         None
                 }
@@ -505,11 +513,22 @@ class SemanticAnalyser(
             case WriterT() =>
                 Some(TypT())
 
-            case VecLit(_) =>
-                None
+            case VecLit(v) => {
+                if (!v.optExpressions.forall(e => tipe(e) == tipe(v.optExpressions.head)))
+                    None
+                tipe(v.optExpressions.head) match {
+                    case Some(typ) => Some(VecT(Some(typ)))
+                    case None      => None
+                }
+            }
+
+            case Vectors() =>
+                Some(RecT(Vector(
+                    FieldType("get", primitivesTypesTable("SelectItemVector"))
+                )))
 
             case VecT(_) =>
-                None
+                Some(TypT())
 
             case _ : VarT =>
                 Some(TypT())

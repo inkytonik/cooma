@@ -597,7 +597,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "selection from non-record",
                 "42.x",
-                """|1:4:error: selection of x field from non-record type Int
+                """|1:4:error: selection of x field from non-record type or non-vector type Int
                    |42.x
                    |   ^
                    |"""

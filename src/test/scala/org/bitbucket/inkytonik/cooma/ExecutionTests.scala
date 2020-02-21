@@ -19,15 +19,16 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
     import java.io.{ByteArrayOutputStream, PrintStream}
     import java.nio.file.{Files, Paths}
-    import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
+
     import org.bitbucket.inkytonik.cooma.Primitives._
+    import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
     import org.bitbucket.inkytonik.cooma.truffle.{TruffleBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
-    import org.bitbucket.inkytonik.kiama.util.{FileSource, Source, StringConsole, StringSource}
     import org.bitbucket.inkytonik.kiama.util.Filenames.makeTempFilename
     import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
+    import org.bitbucket.inkytonik.kiama.util.{FileSource, Source, StringConsole, StringSource}
     import org.rogach.scallop.throwError
-    import wolfendale.scalacheck.regexp.RegexpGen
     import org.scalacheck.Gen
+    import wolfendale.scalacheck.regexp.RegexpGen
 
     case class Backend(
         name : String,
@@ -1031,6 +1032,13 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         """Strings.substr("hi")""",
                         "<function>",
                         "(Int) String"
+                    ),
+
+                    ExecTest(
+                        s"Collection prim",
+                        """[1,2,3]""",
+                        "[1,2,3]",
+                        "Vector(Int)"
                     )
                 )
 
