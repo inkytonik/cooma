@@ -191,68 +191,9 @@ class SemanticAnalyser(
             })
     }
 
-    def checkSecretArgumentTypes(as : Vector[ArgumentType]) : Messages =
-        as.flatMap(a => a.expression match {
-            case SecT(_) => noMessages
-            case _ =>
-                error(a.expression, s"function with public field used from secret case")
-        })
-
-    // Function is called when a match on case statements occurs
-    // Should recursively check the each expression contains only function
-    // We only care about out of scope function usage either from a record field or idn use
-    def checkSecretExpression(e : Expression) : Messages = {
-        e match {
-            case App(exp, _) => checkSecretExpression(exp) // Functions should occur on left?
-            case Blk(b) => b match {
-                case BlkDef(_, exp) => checkSecretExpression(Blk(exp)) // FIXME Nasty solution
-                case BlkLet(Let(_, _, _, exp), _) =>
-                    checkSecretExpression(exp)
-                case Return(exp) => checkSecretExpression(exp)
-            }
-            case i @ Idn(IdnUse(x)) =>
-                (tipe(i) match {
-                    case Some(FunT(ArgumentTypes(as), _)) =>
-                        checkSecretArgumentTypes(as)
-                    case _ =>
-                        noMessages
-                }) ++ (lookup(env(i), x, UnknownEntity()) match {
-                    case FunctionEntity(Def(_, Body(_, _, b))) =>
-                        checkSecretExpression(b)
-                    case _ => noMessages
-                })
-            // case s @ Sel(i @ Idn(IdnUse(x)), FieldUse(field)) => { // Functions that are part of records?
-            //     // System.out.println(lookup(env(i), x, UnknownEntity()))
-            //     (lookup(env(i), x, UnknownEntity())) match {
-            //         case ArgumentEntity(Argument(_, exp, _)) => {
-            //             System.out.println(unalias(s, exp))
-            //             unalias(s, exp) match {
-            //                 case Some(RecT(fs)) => {
-            //                     System.out.println(unalias)
-            //                 }
-            //             }
-            //         }
-            //         case _ =>
-            //             noMessages
-            //     }
-            //     checkSecretExpression(i)
-            // }
-            case _ =>
-                noMessages
-        }
-    }
-
-    // If secret ensure secret context for each case statment
-    def checkSecretMatch(e : Expression, cs : Vector[Case]) : Messages =
-        tipe(e) match {
-            case Some(SecT(_)) => cs.flatMap(c => checkSecretExpression(c.expression))
-            case _             => noMessages
-        }
-
     def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
         checkMatchDiscType(e) ++
-            checkMatchCaseNum(e, cs) ++
-            checkSecretMatch(e, cs)
+            checkMatchCaseNum(e, cs)
 
     def checkMatchDiscType(e : Expression) : Messages =
         tipe(e) match {
