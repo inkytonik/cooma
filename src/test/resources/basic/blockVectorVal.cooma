@@ -1,13 +1,4 @@
 {
     val x = [999]
-    val y = [555]
-    val ab = [1,2,3,4,5]
-    val z = {
-              a = x & y,
-              b = x.get(0),
-              c = x.append(989),
-              d = x.put(0,151),
-              e = ab.slice(0,4)
-             }
-    z
+    Vectors.get(Int, x, 0)
 }

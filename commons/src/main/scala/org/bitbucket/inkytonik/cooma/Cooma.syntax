@@ -10,7 +10,7 @@ header {
 Program =
   Spacing Expression EOF.
 
-Expression {paren} =
+Expression =
     "fun" '(' Arguments ")" Expression                       {Fun, right, 4}
   | '(' ArgumentTypes ")" Expression                         {FunT, right, 4}
   | Expression sp "match" '{' nest(Case+) \n '}'             {Mat, left, 3}
@@ -42,7 +42,7 @@ Expression {paren} =
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
   | IdnUse                                                   {Idn}
   | 'Vectors'                                                {Vectors}
-  | 'Vector' ('(' Expression ')')?                           {VecT}
+  | 'Vector' ('('Expression')')?                             {VecT}
   | '[' VecElems ']'                                         {VecLit}.
 
 Arguments =

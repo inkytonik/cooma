@@ -516,10 +516,11 @@ class SemanticAnalyser(
             case VecLit(v) => {
                 if (!v.optExpressions.forall(e => tipe(e) == tipe(v.optExpressions.head)))
                     None
-                tipe(v.optExpressions.head) match {
-                    case Some(typ) => Some(VecT(Some(typ)))
-                    case None      => None
-                }
+                else
+                    v.optExpressions match {
+                        case h +: _ if tipe(h).isDefined => Some(VecT(tipe(h)))
+                        case _                           => None
+                    }
             }
 
             case Vectors() =>
@@ -630,6 +631,7 @@ class SemanticAnalyser(
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
             case RecT(fs)                   => RecT(aliasFieldTypes(fs))
             case VarT(fs)                   => VarT(aliasFieldTypes(fs))
+            case VecT(Some(t))              => VecT(Some(alias(t)))
             case _                          => e
         }
 
@@ -849,6 +851,8 @@ object SemanticAnalysis {
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
                 case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
                     subtypesArgs(us, ts) && subtype(t, u)
+                case (VecT(_), VecT(_)) =>
+                    true
                 case _ =>
                     false
             })

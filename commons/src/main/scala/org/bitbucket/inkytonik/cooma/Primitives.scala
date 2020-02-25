@@ -469,12 +469,12 @@ object Primitives {
      */
     case class SelectItemVector[I <: Backend]() extends Primitive[I] {
 
-        def numArgs : Int = 2
+        def numArgs : Int = 3
 
         override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
 
             xs match {
-                case Vector(vec, i) => interp.isIntR(interp.lookupR(rho, i)) match {
+                case Vector(_, vec, i) => interp.isIntR(interp.lookupR(rho, i)) match {
                     case Some(i) => interp.isVecR(interp.lookupR(rho, vec)) match {
                         case Some(elems) =>
                             val index = i.toInt

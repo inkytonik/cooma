@@ -122,7 +122,14 @@ object SymbolTable extends Environments[CoomaEntity] {
                 ArgumentType(Some(IdnDef("v")), VecT(Some(Idn(IdnUse("t"))))),
                 ArgumentType(Some(IdnDef("i")), IntT()),
             )
-        ), Idn(IdnUse("t")))
+        ), Idn(IdnUse("t"))),
+        "AppendItemVector" -> FunT(ArgumentTypes(
+            Vector(
+                ArgumentType(Some(IdnDef("t")), TypT()),
+                ArgumentType(Some(IdnDef("v")), VecT(Some(Idn(IdnUse("t"))))),
+                ArgumentType(Some(IdnDef("e")), Idn(IdnUse("t"))),
+            )
+        ), UniT()),
     )
 
 }

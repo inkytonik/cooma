@@ -53,7 +53,8 @@ trait Compiler {
         "StrConcat" -> PrimitiveMeta(stringP(CONCAT)),
         "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
         "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR)),
-        "SelectItemVector" -> PrimitiveMeta(selectItemVector())
+        "SelectItemVector" -> PrimitiveMeta(selectItemVector()),
+        "AppendItemVector" -> PrimitiveMeta(appendItemVector())
     )
 
     /**
@@ -153,9 +154,12 @@ trait Compiler {
         ))
 
     def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
-        val argNames = (1 to argTypes.length).map(i => s"arg$i")
-        val args = argNames.zip(argTypes).map { case (n, t) => Argument(IdnDef(n), t, None) }
-        val params = argNames.map(n => Idn(IdnUse(n))).toVector
+        mkPrimFieldArgNames(fieldName, (1 to argTypes.length).map(i => s"arg$i").zip(argTypes), primName)
+    }
+
+    def mkPrimFieldArgNames(fieldName : String, argNames : Seq[(String, Expression)], primName : String) : Field = {
+        val args = argNames.map { case (n, t) => Argument(IdnDef(n), t, None) }
+        val params = argNames.map { case (n, _) => Idn(IdnUse(n)) }.toVector
         Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
     }
 
@@ -211,7 +215,8 @@ trait Compiler {
 
     val vectors =
         Rec(Vector(
-            mkPrimField("get", Vector(VecT(None), IntT()), "SelectItemVector")
+            mkPrimFieldArgNames("get", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("i", IntT())), "SelectItemVector"),
+            mkPrimFieldArgNames("append", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("e", Idn(IdnUse("t")))), "AppendItemVector")
         ))
 
     def compile(exp : Expression, kappa : String => Term) : Term =

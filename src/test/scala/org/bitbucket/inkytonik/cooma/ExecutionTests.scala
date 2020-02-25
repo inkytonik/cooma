@@ -1033,13 +1033,119 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "<function>",
                         "(Int) String"
                     ),
-
+                    //Vector tests
                     ExecTest(
-                        s"Collection prim",
+                        s"Vector literal",
                         """[1,2,3]""",
                         "[1,2,3]",
                         "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Int Vector declaration",
+                        """{
+                            val x : Vector(Int) = [1,2,3]
+                            x
+                        }""",
+                        "[1,2,3]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Raw Vector declaration",
+                        """{
+                            val x : Vector = [1,2,3]
+                            x
+                        }""",
+                        "[1,2,3]",
+                        "Vector"
+                    ),
+                    ExecTest(
+                        "Empty Int Vector declaration",
+                        """{
+                            val x : Vector(Int) = []
+                            x
+                        }""",
+                        "[]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Empty raw Vector declaration",
+                        """{
+                            val x : Vector = []
+                            x
+                        }""",
+                        "[]",
+                        "Vector"
+                    ),
+                    ExecTest(
+                        "Multi-dimensional vector declaration",
+                        """{
+                            val x : Vector(Vector(Int)) = [[1,2,3],
+														   [4,5,6],
+				                                           [7,8,9]]
+                            x
+                        }""",
+                        "[[1,2,3],[4,5,6],[7,8,9]]",
+                        "Vector(Vector(Int))"
+                    ),
+                    ExecTest(
+                        "Record vector declaration",
+                        """{
+                            val x : Vector({ a : Int }) = [{ i = 65 },
+														   { j = -50 }]
+                            x
+                        }""",
+                        "[{ i = 65 },{ j = -50 }]",
+                        "Vector({ a : Int })"
+                    ),
+                    ExecTest(
+                        "Boolean vector declaration",
+                        """{
+                            val x : Vector(Boolean) = [true, false]
+                            x
+                        }""",
+                        "[true,false]",
+                        "Vector(Boolean)"
+                    ),
+                    ExecTest(
+                        "Boolean vector declaration - cont.",
+                        """{
+                            val x : Vector(Boolean) = [Booleans.and(false, false),
+                            						   Booleans.and(false, true),
+                            						   Booleans.and(true, false),
+                            						   Booleans.and(true, true)]
+                            x
+                        }""",
+                        "[false,false,false,true]",
+                        "Vector(Boolean)"
+                    ),
+                    ExecTest(
+                        "Unit Vector declaration",
+                        """{
+                            val x : Vector(Unit) = [{}]
+                            x
+                        }""",
+                        "[{}]",
+                        "Vector(Unit)"
+                    ),
+                    ExecTest(
+                        "String Vector declaration",
+                        """{
+                            val x : Vector(String) = ["hello", "world"]
+                            x
+                        }""",
+                        "[\"hello\",\"world\"]",
+                        "Vector(String)"
+                    ),
+                    ExecTest(
+                        "Variant Vector declaration",
+                        """{
+                            val x : Vector(< a : Int, v : String >) = [< a = 1 >, < v = "variant" >]
+                            x
+                        }""",
+                        "[< a = 1 >,< v = \"variant\" >]",
+                        "Vector(< a : Int, v : String >)"
                     )
+
                 )
 
         for (aTest <- execTests) {
