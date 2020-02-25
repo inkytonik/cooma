@@ -525,7 +525,9 @@ class SemanticAnalyser(
 
             case Vectors() =>
                 Some(RecT(Vector(
-                    FieldType("get", primitivesTypesTable("SelectItemVector"))
+                    FieldType("get", primitivesTypesTable("SelectItemVector")),
+                    FieldType("append", primitivesTypesTable("AppendItemVector")),
+                    FieldType("put", primitivesTypesTable("PutItemVector"))
                 )))
 
             case VecT(_) =>

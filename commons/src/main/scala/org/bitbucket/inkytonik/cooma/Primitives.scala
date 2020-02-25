@@ -497,30 +497,76 @@ object Primitives {
 
     }
 
-    /**
-     * Appends the given runtime value to the end of the given vector.
-     * The first argument is the name of the vecR.
-     * The Second argument is the name of the runtime value.
-     * @tparam I
-     */
-    case class AppendItemVector[I <: Backend]() extends Primitive[I] {
+    sealed abstract class AddItemVectorOp extends Product with Serializable
+    object AddItemVectorOp {
+        final case object Prepend extends AddItemVectorOp
+        final case object Append extends AddItemVectorOp
+        final case object Put extends AddItemVectorOp
+    }
 
-        def numArgs : Int = 2
+    abstract class AddItemVector[I <: Backend]() extends Primitive[I] {
+
+        def numArgs : Int = 4
+
+        def op : AddItemVectorOp
 
         override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-
             xs match {
-                case Vector(vec, i) => interp.isVecR(interp.lookupR(rho, vec)) match {
-                    case Some(elems) => interp.vecR(elems :+ interp.lookupR(rho, i))
-                    case None        => sys.error(s"$show: can't find vector operand $vec")
+                case Vector(_, vec, i, e) => interp.isVecR(interp.lookupR(rho, vec)) match {
+                    case Some(elems) => op match {
+                        case AddItemVectorOp.Append  => interp.vecR(elems :+ interp.lookupR(rho, e))
+                        case AddItemVectorOp.Prepend => interp.vecR(interp.lookupR(rho, e) +: elems)
+                        case AddItemVectorOp.Put => interp.isIntR(interp.lookupR(rho, i)) match {
+                            case Some(idx) => if (elems.indices contains idx) {
+                                interp.vecR(elems.updated(idx.intValue, interp.lookupR(rho, e)))
+                            } else {
+                                interp.errR(s"Index out of bounds - size: ${elems.size}, index: $idx")
+                            }
+                            case None => sys.error(s"$show: can't find index operand $i")
+                        }
+                    }
+                    case None => sys.error(s"$show: can't find vector operand $vec")
                 }
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")
             }
         }
 
-        def show : String = "AppendItemVector"
+    }
 
+    abstract class AddItemVectorNoIndex[I <: Backend]() extends AddItemVector[I] {
+        override def numArgs : Int = 3
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            xs match {
+                case Vector(t, vec, e) =>
+                    super.run(interp)(rho, Vector(t, vec, "", e), args)
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+        }
+    }
+
+    /**
+     * Appends the given runtime value to the end of the given vector.
+     * The first argument is the name of the vecR.
+     * The Second argument is the name of the runtime value.
+     * @tparam I
+     */
+    case class AppendItemVector[I <: Backend]() extends AddItemVectorNoIndex[I] {
+        def op : AddItemVectorOp = AddItemVectorOp.Append
+        def show : String = "AppendItemVector"
+    }
+
+    /**
+     * Prepends the given runtime value to the end of the given vector.
+     * The first argument is the name of the vecR.
+     * The Second argument is the name of the runtime value.
+     * @tparam I
+     */
+    case class PrependItemVector[I <: Backend]() extends AddItemVectorNoIndex[I] {
+        def op : AddItemVectorOp = AddItemVectorOp.Prepend
+        def show : String = "PrependItemVector"
     }
 
     /**
@@ -530,32 +576,9 @@ object Primitives {
      * The third argument is the name of the runtime value
      * @tparam I
      */
-    case class PutItemVector[I <: Backend]() extends Primitive[I] {
-
-        def numArgs : Int = 3
-
-        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-
-            xs match {
-                case Vector(vec, i, valr) => interp.isIntR(interp.lookupR(rho, i)) match {
-                    case Some(idx) => interp.isVecR(interp.lookupR(rho, vec)) match {
-                        case Some(elems) =>
-                            if (elems.indices contains idx) {
-                                interp.vecR(elems.updated(idx.intValue, interp.lookupR(rho, valr)))
-                            } else {
-                                interp.errR(s"Index out of bounds - size: ${elems.size}, index: $idx")
-                            }
-                        case None => sys.error(s"$show: can't find vector operand $vec")
-                    }
-                    case None => sys.error(s"$show: can't find index operand $i")
-                }
-                case _ =>
-                    sys.error(s"$show: unexpectedly got arguments $xs")
-            }
-        }
-
-        def show : String = "AppendItemVector"
-
+    case class PutItemVector[I <: Backend]() extends AddItemVector[I] {
+        def op : AddItemVectorOp = AddItemVectorOp.Put
+        def show : String = "PutItemVector"
     }
 
     /**

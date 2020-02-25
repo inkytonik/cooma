@@ -54,7 +54,8 @@ trait Compiler {
         "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
         "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR)),
         "SelectItemVector" -> PrimitiveMeta(selectItemVector()),
-        "AppendItemVector" -> PrimitiveMeta(appendItemVector())
+        "AppendItemVector" -> PrimitiveMeta(appendItemVector()),
+        "PutItemVector" -> PrimitiveMeta(putItemVector())
     )
 
     /**
@@ -216,7 +217,8 @@ trait Compiler {
     val vectors =
         Rec(Vector(
             mkPrimFieldArgNames("get", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("i", IntT())), "SelectItemVector"),
-            mkPrimFieldArgNames("append", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("e", Idn(IdnUse("t")))), "AppendItemVector")
+            mkPrimFieldArgNames("append", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("e", Idn(IdnUse("t")))), "AppendItemVector"),
+            mkPrimFieldArgNames("put", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("i", IntT()), ("e", Idn(IdnUse("t")))), "PutItemVector")
         ))
 
     def compile(exp : Expression, kappa : String => Term) : Term =

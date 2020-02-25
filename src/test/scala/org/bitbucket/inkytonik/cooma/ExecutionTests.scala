@@ -62,6 +62,12 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             expectedREPLVar : String = "res0"
         )
 
+        case class ExecTestError(
+            name : String,
+            program : String,
+            expectedErrorMessage : String
+        )
+
         val execTests =
             Vector(
                 // Primitive values
@@ -1144,8 +1150,53 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         }""",
                         "[< a = 1 >,< v = \"variant\" >]",
                         "Vector(< a : Int, v : String >)"
+                    ),
+                    ExecTest(
+                        "Vector operations - get",
+                        """{
+                            val x : Vector(Int) = [1,2,3]
+                            Vectors.get(Int, x, 0)
+                        }""",
+                        "1",
+                        "Int"
+                    ),
+                    ExecTest(
+                        "Vector operations - get - upper bound",
+                        """{
+                            val x : Vector(Int) = [1,2,3]
+                            Vectors.get(Int, x, 2)
+                        }""",
+                        "3",
+                        "Int"
+                    ),
+                    ExecTest(
+                        "Vector operations - append",
+                        """{
+                            val x : Vector(Int) = [1,2,3]
+                            val z = Vectors.append(Int, x, 4)
+							Vectors.get(Int, z, 3)
+                        }""",
+                        "4",
+                        "Int"
+                    ),
+                    ExecTest(
+                        "Vector operations - append on empty vector",
+                        """{
+                            val x : Vector(Int) = []
+							Vectors.get(Int, Vectors.append(Int, x, 4), 0)
+                        }""",
+                        "4",
+                        "Int"
+                    ),
+                    ExecTest(
+                        "Vector operations - put on vector",
+                        """{
+                            val x : Vector(Int) = [1]
+							Vectors.put(Int, x, 0, 5)
+                        }""",
+                        "[5]",
+                        "Vector(Int)"
                     )
-
                 )
 
         for (aTest <- execTests) {
@@ -1157,6 +1208,65 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 val result = runString(aTest.name, aTest.program, Seq("-r") ++ backend.options, backend)
                 val expectedValue = aTest.expectedCompiledResult.stripMargin
                 result shouldBe s"$expectedValue\n"
+            }
+        }
+
+        val execTestsError =
+            Vector(
+                ExecTestError(
+                    "Vector operations - get - out of bounds",
+                    """{
+                            val x : Vector(Int) = [1,2,3]
+                            Vectors.get(Int, x, 4)
+                        }""",
+                    "cooma: Index out of bounds - size: 3, index: 4"
+                ),
+                ExecTestError(
+                    "Vector operations - get - out of bounds - negative index",
+                    """{
+                            val x : Vector(Int) = [1,2,3]
+                            Vectors.get(Int, x, -1)
+                        }""",
+                    "cooma: Index out of bounds - size: 3, index: -1"
+                ),
+                ExecTestError(
+                    "Vector operations - get - out of bounds - empty vector ",
+                    """{
+                            val x : Vector(Int) = []
+                            Vectors.get(Int, x, 0)
+                        }""",
+                    "cooma: Index out of bounds - size: 0, index: 0"
+                ),
+                ExecTestError(
+                    "Vector operations - put on empty vector ",
+                    """{
+                        val x : Vector(Int) = []
+                        Vectors.put(Int, x, 0, 5)
+                    }""",
+                    "cooma: Index out of bounds - size: 0, index: 0"
+                ),
+                ExecTestError(
+                    "Vector operations - put on vector, index out ouf bounds ",
+                    """{
+                        val x : Vector(Int) = [1]
+                        Vectors.put(Int, x, 1, 5)
+                    }""",
+                    "cooma: Index out of bounds - size: 1, index: 1"
+                ),
+                ExecTestError(
+                    "Vector operations - put on vector, index out ouf bounds (negative) ",
+                    """{
+                        val x : Vector(Int) = [1]
+                        Vectors.put(Int, x, -1, 5)
+                    }""",
+                    "cooma: Index out of bounds - size: 1, index: -1"
+                )
+            )
+
+        for (aTest <- execTestsError) {
+            test(s"${backend.name} run: ${aTest.name}") {
+                val errorMessage = runString(aTest.name, aTest.program, backend.options, backend)
+                errorMessage shouldBe s"${aTest.expectedErrorMessage}\n"
             }
         }
 
