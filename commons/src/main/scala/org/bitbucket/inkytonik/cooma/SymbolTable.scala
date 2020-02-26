@@ -95,6 +95,9 @@ object SymbolTable extends Environments[CoomaEntity] {
     def mkPrimTypeWithArgNames(args : Vector[(String, Expression)], retType : Expression) : FunT =
         FunT(ArgumentTypes(args.map { case (x, e) => ArgumentType(Some(IdnDef(x)), e) }), retType)
 
+    def mkVectorPrimTypeWithArgNames(args : Vector[(String, Expression)], retType : Expression) : FunT =
+        mkPrimTypeWithArgNames(Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t")))))) ++ args, retType)
+
     def mkIntUnPrimType(retType : Expression) : FunT =
         mkPrimType(Vector(IntT()), retType)
 
@@ -116,28 +119,11 @@ object SymbolTable extends Environments[CoomaEntity] {
         "StrConcat" -> mkPrimType(Vector(StrT(), StrT()), StrT()),
         "StrLength" -> mkPrimType(Vector(StrT()), IntT()),
         "StrSubstr" -> mkPrimType(Vector(StrT(), IntT()), StrT()),
-        "SelectItemVector" -> FunT(ArgumentTypes(
-            Vector(
-                ArgumentType(Some(IdnDef("t")), TypT()),
-                ArgumentType(Some(IdnDef("v")), VecT(Some(Idn(IdnUse("t"))))),
-                ArgumentType(Some(IdnDef("i")), IntT()),
-            )
-        ), Idn(IdnUse("t"))),
-        "AppendItemVector" -> FunT(ArgumentTypes(
-            Vector(
-                ArgumentType(Some(IdnDef("t")), TypT()),
-                ArgumentType(Some(IdnDef("v")), VecT(Some(Idn(IdnUse("t"))))),
-                ArgumentType(Some(IdnDef("e")), Idn(IdnUse("t"))),
-            )
-        ), VecT(Some(Idn(IdnUse("t"))))),
-        "PutItemVector" -> FunT(ArgumentTypes(
-            Vector(
-                ArgumentType(Some(IdnDef("t")), TypT()),
-                ArgumentType(Some(IdnDef("v")), VecT(Some(Idn(IdnUse("t"))))),
-                ArgumentType(Some(IdnDef("i")), IntT()),
-                ArgumentType(Some(IdnDef("e")), Idn(IdnUse("t"))),
-            )
-        ), VecT(Some(Idn(IdnUse("t"))))),
+        "VectorLength" -> mkVectorPrimTypeWithArgNames(Vector(), IntT()),
+        "SelectItemVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT())), Idn(IdnUse("t"))),
+        "AppendItemVector" -> mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Some(Idn(IdnUse("t"))))),
+        "PutItemVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT()), ("e", Idn(IdnUse("t")))), VecT(Some(Idn(IdnUse("t"))))),
+        "SliceVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT()), ("j", IntT())), VecT(Some(Idn(IdnUse("t")))))
     )
 
 }

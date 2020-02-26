@@ -208,25 +208,7 @@ object Primitives {
                             }
                         case None => interp.isVecR(value) match {
                             case Some(elems) => f1 match {
-                                case "length" => interp.intR(elems.length)
-                                case "get" => interp.clsR(rho, "k", "i", interp.letV(
-                                    "val",
-                                    interp.prmV(interp.selectItemVector(), Vector(r, "i")),
-                                    interp.appC("k", "val")
-                                ))
-                                case "append" => interp.clsR(rho, "k", "e", interp.letV(
-                                    "val",
-                                    interp.prmV(interp.appendItemVector(), Vector(r, "e")),
-                                    interp.appC("k", "val")
-                                ))
-                                case "put" => interp.clsR(rho, "k", "i",
-                                    interp.letV("f", interp.funV("j", "val",
-                                        interp.letV(
-                                            "letvk",
-                                            interp.prmV(interp.putItemVector(), Vector(r, "i", "val")),
-                                            interp.appC("j", "letvk")
-                                        )),
-                                        interp.appC("k", "f")))
+
                                 case "slice" => interp.clsR(rho, "k", "i",
                                     interp.letV("f", interp.funV("j", "val",
                                         interp.letV(
@@ -462,6 +444,31 @@ object Primitives {
     }
 
     /**
+     * Returns the length of the given vector.
+     * The first argument is the name of the vecR.
+     * @tparam I
+     */
+    case class VectorLength[I <: Backend]() extends Primitive[I] {
+        val numArgs = 2
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs match {
+                case Vector(_, v) =>
+                    val value = interp.lookupR(rho, v)
+                    interp.isVecR(value) match {
+                        case Some(elems) =>
+                            interp.intR(elems.length)
+                        case _ =>
+                            sys.error(s"$show: $v is $value, expected value of type Vector")
+                    }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+
+        def show = "VectorLength"
+    }
+
+    /**
      * Returns the runtime value located at the given index in the given vector.
      * The first argument is the name of the vecR.
      * The Second argument is the name of the index.
@@ -590,12 +597,12 @@ object Primitives {
      */
     case class SliceVector[I <: Backend]() extends Primitive[I] {
 
-        def numArgs : Int = 3
+        def numArgs : Int = 4
 
         override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
 
             xs match {
-                case Vector(vec, from, to) => interp.isIntR(interp.lookupR(rho, from)) match {
+                case Vector(_, vec, from, to) => interp.isIntR(interp.lookupR(rho, from)) match {
                     case Some(idxFrom) => interp.isIntR(interp.lookupR(rho, to)) match {
                         case Some(idxTo) => interp.isVecR(interp.lookupR(rho, vec)) match {
                             case Some(elems) =>

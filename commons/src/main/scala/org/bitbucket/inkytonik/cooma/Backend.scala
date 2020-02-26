@@ -35,6 +35,7 @@ trait Backend {
     def concatP() : Primitive
     def selectP() : Primitive
     def writerWriteP(filename : String) : Primitive
+    def vectorLength() : Primitive
     def selectItemVector() : Primitive
     def appendItemVector() : Primitive
     def putItemVector() : Primitive

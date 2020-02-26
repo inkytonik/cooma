@@ -1196,7 +1196,80 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         }""",
                         "[5]",
                         "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - empty vector length",
+                        """{
+                            val x  = []
+							Vectors.length(Int, x)
+                        }""",
+                        "0",
+                        "Int"
+                    ),
+                    ExecTest(
+                        "Vector operations - vector length",
+                        """{
+                            val x  = [1,2,3]
+							Vectors.length(Int, x)
+                        }""",
+                        "3",
+                        "Int"
+                    ),
+                    ExecTest(
+                        "Vector operations - vector empty slice",
+                        """{
+                            val x  = [1,2,3]
+							Vectors.slice(Int, x,0,0)
+                        }""",
+                        "[]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - empty vector  slice",
+                        """{
+                            val x  = []
+							Vectors.slice(Int, x,0,0)
+                        }""",
+                        "[]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - vector slice",
+                        """{
+                            val x  = [1,2,3]
+							Vectors.slice(Int, x,0,1)
+                        }""",
+                        "[1]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - vector slice 2",
+                        """{
+                            val x  = [1,2,3]
+							Vectors.slice(Int, x,0,3)
+                        }""",
+                        "[1,2,3]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - vector slice 3",
+                        """{
+                            val x  = [1,2,3,4]
+							Vectors.slice(Int, x,1,3)
+                        }""",
+                        "[2,3]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - vector slice 4",
+                        """{
+                            val x  = [1,2,3,4]
+							Vectors.slice(Int, x,2,4)
+                        }""",
+                        "[3,4]",
+                        "Vector(Int)"
                     )
+
                 )
 
         for (aTest <- execTests) {
@@ -1260,6 +1333,30 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         Vectors.put(Int, x, -1, 5)
                     }""",
                     "cooma: Index out of bounds - size: 1, index: -1"
+                ),
+                ExecTestError(
+                    "Vector operations - vector slice wrong range 1 ",
+                    """{
+                        val x : Vector(Int) = [1,2,3]
+                        Vectors.slice(Int, x, -1, 1)
+                    }""",
+                    "cooma: Index out of bounds for slice - elems range: [0:2], targeted range: [-1:1)"
+                ),
+                ExecTestError(
+                    "Vector operations - vector slice wrong range 2 ",
+                    """{
+                        val x : Vector(Int) = [1,2,3]
+                        Vectors.slice(Int, x, 1, 4)
+                    }""",
+                    "cooma: Index out of bounds for slice - elems range: [0:2], targeted range: [1:4)"
+                ),
+                ExecTestError(
+                    "Vector operations - vector slice wrong range 3 ",
+                    """{
+                        val x : Vector(Int) = [1,2,3]
+                        Vectors.slice(Int, x, -1, 4)
+                    }""",
+                    "cooma: Index out of bounds for slice - elems range: [0:2], targeted range: [-1:4)"
                 )
             )
 

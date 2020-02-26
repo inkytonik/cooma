@@ -129,6 +129,9 @@ class ReferenceBackend(
     def selectP() : Primitive =
         SelectP()
 
+    def vectorLength() : Primitive =
+        VectorLength()
+
     def selectItemVector() : Primitive =
         SelectItemVector()
 

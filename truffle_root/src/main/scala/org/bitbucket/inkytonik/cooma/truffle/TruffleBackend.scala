@@ -119,6 +119,9 @@ class TruffleBackend(config : Config) extends Backend {
     def stringP(op : StrPrimOp) : Primitive =
         StringPrimitive(op)
 
+    def vectorLength() : Primitive =
+        VectorLength()
+
     def selectItemVector() : Primitive =
         SelectItemVector()
 
