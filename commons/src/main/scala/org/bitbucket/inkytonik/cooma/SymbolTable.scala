@@ -123,7 +123,8 @@ object SymbolTable extends Environments[CoomaEntity] {
         "SelectItemVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT())), Idn(IdnUse("t"))),
         "AppendItemVector" -> mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Some(Idn(IdnUse("t"))))),
         "PutItemVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT()), ("e", Idn(IdnUse("t")))), VecT(Some(Idn(IdnUse("t"))))),
-        "SliceVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT()), ("j", IntT())), VecT(Some(Idn(IdnUse("t")))))
+        "SliceVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT()), ("j", IntT())), VecT(Some(Idn(IdnUse("t"))))),
+        "ConcatVector" -> mkVectorPrimTypeWithArgNames(Vector(("vr", VecT(Some(Idn(IdnUse("t")))))), VecT(Some(Idn(IdnUse("t")))))
     )
 
 }

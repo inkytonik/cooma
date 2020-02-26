@@ -1268,6 +1268,46 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         }""",
                         "[3,4]",
                         "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - empty concat - both",
+                        """{
+                            val x : Vector(Int) = []
+							val y : Vector(Int) = []
+							Vectors.concat(Int, x, y)
+                        }""",
+                        "[]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - empty concat - left",
+                        """{
+                            val x : Vector(Int) = []
+							val y : Vector(Int) = [1]
+							Vectors.concat(Int, x, y)
+                        }""",
+                        "[1]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - empty concat - right",
+                        """{
+                            val x : Vector(Int) = [1]
+							val y : Vector(Int) = []
+							Vectors.concat(Int, x, y)
+                        }""",
+                        "[1]",
+                        "Vector(Int)"
+                    ),
+                    ExecTest(
+                        "Vector operations - concat ",
+                        """{
+                            val x : Vector(Int) = [1,2,3]
+							val y : Vector(Int) = [4,5,6]
+							Vectors.concat(Int, x, y)
+                        }""",
+                        "[1,2,3,4,5,6]",
+                        "Vector(Int)"
                     )
 
                 )

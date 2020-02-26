@@ -529,7 +529,8 @@ class SemanticAnalyser(
                     FieldType("get", primitivesTypesTable("SelectItemVector")),
                     FieldType("append", primitivesTypesTable("AppendItemVector")),
                     FieldType("put", primitivesTypesTable("PutItemVector")),
-                    FieldType("slice", primitivesTypesTable("SliceVector"))
+                    FieldType("slice", primitivesTypesTable("SliceVector")),
+                    FieldType("concat", primitivesTypesTable("ConcatVector"))
                 )))
 
             case VecT(_) =>

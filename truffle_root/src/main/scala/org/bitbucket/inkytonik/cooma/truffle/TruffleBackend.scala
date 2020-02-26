@@ -134,6 +134,9 @@ class TruffleBackend(config : Config) extends Backend {
     def sliceVector() : Primitive =
         SliceVector()
 
+    def concatVector() : Primitive =
+        ConcatVector()
+
     // Runtime Values
     override type ValueR = RuntimeValue
     override type OutputValueR = org.graalvm.polyglot.Value

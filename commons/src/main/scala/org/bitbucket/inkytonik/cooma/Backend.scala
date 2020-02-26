@@ -40,6 +40,7 @@ trait Backend {
     def appendItemVector() : Primitive
     def putItemVector() : Primitive
     def sliceVector() : Primitive
+    def concatVector() : Primitive
 
     def equalP : Primitive
     def intBinP(op : Primitives.IntPrimBinOp) : Primitive

@@ -142,14 +142,10 @@ object Primitives {
                                 case Some(rFields) => interp.recR(lFields ++ rFields)
                                 case None          => sys.error(s"$show: right argument $r of & is non-record")
                             }
-                        case None => interp.isVecR(interp.lookupR(rho, l)) match {
-                            case Some(lvec) => interp.isVecR(interp.lookupR(rho, r)) match {
-                                case Some(rvec) => interp.vecR(lvec ++ rvec)
-                                case None       => sys.error(s"$show: right argument $r of & is non-vector")
-                            }
-                            case None => sys.error(s"$show: left argument $l of & has to be of record or vector type")
-                        }
+                        case None =>
+                            sys.error(s"$show: left argument $l of & has to be of record or vector type")
                     }
+
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")
             }
@@ -443,24 +439,31 @@ object Primitives {
         }
     }
 
+    abstract class VectorPrimitive[I <: Backend]() extends Primitive[I] {
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR
+
+        def lookupVector(interp : I)(rho : interp.Env, name : String, errorMsg : String) : Vector[interp.ValueR] = {
+            interp.isVecR(interp.lookupR(rho, name)) match {
+                case Some(value) => value
+                case None        => sys.error(errorMsg)
+            }
+        }
+    }
+
     /**
      * Returns the length of the given vector.
      * The first argument is the name of the vecR.
      * @tparam I
      */
-    case class VectorLength[I <: Backend]() extends Primitive[I] {
+    case class VectorLength[I <: Backend]() extends VectorPrimitive[I] {
         val numArgs = 2
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
             xs match {
                 case Vector(_, v) =>
-                    val value = interp.lookupR(rho, v)
-                    interp.isVecR(value) match {
-                        case Some(elems) =>
-                            interp.intR(elems.length)
-                        case _ =>
-                            sys.error(s"$show: $v is $value, expected value of type Vector")
-                    }
+                    val error = s"$show: $v is ${interp.lookupR(rho, v)}, expected value of type Vector"
+                    interp.intR(lookupVector(interp)(rho, v, error).length)
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")
             }
@@ -474,7 +477,7 @@ object Primitives {
      * The Second argument is the name of the index.
      * @tparam I
      */
-    case class SelectItemVector[I <: Backend]() extends Primitive[I] {
+    case class SelectItemVector[I <: Backend]() extends VectorPrimitive[I] {
 
         def numArgs : Int = 3
 
@@ -482,16 +485,15 @@ object Primitives {
 
             xs match {
                 case Vector(_, vec, i) => interp.isIntR(interp.lookupR(rho, i)) match {
-                    case Some(i) => interp.isVecR(interp.lookupR(rho, vec)) match {
-                        case Some(elems) =>
-                            val index = i.toInt
-                            if (elems.indices contains index) {
-                                elems(index)
-                            } else {
-                                interp.errR(s"Index out of bounds - size: ${elems.size}, index: $index")
-                            }
-                        case None => sys.error(s"$show: can't find vector operand $vec")
-                    }
+                    case Some(i) =>
+                        val elems = lookupVector(interp)(rho, vec, s"$show: can't find vector operand $vec")
+                        val index = i.toInt
+                        if (elems.indices contains index) {
+                            elems(index)
+                        } else {
+                            interp.errR(s"Index out of bounds - size: ${elems.size}, index: $index")
+                        }
+
                     case _ => sys.error(s"$show: can't find integer (index) operand ${xs.head}")
                 }
                 case _ =>
@@ -511,7 +513,7 @@ object Primitives {
         final case object Put extends AddItemVectorOp
     }
 
-    abstract class AddItemVector[I <: Backend]() extends Primitive[I] {
+    abstract class AddItemVector[I <: Backend]() extends VectorPrimitive[I] {
 
         def numArgs : Int = 4
 
@@ -519,8 +521,9 @@ object Primitives {
 
         override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             xs match {
-                case Vector(_, vec, i, e) => interp.isVecR(interp.lookupR(rho, vec)) match {
-                    case Some(elems) => op match {
+                case Vector(_, vec, i, e) =>
+                    val elems = lookupVector(interp)(rho, vec, s"$show: can't find vector operand $vec")
+                    op match {
                         case AddItemVectorOp.Append  => interp.vecR(elems :+ interp.lookupR(rho, e))
                         case AddItemVectorOp.Prepend => interp.vecR(interp.lookupR(rho, e) +: elems)
                         case AddItemVectorOp.Put => interp.isIntR(interp.lookupR(rho, i)) match {
@@ -532,8 +535,6 @@ object Primitives {
                             case None => sys.error(s"$show: can't find index operand $i")
                         }
                     }
-                    case None => sys.error(s"$show: can't find vector operand $vec")
-                }
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")
             }
@@ -595,7 +596,7 @@ object Primitives {
      * The third argument is the index to
      * @tparam I
      */
-    case class SliceVector[I <: Backend]() extends Primitive[I] {
+    case class SliceVector[I <: Backend]() extends VectorPrimitive[I] {
 
         def numArgs : Int = 4
 
@@ -604,18 +605,15 @@ object Primitives {
             xs match {
                 case Vector(_, vec, from, to) => interp.isIntR(interp.lookupR(rho, from)) match {
                     case Some(idxFrom) => interp.isIntR(interp.lookupR(rho, to)) match {
-                        case Some(idxTo) => interp.isVecR(interp.lookupR(rho, vec)) match {
-                            case Some(elems) =>
-                                if (elems.indices.containsSlice(idxFrom to idxTo - 1)) {
-                                    interp.vecR(elems.slice(idxFrom.intValue, idxTo.intValue))
-                                } else {
-                                    interp.errR(s"Index out of bounds for slice - elems range: [${elems.indices.min}:${elems.indices.max}], targeted range: [$idxFrom:$idxTo)")
-                                }
-                            case None => sys.error(s"$show: can't find vector operand $vec")
-                        }
+                        case Some(idxTo) =>
+                            val elems = lookupVector(interp)(rho, vec, s"$show: can't find vector operand $vec")
+                            if (elems.indices.containsSlice(idxFrom to idxTo - 1)) {
+                                interp.vecR(elems.slice(idxFrom.intValue, idxTo.intValue))
+                            } else {
+                                interp.errR(s"Index out of bounds for slice - elems range: [${elems.indices.min}:${elems.indices.max}], targeted range: [$idxFrom:$idxTo)")
+                            }
                         case None => sys.error(s"$show: can't find index operand $to")
                     }
-
                     case None => sys.error(s"$show: can't find index operand $from")
                 }
                 case _ =>
@@ -624,6 +622,30 @@ object Primitives {
         }
 
         def show : String = "SliceVector"
+
+    }
+
+    /**
+     * Concatenates two vectors
+     * The first argument is the name of the first vector.
+     * The second argument is the name of the second vector.
+     * @tparam I
+     */
+    case class ConcatVector[I <: Backend]() extends VectorPrimitive[I] {
+
+        def numArgs : Int = 3
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            xs match {
+                case Vector(_, vecl, vecr) =>
+                    interp.vecR(lookupVector(interp)(rho, vecl, s"$show: first argument $vecl is non-vector")
+                        ++ lookupVector(interp)(rho, vecr, s"$show: second argument $vecr is non-vector"))
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+        }
+
+        def show : String = "ConcatVector"
 
     }
 

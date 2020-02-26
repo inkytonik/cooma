@@ -57,7 +57,8 @@ trait Compiler {
         "AppendItemVector" -> PrimitiveMeta(appendItemVector()),
         "PutItemVector" -> PrimitiveMeta(putItemVector()),
         "VectorLength" -> PrimitiveMeta(vectorLength()),
-        "SliceVector" -> PrimitiveMeta(sliceVector())
+        "SliceVector" -> PrimitiveMeta(sliceVector()),
+        "ConcatVector" -> PrimitiveMeta(concatVector()),
     )
 
     /**
@@ -166,6 +167,10 @@ trait Compiler {
         Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
     }
 
+    def mkVectorPrimFieldArgNames(fieldName : String, argNames : Seq[(String, Expression)], primName : String) : Field = {
+        mkPrimFieldArgNames(fieldName, Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t")))))) ++ argNames, primName)
+    }
+
     def mkInt1PrimField(fieldName : String, primName : String) : Field =
         mkPrimField(fieldName, Vector(IntT()), primName)
 
@@ -218,11 +223,12 @@ trait Compiler {
 
     val vectors =
         Rec(Vector(
-            mkPrimFieldArgNames("length", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t")))))), "VectorLength"),
-            mkPrimFieldArgNames("get", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("i", IntT())), "SelectItemVector"),
-            mkPrimFieldArgNames("append", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("e", Idn(IdnUse("t")))), "AppendItemVector"),
-            mkPrimFieldArgNames("put", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("i", IntT()), ("e", Idn(IdnUse("t")))), "PutItemVector"),
-            mkPrimFieldArgNames("slice", Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t"))))), ("i", IntT()), ("j", IntT())), "SliceVector")
+            mkVectorPrimFieldArgNames("length", Vector(), "VectorLength"),
+            mkVectorPrimFieldArgNames("get", Vector(("i", IntT())), "SelectItemVector"),
+            mkVectorPrimFieldArgNames("append", Vector(("e", Idn(IdnUse("t")))), "AppendItemVector"),
+            mkVectorPrimFieldArgNames("put", Vector(("i", IntT()), ("e", Idn(IdnUse("t")))), "PutItemVector"),
+            mkVectorPrimFieldArgNames("slice", Vector(("i", IntT()), ("j", IntT())), "SliceVector"),
+            mkVectorPrimFieldArgNames("concat", Vector(("vr", VecT(Some(Idn(IdnUse("t")))))), "ConcatVector")
         ))
 
     def compile(exp : Expression, kappa : String => Term) : Term =

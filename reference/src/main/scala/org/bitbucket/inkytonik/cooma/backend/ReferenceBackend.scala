@@ -144,6 +144,9 @@ class ReferenceBackend(
     def sliceVector() : Primitive =
         SliceVector()
 
+    def concatVector() : Primitive =
+        ConcatVector()
+
     def equalP : Primitive =
         EqualP()
 
