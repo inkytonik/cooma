@@ -10,14 +10,14 @@ header {
 Program =
   Spacing Expression EOF.
 
-Expression {paren} =
-    "fun" '(' Arguments ")" Expression                       {Fun, right, 4}
-  | '(' ArgumentTypes ")" Expression                         {FunT, right, 4}
+Expression =
+    "fun" '(' Arguments ")" Expression                       {Fun, right, 5}
+  | '(' ArgumentTypes ")" Expression                         {FunT, right, 5}
   | Expression sp "match" '{' nest(Case+) \n '}'             {Mat, left, 3}
   | Expression "&" Expression                                {Cat, left, 2}
   | Expression '(' Expression ** "," ')'                     {App, left, 1}
   | Expression '.' FieldUse                                  {Sel, left, 1}                                              
-  | Expression '!'                                           {SecT, none, 5}
+  | Expression '!'                                           {SecT, none, 4}
   | '{' '}'                                                  {Uni}
   | 'Unit'                                                   {UniT}
   | '{' nestnl(BlockExp) \n '}'                              {Blk}

@@ -1,10 +1,5 @@
 {
-    val w : { write : (String) Unit } = { write = fun(s : String) { } }
-    def declassify(b : Boolean!, w : { write : (String) Unit }) Unit! = 
-        b match { 
-            case True(_)  => w.write("True")
-            case False(_) => w.write("False")
-        }
-    
-    declassify(true, w)
+    type t = <a : Int, b : Int!>
+    val func = fun(x : t) x match { case a(v) => v case b(v) => v }
+    func(<a = 10>)
 }

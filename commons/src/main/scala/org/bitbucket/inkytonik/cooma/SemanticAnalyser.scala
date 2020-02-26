@@ -67,33 +67,60 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
+                        case Fun(Arguments(as), e) => // Check closures to enforce no T! -> T
+                            checkFunction(as, e)
                         // Secret records and variants field check
-                        case SecT(t @ RecT(fs)) =>
-                            checkSecretFields(fs, t)
-                        case SecT(t @ VarT(fs)) =>
-                            checkSecretFields(fs, t)
+                        // case SecT(t @ RecT(fs)) =>
+                        //     checkSecretFields(fs, t)
+                        // case SecT(t @ VarT(fs)) =>
+                        //     checkSecretFields(fs, t)
                     }
+
+            // Check function defs to enforce no T! -> T
+            case Def(_, Body(Arguments(as), e, _)) => checkFunction(as, e)
         }
 
-    def checkSecretFields(fs : Vector[FieldType], t : Expression) : Messages = {
-        fs.flatMap(f => f.expression match {
-            case SecT(_)                    => noMessages
-            case FunT(ArgumentTypes(as), e) => checkSecretFunc(as, e)
-            case _                          => error(f, s"public field ${f.identifier} found in secret ${show(t)}")
-        })
-    }
-
-    def checkSecretFunc(as : Vector[ArgumentType], r : Expression) : Messages = {
-        as.flatMap(a => a.expression match {
-            case SecT(_) => noMessages
-            case _       => error(a, s"public argument type found in secret function")
-        }) ++ {
-            r match {
+    def enforceInfoLevel(e : Expression, level : Expression) : Messages = {
+        tipe(level) match {
+            case Some(TypT()) => level match { // Level is already a type
                 case SecT(_) => noMessages
-                case _       => error(r, s"public return type found in secret function")
+                case t @ _ => e match {
+                    case SecT(_) =>
+                        error(e, s"expression must be equally or less secure then ${show(level)}")
+                    case _ => noMessages
+                }
+            }
+            case Some(SecT(_)) => noMessages // t and t! < t! where level not type
+            case t @ _ => e match {
+                case SecT(_) =>
+                    error(e, s"expression must be equally or less secure then ${show(t.getOrElse(TypT()))}")
+                case _ => noMessages // t < t
             }
         }
     }
+
+    def checkFunction(as : Vector[Argument], e : Expression) : Messages =
+        as.flatMap(a => enforceInfoLevel(a.expression, e))
+
+    // def checkSecretFields(fs : Vector[FieldType], t : Expression) : Messages = {
+    //     fs.flatMap(f => f.expression match {
+    //         case SecT(_)                    => noMessages
+    //         case FunT(ArgumentTypes(as), e) => checkSecretFunc(as, e)
+    //         case _                          => error(f, s"public field ${f.identifier} found in secret ${show(t)}")
+    //     })
+    // }
+
+    // def checkSecretFunc(as : Vector[ArgumentType], r : Expression) : Messages = {
+    //     as.flatMap(a => a.expression match {
+    //         case SecT(_) => noMessages
+    //         case _       => error(a, s"public argument type found in secret function")
+    //     }) ++ {
+    //         r match {
+    //             case SecT(_) => noMessages
+    //             case _       => error(r, s"public return type found in secret function")
+    //         }
+    //     }
+    // }
 
     def checkPrimitive(prm : Prm) : Messages = {
         primitivesTypesTable.get(prm.identifier) match {
@@ -508,7 +535,7 @@ class SemanticAnalyser(
                             case None =>
                                 None
                         }
-                    // Secret rows
+                    // Secret row selection
                     case Some(SecT(RecT(fieldTypes))) =>
                         fieldTypes.find {
                             case FieldType(i, t) =>
@@ -518,7 +545,6 @@ class SemanticAnalyser(
                                 Some(t)
                             case None =>
                                 None
-
                         }
                     case _ =>
                         None
