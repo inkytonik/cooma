@@ -134,6 +134,154 @@ class InformationFlowTests extends Tests {
                    |{ def func(a : String, b : String!) String = a 0 }
                    |                           ^
                    |"""
+            ),
+
+            // Secret matches
+            InformationFlowTest(
+                "secret match: bind",
+                "{ val x : < a : Int >! = < a = 1 > x match { case a(n) => n } }",
+                ""
+            ),
+            InformationFlowTest(
+                "secret match: wildcard",
+                "{ val x : < a : Int >! = < a = 1 > x match { case a(_) => 1 } }",
+                ""
+            ),
+            InformationFlowTest(
+                "secret match: wildcard not usable",
+                "{ val x : < a : Int >! = < a = 1 > x match { case a(_) => _ } }",
+                """|1:59:error: _ is not declared
+                   |{ val x : < a : Int >! = < a = 1 > x match { case a(_) => _ } }
+                   |                                                          ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret match: correct type",
+                """{
+                     val x : < a : Int >! = < a = 1>
+                     def f () Int! = x match { case a(n) => n }
+                     f ()
+                   }""",
+                ""
+            ),
+            InformationFlowTest(
+                "secret match: match on non-variant",
+                "{ val x : Int! = 3 x match { case x(a) => a } }",
+                """|1:20:error: match of non-variant type Int!
+                   |{ val x : Int! = 3 x match { case x(a) => a } }
+                   |                   ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret match: wrong result type",
+                """{
+                  |  def f () String = { val x : < a : Int >! = < a = 1 > x match { case a(n) => n } }
+                  |  f ()
+                  |}""",
+                """|2:21:error: expected String, got { val x: < a : Int >! = < a = 1 > x match { case a(n) => n } } of type Int!
+                   |  def f () String = { val x : < a : Int >! = < a = 1 > x match { case a(n) => n } }
+                   |                    ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret match: non-declared name in match case",
+                "{ val x : < a : Int >! = < a = 1 > x match { case a(n) => y } }",
+                """|1:59:error: y is not declared
+                   |{ val x : < a : Int >! = < a = 1 > x match { case a(n) => y } }
+                   |                                                          ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret match: correct number and type of cases for match",
+                """{
+                    def f () <x : Int, y : Int>! = <x = 3>
+                    f () match { case x(a) => 1 case y(b) => 2 }
+                }""",
+                ""
+            ),
+            InformationFlowTest(
+                "secret match: correct number of cases but wrong type for match",
+                """{
+                  |  def f () <x : Int, y : Int>! = <x = 3>
+                  |  f () match { case x(a) => 1 case y(b) => "hi" }
+                  |}""",
+                """|3:29:error: case expression types are not the same
+                   |  f () match { case x(a) => 1 case y(b) => "hi" }
+                   |                            ^
+                   |3:44:error: case expression types are not the same
+                   |  f () match { case x(a) => 1 case y(b) => "hi" }
+                   |                                           ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret match: incorrect number of cases for match",
+                """{
+                  |  def f () < x : Int, y : Int >! = < x = 3 >
+                  |  f () match { case x(a) => 1 }
+                  |}""",
+                """|3:16:error: expected 2 cases, got 1
+                   |  f () match { case x(a) => 1 }
+                   |               ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret match: duplicate cases for match",
+                """{
+                  |  def f () < x : Int, y : Int >! = < x = 3 >
+                  |  f () match { case x(a) => 1 case x(b) => 2 }
+                  |}""",
+                """|3:16:error: duplicate case for variant x
+                   |  f () match { case x(a) => 1 case x(b) => 2 }
+                   |               ^
+                   |3:31:error: duplicate case for variant x
+                   |  f () match { case x(a) => 1 case x(b) => 2 }
+                   |                              ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "secret match: incorrect variant for match",
+                """{
+                  |  def f () < x : Int, y : Int >! = < x = 3 >
+                  |  f () match { case w(a) => 1 case y(b) => 2 }
+                  |}""",
+                """|3:16:error: variant w not present in matched type < x : Int, y : Int >!
+                   |  f () match { case w(a) => 1 case y(b) => 2 }
+                   |               ^
+                   |"""
+            ),
+
+            // Explicit flows
+            InformationFlowTest(
+                "explicit flow: cannot assign secret value to public type",
+                "{ val x : Int! = 10 val y : Int = x 0 }",
+                """|1:35:error: expected Int, got x of type Int!
+                   |{ val x : Int! = 10 val y : Int = x 0 }
+                   |                                  ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "explicit flow: cannot assign secret return value of function def to public type",
+                "{ def sec(x : Int!) Int! = x val y : Int = sec(10) 0 }",
+                """|1:44:error: expected Int, got sec(10) of type Int!
+                   |{ def sec(x : Int!) Int! = x val y : Int = sec(10) 0 }
+                   |                                           ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "explicit flow: cannot assign secret return value of function to public type",
+                "{ val x = fun(x : Int!) x val y : Int = x(10) 0 }",
+                """|1:41:error: expected Int, got x(10) of type Int!
+                   |{ val x = fun(x : Int!) x val y : Int = x(10) 0 }
+                   |                                        ^
+                   |"""
+            ),
+            InformationFlowTest(
+                "explicit flow: cannot assign result of secret match to public type",
+                "{ val x : Boolean! = true val y : Int = x match { case True(_) => 0 case False(_) => 1 } 0 }",
+                """|1:41:error: expected Int, got x match { case True(_) => 0 case False(_) => 1 } of type Int!
+                   |{ val x : Boolean! = true val y : Int = x match { case True(_) => 0 case False(_) => 1 } 0 }
+                   |                                        ^
+                   |"""
             )
 
         // Capabilities

@@ -80,7 +80,7 @@ class SemanticAnalyser(
             case Def(_, Body(Arguments(as), e, _)) => checkFunction(as, e)
         }
 
-    def enforceInfoLevel(e : Expression, level : Expression) : Messages = {
+    def enforceInfoLevel(e : Expression, level : Expression) : Messages =
         tipe(level) match {
             case Some(TypT()) => level match { // Level is already a type
                 case SecT(_) => noMessages
@@ -97,7 +97,6 @@ class SemanticAnalyser(
                 case _ => noMessages // t < t
             }
         }
-    }
 
     def checkFunction(as : Vector[Argument], e : Expression) : Messages =
         as.flatMap(a => enforceInfoLevel(a.expression, e))
@@ -197,6 +196,13 @@ class SemanticAnalyser(
                     case _ =>
                         noMessages
                 }
+            case Some(t @ SecT(VarT(fieldTypes))) =>
+                fieldTypes.find(f => f.identifier == c.identifier) match {
+                    case None =>
+                        error(c, s"variant ${c.identifier} not present in matched type ${show(alias(t))}")
+                    case _ =>
+                        noMessages
+                }
             case _ =>
                 noMessages
         }
@@ -233,6 +239,8 @@ class SemanticAnalyser(
     def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
         tipe(e) match {
             case Some(VarT(fields)) if fields.length != cs.length =>
+                error(cs(0), s"expected ${fields.length} cases, got ${cs.length}")
+            case Some(SecT(VarT(fields))) if fields.length != cs.length => // Match on secret variant
                 error(cs(0), s"expected ${fields.length} cases, got ${cs.length}")
             case _ =>
                 noMessages
@@ -536,16 +544,16 @@ class SemanticAnalyser(
                                 None
                         }
                     // Secret row selection
-                    case Some(SecT(RecT(fieldTypes))) =>
-                        fieldTypes.find {
-                            case FieldType(i, t) =>
-                                i == f
-                        } match {
-                            case Some(FieldType(i, t)) =>
-                                Some(t)
-                            case None =>
-                                None
-                        }
+                    // case Some(SecT(RecT(fieldTypes))) =>
+                    //     fieldTypes.find {
+                    //         case FieldType(i, t) =>
+                    //             i == f
+                    //     } match {
+                    //         case Some(FieldType(i, t)) =>
+                    //             Some(t)
+                    //         case None =>
+                    //             None
+                    //     }
                     case _ =>
                         None
                 }
@@ -637,6 +645,8 @@ class SemanticAnalyser(
                 tipe(e) match {
                     case Some(VarT(r)) if tree.index(c) - 1 < r.length =>
                         Some(r(tree.index(c) - 1).expression)
+                    case Some(SecT(VarT(r))) if tree.index(c) - 1 < r.length =>
+                        Some(r(tree.index(c) - 1).expression)
                     case _ =>
                         None
                 }
@@ -667,7 +677,7 @@ class SemanticAnalyser(
                         case Case(_, _, e) =>
                             tipe(e)
                     }.distinct
-                if (caseTypes contains None)
+                if (caseTypes contains None) // No cases?
                     OkCases(None)
                 else if (caseTypes.length > 1) // All case types need to be the same, if we have more then 1 type no good
                     BadCases()
@@ -680,6 +690,8 @@ class SemanticAnalyser(
                         }
                         case _ => OkCases(caseTypes(0))
                     }
+            // else
+            //     OkCases(caseTypes(0))
         }
 
     def alias(e : Expression) : Expression =
