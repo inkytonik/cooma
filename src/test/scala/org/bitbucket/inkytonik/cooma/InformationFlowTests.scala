@@ -69,21 +69,21 @@ class InformationFlowTests extends Tests {
                 "{ val x : Type! = Int 1 }",
                 ""
             ),
-            // InformationFlowTest(
-            //     "secret Reader capability can be defined",
-            //     "fun (r : Reader!) r.read()",
-            //     ""
-            // ),
-            // InformationFlowTest(
-            //     "secret ReaderWriter capability can be defined",
-            //     "fun (rw : ReaderWriter!) rw.write(rw.read())",
-            //     ""
-            // ),
-            // InformationFlowTest(
-            //     "secret Writer capability can be defined",
-            //     "fun (w : Writer!) w.write()",
-            //     ""
-            // ),
+            InformationFlowTest(
+                "secret Reader capability can be defined",
+                "fun (r : Reader!) r.read()",
+                ""
+            ),
+            InformationFlowTest(
+                "secret ReaderWriter capability can be defined",
+                "fun (rw : ReaderWriter!) rw.write(rw.read())",
+                ""
+            ),
+            InformationFlowTest(
+                "secret Writer capability can be defined",
+                "fun (w : Writer!) w.write()",
+                ""
+            ),
 
             // Enforce secret functions i.e. can't have Int! -> Int
             InformationFlowTest(

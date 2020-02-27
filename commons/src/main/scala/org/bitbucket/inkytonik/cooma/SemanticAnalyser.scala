@@ -81,20 +81,22 @@ class SemanticAnalyser(
         }
 
     def enforceInfoLevel(e : Expression, level : Expression) : Messages =
-        tipe(level) match {
-            case Some(TypT()) => level match { // Level is already a type
-                case SecT(_) => noMessages
+        level match {
+            case App(f, _) => // check the return type of the function
+                enforceInfoLevel(e, f)
+            case SecT(_) =>
+                noMessages // Secret type (T and T! < T!)
+            case _ => tipe(level) match {
+                case Some(SecT(_)) =>
+                    noMessages // t and t! < t! where tipe of level is secret
+                case Some(FunT(_, r)) => // level is a function -> check it's return type
+                    enforceInfoLevel(e, r)
                 case t @ _ => e match {
                     case SecT(_) =>
-                        error(e, s"expression must be equally or less secure then ${show(level)}")
-                    case _ => noMessages
+                        val typeStr = if (tipe(level) == Some(TypT())) show(level) else show(t.getOrElse(TypT()))
+                        error(e, s"expression must be equally or less secure then ${typeStr}")
+                    case _ => noMessages // t < t
                 }
-            }
-            case Some(SecT(_)) => noMessages // t and t! < t! where level not type
-            case t @ _ => e match {
-                case SecT(_) =>
-                    error(e, s"expression must be equally or less secure then ${show(t.getOrElse(TypT()))}")
-                case _ => noMessages // t < t
             }
         }
 
@@ -544,16 +546,16 @@ class SemanticAnalyser(
                                 None
                         }
                     // Secret row selection
-                    // case Some(SecT(RecT(fieldTypes))) =>
-                    //     fieldTypes.find {
-                    //         case FieldType(i, t) =>
-                    //             i == f
-                    //     } match {
-                    //         case Some(FieldType(i, t)) =>
-                    //             Some(t)
-                    //         case None =>
-                    //             None
-                    //     }
+                    case Some(SecT(RecT(fieldTypes))) =>
+                        fieldTypes.find {
+                            case FieldType(i, t) =>
+                                i == f
+                        } match {
+                            case Some(FieldType(i, t)) =>
+                                Some(t)
+                            case None =>
+                                None
+                        }
                     case _ =>
                         None
                 }

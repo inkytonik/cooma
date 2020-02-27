@@ -102,12 +102,12 @@ object SymbolTable extends Environments[CoomaEntity] {
     val secReaderWriterT : Expression =
         SecT(RecT(Vector(
             FieldType("read", FunT(ArgumentTypes(Vector()), SecT(StrT()))),
-            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), SecT(StrT())))), UniT()))
+            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), SecT(StrT())))), SecT(UniT())))
         )))
 
     val secWriterT : Expression =
         SecT(RecT(Vector(
-            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), SecT(StrT())))), UniT()))
+            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), SecT(StrT())))), SecT(UniT())))
         )))
 
     def mkPrimType(args : Vector[Expression], retType : Expression) : FunT =
