@@ -78,7 +78,7 @@ trait Compiler {
                 case ReaderWriterT() => compileCapArg("ReaderWriter")
                 case WriterT()       => compileCapArg("Writer")
 
-                case StrT() =>
+                case StrT() | SecT(StrT()) => // Allows secret string to be top level arg
                     letV(a, prmV(argumentP(nArg), Vector()),
                         compileTop(e, nArg + 1))
 
