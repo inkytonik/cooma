@@ -70,6 +70,14 @@ class SemanticAnalyser(
                     }
         }
 
+    def checkVectorElements(elems : VecElems) : Messages = {
+        if (elems.optExpressions.forall(e => tipe(e) == tipe(elems.optExpressions.head))) {
+            noMessages
+        } else {
+            error(elems, "All the elements from the vector must be of the same type")
+        }
+    }
+
     def checkPrimitive(prm : Prm) : Messages = {
         primitivesTypesTable.get(prm.identifier) match {
             case Some(funT) =>
@@ -856,8 +864,12 @@ object SemanticAnalysis {
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
                 case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
                     subtypesArgs(us, ts) && subtype(t, u)
-                case (VecT(_), VecT(_)) =>
-                    true
+                case (VecT(Some(tt)), VecT(Some(tu))) => (tt, tu) match {
+                    case (Idn(_), _) | (_, Idn(_)) =>
+                        true
+                    case (_, _) =>
+                        subtype(tt, tu)
+                }
                 case _ =>
                     false
             })

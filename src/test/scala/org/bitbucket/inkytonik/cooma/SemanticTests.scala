@@ -1508,8 +1508,7 @@ class SemanticTests extends Tests {
                                 |^
                                 |"""
                         )
-                ) ++
-                    (op match {
+                ) ++ (op match {
                         case Primitives.LENGTH =>
                             Vector(
                                 SemanticTest(
@@ -1583,8 +1582,17 @@ class SemanticTests extends Tests {
                                         |"""
                                 )
                             )
-                    })
-            })
+                    }) ++ Vector(
+                    SemanticTest(
+                        s"Wrong type of elements in generic Vector",
+                        s"val x : Vector(Int) = [\"hello\", \"world\"]",
+                        s"""|1:23:error: expected Vector(Int), got ["hello", "world"] of type Vector(String)
+                            |val x : Vector(Int) = ["hello", "world"]
+							|                      ^
+                            |"""
+                    )
+                )
+            } )
 
     for (aTest <- semanticTests) {
         test(aTest.name) {
