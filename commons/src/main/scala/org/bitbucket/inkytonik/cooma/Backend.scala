@@ -38,9 +38,11 @@ trait Backend {
     def vectorLength() : Primitive
     def selectItemVector() : Primitive
     def appendItemVector() : Primitive
+    def prependItemVector() : Primitive
     def putItemVector() : Primitive
     def sliceVector() : Primitive
     def concatVector() : Primitive
+    def mapVector() : Primitive
 
     def equalP : Primitive
     def intBinP(op : Primitives.IntPrimBinOp) : Primitive
@@ -68,6 +70,7 @@ trait Backend {
     def isRecR(value : ValueR) : Option[Vector[FldR]]
     def isVarR(value : ValueR) : Option[(String, ValueR)]
     def isVecR(value : ValueR) : Option[Vector[ValueR]]
+    def isClsR(value : ValueR) : Option[(Env, String, String, Term)]
 
     type FldR
     def fldR(x : String, v : ValueR) : FldR

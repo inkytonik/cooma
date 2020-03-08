@@ -138,6 +138,9 @@ class ReferenceBackend(
     def appendItemVector() : Primitive =
         AppendItemVector()
 
+    def prependItemVector() : Primitive =
+        PrependItemVector()
+
     def putItemVector() : Primitive =
         PutItemVector()
 
@@ -146,6 +149,9 @@ class ReferenceBackend(
 
     def concatVector() : Primitive =
         ConcatVector()
+
+    def mapVector() : Primitive =
+        MapVector()
 
     def equalP : Primitive =
         EqualP()
@@ -219,6 +225,12 @@ class ReferenceBackend(
         value match {
             case VecR(e) => Some(e)
             case _       => None
+        }
+
+    def isClsR(value : ValueR) : Option[(Env, String, String, Term)] =
+        value match {
+            case ClsR(env, f, x, e) => Some((env, f, x, e))
+            case _                  => None
         }
 
     def isFldR(value : FldR) : Option[(String, ValueR)] =

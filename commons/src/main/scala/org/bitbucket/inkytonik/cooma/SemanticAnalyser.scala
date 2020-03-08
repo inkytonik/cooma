@@ -67,6 +67,8 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
+                        case VecLit(e) =>
+                            checkVectorElements(e)
                     }
         }
 
@@ -483,7 +485,7 @@ class SemanticAnalyser(
                             case None =>
                                 None
                         }
-                    case Some(VecT(Some(e))) =>
+                    case Some(VecT(e)) =>
                         Some(e)
 
                     case _ =>
@@ -526,8 +528,11 @@ class SemanticAnalyser(
                     None
                 else
                     v.optExpressions match {
-                        case h +: _ if tipe(h).isDefined => Some(VecT(tipe(h)))
-                        case _                           => None
+                        case h +: _ if tipe(h).isDefined => tipe(h) match {
+                            case Some(value) => Some(VecT(value))
+                            case _           => None
+                        }
+                        case _ => None
                     }
             }
 
@@ -536,9 +541,13 @@ class SemanticAnalyser(
                     FieldType("length", primitivesTypesTable("VectorLength")),
                     FieldType("get", primitivesTypesTable("SelectItemVector")),
                     FieldType("append", primitivesTypesTable("AppendItemVector")),
+                    FieldType("prepend", primitivesTypesTable("PrependItemVector")),
                     FieldType("put", primitivesTypesTable("PutItemVector")),
                     FieldType("slice", primitivesTypesTable("SliceVector")),
-                    FieldType("concat", primitivesTypesTable("ConcatVector"))
+                    FieldType("concat", primitivesTypesTable("ConcatVector")),
+                    FieldType("map", primitivesTypesTable("MapVector")),
+                    FieldType("head", mkVectorPrimTypeWithArgNames(Vector(), Idn(IdnUse("t")))),
+                    FieldType("tail", mkVectorPrimTypeWithArgNames(Vector(), VecT(Idn(IdnUse("t")))))
                 )))
 
             case VecT(_) =>
@@ -644,7 +653,7 @@ class SemanticAnalyser(
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
             case RecT(fs)                   => RecT(aliasFieldTypes(fs))
             case VarT(fs)                   => VarT(aliasFieldTypes(fs))
-            case VecT(Some(t))              => VecT(Some(alias(t)))
+            case VecT(t)                    => VecT(alias(t))
             case _                          => e
         }
 
@@ -692,6 +701,9 @@ class SemanticAnalyser(
 
             case VarT(fieldTypes) =>
                 unaliasVarT(n, fieldTypes)
+
+            case VecT(t) =>
+                unaliasVecT(n, t)
 
             case WriterT() =>
                 Some(writerT)
@@ -756,6 +768,13 @@ class SemanticAnalyser(
 
     def unaliasVarT(n : ASTNode, fts : Vector[FieldType]) : Option[VarT] =
         unaliasFieldTypes(n, fts).map(VarT)
+
+    def unaliasVecT(n : ASTNode, t : Expression) : Option[VecT] = {
+        unalias(n, t) match {
+            case Some(u) => Some(VecT(u))
+            case _       => None
+        }
+    }
 
     lazy val blockTipe : BlockExp => Option[Expression] =
         attr {
@@ -864,7 +883,8 @@ object SemanticAnalysis {
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
                 case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
                     subtypesArgs(us, ts) && subtype(t, u)
-                case (VecT(Some(tt)), VecT(Some(tu))) => (tt, tu) match {
+
+                case (VecT(tt), VecT(tu)) => (tt, tu) match {
                     case (Idn(_), _) | (_, Idn(_)) =>
                         true
                     case (_, _) =>

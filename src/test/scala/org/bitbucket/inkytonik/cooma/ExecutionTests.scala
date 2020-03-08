@@ -1056,15 +1056,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector(Int)"
                     ),
                     ExecTest(
-                        "Raw Vector declaration",
-                        """{
-                            val x : Vector = [1,2,3]
-                            x
-                        }""",
-                        "[1,2,3]",
-                        "Vector"
-                    ),
-                    ExecTest(
                         "Empty Int Vector declaration",
                         """{
                             val x : Vector(Int) = []
@@ -1072,15 +1063,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         }""",
                         "[]",
                         "Vector(Int)"
-                    ),
-                    ExecTest(
-                        "Empty raw Vector declaration",
-                        """{
-                            val x : Vector = []
-                            x
-                        }""",
-                        "[]",
-                        "Vector"
                     ),
                     ExecTest(
                         "Multi-dimensional vector declaration",
@@ -1096,11 +1078,11 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     ExecTest(
                         "Record vector declaration",
                         """{
-                            val x : Vector({ a : Int }) = [{ i = 65 },
-														   { j = -50 }]
+                            val x : Vector({ a : Int }) = [{ a = 65 },
+														   { a = -50 }]
                             x
                         }""",
-                        "[{ i = 65 },{ j = -50 }]",
+                        "[{ a = 65 },{ a = -50 }]",
                         "Vector({ a : Int })"
                     ),
                     ExecTest(

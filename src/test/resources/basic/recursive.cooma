@@ -1,0 +1,9 @@
+val predef = {
+
+
+    val predef = {
+        map = map,
+        fold = fold
+    }
+    predef
+}

@@ -128,6 +128,9 @@ class TruffleBackend(config : Config) extends Backend {
     def appendItemVector() : Primitive =
         AppendItemVector()
 
+    def prependItemVector() : Primitive =
+        PrependItemVector()
+
     def putItemVector() : Primitive =
         PutItemVector()
 
@@ -136,6 +139,9 @@ class TruffleBackend(config : Config) extends Backend {
 
     def concatVector() : Primitive =
         ConcatVector()
+
+    def mapVector() : Primitive =
+        MapVector()
 
     // Runtime Values
     override type ValueR = RuntimeValue
@@ -203,6 +209,12 @@ class TruffleBackend(config : Config) extends Backend {
     def isVecR(value : ValueR) : Option[Vector[ValueR]] =
         value match {
             case varr : VecRuntimeValue => Some(varr.getVector)
+            case _                      => None
+        }
+
+    def isClsR(value : ValueR) : Option[(Env, String, String, Term)] =
+        value match {
+            case clsr : FunctionClosure => Some((clsr.getRho, clsr.getK, clsr.getX, clsr.getZ))
             case _                      => None
         }
 

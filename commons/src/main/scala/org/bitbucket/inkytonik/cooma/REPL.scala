@@ -78,6 +78,15 @@ trait REPL extends REPLBase[Config] {
     }
 
     /**
+     * Process interactively entered lines, one by one, until end of file.
+     * Prompt with the given prompt.
+     */
+    override def processlines(config : Config) : Unit = {
+        enterline(Predef.predefREPL, config)
+        super.processlines(config)
+    }
+
+    /**
      * Process a line of user input.
      */
     override def processline(source : Source, console : Console, config : Config) : Option[Config] = {

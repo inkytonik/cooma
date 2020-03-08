@@ -42,7 +42,7 @@ Expression =
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
   | IdnUse                                                   {Idn}
   | 'Vectors'                                                {Vectors}
-  | 'Vector' ('('Expression')')?                             {VecT}
+  | 'Vector' '('Expression')'                                {VecT}
   | '[' VecElems ']'                                         {VecLit}.
 
 Arguments =

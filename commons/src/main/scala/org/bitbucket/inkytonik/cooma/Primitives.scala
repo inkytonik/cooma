@@ -202,25 +202,12 @@ object Primitives {
                                 case Some(v) => v
                                 case None    => sys.error(s"$show: can't find field $f1 in $fields")
                             }
-                        case None => interp.isVecR(value) match {
-                            case Some(elems) => f1 match {
-
-                                case "slice" => interp.clsR(rho, "k", "i",
-                                    interp.letV("f", interp.funV("j", "val",
-                                        interp.letV(
-                                            "letvk",
-                                            interp.prmV(interp.sliceVector(), Vector(r, "i", "val")),
-                                            interp.appC("j", "letvk")
-                                        )),
-                                        interp.appC("k", "f")))
-
-                            }
-                            case None => interp.isErrR(value) match {
-                                case Some(_) => value
-                                case None    => sys.error(s"$show: $r is $value, looking for field $f1")
-                            }
+                        case None => interp.isErrR(value) match {
+                            case Some(_) => value
+                            case None    => sys.error(s"$show: $r is $value, looking for field $f1")
                         }
                     }
+
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")
             }
@@ -646,6 +633,30 @@ object Primitives {
         }
 
         def show : String = "ConcatVector"
+
+    }
+
+    case class MapVector[I <: Backend]() extends VectorPrimitive[I] {
+
+        def numArgs : Int = 4
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            xs match {
+                case Vector(_, vec, f, _) =>
+                    val vector = lookupVector(interp)(rho, vec, s"$show: first argument $vec is non-vector")
+                    interp.vecR(vector)
+
+                //                    interp.vecR(vector.map(v =>
+                //                        interp.isClsR(interp.lookupR(rho, f)) match {
+                //                            case Some((e, clsrf, x, body)) => interp.clsR(e, clsrf, v, body)
+                //                            case _                         => sys.error(s"$show: can't find closure operand $f")
+                //                        }))
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+        }
+
+        def show : String = "MapVector"
 
     }
 

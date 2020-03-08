@@ -55,10 +55,12 @@ trait Compiler {
         "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR)),
         "SelectItemVector" -> PrimitiveMeta(selectItemVector()),
         "AppendItemVector" -> PrimitiveMeta(appendItemVector()),
+        "PrependItemVector" -> PrimitiveMeta(prependItemVector()),
         "PutItemVector" -> PrimitiveMeta(putItemVector()),
         "VectorLength" -> PrimitiveMeta(vectorLength()),
         "SliceVector" -> PrimitiveMeta(sliceVector()),
         "ConcatVector" -> PrimitiveMeta(concatVector()),
+        "MapVector" -> PrimitiveMeta(mapVector())
     )
 
     /**
@@ -168,7 +170,7 @@ trait Compiler {
     }
 
     def mkVectorPrimFieldArgNames(fieldName : String, argNames : Seq[(String, Expression)], primName : String) : Field = {
-        mkPrimFieldArgNames(fieldName, Vector(("t", TypT()), ("v", VecT(Some(Idn(IdnUse("t")))))) ++ argNames, primName)
+        mkPrimFieldArgNames(fieldName, Vector(("t", TypT()), ("v", VecT(Idn(IdnUse("t"))))) ++ argNames, primName)
     }
 
     def mkInt1PrimField(fieldName : String, primName : String) : Field =
@@ -213,6 +215,8 @@ trait Compiler {
             mkInt2PrimField("gt", "IntGt"),
             mkInt2PrimField("gte", "IntGte")
         ))
+    //
+    //    val mapF = Fun(Arguments(Vector(Argument(IdnDef("inT"), TypT(), None), Argument(IdnDef("v"), VecT(Idn(IdnUse("inT"))), None), Argument(IdnDef("outT"), TypT(), None), Argument(IdnDef("f"), FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("e")), Idn(IdnUse("inT"))))), Idn(IdnUse("outT"))), None))), Blk(Return(Mat(App(Eql(), Vector(IntT(), Num(0), Prm("VectorLength", Vector(Idn(IdnUse("inT")), Idn(IdnUse("v")))))), Vector(Case("True", IdnDef("_"), VecLit(VecElems(Vector()))), Case("False", IdnDef("_"), Prm("PrependItemVector", Vector(Idn(IdnUse("outT")), App(mapF(), Vector(Idn(IdnUse("inT")), App(Sel(Vectors(), FieldUse("tail")), Vector(Idn(IdnUse("inT")), Idn(IdnUse("v")))), Idn(IdnUse("outT")), Idn(IdnUse("f")))), App(Idn(IdnUse("f")), Vector(App(Sel(Vectors(), FieldUse("head")), Vector(Idn(IdnUse("inT")), Idn(IdnUse("v"))))))))))))))
 
     val strings =
         Rec(Vector(
@@ -226,9 +230,12 @@ trait Compiler {
             mkVectorPrimFieldArgNames("length", Vector(), "VectorLength"),
             mkVectorPrimFieldArgNames("get", Vector(("i", IntT())), "SelectItemVector"),
             mkVectorPrimFieldArgNames("append", Vector(("e", Idn(IdnUse("t")))), "AppendItemVector"),
+            mkVectorPrimFieldArgNames("prepend", Vector(("e", Idn(IdnUse("t")))), "PrependItemVector"),
             mkVectorPrimFieldArgNames("put", Vector(("i", IntT()), ("e", Idn(IdnUse("t")))), "PutItemVector"),
             mkVectorPrimFieldArgNames("slice", Vector(("i", IntT()), ("j", IntT())), "SliceVector"),
-            mkVectorPrimFieldArgNames("concat", Vector(("vr", VecT(Some(Idn(IdnUse("t")))))), "ConcatVector")
+            mkVectorPrimFieldArgNames("concat", Vector(("vr", VecT(Idn(IdnUse("t"))))), "ConcatVector"),
+            Field("head", Fun(Arguments(Vector(Argument(IdnDef("t"), TypT(), None), Argument(IdnDef("v"), VecT(Idn(IdnUse("t"))), None))), Blk(Return(Prm("SelectItemVector", Vector(Idn(IdnUse("t")), Idn(IdnUse("v")), Num(0))))))),
+            Field("tail", Fun(Arguments(Vector(Argument(IdnDef("tt"), TypT(), None), Argument(IdnDef("v"), VecT(Idn(IdnUse("tt"))), None))), Blk(Return(Mat(App(Eql(), Vector(IntT(), Num(0), Prm("VectorLength", Vector(Idn(IdnUse("tt")), Idn(IdnUse("v")))))), Vector(Case("True", IdnDef("_"), VecLit(VecElems(Vector()))), Case("False", IdnDef("_"), Prm("SliceVector", Vector(Idn(IdnUse("tt")), Idn(IdnUse("v")), Num(1), Prm("VectorLength", Vector(Idn(IdnUse("tt")), Idn(IdnUse("v"))))))))))))),
         ))
 
     def compile(exp : Expression, kappa : String => Term) : Term =
