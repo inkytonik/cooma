@@ -1127,11 +1127,11 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     ExecTest(
                         "Variant Vector declaration",
                         """{
-                            val x : Vector(< a : Int, v : String >) = [< a = 1 >, < v = "variant" >]
+                            val x : Vector(< a : Int >) = [< a = 1 >]
                             x
                         }""",
-                        "[< a = 1 >,< v = \"variant\" >]",
-                        "Vector(< a : Int, v : String >)"
+                        "[< a = 1 >]",
+                        "Vector(< a : Int >)"
                     ),
                     ExecTest(
                         "Vector operations - get",

@@ -82,7 +82,7 @@ trait REPL extends REPLBase[Config] {
      * Prompt with the given prompt.
      */
     override def processlines(config : Config) : Unit = {
-        enterline(Predef.predefREPL, config)
+        //enterline(Predef.predefREPL, config)
         super.processlines(config)
     }
 
