@@ -32,6 +32,11 @@ trait REPL extends REPLBase[Config] {
     var currentStaticEnv : Environment = _
 
     /**
+     * Mutes the output. Used
+     */
+    var muteOutput = false
+
+    /**
      * Create a configuration for this REPL session.
      */
     def createConfig(args : Seq[String]) : Config =
@@ -82,7 +87,9 @@ trait REPL extends REPLBase[Config] {
      * Prompt with the given prompt.
      */
     override def processlines(config : Config) : Unit = {
-        //enterline(Predef.predefREPL, config)
+        muteOutput = true
+        enterline(Predef.predefREPL, config)
+        muteOutput = false
         super.processlines(config)
     }
 
@@ -133,8 +140,8 @@ trait REPL extends REPLBase[Config] {
     object AlreadyBoundIdn {
         def unapply(e : Expression) : Boolean =
             e match {
-                case BoolT() | Booleans() | False() | Idn(IdnUse(_)) | IntT() | Ints() |
-                    ReaderT() | ReaderWriterT() | WriterT() | Strings() | StrT() | True() =>
+                case BoolT() | Booleans() | False() | Idn(IdnUse(_)) | IntT() |
+                    ReaderT() | ReaderWriterT() | WriterT() | StrT() | True() =>
                     true
                 case _ =>
                     false
@@ -200,7 +207,7 @@ trait REPL extends REPLBase[Config] {
      * Process a user-entered value binding.
      */
     def processLet(i : String, ld : Let, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
-        val program = Program(Blk(BlkLet(ld, Return(Idn(IdnUse(i))))))
+        val program = Program(BlkLet(ld, Return(Idn(IdnUse(i)))))
         process(program, i, optTypeValue, aliasedType, config)
     }
 
@@ -208,7 +215,7 @@ trait REPL extends REPLBase[Config] {
      * Process a user-entered function definition binding.
      */
     def processDef(i : String, fd : Def, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
-        val program = Program(Blk(BlkDef(Defs(Vector(fd)), Return(Idn(IdnUse(i))))))
+        val program = Program(BlkDef(Defs(Vector(fd)), Return(Idn(IdnUse(i)))))
         process(program, i, optTypeValue, aliasedType, config)
     }
 
@@ -216,7 +223,7 @@ trait REPL extends REPLBase[Config] {
      * Process a user-entered identifier expression.
      */
     def processIdn(i : String, e : Expression, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
-        val program = Program(e)
+        val program = Program(Return(e))
         process(program, i, optTypeValue, aliasedType, config)
     }
 
@@ -274,7 +281,7 @@ trait REPL extends REPLBase[Config] {
                             ""
                     }
             }
-        config.output().emitln(s"$i : ${show(aliasedType)}$value")
+        if (!muteOutput) config.output().emitln(s"$i : ${show(aliasedType)}$value")
     }
 
     /**

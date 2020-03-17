@@ -35,15 +35,24 @@ public abstract class CoomaAppFTermNode extends CoomaTermNode {
 
     @Specialization(guards = "isHalt()")
     Object executeHalt(VirtualFrame frame) {
-        FunctionClosureHolder value = (FunctionClosureHolder) obtainFromRho(f);
-        FunctionClosure closure = value.get(f);
-        Rho p1 = closure.getRho()
-                .extend(closure.getK(),
-                        new ContinuationClosure(obtainRho(),
-                                this.x, CoomaAppCTermNodeGen.create(CoomaConstants.HALT, this.x)))
-                .extend(closure.getX(), obtainFromRho(this.x));
-        replaceRho(p1);
-        return closure.getZ().executeGeneric(frame);
+
+        RuntimeValue rvalue = obtainFromRho(f);
+        if (rvalue instanceof FunctionClosureHolder) {
+            FunctionClosureHolder value = (FunctionClosureHolder) obtainFromRho(f);
+            FunctionClosure closure = value.get(f);
+            Rho p1 = closure.getRho()
+                    .extend(closure.getK(),
+                            new ContinuationClosure(obtainRho(),
+                                    this.x, CoomaAppCTermNodeGen.create(CoomaConstants.HALT, this.x)))
+                    .extend(closure.getX(), obtainFromRho(this.x));
+            replaceRho(p1);
+            return closure.getZ().executeGeneric(frame);
+        } else if (rvalue instanceof ErrorRuntimeValue) {
+            return rvalue;
+        } else {
+            throw new CoomaException(String.format("interpret AppF: %s is %s", f, rvalue.print()), this);
+        }
+
     }
 
     @Specialization

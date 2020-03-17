@@ -560,9 +560,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "def block (self reference, tail call)",
                     """{
                         def f(x : Int) Int =
-                            equal(Int, x, 0) match {
+                            predef.equal(Int, x, 0) match {
                                 case True(_)  => 20
-                                case False(_) => f(Ints.sub(x, 1))
+                                case False(_) => f(predef.Ints.sub(x, 1))
                             }
                         f(10)
                     }""",
@@ -573,9 +573,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "def block (accumulator, tail call)",
                     """{
                         def f(s : Int, x : Int) Int =
-                            equal(Int, x, 0) match {
+                            predef.equal(Int, x, 0) match {
                                 case True(_)  => s
-                                case False(_) => f(Ints.add(s, x), Ints.sub(x, 1))
+                                case False(_) => f(predef.Ints.add(s, x), predef.Ints.sub(x, 1))
                             }
                         f(0, 10)
                     }""",
@@ -776,7 +776,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ),
                 ExecTest(
                     "Ints",
-                    "Ints",
+                    "predef.Ints",
                     """{
                       |    abs = <function>,
                       |    add = <function>,
@@ -790,22 +790,21 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    gte = <function>
                       |}""",
                     """{
-                      |    abs : (Int) Int,
-                      |    add : (Int, Int) Int,
-                      |    div : (Int, Int) Int,
-                      |    mul : (Int, Int) Int,
-                      |    pow : (Int, Int) Int,
-                      |    sub : (Int, Int) Int,
-                      |    lt : (Int, Int) Boolean,
-                      |    lte : (Int, Int) Boolean,
-                      |    gt : (Int, Int) Boolean,
-                      |    gte : (Int, Int) Boolean
+					  |    abs : (x : Int) Int,
+                      |    add : (x : Int, y : Int) Int,
+                      |    div : (x : Int, y : Int) Int,
+                      |    mul : (x : Int, y : Int) Int,
+                      |    pow : (x : Int, y : Int) Int,
+                      |    sub : (x : Int, y : Int) Int,
+                      |    lt : (x : Int, y : Int) Boolean,
+                      |    lte : (x : Int, y : Int) Boolean,
+                      |    gt : (x : Int, y : Int) Boolean,
+                      |    gte : (x : Int, y : Int) Boolean
                       |}""",
-                    "Ints"
                 ),
                 ExecTest(
-                    "< v = Ints >",
-                    "< v = Ints >",
+                    "< v = predef.Ints >",
+                    "< v = predef.Ints >",
                     """< v = {
                        |    abs = <function>,
                        |    add = <function>,
@@ -820,22 +819,22 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |} >""",
                     """<
                        |    v : {
-                       |        abs : (Int) Int,
-                       |        add : (Int, Int) Int,
-                       |        div : (Int, Int) Int,
-                       |        mul : (Int, Int) Int,
-                       |        pow : (Int, Int) Int,
-                       |        sub : (Int, Int) Int,
-                       |        lt : (Int, Int) Boolean,
-                       |        lte : (Int, Int) Boolean,
-                       |        gt : (Int, Int) Boolean,
-                       |        gte : (Int, Int) Boolean
+                       |        abs : (x : Int) Int,
+                       |        add : (x : Int, y : Int) Int,
+                       |        div : (x : Int, y : Int) Int,
+                       |        mul : (x : Int, y : Int) Int,
+                       |        pow : (x : Int, y : Int) Int,
+                       |        sub : (x : Int, y : Int) Int,
+                       |        lt : (x : Int, y : Int) Boolean,
+                       |        lte : (x : Int, y : Int) Boolean,
+                       |        gt : (x : Int, y : Int) Boolean,
+                       |        gte : (x : Int, y : Int) Boolean
                        |    }
                        |>"""
                 ),
                 ExecTest(
-                    "{ x = { a = 1, b = Ints } }",
-                    "{ x = { a = 1, b = Ints } }",
+                    "{ x = { a = 1, b = predef.Ints } }",
+                    "{ x = { a = 1, b = predef.Ints } }",
                     """{
                        |    x = {
                        |        a = 1,
@@ -857,113 +856,113 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |    x : {
                        |        a : Int,
                        |        b : {
-                       |            abs : (Int) Int,
-                       |            add : (Int, Int) Int,
-                       |            div : (Int, Int) Int,
-                       |            mul : (Int, Int) Int,
-                       |            pow : (Int, Int) Int,
-                       |            sub : (Int, Int) Int,
-                       |            lt : (Int, Int) Boolean,
-                       |            lte : (Int, Int) Boolean,
-                       |            gt : (Int, Int) Boolean,
-                       |            gte : (Int, Int) Boolean
+                       |            abs : (x : Int) Int,
+                       |            add : (x : Int, y : Int) Int,
+                       |            div : (x : Int, y : Int) Int,
+                       |            mul : (x : Int, y : Int) Int,
+                       |            pow : (x : Int, y : Int) Int,
+                       |            sub : (x : Int, y : Int) Int,
+                       |            lt : (x : Int, y : Int) Boolean,
+                       |            lte : (x : Int, y : Int) Boolean,
+                       |            gt : (x : Int, y : Int) Boolean,
+                       |            gte : (x : Int, y : Int) Boolean
                        |        }
                        |    }
                        |}"""
                 ),
                 ExecTest(
                     "equal has the correct type",
-                    "equal",
+                    "predef.equal",
                     "<function>",
-                    "(t : Type, t, t) Boolean"
+                    "(t : Type, l : t, r : t) Boolean"
                 ),
                 ExecTest(
                     "equality of integers (equal)",
-                    "equal(Int, 42, 42)",
+                    "predef.equal(Int, 42, 42)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of integers (unequal)",
-                    "equal(Int, 42, 99)",
+                    "predef.equal(Int, 42, 99)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of strings (equal)",
-                    s"""equal(String, "abc", "abc")""",
+                    s"""predef.equal(String, "abc", "abc")""",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of strings (unequal)",
-                    s"""equal(String, "abc", "cba")""",
+                    s"""predef.equal(String, "abc", "cba")""",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of Booleans (equal)",
-                    "equal(Boolean, true, true)",
+                    "predef.equal(Boolean, true, true)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of Booleans (unequal)",
-                    "equal(Boolean, true, false)",
+                    "predef.equal(Boolean, true, false)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of records (equal, flat)",
-                    "equal({x : Int, y : Int}, {x = 0, y = 1}, {y = 1, x = 0})",
+                    "predef.equal({x : Int, y : Int}, {x = 0, y = 1}, {y = 1, x = 0})",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of records (equal, nested)",
-                    "equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 0, a = 0}})",
+                    "predef.equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 0, a = 0}})",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of records (unequal, flat",
-                    "equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
+                    "predef.equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of records (unequal, nested)",
-                    "equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 1, a = 0}})",
+                    "predef.equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 1, a = 0}})",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of variants (equal, flat)",
-                    "equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
+                    "predef.equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of variants (equal, nested)",
-                    "equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 1} >)",
+                    "predef.equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 1} >)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of variants (unequal, same constructor)",
-                    "equal(< a : Int, v : Int >, < a = 1 >, < a = 2 >)",
+                    "predef.equal(< a : Int, v : Int >, < a = 1 >, < a = 2 >)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of variants (unequal, different constructor)",
-                    "equal(< a : Int, v : Int >, < a = 1 >, < v = 2 >)",
+                    "predef.equal(< a : Int, v : Int >, < a = 1 >, < v = 2 >)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
                     "equality of variants (unequal, nested)",
-                    "equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
+                    "predef.equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
                     "false",
                     "Boolean"
                 )
@@ -972,24 +971,24 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     Vector(
                         ExecTest(
                             s"Pre-defined Ints.${op.name} has the correct type",
-                            s"Ints.${op.name}",
+                            s"predef.Ints.${op.name}",
                             "<function>",
-                            "(Int) Int"
+                            "(x : Int) Int"
                         )
                     )
                 }) ++ allInt2PrimBinOps.flatMap(op => {
                     Vector(
                         ExecTest(
                             s"Pre-defined Ints.${op.name} has the correct type",
-                            s"Ints.${op.name}",
+                            s"predef.Ints.${op.name}",
                             "<function>",
-                            "(Int, Int) Int"
+                            "(x : Int, y : Int) Int"
                         ),
                         ExecTest(
                             s"Pre-defined Ints.${op.name} partial application has the correct type",
-                            s"Ints.${op.name}(1)",
+                            s"predef.Ints.${op.name}(1)",
                             "<function>",
-                            "(Int) Int"
+                            "(y : Int) Int"
                         )
                     )
 
@@ -997,47 +996,47 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     Vector(
                         ExecTest(
                             s"Pre-defined Ints.${op.name} has the correct type",
-                            s"Ints.${op.name}",
+                            s"predef.Ints.${op.name}",
                             "<function>",
-                            "(Int, Int) Boolean"
+                            "(x : Int, y : Int) Boolean"
                         ),
                         ExecTest(
                             s"Pre-defined Ints.${op.name} partial application has the correct type",
-                            s"Ints.${op.name}(1)",
+                            s"predef.Ints.${op.name}(1)",
                             "<function>",
-                            "(Int) Boolean"
+                            "(y : Int) Boolean"
                         )
                     )
                 }) ++ Vector(
                     ExecTest(
                         s"Pre-defined Strings.concat has the correct type",
-                        "Strings.concat",
+                        "predef.Strings.concat",
                         "<function>",
-                        "(String, String) String"
+                        "(x : String, y : String) String"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.concat partial application has the correct type",
-                        """Strings.concat("hi")""",
+                        """predef.Strings.concat("hi")""",
                         "<function>",
-                        "(String) String"
+                        "(y : String) String"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.length has the correct type",
-                        "Strings.length",
+                        "predef.Strings.length",
                         "<function>",
-                        "(String) Int"
+                        "(x : String) Int"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.substr has the correct type",
-                        "Strings.substr",
+                        "predef.Strings.substr",
                         "<function>",
-                        "(String, Int) String"
+                        "(x : String, y : Int) String"
                     ),
                     ExecTest(
                         s"Pre-defined Strings.substr partial application has the correct type",
-                        """Strings.substr("hi")""",
+                        """predef.Strings.substr("hi")""",
                         "<function>",
-                        "(Int) String"
+                        "(y : Int) String"
                     ),
                     //Vector tests
                     ExecTest(
@@ -1137,7 +1136,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - get",
                         """{
                             val x : Vector(Int) = [1,2,3]
-                            Vectors.get(Int, x, 0)
+                            predef.Vectors.get(Int, x, 0)
                         }""",
                         "1",
                         "Int"
@@ -1146,7 +1145,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - get - upper bound",
                         """{
                             val x : Vector(Int) = [1,2,3]
-                            Vectors.get(Int, x, 2)
+                            predef.Vectors.get(Int, x, 2)
                         }""",
                         "3",
                         "Int"
@@ -1155,8 +1154,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - append",
                         """{
                             val x : Vector(Int) = [1,2,3]
-                            val z = Vectors.append(Int, x, 4)
-							Vectors.get(Int, z, 3)
+                            val z = predef.Vectors.append(Int, x, 4)
+							predef.Vectors.get(Int, z, 3)
                         }""",
                         "4",
                         "Int"
@@ -1165,7 +1164,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - append on empty vector",
                         """{
                             val x : Vector(Int) = []
-							Vectors.get(Int, Vectors.append(Int, x, 4), 0)
+							predef.Vectors.get(Int, predef.Vectors.append(Int, x, 4), 0)
                         }""",
                         "4",
                         "Int"
@@ -1174,7 +1173,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - put on vector",
                         """{
                             val x : Vector(Int) = [1]
-							Vectors.put(Int, x, 0, 5)
+							predef.Vectors.put(Int, x, 0, 5)
                         }""",
                         "[5]",
                         "Vector(Int)"
@@ -1183,7 +1182,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - empty vector length",
                         """{
                             val x  = []
-							Vectors.length(Int, x)
+							predef.Vectors.length(Int, x)
                         }""",
                         "0",
                         "Int"
@@ -1192,7 +1191,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - vector length",
                         """{
                             val x  = [1,2,3]
-							Vectors.length(Int, x)
+							predef.Vectors.length(Int, x)
                         }""",
                         "3",
                         "Int"
@@ -1201,7 +1200,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - vector empty slice",
                         """{
                             val x  = [1,2,3]
-							Vectors.slice(Int, x,0,0)
+							predef.Vectors.slice(Int, x,0,0)
                         }""",
                         "[]",
                         "Vector(Int)"
@@ -1210,7 +1209,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - empty vector  slice",
                         """{
                             val x  = []
-							Vectors.slice(Int, x,0,0)
+							predef.Vectors.slice(Int, x,0,0)
                         }""",
                         "[]",
                         "Vector(Int)"
@@ -1219,7 +1218,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - vector slice",
                         """{
                             val x  = [1,2,3]
-							Vectors.slice(Int, x,0,1)
+							predef.Vectors.slice(Int, x,0,1)
                         }""",
                         "[1]",
                         "Vector(Int)"
@@ -1228,7 +1227,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - vector slice 2",
                         """{
                             val x  = [1,2,3]
-							Vectors.slice(Int, x,0,3)
+							predef.Vectors.slice(Int, x,0,3)
                         }""",
                         "[1,2,3]",
                         "Vector(Int)"
@@ -1237,7 +1236,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - vector slice 3",
                         """{
                             val x  = [1,2,3,4]
-							Vectors.slice(Int, x,1,3)
+							predef.Vectors.slice(Int, x,1,3)
                         }""",
                         "[2,3]",
                         "Vector(Int)"
@@ -1246,7 +1245,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "Vector operations - vector slice 4",
                         """{
                             val x  = [1,2,3,4]
-							Vectors.slice(Int, x,2,4)
+							predef.Vectors.slice(Int, x,2,4)
                         }""",
                         "[3,4]",
                         "Vector(Int)"
@@ -1256,7 +1255,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         """{
                             val x : Vector(Int) = []
 							val y : Vector(Int) = []
-							Vectors.concat(Int, x, y)
+							predef.Vectors.concat(Int, x, y)
                         }""",
                         "[]",
                         "Vector(Int)"
@@ -1266,7 +1265,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         """{
                             val x : Vector(Int) = []
 							val y : Vector(Int) = [1]
-							Vectors.concat(Int, x, y)
+							predef.Vectors.concat(Int, x, y)
                         }""",
                         "[1]",
                         "Vector(Int)"
@@ -1276,7 +1275,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         """{
                             val x : Vector(Int) = [1]
 							val y : Vector(Int) = []
-							Vectors.concat(Int, x, y)
+							predef.Vectors.concat(Int, x, y)
                         }""",
                         "[1]",
                         "Vector(Int)"
@@ -1286,7 +1285,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         """{
                             val x : Vector(Int) = [1,2,3]
 							val y : Vector(Int) = [4,5,6]
-							Vectors.concat(Int, x, y)
+							predef.Vectors.concat(Int, x, y)
                         }""",
                         "[1,2,3,4,5,6]",
                         "Vector(Int)"
@@ -1312,7 +1311,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - get - out of bounds",
                     """{
                             val x : Vector(Int) = [1,2,3]
-                            Vectors.get(Int, x, 4)
+                            predef.Vectors.get(Int, x, 4)
                         }""",
                     "cooma: Index out of bounds - size: 3, index: 4"
                 ),
@@ -1320,7 +1319,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - get - out of bounds - negative index",
                     """{
                             val x : Vector(Int) = [1,2,3]
-                            Vectors.get(Int, x, -1)
+                            predef.Vectors.get(Int, x, -1)
                         }""",
                     "cooma: Index out of bounds - size: 3, index: -1"
                 ),
@@ -1328,7 +1327,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - get - out of bounds - empty vector ",
                     """{
                             val x : Vector(Int) = []
-                            Vectors.get(Int, x, 0)
+                            predef.Vectors.get(Int, x, 0)
                         }""",
                     "cooma: Index out of bounds - size: 0, index: 0"
                 ),
@@ -1336,7 +1335,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - put on empty vector ",
                     """{
                         val x : Vector(Int) = []
-                        Vectors.put(Int, x, 0, 5)
+                        predef.Vectors.put(Int, x, 0, 5)
                     }""",
                     "cooma: Index out of bounds - size: 0, index: 0"
                 ),
@@ -1344,7 +1343,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - put on vector, index out ouf bounds ",
                     """{
                         val x : Vector(Int) = [1]
-                        Vectors.put(Int, x, 1, 5)
+                        predef.Vectors.put(Int, x, 1, 5)
                     }""",
                     "cooma: Index out of bounds - size: 1, index: 1"
                 ),
@@ -1352,7 +1351,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - put on vector, index out ouf bounds (negative) ",
                     """{
                         val x : Vector(Int) = [1]
-                        Vectors.put(Int, x, -1, 5)
+                        predef.Vectors.put(Int, x, -1, 5)
                     }""",
                     "cooma: Index out of bounds - size: 1, index: -1"
                 ),
@@ -1360,7 +1359,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - vector slice wrong range 1 ",
                     """{
                         val x : Vector(Int) = [1,2,3]
-                        Vectors.slice(Int, x, -1, 1)
+                        predef.Vectors.slice(Int, x, -1, 1)
                     }""",
                     "cooma: Index out of bounds for slice - elems range: [0:2], targeted range: [-1:1)"
                 ),
@@ -1368,7 +1367,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - vector slice wrong range 2 ",
                     """{
                         val x : Vector(Int) = [1,2,3]
-                        Vectors.slice(Int, x, 1, 4)
+                        predef.Vectors.slice(Int, x, 1, 4)
                     }""",
                     "cooma: Index out of bounds for slice - elems range: [0:2], targeted range: [1:4)"
                 ),
@@ -1376,7 +1375,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Vector operations - vector slice wrong range 3 ",
                     """{
                         val x : Vector(Int) = [1,2,3]
-                        Vectors.slice(Int, x, -1, 4)
+                        predef.Vectors.slice(Int, x, -1, 4)
                     }""",
                     "cooma: Index out of bounds for slice - elems range: [0:2], targeted range: [-1:4)"
                 )
@@ -1639,30 +1638,20 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             val optionTests =
                 List(
                     OptionTest("Cooma AST print", "-C", "basic/singleArgCall", "coomaAST"),
-                    OptionTest("IR print", "-i", "basic/singleArgCall", "IR"),
-                    OptionTest("IR AST print", "-I", "basic/singleArgCall", "IRAST"),
                     OptionTest("Cooma AST print", "-C", "basic/multiArgCall", "coomaAST"),
-                    OptionTest("IR print", "-i", "basic/multiArgCall", "IR"),
-                    OptionTest("IR AST print", "-I", "basic/multiArgCall", "IRAST"),
                     OptionTest("Cooma AST print", "-C", "basic/blockVal", "coomaAST"),
-                    OptionTest("IR print", "-i", "basic/blockVal", "IR"),
-                    OptionTest("IR AST print", "-I", "basic/blockVal", "IRAST"),
                     OptionTest("Cooma AST print", "-C", "basic/blockDef", "coomaAST"),
-                    OptionTest("IR print", "-i", "basic/blockDef", "IR"),
-                    OptionTest("IR AST print", "-I", "basic/blockDef", "IRAST"),
                     OptionTest("Type print", "-t", "basic/boolean", "type"),
                     OptionTest("Type print", "-t", "capability/readerCmdArg", "type", Seq("/dev/null")),
                     OptionTest("Usage", "--usage", "basic/integer", "usage", Seq()),
                     OptionTest("Usage", "--usage", "capability/readerCmdArg", "usage", Seq()),
                     OptionTest("Cooma AST print", "-C", "capability/writerCmdArg", "coomaAST", Seq("/dev/null")),
-                    OptionTest("IR print", "-i", "capability/writerCmdArg", "IR", Seq("/dev/null")),
-                    OptionTest("IR AST print", "-I", "capability/writerCmdArg", "IRAST", Seq("/dev/null"))
                 )
 
             for (aTest <- optionTests) {
                 val inputFilename = s"${aTest.inputBasename}.cooma"
                 val expectedFilename = s"${aTest.inputBasename}.${aTest.expectedExtension}"
-                val execute = backend.name == "Reference"
+                val execute = backend.name == "Reference" && aTest.expectedExtension == "coomaAST"
                 if (execute)
                     filetest(s"${backend.name} file", resourcesPath, s"$resourcesPath/$expectedFilename",
                         backend.options ++ List(aTest.option, s"$resourcesPath/$inputFilename") ++ aTest.args,
@@ -2126,6 +2115,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 s"$cmd\n$input\n:end"
         val console = new StringConsole(replInput)
         val repl = createREPL(config)
+        repl.enterline(Predef.predefREPL, config)
         runTest(repl.processconsole(console, "dummy", _), options, allArgs)
     }
 

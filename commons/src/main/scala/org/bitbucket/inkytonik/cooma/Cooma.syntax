@@ -8,7 +8,7 @@ header {
 // Cooma source language
 
 Program =
-  Spacing Expression EOF.
+  Spacing BlockExp EOF.
 
 Expression =
     "fun" '(' Arguments ")" Expression                       {Fun, right, 4}
@@ -30,18 +30,14 @@ Expression =
   | 'Booleans'                                               {Booleans}
   | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
   | 'Int'                                                    {IntT}
-  | 'Ints'                                                   {Ints}
   | 'Reader'                                                 {ReaderT}
   | 'ReaderWriter'                                           {ReaderWriterT}
   | 'Writer'                                                 {WriterT}
   | StringLit                                                {Str}
   | 'String'                                                 {StrT}
-  | 'Strings'                                                {Strings}
   | 'Type'                                                   {TypT}
-  | 'equal'                                                  {Eql}
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
   | IdnUse                                                   {Idn}
-  | 'Vectors'                                                {Vectors}
   | 'Vector' '('Expression')'                                {VecT}
   | '[' VecElems ']'                                         {VecLit}.
 

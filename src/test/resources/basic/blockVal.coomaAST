@@ -1,22 +1,23 @@
 Program(
-    Blk(
-        BlkLet(
-            Let(
-                Val(),
-                IdnDef(
-                    "x"),
-                None,
-                Num(
-                    10)),
+    Return(
+        Blk(
             BlkLet(
                 Let(
                     Val(),
                     IdnDef(
-                        "y"),
+                        "x"),
                     None,
                     Num(
-                        20)),
-                Return(
-                    Idn(
-                        IdnUse(
-                            "y")))))))
+                        10)),
+                BlkLet(
+                    Let(
+                        Val(),
+                        IdnDef(
+                            "y"),
+                        None,
+                        Num(
+                            20)),
+                    Return(
+                        Idn(
+                            IdnUse(
+                                "y"))))))))

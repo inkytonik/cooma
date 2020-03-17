@@ -15,7 +15,7 @@ trait Compiler {
      */
     def compileCommand(prog : Program) : Term = {
         resetFresh()
-        compileTop(prog.expression, 0)
+        compileBlockExp(prog.blockExp, z => appC("$halt", z), top = true)
     }
 
     /**
@@ -24,7 +24,7 @@ trait Compiler {
      */
     def compileStandalone(prog : Program) : Term = {
         resetFresh()
-        compileHalt(prog.expression)
+        compileBlockExp(prog.blockExp, z => appC("$halt", z), top = true)
     }
 
     /**
@@ -215,8 +215,6 @@ trait Compiler {
             mkInt2PrimField("gt", "IntGt"),
             mkInt2PrimField("gte", "IntGte")
         ))
-    //
-    //    val mapF = Fun(Arguments(Vector(Argument(IdnDef("inT"), TypT(), None), Argument(IdnDef("v"), VecT(Idn(IdnUse("inT"))), None), Argument(IdnDef("outT"), TypT(), None), Argument(IdnDef("f"), FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("e")), Idn(IdnUse("inT"))))), Idn(IdnUse("outT"))), None))), Blk(Return(Mat(App(Eql(), Vector(IntT(), Num(0), Prm("VectorLength", Vector(Idn(IdnUse("inT")), Idn(IdnUse("v")))))), Vector(Case("True", IdnDef("_"), VecLit(VecElems(Vector()))), Case("False", IdnDef("_"), Prm("PrependItemVector", Vector(Idn(IdnUse("outT")), App(mapF(), Vector(Idn(IdnUse("inT")), App(Sel(Vectors(), FieldUse("tail")), Vector(Idn(IdnUse("inT")), Idn(IdnUse("v")))), Idn(IdnUse("outT")), Idn(IdnUse("f")))), App(Idn(IdnUse("f")), Vector(App(Sel(Vectors(), FieldUse("head")), Vector(Idn(IdnUse("inT")), Idn(IdnUse("v"))))))))))))))
 
     val strings =
         Rec(Vector(
@@ -225,18 +223,16 @@ trait Compiler {
             mkStrIntPrimField("substr", "StrSubstr")
         ))
 
-    val vectors =
-        Rec(Vector(
-            mkVectorPrimFieldArgNames("length", Vector(), "VectorLength"),
-            mkVectorPrimFieldArgNames("get", Vector(("i", IntT())), "SelectItemVector"),
-            mkVectorPrimFieldArgNames("append", Vector(("e", Idn(IdnUse("t")))), "AppendItemVector"),
-            mkVectorPrimFieldArgNames("prepend", Vector(("e", Idn(IdnUse("t")))), "PrependItemVector"),
-            mkVectorPrimFieldArgNames("put", Vector(("i", IntT()), ("e", Idn(IdnUse("t")))), "PutItemVector"),
-            mkVectorPrimFieldArgNames("slice", Vector(("i", IntT()), ("j", IntT())), "SliceVector"),
-            mkVectorPrimFieldArgNames("concat", Vector(("vr", VecT(Idn(IdnUse("t"))))), "ConcatVector"),
-            Field("head", Fun(Arguments(Vector(Argument(IdnDef("t"), TypT(), None), Argument(IdnDef("v"), VecT(Idn(IdnUse("t"))), None))), Blk(Return(Prm("SelectItemVector", Vector(Idn(IdnUse("t")), Idn(IdnUse("v")), Num(0))))))),
-            Field("tail", Fun(Arguments(Vector(Argument(IdnDef("tt"), TypT(), None), Argument(IdnDef("v"), VecT(Idn(IdnUse("tt"))), None))), Blk(Return(Mat(App(Eql(), Vector(IntT(), Num(0), Prm("VectorLength", Vector(Idn(IdnUse("tt")), Idn(IdnUse("v")))))), Vector(Case("True", IdnDef("_"), VecLit(VecElems(Vector()))), Case("False", IdnDef("_"), Prm("SliceVector", Vector(Idn(IdnUse("tt")), Idn(IdnUse("v")), Num(1), Prm("VectorLength", Vector(Idn(IdnUse("tt")), Idn(IdnUse("v"))))))))))))),
-        ))
+    //    val vectors =
+    //        Rec(Vector(
+    //            mkVectorPrimFieldArgNames("length", Vector(), "VectorLength"),
+    //            mkVectorPrimFieldArgNames("get", Vector(("i", IntT())), "SelectItemVector"),
+    //            mkVectorPrimFieldArgNames("append", Vector(("e", Idn(IdnUse("t")))), "AppendItemVector"),
+    //            mkVectorPrimFieldArgNames("prepend", Vector(("e", Idn(IdnUse("t")))), "PrependItemVector"),
+    //            mkVectorPrimFieldArgNames("put", Vector(("i", IntT()), ("e", Idn(IdnUse("t")))), "PutItemVector"),
+    //            mkVectorPrimFieldArgNames("slice", Vector(("i", IntT()), ("j", IntT())), "SliceVector"),
+    //            mkVectorPrimFieldArgNames("concat", Vector(("vr", VecT(Idn(IdnUse("t"))))), "ConcatVector"),
+    //        ))
 
     def compile(exp : Expression, kappa : String => Term) : Term =
         exp match {
@@ -255,7 +251,7 @@ trait Compiler {
                 compile(App(App(f, Vector(a)), as), kappa)
 
             case Blk(be) =>
-                compileBlockExp(be, kappa)
+                compileBlockExp(be, kappa, false)
 
             case Booleans() =>
                 compile(booleans, kappa)
@@ -266,9 +262,6 @@ trait Compiler {
                     compile(r2, z =>
                         letV(r, prmV(concatP(), Vector(y, z)),
                             kappa(r))))
-
-            case Eql() =>
-                compile(equal, kappa)
 
             case False() =>
                 compile(Var(Field("False", Uni())), kappa)
@@ -284,9 +277,6 @@ trait Compiler {
 
             case Idn(IdnUse(i)) =>
                 kappa(i)
-
-            case Ints() =>
-                compile(ints, kappa)
 
             case Mat(e, cs) =>
                 compileMatch(e, cs, kappa)
@@ -316,9 +306,6 @@ trait Compiler {
                 letV(s, strV(unescape(l.tail.init)),
                     kappa(s))
 
-            case Strings() =>
-                compile(strings, kappa)
-
             case True() =>
                 compile(Var(Field("True", Uni())), kappa)
 
@@ -332,9 +319,6 @@ trait Compiler {
                 compile(field.expression, z =>
                     letV(r, varV(field.identifier, z),
                         kappa(r)))
-
-            case Vectors() =>
-                compile(vectors, kappa)
 
             case VecLit(VecElems(e)) =>
                 val v = fresh("v")
@@ -375,21 +359,24 @@ trait Compiler {
             kappa(f))
     }
 
-    def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
+    def compileBlockExp(be : BlockExp, kappa : String => Term, top : Boolean) : Term =
         be match {
             case BlkDef(ds, be2) =>
                 letF(
                     ds.defs.map(compileDef),
-                    compileBlockExp(be2, kappa)
+                    compileBlockExp(be2, kappa, top)
                 )
 
             case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
                 val j = fresh("k")
-                letC(j, x, compileBlockExp(be2, kappa),
+                letC(j, x, compileBlockExp(be2, kappa, top),
                     tailCompile(e, j))
 
             case Return(e) =>
-                compile(e, kappa)
+                top match {
+                    case true => compileTop(e, 0)
+                    case _    => compile(e, kappa)
+                }
         }
 
     def compileDefBody(args : Vector[Argument], e : Expression, k : String) : Term =
@@ -472,9 +459,6 @@ trait Compiler {
                         letV(r, prmV(concatP(), Vector(y, z)),
                             appC(k, r))))
 
-            case Eql() =>
-                tailCompile(equal, k)
-
             case False() =>
                 tailCompile(Var(Field("False", Uni())), k)
 
@@ -492,9 +476,6 @@ trait Compiler {
 
             case Idn(IdnUse(x)) =>
                 appC(k, x)
-
-            case Ints() =>
-                tailCompile(ints, k)
 
             case Mat(e, cs) =>
                 tailCompileMatch(e, cs, k)
@@ -525,9 +506,6 @@ trait Compiler {
                 letV(s, strV(unescape(l.tail.init)),
                     appC(k, s))
 
-            case Strings() =>
-                tailCompile(strings, k)
-
             case True() =>
                 tailCompile(Var(Field("True", Uni())), k)
 
@@ -546,9 +524,6 @@ trait Compiler {
                 val v = fresh("v")
                 compilePrimArgs(e.optExpressions, cElems =>
                     letV(v, vecV(cElems), appC(k, v)))
-
-            case Vectors() =>
-                tailCompile(vectors, k)
 
             // Types erase to unit
             case IsType() =>

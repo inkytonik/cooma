@@ -1,5 +1,5 @@
 {
    val x = prim IntAdd(1,1)
-   val y = Ints.add(1,1)
-   Ints.sub(x,y)
+   val y = predef.Ints.add(1,1)
+   predef.Ints.sub(x,y)
 }

@@ -11,7 +11,8 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.kiama.util.CompilerBase
+import org.bitbucket.inkytonik.kiama.util.{CompilerBase, Message}
+import xtc.parser.ParseError
 
 abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server {
 
@@ -47,16 +48,16 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
     val analysers = scala.collection.mutable.Map[Source, SemanticAnalyser]()
 
     override def makeast(source : Source, config : Config) : Either[Program, Messages] = {
-        //val p = new CoomaParser(Predef.withPredef(source), positions)
-        val p = new CoomaParser(source, positions)
+        val p = new CoomaParser(Predef.withPredef(source), positions)
         val pr = p.pProgram(0)
         if (pr.hasValue) {
             val program = p.value(pr).asInstanceOf[Program]
+            Predef.rewritePositions(program, positions)
             if (config.coomaASTPrint())
-                config.output().emitln(layout(any(program), 5))
+                config.output().emitln(layout(any(Predef.userCode(program)), 5))
             if (config.server()) {
                 publishSourceProduct(source, format(program))
-                publishSourceTreeProduct(source, pretty(any(program)))
+                publishSourceTreeProduct(source, pretty(any(Predef.userCode(program))))
             }
             checkProgram(program, source, config) match {
                 case Vector() =>
@@ -64,8 +65,17 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 case messages =>
                     Right(messages)
             }
-        } else
-            Right(Vector(p.errorToMessage(pr.parseError)))
+        } else {
+            Right(syntaxErrorMessage(p, pr.parseError()))
+        }
+    }
+
+    private def syntaxErrorMessage(p : CoomaParser, e : ParseError) : Messages = {
+        val loc = p.location(e.index)
+        val pos = new CoomaPosition(loc.line, loc.column, p.source)
+        positions.setStart(e, pos)
+        positions.setFinish(e, pos)
+        Vector(Message(e, e.msg))
     }
 
     def checkProgram(program : Program, source : Source, config : Config) : Messages =
@@ -81,12 +91,12 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 // Do nothing
             }
             analysers(source) = analyser
-            analyser.tipe(program.expression) match {
+            analyser.tipe(Blk(program.blockExp)) match {
                 case Some(tipe) =>
                     if (config.typePrint())
                         config.output().emitln(show(analyser.alias(tipe)))
                     if (analyser.errors.isEmpty && config.usage())
-                        printUsage(program.expression, tipe, config)
+                        printUsage(Blk(program.blockExp), tipe, config)
                 case None =>
                     if (config.typePrint())
                         config.output().emitln("unknown type")

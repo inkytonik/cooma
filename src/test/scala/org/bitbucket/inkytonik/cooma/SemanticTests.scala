@@ -1277,12 +1277,12 @@ class SemanticTests extends Tests {
 
             SemanticTest(
                 s"Partial apply equal (type only)",
-                s"equal(Int)",
+                s"predef.equal(Int)",
                 ""
             ),
             SemanticTest(
                 s"Partial apply equal (type and arg)",
-                s"equal(Int, 1)",
+                s"predef.equal(Int, 1)",
                 ""
             ),
             SemanticTest(
@@ -1584,16 +1584,6 @@ class SemanticTests extends Tests {
                             )
                     })
             })
-    //    ++ Vector(
-    //                SemanticTest(
-    //                    s"Wrong type of elements in generic Vector",
-    //                    s"""val x : Vector(Int) = ["hello", "world"]""",
-    //                    s"""|1:23:error: expected Vector(Int), got ["hello", "world"] of type Vector(String)
-    //                        |val x : Vector(Int) = ["hello", "world"]
-    //                        |                      ^
-    //                        |"""
-    //                )
-    //            )
 
     for (aTest <- semanticTests) {
         test(aTest.name) {
