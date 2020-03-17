@@ -1,0 +1,7 @@
+{
+    val x : Vector(Int) = [1,2,3]
+    {
+        x = predef.map(Int, x , Int, fun (x : Int) predef.Ints.add(x, 1)),
+        y = predef.fold(Int, x, fun (l : Int, r : Int) predef.Ints.add(l, r), 0)
+    }
+}
