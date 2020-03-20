@@ -27,7 +27,6 @@ Expression =
   | 'false'                                                  {False}
   | 'true'                                                   {True}
   | 'Boolean'                                                {BoolT}
-  | 'Booleans'                                               {Booleans}
   | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
   | 'Int'                                                    {IntT}
   | 'Reader'                                                 {ReaderT}

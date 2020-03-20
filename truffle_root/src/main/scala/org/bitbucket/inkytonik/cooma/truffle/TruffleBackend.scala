@@ -143,6 +143,9 @@ class TruffleBackend(config : Config) extends Backend {
     def mapVector() : Primitive =
         MapVector()
 
+    def exception() : Primitive =
+        Exception()
+
     // Runtime Values
     override type ValueR = RuntimeValue
     override type OutputValueR = org.graalvm.polyglot.Value

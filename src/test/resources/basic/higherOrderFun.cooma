@@ -1,7 +1,21 @@
 {
     val x : Vector(Int) = [1,2,3]
     {
-        x = predef.map(Int, x , Int, fun (x : Int) predef.Ints.add(x, 1)),
-        y = predef.fold(Int, x, fun (l : Int, r : Int) predef.Ints.add(l, r), 0)
+        map = predef.map(Int, x , Int, fun (x : Int) predef.Ints.add(x, 1)),
+        fold = predef.fold(Int, x, fun (l : Int, r : Int) predef.Ints.add(l, r), 0),
+        reduce = predef.reduce(Int, x, fun ( l : Int, r : Int) predef.Ints.sub(l, r)),
+        filter = predef.filter(Int, x, fun ( e : Int) predef.Ints.gt(e, 2)),
+        filterNot = predef.filterNot(Int, x, fun ( e : Int) predef.Ints.gt(e, 2)),
+        find = predef.filter(Int, x, fun ( e : Int) predef.Ints.gt(e, 2)),
+        forall  = predef.forall(Int, x, fun ( e : Int) predef.Ints.gt(e, 0)),
+        indexof = predef.indexOf(Int, x, 1),
+        indexofNE = predef.indexOf(Int, x, 5),
+        exists  = predef.exists(Int, x, fun ( e : Int) predef.Ints.gt(e, 0)),
+        contains  = predef.contains(Int, x, 1),
+        containsNot  = predef.contains(Int, x, 5),
+        count = predef.count(Int, x, fun ( e : Int) predef.Ints.gt(e, 0)),
+        drop = predef.drop(Int, x, 1),
+        dropR = predef.dropRight(Int, x, 1),
+        dropWhile = predef.dropWhile(Int, x, fun ( e : Int) predef.Ints.gt(e, 1))
     }
 }

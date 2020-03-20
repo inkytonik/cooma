@@ -60,7 +60,8 @@ trait Compiler {
         "VectorLength" -> PrimitiveMeta(vectorLength()),
         "SliceVector" -> PrimitiveMeta(sliceVector()),
         "ConcatVector" -> PrimitiveMeta(concatVector()),
-        "MapVector" -> PrimitiveMeta(mapVector())
+        "MapVector" -> PrimitiveMeta(mapVector()),
+        "Exception" -> PrimitiveMeta(exception())
     )
 
     /**
@@ -107,57 +108,6 @@ trait Compiler {
                 compileHalt(exp)
         }
     }
-
-    val and =
-        Fun(
-            Arguments(Vector(
-                Argument(IdnDef("l"), BoolT(), None),
-                Argument(IdnDef("r"), BoolT(), None)
-            )),
-            Mat(
-                Idn(IdnUse("l")),
-                Vector(
-                    Case("False", IdnDef("_"), False()),
-                    Case("True", IdnDef("_"), Idn(IdnUse("r")))
-                )
-            )
-        )
-
-    val not =
-        Fun(
-            Arguments(Vector(
-                Argument(IdnDef("b"), BoolT(), None)
-            )),
-            Mat(
-                Idn(IdnUse("b")),
-                Vector(
-                    Case("False", IdnDef("_"), True()),
-                    Case("True", IdnDef("_"), False())
-                )
-            )
-        )
-
-    val or =
-        Fun(
-            Arguments(Vector(
-                Argument(IdnDef("l"), BoolT(), None),
-                Argument(IdnDef("r"), BoolT(), None)
-            )),
-            Mat(
-                Idn(IdnUse("l")),
-                Vector(
-                    Case("False", IdnDef("_"), Idn(IdnUse("r"))),
-                    Case("True", IdnDef("_"), True())
-                )
-            )
-        )
-
-    val booleans =
-        Rec(Vector(
-            Field("and", and),
-            Field("not", not),
-            Field("or", or)
-        ))
 
     def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
         mkPrimFieldArgNames(fieldName, (1 to argTypes.length).map(i => s"arg$i").zip(argTypes), primName)
@@ -252,9 +202,6 @@ trait Compiler {
 
             case Blk(be) =>
                 compileBlockExp(be, kappa, false)
-
-            case Booleans() =>
-                compile(booleans, kappa)
 
             case Cat(r1, r2) =>
                 val r = fresh("r")
@@ -448,9 +395,6 @@ trait Compiler {
 
             case Blk(be) =>
                 tailCompileBlockExp(be, k)
-
-            case Booleans() =>
-                tailCompile(booleans, k)
 
             case Cat(r1, r2) =>
                 val r = fresh("r")

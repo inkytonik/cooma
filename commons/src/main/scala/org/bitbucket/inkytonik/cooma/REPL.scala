@@ -140,7 +140,7 @@ trait REPL extends REPLBase[Config] {
     object AlreadyBoundIdn {
         def unapply(e : Expression) : Boolean =
             e match {
-                case BoolT() | Booleans() | False() | Idn(IdnUse(_)) | IntT() |
+                case BoolT() | False() | Idn(IdnUse(_)) | IntT() |
                     ReaderT() | ReaderWriterT() | WriterT() | StrT() | True() =>
                     true
                 case _ =>

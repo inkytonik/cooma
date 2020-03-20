@@ -126,8 +126,8 @@ object SymbolTable extends Environments[CoomaEntity] {
         "PutItemVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT()), ("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t")))),
         "SliceVector" -> mkVectorPrimTypeWithArgNames(Vector(("i", IntT()), ("j", IntT())), VecT(Idn(IdnUse("t")))),
         "ConcatVector" -> mkVectorPrimTypeWithArgNames(Vector(("vr", VecT(Idn(IdnUse("t"))))), VecT(Idn(IdnUse("t")))),
-        "MapVector" -> mkVectorPrimTypeWithArgNames(Vector(("u", TypT()), ("f", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("tp")), Idn(IdnUse("t"))))), Idn(IdnUse("u"))))), VecT(Idn(IdnUse("u"))))
-
+        "MapVector" -> mkVectorPrimTypeWithArgNames(Vector(("u", TypT()), ("f", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("tp")), Idn(IdnUse("t"))))), Idn(IdnUse("u"))))), VecT(Idn(IdnUse("u")))),
+        "Exception" -> mkPrimType(Vector(StrT()), UniT())
     )
 
 }

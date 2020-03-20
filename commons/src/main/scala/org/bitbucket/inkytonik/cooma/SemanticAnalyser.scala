@@ -369,13 +369,6 @@ class SemanticAnalyser(
             case Blk(b) =>
                 blockTipe(b)
 
-            case Booleans() =>
-                Some(RecT(Vector(
-                    FieldType("and", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT)),
-                    FieldType("not", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT))), boolT)),
-                    FieldType("or", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT))
-                )))
-
             case BoolT() =>
                 Some(TypT())
 
@@ -407,20 +400,6 @@ class SemanticAnalyser(
             case u @ Idn(IdnUse(x)) =>
                 entityType(lookup(env(u), x, UnknownEntity()))
 
-            //            case Ints() =>
-            //                Some(RecT(Vector(
-            //                    FieldType("abs", primitivesTypesTable("IntAbs")),
-            //                    FieldType("add", primitivesTypesTable("IntAdd")),
-            //                    FieldType("div", primitivesTypesTable("IntDiv")),
-            //                    FieldType("mul", primitivesTypesTable("IntMul")),
-            //                    FieldType("pow", primitivesTypesTable("IntPow")),
-            //                    FieldType("sub", primitivesTypesTable("IntSub")),
-            //                    FieldType("lt", primitivesTypesTable("IntLt")),
-            //                    FieldType("lte", primitivesTypesTable("IntLte")),
-            //                    FieldType("gt", primitivesTypesTable("IntGt")),
-            //                    FieldType("gte", primitivesTypesTable("IntGte"))
-            //                )))
-
             case IntT() =>
                 Some(TypT())
 
@@ -434,6 +413,8 @@ class SemanticAnalyser(
 
             case _ : Num =>
                 Some(IntT())
+
+            case Prm(i, _) if i == "Exception" => None
 
             case n @ Prm(i, args) =>
                 primitivesTypesTable.get(i) match {
@@ -480,13 +461,6 @@ class SemanticAnalyser(
             case _ : Str =>
                 Some(StrT())
 
-            //            case Strings() =>
-            //                Some(RecT(Vector(
-            //                    FieldType("concat", primitivesTypesTable("StrConcat")),
-            //                    FieldType("length", primitivesTypesTable("StrLength")),
-            //                    FieldType("substr", primitivesTypesTable("StrSubstr"))
-            //                )))
-
             case StrT() =>
                 Some(TypT())
 
@@ -520,20 +494,6 @@ class SemanticAnalyser(
                         case _ => None
                     }
             }
-
-            //            case Vectors() =>
-            //                Some(RecT(Vector(
-            //                    FieldType("length", primitivesTypesTable("VectorLength")),
-            //                    FieldType("get", primitivesTypesTable("SelectItemVector")),
-            //                    FieldType("append", primitivesTypesTable("AppendItemVector")),
-            //                    FieldType("prepend", primitivesTypesTable("PrependItemVector")),
-            //                    FieldType("put", primitivesTypesTable("PutItemVector")),
-            //                    FieldType("slice", primitivesTypesTable("SliceVector")),
-            //                    FieldType("concat", primitivesTypesTable("ConcatVector")),
-            //                    FieldType("map", primitivesTypesTable("MapVector")),
-            //                    FieldType("head", mkVectorPrimTypeWithArgNames(Vector(), Idn(IdnUse("t")))),
-            //                    FieldType("tail", mkVectorPrimTypeWithArgNames(Vector(), VecT(Idn(IdnUse("t")))))
-            //                )))
 
             case VecT(_) =>
                 Some(TypT())

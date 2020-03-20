@@ -49,6 +49,8 @@ trait Backend {
     def intRelP(op : Primitives.IntPrimRelOp) : Primitive
     def stringP(op : Primitives.StrPrimOp) : Primitive
 
+    def exception() : Primitive
+
     def showTerm(t : Term) : String
 
     type ValueR

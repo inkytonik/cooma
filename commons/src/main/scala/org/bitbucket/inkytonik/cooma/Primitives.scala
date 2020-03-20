@@ -247,8 +247,11 @@ object Primitives {
                                         (interp.isVarR(lvalue), interp.isVarR(rvalue)) match {
                                             case (Some((lc, lv)), Some((rc, rv))) =>
                                                 (lc == rc) && (equal(lv, rv))
-                                            case _ =>
-                                                false
+                                            case _ => (interp.isVecR(lvalue), interp.isVecR(rvalue)) match {
+                                                case (Some(lv), Some(rv)) => lv.corresponds(rv)(equal)
+                                                case _ =>
+                                                    false
+                                            }
                                         }
                                 }
                         }
@@ -657,6 +660,25 @@ object Primitives {
         }
 
         def show : String = "MapVector"
+
+    }
+
+    case class Exception[I <: Backend]() extends Primitive[I] {
+
+        def numArgs : Int = 1
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            xs match {
+                case Vector(e) => interp.isStrR(interp.lookupR(rho, e)) match {
+                    case Some(msg) => interp.errR(msg)
+                    case None      => sys.error(s"$show: expected string error message")
+                }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+        }
+
+        def show : String = "Exception"
 
     }
 

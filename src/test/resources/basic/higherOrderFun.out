@@ -1,1 +1,18 @@
-{ x = [2,3,4], y = 6 }
+{
+    map = [2,3,4],
+    fold = 6,
+    reduce = -4,
+    filter = [3],
+    filterNot = [1,2],
+    find = [3],
+    forall = true,
+    indexof = 0,
+    indexofNE = -1,
+    exists = true,
+    contains = true,
+    containsNot = false,
+    count = 3,
+    drop = [2,3],
+    dropR = [1,2],
+    dropWhile = [1,2,3]
+}

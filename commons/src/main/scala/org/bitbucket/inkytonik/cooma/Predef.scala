@@ -8,119 +8,296 @@ object Predef {
 
     import org.bitbucket.inkytonik.kiama.util.Source
 
-    val predefVectors : (String, String) = ("Vectors",
-        """val Vectors = {
-		  |		head = fun (t : Type, v : Vector(t)) {
-		  |				prim SelectItemVector(t, v, 0)
-		  |    		},
-		  |		tail = fun (t : Type, v : Vector(t)) {
-		  |  			val empty : Vector(t) = []
-		  |				prim Equal(Int, 0, prim VectorLength(t, v)) match {
-		  |    				case True(_) => empty
-		  |					case False(_) => prim SliceVector(t, v, 1, prim VectorLength(t, v))
-		  |    			}
-		  |  		},
-		  |		init = fun (t : Type, v : Vector(t)) {
-		  |			val empty : Vector(t) = []
-		  |			prim Equal(Int, 0, prim VectorLength(t, v)) match {
-		  |				case True(_) => empty
-		  |				case False(_) => prim SliceVector(t, v, 0, prim IntSub(prim VectorLength(t, v), 1))
-		  |			}
-		  |  	},
-	  	  |     length = fun (t : Type, v : Vector(t)) {
-		  |     		 prim VectorLength(t, v)
-		  |     	},
-		  |   	get = fun (t : Type, v : Vector(t), i : Int) {
-		  |     		 prim SelectItemVector(t, v, i)
-		  |     	},
-		  |     put = fun (t : Type, v : Vector(t), i : Int, e : t) {
-		  |     		 prim PutItemVector(t, v, i, e)
-		  |     	},
-		  |   	append = fun (t : Type, v : Vector(t), e : t) {
-		  |     		 prim AppendItemVector(t, v, e)
-		  |    		},
-		  |   	prepend = fun (t : Type, v : Vector(t), e : t) {
-		  |     		 prim AppendItemVector(t, v, e)
-		  |    		},
-		  |   	slice = fun (t : Type, v : Vector(t), i : Int, j : Int) {
-		  |     		 prim SliceVector(t, v, i, j)
-		  |    		},
-		  |   	concat = fun (t : Type, v : Vector(t), vr : Vector(t)) {
-		  |     		 prim ConcatVector(t, v, vr)
-		  |    		}
-		  |}
-		  |""".stripMargin
-    )
-
-    val predefEqual : (String, String) = ("equal",
-        """def equal(t : Type, l : t, r : t) Boolean = {
-		  |		prim Equal(t, l, r)
-		  |}
-		  |""".stripMargin
-    )
-
-    val predefMap : (String, String) = ("map",
-        """def map (inT : Type, v : Vector(inT), outT : Type, f : (e : inT)  outT   ) Vector(outT) = {
-		  |    equal(Int, 0, prim VectorLength(inT, v)) match {
-		  |        case True(_)  => []
-		  |        case False(_) => prim PrependItemVector(outT, map(inT, Vectors.tail(inT, v) , outT, f), f(Vectors.head(inT, v)))
-		  |    }
-		  |}
-		  |""".stripMargin
-    )
-
-    //TODO: reduce, filter, find, look for more combinators on collections
-
-    /*
-	reduce(v, i, op)
-		if v is empty,
-			i
-		else
-			reduce(v.tail, op(i, v.head), op)
-	 */
-
-    val predefFold : (String, String) = ("fold",
-        """def fold (inT : Type, v : Vector(inT), f : (l : inT, r : inT)  inT, acc : inT    ) inT = {
-		  |    equal(Int, 0, prim VectorLength(inT, v)) match {
-		  |        case True(_)  => acc
-		  |        case False(_) => fold(inT, Vectors.tail(inT, v), f, f(acc, Vectors.head(inT, v)))
-		  |    }
-		  |}
-		  |""".stripMargin
-    )
-
-    val predefInts : (String, String) = ("Ints",
-        """val Ints = {
-		  |		abs = fun (x : Int) prim IntAbs(x),
-		  |		add = fun (x : Int, y : Int) prim IntAdd(x, y),
-		  |		div = fun (x : Int, y : Int) prim IntDiv(x, y),
-		  |		mul = fun (x : Int, y : Int) prim IntMul(x, y),
-		  |		pow = fun (x : Int, y : Int) prim IntPow(x, y),
-		  |  	sub = fun (x : Int, y : Int) prim IntSub(x, y),
-		  |		lt =  fun (x : Int, y : Int) prim IntLt(x, y),
-		  |		lte = fun (x : Int, y : Int) prim IntLte(x, y),
-		  |		gt =  fun (x : Int, y : Int) prim IntGt(x, y),
-		  |		gte = fun (x : Int, y : Int) prim IntGte(x, y)
-		  |}
-		  |""".stripMargin
-    )
-
-    val predefStrings : (String, String) = ("Strings",
-        """val Strings = {
-		  |		length = fun (x : String) prim StrLength(x),
-		  |		concat = fun (x : String, y : String) prim StrConcat(x, y),
-		  |		substr = fun (x : String, y : Int) prim StrSubstr(x, y)
-		  |}
-		  |""".stripMargin
-    )
-
     val predefList = Vector(
-        predefEqual,
-        predefVectors,
-        predefMap,
-        predefFold,
-        predefInts,
-        predefStrings
+        ("Ints",
+            """val Ints = {
+			  |		abs = fun (x : Int) prim IntAbs(x),
+			  |		add = fun (x : Int, y : Int) prim IntAdd(x, y),
+			  |		div = fun (x : Int, y : Int) prim IntDiv(x, y),
+			  |		mul = fun (x : Int, y : Int) prim IntMul(x, y),
+			  |		pow = fun (x : Int, y : Int) prim IntPow(x, y),
+			  |  	sub = fun (x : Int, y : Int) prim IntSub(x, y),
+			  |		lt =  fun (x : Int, y : Int) prim IntLt(x, y),
+			  |		lte = fun (x : Int, y : Int) prim IntLte(x, y),
+			  |		gt =  fun (x : Int, y : Int) prim IntGt(x, y),
+			  |		gte = fun (x : Int, y : Int) prim IntGte(x, y)
+			  |}
+			  |""".stripMargin
+        ),
+        ("Booleans",
+            """val Booleans = {
+			  |	and = fun (l : Boolean, r : Boolean) {
+			  |		l match {
+			  |			case False(_) => false
+			  |			case True(_)  => r
+			  |		}
+			  |	},
+			  |	or = fun (l : Boolean, r : Boolean) {
+			  |		l match {
+			  |			case False(_) => r
+			  |			case True(_)  => true
+			  |		}
+			  |	},
+			  |	not = fun (b : Boolean) {
+			  |		b match {
+			  |			case False(_) => true
+			  |			case True(_)  => false
+			  |		}
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("equal",
+            """def equal(t : Type, l : t, r : t) Boolean = {
+			  |		prim Equal(t, l, r)
+			  |}
+			  |""".stripMargin
+        ),
+        ("Vectors",
+            """val Vectors = {
+			  |		head = fun (t : Type, v : Vector(t)) {
+			  |				prim SelectItemVector(t, v, 0)
+			  |    		},
+			  |		tail = fun (t : Type, v : Vector(t)) {
+			  |  			val empty : Vector(t) = []
+			  |				prim Equal(Int, 0, prim VectorLength(t, v)) match {
+			  |    				case True(_) => empty
+			  |					case False(_) => prim SliceVector(t, v, 1, prim VectorLength(t, v))
+			  |    			}
+			  |  		},
+			  |		init = fun (t : Type, v : Vector(t)) {
+			  |			val empty : Vector(t) = []
+			  |			prim Equal(Int, 0, prim VectorLength(t, v)) match {
+			  |				case True(_) => empty
+			  |				case False(_) => prim SliceVector(t, v, 0, prim IntSub(prim VectorLength(t, v), 1))
+			  |			}
+			  |  	},
+	  	  	  |     length = fun (t : Type, v : Vector(t)) {
+			  |     		 prim VectorLength(t, v)
+			  |     	},
+			  |     last = fun (t : Type, v : Vector(t)) {
+			  |				prim SelectItemVector(t, v, prim IntSub(prim VectorLength(t, v), 1))
+			  |     },
+			  |   	get = fun (t : Type, v : Vector(t), i : Int) {
+			  |     		 prim SelectItemVector(t, v, i)
+			  |     	},
+			  |     put = fun (t : Type, v : Vector(t), i : Int, e : t) {
+			  |     		 prim PutItemVector(t, v, i, e)
+			  |     	},
+			  |   	append = fun (t : Type, v : Vector(t), e : t) {
+			  |     		 prim AppendItemVector(t, v, e)
+			  |    		},
+			  |   	prepend = fun (t : Type, v : Vector(t), e : t) {
+			  |     		 prim AppendItemVector(t, v, e)
+			  |    		},
+			  |   	slice = fun (t : Type, v : Vector(t), i : Int, j : Int) {
+			  |     		 prim SliceVector(t, v, i, j)
+			  |    		},
+			  |   	concat = fun (t : Type, v : Vector(t), vr : Vector(t)) {
+			  |     		 prim ConcatVector(t, v, vr)
+			  |    		}
+			  |}
+			  |""".stripMargin
+        ),
+        ("map",
+            """def map (inT : Type, v : Vector(inT), outT : Type, f : (e : inT)  outT   ) Vector(outT) = {
+			  |    equal(Int, 0, prim VectorLength(inT, v)) match {
+			  |        case True(_)  => []
+			  |        case False(_) => prim PrependItemVector(outT, map(inT, Vectors.tail(inT, v) , outT, f), f(Vectors.head(inT, v)))
+			  |    }
+			  |}
+			  |""".stripMargin
+        ),
+        ("fold",
+            """def fold (inT : Type, v : Vector(inT), f : (l : inT, r : inT)  inT, acc : inT    ) inT = {
+			  |    equal(Int, 0, prim VectorLength(inT, v)) match {
+			  |        case True(_)  => acc
+			  |        case False(_) => fold(inT, Vectors.tail(inT, v), f, f(acc, Vectors.head(inT, v)))
+			  |    }
+			  |}
+			  |""".stripMargin
+        ),
+        ("foldLeft",
+            """def foldLeft (vt : Type, acct : Type, v : Vector(vt), f : (l : acct, r : vt)  acct, acc : acct ) acct = {
+			  |    equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |        case True(_)  => acc
+			  |        case False(_) => foldLeft(vt, acct, Vectors.tail(vt, v), f, f(acc, Vectors.head(vt, v)))
+			  |    }
+			  |}
+			  |""".stripMargin
+        ),
+        ("foldRight",
+            """def foldRight (vt : Type, acct : Type, v : Vector(vt), f : (r : vt, l : acct)  acct, acc : acct ) acct = {
+			  |    equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |        case True(_)  => acc
+			  |        case False(_) => foldRight(vt, acct, Vectors.init(vt, v), f, f(Vectors.last(vt, v), acc))
+			  |    }
+			  |}
+			  |""".stripMargin
+        ),
+        ("Strings",
+            """val Strings = {
+			  |		length = fun (x : String) prim StrLength(x),
+			  |		concat = fun (x : String, y : String) prim StrConcat(x, y),
+			  |		substr = fun (x : String, y : Int) prim StrSubstr(x, y)
+			  |}
+			  |""".stripMargin
+        ),
+        ("reduce",
+            """def reduce (vt : Type, v : Vector(vt), f : (l : vt, r : vt )  vt  ) vt = {
+			  |
+			  |  def doReduce(v : Vector(vt), f : (l : vt, r : vt )  vt, acc : vt) vt = {
+			  |		equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |	        case True(_)  => acc
+			  |	        case False(_) => doReduce(Vectors.tail(vt, v), f, f(acc,  Vectors.head(vt, v)))
+			  |    	}
+			  |	 }
+			  |
+			  |	equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |		case True(_)  => prim Exception("Cannot apply reduce on empty collection")
+			  |		case False(_) => doReduce(Vectors.tail(vt, v), f, Vectors.head(vt, v))
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("filter",
+            """def filter (vt : Type, v : Vector(vt), p : (e : vt )  Boolean  ) Vector(vt) = {
+			  |	val empty : Vector(vt) = []
+			  |	equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |		case True(_)  => empty
+			  |		case False(_) => p(Vectors.head(vt, v)) match {
+			  |								case True(_)  => prim PrependItemVector(vt, filter(vt, Vectors.tail(vt, v), p), Vectors.head(vt, v))
+			  |					        	case False(_) => filter(vt, Vectors.tail(vt, v), p)
+			  |						}
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("filterNot",
+            """def filterNot (vt : Type, v : Vector(vt), p : (e : vt )  Boolean  ) Vector(vt) = {
+			  |	val empty : Vector(vt) = []
+			  |	equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |		case True(_)  => empty
+			  |		case False(_) => p(Vectors.head(vt, v)) match {
+			  |								case True(_)  => filterNot(vt, Vectors.tail(vt, v), p)
+			  |					        	case False(_) => prim PrependItemVector(vt, filterNot(vt, Vectors.tail(vt, v), p), Vectors.head(vt, v))
+			  |						}
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("find",
+            """def find (vt : Type, v : Vector(vt), p : (e : vt )  Boolean  ) Vector(vt) = {
+			  |	val empty : Vector(vt) = []
+			  |	equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |		case True(_)  => empty
+			  |		case False(_) => p(Vectors.head(vt, v)) match {
+			  |								case True(_)  => [Vectors.head(vt, v)]
+			  |					        	case False(_) => find(vt, Vectors.tail(vt, v), p)
+			  |						}
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("forall",
+            """def forall (vt : Type, v : Vector(vt), p : (e : vt )  Boolean  ) Boolean = {
+			  |	equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |		case True(_)  => true
+			  |		case False(_) => Booleans.and(p(Vectors.head(vt, v)), forall(vt, Vectors.tail(vt, v), p))
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("foreach",
+            """
+			  |def foreach (vt : Type, v : Vector(vt), p : (e : vt )  Unit  ) Unit = {
+			  |	equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |		case True(_)  => {}
+			  |		case False(_) => {
+			  |			val u = p(Vectors.head(vt, v))
+			  |			foreach(vt, Vectors.tail(vt, v),p)
+			  |		}
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("indexOf",
+            """def indexOf (vt : Type, v : Vector(vt), e : vt  ) Int = {
+			  |	def inneIndexOf(vt : Type, v : Vector(vt), e : vt, i : Int  ) Int = {
+			  |		equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |			case True(_)  => -1
+			  |			case False(_) => equal(vt, e, Vectors.head(vt, v)) match {
+			  |				case True(_)  => i
+			  |				case False(_) => inneIndexOf(vt, Vectors.tail(vt, v) , e , Ints.add(i, 1))
+			  |			}
+			  |		}
+			  |	}
+			  |	inneIndexOf(vt, v , e , 0 )
+			  |}
+			  |""".stripMargin
+        ),
+        ("exists",
+            """def exists (vt : Type, v : Vector(vt), p : (e : vt )  Boolean  ) Boolean = {
+			  |		equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |			case True(_)  => false
+			  |			case False(_) => p(Vectors.head(vt, v)) match {
+			  |				case True(_)  => true
+			  |				case False(_) => exists(vt, Vectors.tail(vt, v), p)
+			  |			}
+			  |		}
+			  |	}
+			  |""".stripMargin
+        ),
+        ("contains",
+            """def contains (vt : Type, v : Vector(vt), e : vt) Boolean = {
+			  |		equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |			case True(_)  => false
+			  |			case False(_) => equal(vt, Vectors.head(vt, v), e) match {
+			  |				case True(_)  => true
+			  |				case False(_) => contains(vt, Vectors.tail(vt, v), e)
+			  |			}
+			  |		}
+			  |	}
+			  |""".stripMargin
+        ),
+        ("count",
+            """def count (vt : Type, v : Vector(vt), p : (e : vt )  Boolean ) Int = {
+			  |		Vectors.length(vt, filter(vt, v, p))
+			  |	}
+			  |""".stripMargin
+        ),
+        ("drop",
+            """def drop (vt : Type, v : Vector(vt), n : Int ) Vector(vt) = {
+			  |	Ints.lte(n, 0) match {
+			  |		case True(_)  => v
+			  |		case False(_) => drop(vt, Vectors.tail(vt, v), Ints.sub(n, 1))
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("dropRight",
+            """def dropRight (vt : Type, v : Vector(vt), n : Int ) Vector(vt) = {
+			  |	Ints.lte(n, 0) match {
+			  |		case True(_)  => v
+			  |		case False(_) => dropRight(vt, Vectors.init(vt, v), Ints.sub(n, 1))
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+        ("dropWhile",
+            """def dropWhile (vt : Type, v : Vector(vt), p : (e : vt )  Boolean ) Vector(vt) = {
+			  |	val empty : Vector(vt) = []
+			  |	equal(Int, 0, prim VectorLength(vt, v)) match {
+			  |		case True(_)  => empty
+			  |		case False(_) => p(Vectors.head(vt, v)) match {
+			  |			case True(_)  => dropWhile(vt, Vectors.tail(vt, v), p)
+			  |			case False(_) => v
+			  |		}
+			  |	}
+			  |}
+			  |""".stripMargin
+        ),
+
     )
 
     val predefREPL : String = {
