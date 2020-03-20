@@ -703,76 +703,76 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "false"
                 ),
                 ExecTest(
-                    "Booleans.and(false, false)",
-                    "Booleans.and(false, false)",
+                    "predef.Booleans.and(false, false)",
+                    "predef.Booleans.and(false, false)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
-                    "Booleans.and(false, true)",
-                    "Booleans.and(false, true)",
+                    "predef.Booleans.and(false, true)",
+                    "predef.Booleans.and(false, true)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
-                    "Booleans.and(true, false)",
-                    "Booleans.and(true, false)",
+                    "predef.Booleans.and(true, false)",
+                    "predef.Booleans.and(true, false)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
-                    "Booleans.and(true, true)",
-                    "Booleans.and(true, true)",
+                    "predef.Booleans.and(true, true)",
+                    "predef.Booleans.and(true, true)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    "Booleans.not(false)",
-                    "Booleans.not(false)",
+                    "predef.Booleans.not(false)",
+                    "predef.Booleans.not(false)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    "Booleans.not(true)",
-                    "Booleans.not(true)",
+                    "predef.Booleans.not(true)",
+                    "predef.Booleans.not(true)",
                     "false",
                     "Boolean"
                 ),
 
                 ExecTest(
-                    "Booleans.or(false, false)",
-                    "Booleans.or(false, false)",
+                    "predef.Booleans.or(false, false)",
+                    "predef.Booleans.or(false, false)",
                     "false",
                     "Boolean"
                 ),
                 ExecTest(
-                    "Booleans.or(false, true)",
-                    "Booleans.or(false, true)",
+                    "predef.Booleans.or(false, true)",
+                    "predef.Booleans.or(false, true)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    "Booleans.or(true, false)",
-                    "Booleans.or(true, false)",
+                    "predef.Booleans.or(true, false)",
+                    "predef.Booleans.or(true, false)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
-                    "Booleans.or(true, true)",
-                    "Booleans.or(true, true)",
+                    "predef.Booleans.or(true, true)",
+                    "predef.Booleans.or(true, true)",
                     "true",
                     "Boolean"
                 ),
                 ExecTest(
                     "Booleans",
-                    "Booleans",
+                    "predef.Booleans",
                     "{ and = <function>, not = <function>, or = <function> }",
                     """{
                        |    and : (Boolean, Boolean) Boolean,
                        |    not : (Boolean) Boolean,
                        |    or : (Boolean, Boolean) Boolean
                        |}""",
-                    "Booleans"
+                    "predef.Booleans"
                 ),
                 ExecTest(
                     "Ints",
@@ -1096,10 +1096,10 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     ExecTest(
                         "Boolean vector declaration - cont.",
                         """{
-                            val x : Vector(Boolean) = [Booleans.and(false, false),
-                            						   Booleans.and(false, true),
-                            						   Booleans.and(true, false),
-                            						   Booleans.and(true, true)]
+                            val x : Vector(Boolean) = [predef.Booleans.and(false, false),
+                            						   predef.Booleans.and(false, true),
+                            						   predef.Booleans.and(true, false),
+                            						   predef.Booleans.and(true, true)]
                             x
                         }""",
                         "[false,false,false,true]",

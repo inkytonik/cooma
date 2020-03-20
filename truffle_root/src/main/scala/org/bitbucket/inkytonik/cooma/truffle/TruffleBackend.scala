@@ -144,7 +144,7 @@ class TruffleBackend(config : Config) extends Backend {
         MapVector()
 
     def exception() : Primitive =
-        Exception()
+        ExceptionPrimitive()
 
     // Runtime Values
     override type ValueR = RuntimeValue

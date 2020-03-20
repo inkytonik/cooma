@@ -166,9 +166,9 @@ class ReferenceBackend(
         Primitives.StringPrimitive(op)
 
     def exception() : Primitive =
-        Exception()
-    // Runtime values
+        ExceptionPrimitive()
 
+    // Runtime values
     def errR(msg : String) : ValueR =
         ErrR(msg)
 

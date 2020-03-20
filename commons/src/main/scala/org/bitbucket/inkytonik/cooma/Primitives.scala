@@ -663,7 +663,7 @@ object Primitives {
 
     }
 
-    case class Exception[I <: Backend]() extends Primitive[I] {
+    case class ExceptionPrimitive[I <: Backend]() extends Primitive[I] {
 
         def numArgs : Int = 1
 

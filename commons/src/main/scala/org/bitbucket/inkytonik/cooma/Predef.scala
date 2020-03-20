@@ -32,16 +32,16 @@ object Predef {
 			  |			case True(_)  => r
 			  |		}
 			  |	},
+			  | not = fun (b : Boolean) {
+			  |		b match {
+			  |			case False(_) => true
+			  |			case True(_)  => false
+			  |		}
+			  |	},
 			  |	or = fun (l : Boolean, r : Boolean) {
 			  |		l match {
 			  |			case False(_) => r
 			  |			case True(_)  => true
-			  |		}
-			  |	},
-			  |	not = fun (b : Boolean) {
-			  |		b match {
-			  |			case False(_) => true
-			  |			case True(_)  => false
 			  |		}
 			  |	}
 			  |}
