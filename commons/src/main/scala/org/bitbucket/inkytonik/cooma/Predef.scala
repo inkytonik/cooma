@@ -97,6 +97,7 @@ object Predef {
 			  |     		 prim ConcatVector(t, v, vr)
 			  |    		}
 			  |}
+			  |
 			  |""".stripMargin
         ),
         ("map",
@@ -181,7 +182,7 @@ object Predef {
 			  |		case False(_) => p(Vectors.head(vt, v)) match {
 			  |								case True(_)  => filterNot(vt, Vectors.tail(vt, v), p)
 			  |					        	case False(_) => prim PrependItemVector(vt, filterNot(vt, Vectors.tail(vt, v), p), Vectors.head(vt, v))
-			  |						}
+			  |						}g
 			  |	}
 			  |}
 			  |""".stripMargin
