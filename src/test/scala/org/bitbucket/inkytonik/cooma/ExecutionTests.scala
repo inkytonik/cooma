@@ -768,11 +768,11 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "predef.Booleans",
                     "{ and = <function>, not = <function>, or = <function> }",
                     """{
-                       |    and : (Boolean, Boolean) Boolean,
-                       |    not : (Boolean) Boolean,
-                       |    or : (Boolean, Boolean) Boolean
+                       |    and : (l : Boolean, r : Boolean) Boolean,
+                       |    not : (b : Boolean) Boolean,
+                       |    or : (l : Boolean, r : Boolean) Boolean
                        |}""",
-                    "predef.Booleans"
+                    "res0"
                 ),
                 ExecTest(
                     "Ints",

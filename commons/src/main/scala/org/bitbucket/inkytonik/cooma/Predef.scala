@@ -97,6 +97,7 @@ object Predef {
 			  |     		 prim ConcatVector(t, v, vr)
 			  |    		}
 			  |}
+			  |
 			  |""".stripMargin
         ),
         ("map",
