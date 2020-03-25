@@ -20,7 +20,16 @@ object Predef {
 			  |		lt =  fun (x : Int, y : Int) prim IntLt(x, y),
 			  |		lte = fun (x : Int, y : Int) prim IntLte(x, y),
 			  |		gt =  fun (x : Int, y : Int) prim IntGt(x, y),
-			  |		gte = fun (x : Int, y : Int) prim IntGte(x, y)
+			  |		gte = fun (x : Int, y : Int) prim IntGte(x, y),
+			  |  	max = fun (x : Int, y : Int) {
+			  |			prim IntGte(x, y) match {
+			  |					case True(_)  => x
+			  |					case False(_) => y
+			  |				}
+		  	  |		},
+			  |  	mod = fun (x : Int, y : Int) {
+			  |   		prim IntSub(x, prim IntMul(y, prim IntDiv(x,y)))
+			  |     }
 			  |}
 			  |""".stripMargin
         ),
@@ -101,10 +110,10 @@ object Predef {
 			  |""".stripMargin
         ),
         ("map",
-            """def map (inT : Type, v : Vector(inT), outT : Type, f : (e : inT)  outT   ) Vector(outT) = {
+            """def map (inT : Type, v : Vector(inT), f : (e : inT)  inT   ) Vector(inT) = {
 			  |    equal(Int, 0, prim VectorLength(inT, v)) match {
 			  |        case True(_)  => []
-			  |        case False(_) => prim PrependItemVector(outT, map(inT, Vectors.tail(inT, v) , outT, f), f(Vectors.head(inT, v)))
+			  |        case False(_) => prim PrependItemVector(inT, map(inT, Vectors.tail(inT, v), f), f(Vectors.head(inT, v)))
 			  |    }
 			  |}
 			  |""".stripMargin
@@ -298,7 +307,22 @@ object Predef {
 			  |}
 			  |""".stripMargin
         ),
-
+        ("endsWith",
+            """def endsWith (vt : Type, v : Vector(vt), s : Vector(vt) ) Boolean = {
+			  |	def innerEndsWith (v : Vector(vt), s : Vector(vt), i : Int ) Boolean = {
+			  |		val slice = Vectors.slice(Int, v, i, Vectors.length(Int, v))
+			  |		equal(Vector(vt), s, slice) match {
+			  |        	case True(_) 	=> true
+			  |        	case False(_)	=> equal(Vector(vt), v, slice) match {
+			  |		        case True(_)  => false
+			  |		        case False(_) => innerEndsWith(v, s, Ints.sub(i, 1))
+			  |		    }
+			  |	    }
+			  |	}
+			  |	innerEndsWith(v, s, Ints.sub(Vectors.length(Int, v), 1))
+			  |}
+			  |""".stripMargin
+        )
     )
 
     val predefREPL : String = {
