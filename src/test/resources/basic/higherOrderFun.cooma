@@ -1,7 +1,7 @@
 {
     val x : Vector(Int) = [1,2,3]
     {
-        map = predef.map(Int, x , Int, fun (x : Int) predef.Ints.add(x, 1)),
+        map = predef.map(Int, x, fun (x : Int) predef.Ints.add(x, 1)),
         fold = predef.fold(Int, x, fun (l : Int, r : Int) predef.Ints.add(l, r), 0),
         reduce = predef.reduce(Int, x, fun ( l : Int, r : Int) predef.Ints.sub(l, r)),
         filter = predef.filter(Int, x, fun ( e : Int) predef.Ints.gt(e, 2)),
@@ -19,3 +19,4 @@
         dropWhile = predef.dropWhile(Int, x, fun ( e : Int) predef.Ints.gt(e, 1))
     }
 }
+
