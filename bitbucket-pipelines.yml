@@ -6,5 +6,6 @@ pipelines:
         caches:
             - sbt
             - ivy2
+        size: 2x
         script:
           - sbt +test
