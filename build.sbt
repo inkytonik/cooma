@@ -119,7 +119,7 @@ lazy val root = (project in file("."))
 		version := "0.1.0",
 		assemblySettings,
 		commonsettings,
-		mainClass in Compile := (mainClass in Compile in reference).value,
+		mainClass in Compile := Some("org.bitbucket.inkytonik.cooma.Main"),
 		libraryDependencies ++= Seq(
 			"org.scalatest" %% "scalatest" % "3.1.0" % "test",
 			"org.scalatestplus" %% "scalacheck-1-14" % "3.1.0.0" % "test",
@@ -163,8 +163,8 @@ lazy val truffle = (project in file("truffle"))
 		compileOrder := CompileOrder.Mixed,
 		libraryDependencies ++= Seq(
 				"org.projectlombok" % "lombok" % "1.16.16",
-				"org.graalvm.truffle" % "truffle-api" % "19.3.1",
-				"org.graalvm.truffle" % "truffle-dsl-processor" % "19.3.1",
+				"org.graalvm.truffle" % "truffle-api" % "20.0.0",
+				"org.graalvm.truffle" % "truffle-dsl-processor" % "20.0.0",
 				"com.io7m.jpplib" % "com.io7m.jpplib.core" % "0.8.0",
 				"org.slf4j" % "slf4j-log4j12" % "1.7.21"
 			)

@@ -1887,11 +1887,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 val expectedValue = aTest.expectedCompiledResult.stripMargin
                 result shouldBe s"$expectedValue\n"
             }
-
-            backend match {
-                case ref @ Backend("Reference", _, _) => ref.frontend = new ReferenceFrontend
-                case graal @ _                        => graal.frontend = new TruffleFrontend(out = new PrintStream(truffleOutContent))
-            }
         }
 
         val execTestsError =
