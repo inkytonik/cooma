@@ -4,7 +4,7 @@ bash clean_component.sh
 echo "Building cooma-component.jar"
 
 SCALA_VERSION="scala-2.13"
-GRAALVM_VERSION="19.3.1"
+GRAALVM_VERSION="20.0.0"
 COMPONENT_DIR="component_temp_dir"
 LANGUAGE_PATH="$COMPONENT_DIR/jre/languages/cooma"
 
