@@ -3,7 +3,7 @@
 
 While the truffle-component is the polyglot implementation of Cooma, using the Truffle framework and it is a GraalVM compatible component, the native image is completely different.
 
-GraalVM, with native-image, allows the AOT compilation of programs, reducing the startup and execution times of JVM languages. 
+GraalVM, with native-image, allows the AOT compilation of programs, reducing the startup and execution times of programs running on JVM. 
 This has some limitations, though, such as reflection usage.
 
 As Cooma uses both Scala and Java with the help of libraries, we need to first analyze the reflection usage.
@@ -23,7 +23,6 @@ For these steps, please refer to [truffle component documentation](../truffle-co
 ### Generating Cooma fat jar
 
 Run the sbt task ```assembly```
-
 
 ### Run java agent
 
