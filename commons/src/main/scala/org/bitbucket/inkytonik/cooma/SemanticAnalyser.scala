@@ -103,9 +103,8 @@ class SemanticAnalyser(
     // Enforce only "base" types can be made secret
     def checkSecretType(e : Expression) : Messages =
         e match {
-            case IntT() | StrT() | BoolT() | UniT() =>
-                noMessages
-            case _  => error(e, s"cannot have a secret ${show(e)}")
+            case IntT() | StrT() | BoolT() | UniT() | ReaderT() | WriterT() | ReaderWriterT() => noMessages
+            case _ => error(e, s"cannot have a secret ${show(e)}")
         }
 
     def checkPrimitive(prm : Prm) : Messages = {
