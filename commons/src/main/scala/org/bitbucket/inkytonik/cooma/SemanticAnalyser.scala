@@ -69,59 +69,40 @@ class SemanticAnalyser(
                             checkPrimitive(prm)
                         case Fun(Arguments(as), e) => // Check closures to enforce no T! -> T
                             checkFunction(as, e)
-                        // Secret records and variants field check
-                        // case SecT(t @ RecT(fs)) =>
-                        //     checkSecretFields(fs, t)
-                        // case SecT(t @ VarT(fs)) =>
-                        //     checkSecretFields(fs, t)
                     }
-
-            // Check function defs to enforce no T! -> T
-            case Def(_, Body(Arguments(as), e, _)) => checkFunction(as, e)
         }
 
-    def enforceInfoLevel(e : Expression, level : Expression) : Messages =
-        level match {
-            case App(f, _) => // check the return type of the function
-                enforceInfoLevel(e, f)
-            case SecT(_) =>
-                noMessages // Secret type (T and T! < T!)
-            case _ => tipe(level) match {
-                case Some(SecT(_)) =>
-                    noMessages // t and t! < t! where tipe of level is secret
-                case Some(FunT(_, r)) => // level is a function -> check it's return type
-                    enforceInfoLevel(e, r)
-                case t @ _ => e match {
-                    case SecT(_) =>
-                        val typeStr = if (tipe(level) == Some(TypT())) show(level) else show(t.getOrElse(TypT()))
-                        error(e, s"expression must be equally or less secure then ${typeStr}")
-                    case _ => noMessages // t < t
-                }
+    // Returns the maximum security level of a given row.
+    def rowSec(fs : Vector[FieldType]) : Int =
+        fs.foldLeft(0)((l : Int, f : FieldType) => math.max(l, sec(f.expression)))
+    
+    // Computes the security level of a given expression - MUST be a type.
+    def secLevel(e : Expression) : Int =
+        tipe(e) match {
+            case Some(TypT()) => e match {
+                case FunT(_, t1) => secLevel(t1)
+                case RecT(fs)    => rowSec(fs)
+                case VarT(fs)    => rowSec(fs)
+                case _ : SecT    => 1
+                case _           => 0
             }
+            case _ => 0
         }
+    
+    // Computes the proposition containing the necessary relation between sub-types of a given type.
+    def secProp(e : Expression) : Boolean =
+        tipe(e) match {
+            case Some(TypT()) => e match {
+                case FunT(ArgumentTypes(as), r) => 
+                    as.forall(a => sec(a.expression) <= sec(r)) && secProp(r)
+                case _ => true
+            }
+            case _ => false
+        }
+
 
     def checkFunction(as : Vector[Argument], e : Expression) : Messages =
         as.flatMap(a => enforceInfoLevel(a.expression, e))
-
-    // def checkSecretFields(fs : Vector[FieldType], t : Expression) : Messages = {
-    //     fs.flatMap(f => f.expression match {
-    //         case SecT(_)                    => noMessages
-    //         case FunT(ArgumentTypes(as), e) => checkSecretFunc(as, e)
-    //         case _                          => error(f, s"public field ${f.identifier} found in secret ${show(t)}")
-    //     })
-    // }
-
-    // def checkSecretFunc(as : Vector[ArgumentType], r : Expression) : Messages = {
-    //     as.flatMap(a => a.expression match {
-    //         case SecT(_) => noMessages
-    //         case _       => error(a, s"public argument type found in secret function")
-    //     }) ++ {
-    //         r match {
-    //             case SecT(_) => noMessages
-    //             case _       => error(r, s"public return type found in secret function")
-    //         }
-    //     }
-    // }
 
     def checkPrimitive(prm : Prm) : Messages = {
         primitivesTypesTable.get(prm.identifier) match {
@@ -260,12 +241,6 @@ class SemanticAnalyser(
         val i = f.identifier
         tipe(e) match {
             case Some(t @ RecT(fields)) =>
-                if (fields.map(_.identifier) contains i)
-                    noMessages
-                else
-                    error(f, s"$i is not a field of record type ${show(alias(t))}")
-            // Secret row check - necessary for capabilities and secret rows
-            case Some(t @ SecT(RecT(fields))) =>
                 if (fields.map(_.identifier) contains i)
                     noMessages
                 else
@@ -536,17 +511,6 @@ class SemanticAnalyser(
             case Sel(r, FieldUse(f)) =>
                 tipe(r) match {
                     case Some(RecT(fieldTypes)) =>
-                        fieldTypes.find {
-                            case FieldType(i, t) =>
-                                i == f
-                        } match {
-                            case Some(FieldType(i, t)) =>
-                                Some(t)
-                            case None =>
-                                None
-                        }
-                    // Secret row selection
-                    case Some(SecT(RecT(fieldTypes))) =>
                         fieldTypes.find {
                             case FieldType(i, t) =>
                                 i == f
@@ -941,14 +905,7 @@ object SemanticAnalysis {
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
                 case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
                     subtypesArgs(us, ts) && subtype(t, u)
-                // Aliased types ----- was able to remove bool (outlined in notes). Should be able to do same for following:
-                // case (`readerT`, SecT(s)) =>
-                //     subtype(ReaderT(), s)
-                // case (`readerWriterT`, SecT(s)) =>
-                //     subtype(ReaderWriterT(), s)
-                // case (`writerT`, SecT(s)) =>
-                //     subtype(WriterT(), s)
-                // General case
+                // Secret types
                 case (_, SecT(s)) =>
                     subtype(t, s)
                 case _ =>
