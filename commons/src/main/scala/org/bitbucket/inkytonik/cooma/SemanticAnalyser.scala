@@ -67,15 +67,13 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
-                        case Fun(Arguments(as), e) => // Check closures to enforce no T! -> T
-                            checkFunction(as, e)
                     }
         }
 
     // Returns the maximum security level of a given row.
     def rowSec(fs : Vector[FieldType]) : Int =
-        fs.foldLeft(0)((l : Int, f : FieldType) => math.max(l, sec(f.expression)))
-    
+        fs.foldLeft(0)((l : Int, f : FieldType) => math.max(l, secLevel(f.expression)))
+
     // Computes the security level of a given expression - MUST be a type.
     def secLevel(e : Expression) : Int =
         tipe(e) match {
@@ -88,21 +86,17 @@ class SemanticAnalyser(
             }
             case _ => 0
         }
-    
+
     // Computes the proposition containing the necessary relation between sub-types of a given type.
     def secProp(e : Expression) : Boolean =
         tipe(e) match {
             case Some(TypT()) => e match {
-                case FunT(ArgumentTypes(as), r) => 
-                    as.forall(a => sec(a.expression) <= sec(r)) && secProp(r)
+                case FunT(ArgumentTypes(as), r) =>
+                    as.forall(a => secLevel(a.expression) <= secLevel(r)) && secProp(r)
                 case _ => true
             }
             case _ => false
         }
-
-
-    def checkFunction(as : Vector[Argument], e : Expression) : Messages =
-        as.flatMap(a => enforceInfoLevel(a.expression, e))
 
     def checkPrimitive(prm : Prm) : Messages = {
         primitivesTypesTable.get(prm.identifier) match {
@@ -638,26 +632,20 @@ class SemanticAnalyser(
     lazy val matchType : Mat => MatchType =
         attr {
             case m =>
-                val caseTypes = // Map over each case and get the tipe if its expression
+                val caseTypes =
                     m.cases.map {
                         case Case(_, _, e) =>
                             tipe(e)
                     }.distinct
-                if (caseTypes contains None) // No cases?
+                if (caseTypes contains None)
                     OkCases(None)
-                else if (caseTypes.length > 1) // All case types need to be the same, if we have more then 1 type no good
+                else if (caseTypes.length > 1)
                     BadCases()
-                else
-                    tipe(m.expression) match {
-                        case Some(SecT(_)) => caseTypes(0) match { // Enforce return type is Sec
-                            case s @ Some(SecT(_)) => OkCases(s) // Do nothing if already sec type
-                            case Some(t)           => OkCases(Some(SecT(t)))
-                            case None              => OkCases(None) // Unreachable??
-                        }
-                        case _ => OkCases(caseTypes(0))
+                else // secProps check
+                    secProp(FunT(ArgumentTypes(Vector(ArgumentType(None, m.expression))), caseTypes(0).get)) match {
+                        case true  => OkCases(caseTypes(0))
+                        case false => BadCases()
                     }
-            // else
-            //     OkCases(caseTypes(0))
         }
 
     def alias(e : Expression) : Expression =
@@ -769,8 +757,13 @@ class SemanticAnalyser(
         unaliasArgs(n, as) match {
             case Some(us) =>
                 unalias(n, t) match {
-                    case Some(u) =>
-                        Some(FunT(ArgumentTypes(us), u))
+                    case Some(u) => { // Add secProp check here
+                        val funcType = FunT(ArgumentTypes(us), u)
+                        secProp(funcType) match {
+                            case true  => Some(funcType)
+                            case false => None
+                        }
+                    }
                     case None =>
                         None
                 }
