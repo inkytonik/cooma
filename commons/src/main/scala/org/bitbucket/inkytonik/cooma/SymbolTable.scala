@@ -75,7 +75,7 @@ object SymbolTable extends Environments[CoomaEntity] {
 
     // Secret boolean
     val secBoolT : Expression =
-        SecT(VarT(Vector(FieldType("False", SecT(UniT())), FieldType("True", SecT(UniT())))))
+        VarT(Vector(FieldType("False", SecT(UniT())), FieldType("True", SecT(UniT()))))
 
     val readerT : Expression =
         RecT(Vector(
@@ -95,20 +95,20 @@ object SymbolTable extends Environments[CoomaEntity] {
 
     // Secret capabilities
     val secReaderT : Expression =
-        SecT(RecT(Vector(
+        RecT(Vector(
             FieldType("read", FunT(ArgumentTypes(Vector()), SecT(StrT())))
-        )))
+        ))
 
     val secReaderWriterT : Expression =
-        SecT(RecT(Vector(
+        RecT(Vector(
             FieldType("read", FunT(ArgumentTypes(Vector()), SecT(StrT()))),
             FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), SecT(StrT())))), SecT(UniT())))
-        )))
+        ))
 
     val secWriterT : Expression =
-        SecT(RecT(Vector(
+        RecT(Vector(
             FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), SecT(StrT())))), SecT(UniT())))
-        )))
+        ))
 
     def mkPrimType(args : Vector[Expression], retType : Expression) : FunT =
         FunT(ArgumentTypes(args.map { case e => ArgumentType(None, e) }), retType)
