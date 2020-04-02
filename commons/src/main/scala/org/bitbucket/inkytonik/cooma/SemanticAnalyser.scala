@@ -67,6 +67,8 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
+                        case SecT(t) => // Necessary to enforce only "base" types as secrets.
+                            checkSecretType(t)
                     }
         }
 
@@ -96,6 +98,14 @@ class SemanticAnalyser(
                 case _ => true
             }
             case _ => false
+        }
+
+    // Enforce only "base" types can be made secret
+    def checkSecretType(e : Expression) : Messages =
+        e match {
+            case IntT() | StrT() | BoolT() | UniT() =>
+                noMessages
+            case _  => error(e, s"cannot have a secret ${show(e)}")
         }
 
     def checkPrimitive(prm : Prm) : Messages = {
