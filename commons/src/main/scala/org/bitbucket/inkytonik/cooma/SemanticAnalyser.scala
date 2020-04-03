@@ -67,6 +67,8 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
+                        case fun @ Fun(_, _) =>
+                            checkFunction(fun)
                         case SecT(t) => // Necessary to enforce only "base" types as secrets.
                             checkSecretType(t)
                     }
@@ -98,6 +100,19 @@ class SemanticAnalyser(
                 case _ => true
             }
             case _ => false
+        }
+
+    // Enforce security property is satisfied on functions
+    def checkFunction(f : Expression) : Messages =
+        tipe(f) match {
+            case Some(fun @ FunT(_, _)) =>
+                secProp(fun) match {
+                    case true => noMessages
+                    case false =>
+                        error(f, "security property violated, return type is less secure then one or more of the arguments")
+                }
+            case _ =>
+                error(f, "security property violated, return type is less secure then one or more of the arguments")
         }
 
     // Enforce only "base" types can be made secret
@@ -182,13 +197,6 @@ class SemanticAnalyser(
                     case _ =>
                         noMessages
                 }
-            case Some(t @ SecT(VarT(fieldTypes))) =>
-                fieldTypes.find(f => f.identifier == c.identifier) match {
-                    case None =>
-                        error(c, s"variant ${c.identifier} not present in matched type ${show(alias(t))}")
-                    case _ =>
-                        noMessages
-                }
             case _ =>
                 noMessages
         }
@@ -216,7 +224,7 @@ class SemanticAnalyser(
 
     def checkMatchDiscType(e : Expression) : Messages =
         tipe(e) match {
-            case Some(VarT(_)) | Some(SecT(VarT(_))) | None =>
+            case Some(VarT(_)) | None =>
                 noMessages
             case Some(t) =>
                 error(e, s"match of non-variant type ${show(alias(t))}")

@@ -1,14 +1,1 @@
-{
-    def helper(s : String, w : Writer) Int! = { val x = w.write(s) 0 }
-    def isFalse() Int! = { val x = helper("False") 0 }
-    def isTrue() Int! = { val x = helper("True") 0 }
-
-    def declassify(b : Boolean!, w : Writer) Int! = 
-        b match { 
-            case True(_)  => isTrue()
-            case False(_) => isFalse()
-        }
-    
-    declassify(true)
-
-}
+fun(a : String, b : String!) a

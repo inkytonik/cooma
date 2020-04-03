@@ -55,19 +55,28 @@ class InformationFlowTests extends Tests {
                 ""
             ),
             InformationFlowTest(
-                "secret record can be defined",
+                "secret record cannot be defined",
                 "{ val x : { a : Int! }! = { a = 10 } 1 }",
-                ""
+                """|1:11error:cannot have a secret { a : Int! }
+                   |{ val x : { a : Int! }! = { a = 10 } 1 }
+                   |          ^
+                   |"""
             ),
             InformationFlowTest(
                 "secret variant can be defined",
                 "{ val x : < a : Int! >! = < a = 10 > 1 }",
-                ""
+                """|1:11error:cannot have a secret < a : Int! >
+                   |{ val x : < a : Int! >! = < a = 10 > 1 }
+                   |          ^
+                   |"""
             ),
             InformationFlowTest(
                 "secret type can be defined",
                 "{ val x : Type! = Int 1 }",
-                ""
+                """|1:11error:cannot have a secret Type
+                   |{ val x : Type! = Int 1 }
+                   |          ^
+                   |"""
             ),
             InformationFlowTest(
                 "secret Reader capability can be defined",
