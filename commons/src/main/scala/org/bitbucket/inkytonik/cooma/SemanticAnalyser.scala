@@ -99,11 +99,11 @@ class SemanticAnalyser(
                     as.forall(a => secLevel(a.expression) <= secLevel(r)) && secProp(r)
                 case _ => true
             }
-            case _ => false
+            case _ => true // We can't check non-type values
         }
 
     // Enforce security property is satisfied on functions
-    def checkFunction(f : Expression) : Messages =
+    def checkFunction(f : Fun) : Messages =
         tipe(f) match {
             case Some(fun @ FunT(_, _)) =>
                 secProp(fun) match {
@@ -111,8 +111,7 @@ class SemanticAnalyser(
                     case false =>
                         error(f, "security property violated, return type is less secure then one or more of the arguments")
                 }
-            case _ =>
-                error(f, "security property violated, return type is less secure then one or more of the arguments")
+            case _ => noMessages
         }
 
     // Enforce only "base" types can be made secret
@@ -220,7 +219,8 @@ class SemanticAnalyser(
 
     def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
         checkMatchDiscType(e) ++
-            checkMatchCaseNum(e, cs)
+            checkMatchCaseNum(e, cs) ++
+            checkMatchSec(e, cs) // Check security prop
 
     def checkMatchDiscType(e : Expression) : Messages =
         tipe(e) match {
@@ -239,6 +239,18 @@ class SemanticAnalyser(
             case _ =>
                 noMessages
         }
+
+    // Check security property holds for matches by creating a function to represent match (in accordance w/ proof.)
+    def checkMatchSec(e : Expression, cs : Vector[Case]) : Messages =
+        cs.foldLeft(noMessages)((m, c) => (tipe(e), tipe(c.expression)) match {
+            case (Some(t), Some(u)) =>
+                secProp(FunT(ArgumentTypes(Vector(ArgumentType(None, t))), u)) match {
+                    case true => m
+                    case false =>
+                        m ++ error(e, "security property violated, case return value is less secure then a field in the variant being matched on")
+                }
+            case _ => m
+        })
 
     def checkRecordUse(e : Expression) : Messages =
         tipe(e) match {
@@ -658,11 +670,8 @@ class SemanticAnalyser(
                     OkCases(None)
                 else if (caseTypes.length > 1)
                     BadCases()
-                else // secProps check
-                    secProp(FunT(ArgumentTypes(Vector(ArgumentType(None, m.expression))), caseTypes(0).get)) match {
-                        case true  => OkCases(caseTypes(0))
-                        case false => BadCases()
-                    }
+                else
+                    OkCases(caseTypes(0))
         }
 
     def alias(e : Expression) : Expression =
@@ -774,12 +783,8 @@ class SemanticAnalyser(
         unaliasArgs(n, as) match {
             case Some(us) =>
                 unalias(n, t) match {
-                    case Some(u) => { // Add secProp check here
-                        val funcType = FunT(ArgumentTypes(us), u)
-                        secProp(funcType) match {
-                            case true  => Some(funcType)
-                            case false => None
-                        }
+                    case Some(u) => {
+                        Some(FunT(ArgumentTypes(us), u))
                     }
                     case None =>
                         None
