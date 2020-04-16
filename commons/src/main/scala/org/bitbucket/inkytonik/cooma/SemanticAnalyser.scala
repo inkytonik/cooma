@@ -247,7 +247,7 @@ class SemanticAnalyser(
                 secProp(FunT(ArgumentTypes(Vector(ArgumentType(None, t))), u)) match {
                     case true => m
                     case false =>
-                        m ++ error(e, "security property violated, case return value is less secure then a field in the variant being matched on")
+                        m ++ error(c.expression, "security property violated, case return value is less secure then a field in the variant being matched on")
                 }
             case _ => m
         })
