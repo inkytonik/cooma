@@ -1,0 +1,18 @@
+{
+    type Patient = {
+        id : Int!,
+        name : String!,
+        age : Int
+    }
+
+    val meanAge : ({ p1 : Patient, p2 : Patient }) Int = fun (ps : { p1 : Patient, p2 : Patient })
+        Ints.div(Ints.add(ps.p1.age, ps.p2.age), 2)
+
+    val main : () Int = fun () meanAge({
+        p1 = { id = 1, name = "Alice", age = 32 },
+        p2 = { id = 2, name = "Bob", age = 16 }
+    })
+
+    main()
+}
+

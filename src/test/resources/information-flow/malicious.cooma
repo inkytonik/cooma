@@ -1,0 +1,3 @@
+fun(r : Reader, w : Writer) {
+    w.write(r.read())
+}

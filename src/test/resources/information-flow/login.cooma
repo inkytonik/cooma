@@ -1,0 +1,22 @@
+{
+    type User = { id : Int!, username : String, password : String! }
+
+    def fetchUserFromDb(username : String) User =
+        { id = 0, username = username, password = "code1234" }
+
+    def logUser(w : Writer, username : String) Unit =
+        w.write(Strings.concat(username, " logged in!"))
+
+    def login(username : String, password : String!, w : Writer) Boolean = {
+        val user : User = fetchUserFromDb(username)
+        equal(String, user.password, password) match {
+            case True(_) => {
+                val _ = logUser(w, username)
+                true
+            }
+            case False(_) => false
+        }
+    }
+
+    fun(w : Writer) login("Cameron", "code1234", w)
+}

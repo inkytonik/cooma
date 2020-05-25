@@ -67,24 +67,20 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
-                        case fun @ Fun(_, _) =>
+                        case fun @ Fun(_, _) => // Necessary to enforce security prop for functions
                             checkFunction(fun)
                         case SecT(t) => // Necessary to enforce only "base" types as secrets.
                             checkSecretType(t)
                     }
         }
 
-    // Returns the maximum security level of a given row.
-    def rowSec(fs : Vector[FieldType]) : Int =
-        fs.foldLeft(0)((l : Int, f : FieldType) => math.max(l, secLevel(f.expression)))
-
     // Computes the security level of a given expression - MUST be a type.
     def secLevel(e : Expression) : Int =
         tipe(e) match {
             case Some(TypT()) => e match {
                 case FunT(_, t1) => secLevel(t1)
-                case RecT(fs)    => rowSec(fs)
-                case VarT(fs)    => rowSec(fs)
+                case RecT(fs)    => 0 // Can't have secret rows, must always be public
+                case VarT(fs)    => 0 // Can't have secret variants, must always be publi
                 case _ : SecT    => 1
                 case _           => 0
             }
