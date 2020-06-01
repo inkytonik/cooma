@@ -446,7 +446,11 @@ class SemanticAnalyser(
                 Some(RecT(Vector(
                     FieldType("and", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT)),
                     FieldType("not", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT))), boolT)),
-                    FieldType("or", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT))
+                    FieldType("or", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT)),
+                    // Secret variants
+                    FieldType("andS", FunT(ArgumentTypes(Vector(ArgumentType(None, secBoolT), ArgumentType(None, secBoolT))), secBoolT)),
+                    FieldType("notS", FunT(ArgumentTypes(Vector(ArgumentType(None, secBoolT))), secBoolT)),
+                    FieldType("orS", FunT(ArgumentTypes(Vector(ArgumentType(None, secBoolT), ArgumentType(None, secBoolT))), secBoolT))
                 )))
 
             case BoolT() =>
@@ -471,6 +475,16 @@ class SemanticAnalyser(
                         ArgumentType(None, Idn(IdnUse("t"))),
                     )),
                     boolT
+                ))
+
+            case _ : SecEql =>
+                Some(FunT(
+                    ArgumentTypes(Vector(
+                        ArgumentType(Some(IdnDef("t")), TypT()),
+                        ArgumentType(None, Idn(IdnUse("t"))),
+                        ArgumentType(None, Idn(IdnUse("t"))),
+                    )),
+                    secBoolT
                 ))
 
             case False() =>
@@ -501,7 +515,18 @@ class SemanticAnalyser(
                     FieldType("lt", primitivesTypesTable("IntLt")),
                     FieldType("lte", primitivesTypesTable("IntLte")),
                     FieldType("gt", primitivesTypesTable("IntGt")),
-                    FieldType("gte", primitivesTypesTable("IntGte"))
+                    FieldType("gte", primitivesTypesTable("IntGte")),
+                    // Secret variants
+                    FieldType("absS", primitivesTypesTable("IntAbsS")),
+                    FieldType("addS", primitivesTypesTable("IntAddS")),
+                    FieldType("divS", primitivesTypesTable("IntDivS")),
+                    FieldType("mulS", primitivesTypesTable("IntMulS")),
+                    FieldType("powS", primitivesTypesTable("IntPowS")),
+                    FieldType("subS", primitivesTypesTable("IntSubS")),
+                    FieldType("ltS", primitivesTypesTable("IntLtS")),
+                    FieldType("lteS", primitivesTypesTable("IntLteS")),
+                    FieldType("gtS", primitivesTypesTable("IntGtS")),
+                    FieldType("gteS", primitivesTypesTable("IntGteS"))
                 )))
 
             case IntT() =>
@@ -564,7 +589,11 @@ class SemanticAnalyser(
                 Some(RecT(Vector(
                     FieldType("concat", primitivesTypesTable("StrConcat")),
                     FieldType("length", primitivesTypesTable("StrLength")),
-                    FieldType("substr", primitivesTypesTable("StrSubstr"))
+                    FieldType("substr", primitivesTypesTable("StrSubstr")),
+                    // Secret variants
+                    FieldType("concatS", primitivesTypesTable("StrConcatS")),
+                    FieldType("lengthS", primitivesTypesTable("StrLengthS")),
+                    FieldType("substrS", primitivesTypesTable("StrSubstrS"))
                 )))
 
             case StrT() =>
@@ -866,6 +895,12 @@ class SemanticAnalyser(
                     unalias(e, t)
 
             case tree.parent.pair(a : Expression, Prm("Equal", Vector(t, l, r))) =>
+                if (a eq t)
+                    Some(TypT())
+                else
+                    unalias(t, t)
+
+            case tree.parent.pair(a : Expression, Prm("EqualS", Vector(t, l, r))) =>
                 if (a eq t)
                     Some(TypT())
                 else

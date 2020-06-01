@@ -52,7 +52,22 @@ trait Compiler {
         "IntLte" -> PrimitiveMeta(intRelP(LTE)),
         "StrConcat" -> PrimitiveMeta(stringP(CONCAT)),
         "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
-        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR))
+        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR)),
+        // Secret variants
+        "EqualS" -> PrimitiveMeta(equalP),
+        "IntAbsS" -> PrimitiveMeta(intBinP(ABS)),
+        "IntAddS" -> PrimitiveMeta(intBinP(ADD)),
+        "IntSubS" -> PrimitiveMeta(intBinP(SUB)),
+        "IntMulS" -> PrimitiveMeta(intBinP(MUL)),
+        "IntDivS" -> PrimitiveMeta(intBinP(DIV)),
+        "IntPowS" -> PrimitiveMeta(intBinP(POW)),
+        "IntGtS" -> PrimitiveMeta(intRelP(GT)),
+        "IntGteS" -> PrimitiveMeta(intRelP(GTE)),
+        "IntLtS" -> PrimitiveMeta(intRelP(LT)),
+        "IntLteS" -> PrimitiveMeta(intRelP(LTE)),
+        "StrConcatS" -> PrimitiveMeta(stringP(CONCAT)),
+        "StrLengthS" -> PrimitiveMeta(stringP(LENGTH)),
+        "StrSubstrS" -> PrimitiveMeta(stringP(SUBSTR))
     )
 
     /**
@@ -144,11 +159,58 @@ trait Compiler {
             )
         )
 
+    val andS =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("l"), SecT(BoolT()), None),
+                Argument(IdnDef("r"), SecT(BoolT()), None)
+            )),
+            Mat(
+                Idn(IdnUse("l")),
+                Vector(
+                    Case("False", IdnDef("_"), False()),
+                    Case("True", IdnDef("_"), Idn(IdnUse("r")))
+                )
+            )
+        )
+
+    val notS =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("b"), SecT(BoolT()), None)
+            )),
+            Mat(
+                Idn(IdnUse("b")),
+                Vector(
+                    Case("False", IdnDef("_"), True()),
+                    Case("True", IdnDef("_"), False())
+                )
+            )
+        )
+
+    val orS =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("l"), SecT(BoolT()), None),
+                Argument(IdnDef("r"), BoolT(), None)
+            )),
+            Mat(
+                Idn(IdnUse("l")),
+                Vector(
+                    Case("False", IdnDef("_"), Idn(IdnUse("r"))),
+                    Case("True", IdnDef("_"), True())
+                )
+            )
+        )
+
     val booleans =
         Rec(Vector(
             Field("and", and),
             Field("not", not),
-            Field("or", or)
+            Field("or", or),
+            Field("andS", andS),
+            Field("notS", notS),
+            Field("orS", orS)
         ))
 
     def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
@@ -158,20 +220,40 @@ trait Compiler {
         Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
     }
 
-    def mkInt1PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(IntT()), primName)
+    def mkInt1PrimField(fieldName : String, primName : String, secret : Boolean) : Field =
+        if (secret) {
+            mkPrimField(fieldName, Vector(SecT(IntT())), primName)
+        } else {
+            mkPrimField(fieldName, Vector(IntT()), primName)
+        }
 
-    def mkInt2PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(IntT(), IntT()), primName)
+    def mkInt2PrimField(fieldName : String, primName : String, secret : Boolean) : Field =
+        if (secret) {
+            mkPrimField(fieldName, Vector(SecT(IntT()), SecT(IntT())), primName)
+        } else {
+            mkPrimField(fieldName, Vector(IntT(), IntT()), primName)
+        }
 
-    def mkStr1PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(StrT()), primName)
+    def mkStr1PrimField(fieldName : String, primName : String, secret : Boolean) : Field =
+        if (secret) {
+            mkPrimField(fieldName, Vector(SecT(StrT())), primName)
+        } else {
+            mkPrimField(fieldName, Vector(StrT()), primName)
+        }
 
-    def mkStr2PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(StrT(), StrT()), primName)
+    def mkStr2PrimField(fieldName : String, primName : String, secret : Boolean) : Field =
+        if (secret) {
+            mkPrimField(fieldName, Vector(SecT(StrT()), SecT(StrT())), primName)
+        } else {
+            mkPrimField(fieldName, Vector(StrT(), StrT()), primName)
+        }
 
-    def mkStrIntPrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(StrT(), IntT()), primName)
+    def mkStrIntPrimField(fieldName : String, primName : String, secret : Boolean) : Field =
+        if (secret) {
+            mkPrimField(fieldName, Vector(SecT(StrT()), SecT(IntT())), primName)
+        } else {
+            mkPrimField(fieldName, Vector(StrT(), IntT()), primName)
+        }
 
     val equal =
         Fun(
@@ -187,25 +269,54 @@ trait Compiler {
             ))
         )
 
+    val equalS =
+        Fun(
+            Arguments(Vector(
+                Argument(IdnDef("t"), TypT(), None),
+                Argument(IdnDef("l"), Idn(IdnUse("t")), None),
+                Argument(IdnDef("r"), Idn(IdnUse("t")), None)
+            )),
+            Prm("EqualS", Vector(
+                Idn(IdnUse("t")),
+                Idn(IdnUse("l")),
+                Idn(IdnUse("r"))
+            ))
+        )
+
     val ints =
         Rec(Vector(
-            mkInt1PrimField("abs", "IntAbs"),
-            mkInt2PrimField("add", "IntAdd"),
-            mkInt2PrimField("div", "IntDiv"),
-            mkInt2PrimField("mul", "IntMul"),
-            mkInt2PrimField("pow", "IntPow"),
-            mkInt2PrimField("sub", "IntSub"),
-            mkInt2PrimField("lt", "IntLt"),
-            mkInt2PrimField("lte", "IntLte"),
-            mkInt2PrimField("gt", "IntGt"),
-            mkInt2PrimField("gte", "IntGte")
+            mkInt1PrimField("abs", "IntAbs", false),
+            mkInt2PrimField("add", "IntAdd", false),
+            mkInt2PrimField("div", "IntDiv", false),
+            mkInt2PrimField("mul", "IntMul", false),
+            mkInt2PrimField("pow", "IntPow", false),
+            mkInt2PrimField("sub", "IntSub", false),
+            mkInt2PrimField("lt", "IntLt", false),
+            mkInt2PrimField("lte", "IntLte", false),
+            mkInt2PrimField("gt", "IntGt", false),
+            mkInt2PrimField("gte", "IntGte", false),
+            // Secret variants
+            mkInt1PrimField("absS", "IntAbsS", true),
+            mkInt2PrimField("addS", "IntAddS", true),
+            mkInt2PrimField("divS", "IntDivS", true),
+            mkInt2PrimField("mulS", "IntMulS", true),
+            mkInt2PrimField("powS", "IntPowS", true),
+            mkInt2PrimField("subS", "IntSubS", true),
+            mkInt2PrimField("ltS", "IntLtS", true),
+            mkInt2PrimField("lteS", "IntLteS", true),
+            mkInt2PrimField("gtS", "IntGtS", true),
+            mkInt2PrimField("gteS", "IntGteS", true)
         ))
 
     val strings =
         Rec(Vector(
-            mkStr2PrimField("concat", "StrConcat"),
-            mkStr1PrimField("length", "StrLength"),
-            mkStrIntPrimField("substr", "StrSubstr")
+            mkStr2PrimField("concat", "StrConcat", false),
+            mkStr1PrimField("length", "StrLength", false),
+            mkStrIntPrimField("substr", "StrSubstr", false),
+            // Secret variants
+            mkStr2PrimField("concatS", "StrConcatS", true),
+            mkStr1PrimField("lengthS", "StrLengthS", true),
+            mkStrIntPrimField("substrS", "StrSubstrS", true)
         ))
 
     def compile(exp : Expression, kappa : String => Term) : Term =
@@ -238,6 +349,9 @@ trait Compiler {
                             kappa(r))))
 
             case Eql() =>
+                compile(equal, kappa)
+
+            case SecEql() =>
                 compile(equal, kappa)
 
             case False() =>
@@ -313,7 +427,7 @@ trait Compiler {
             e match {
                 case BoolT() | ReaderT() | ReaderWriterT() | WriterT() |
                     _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT |
-                    _ : UniT | _ : VarT =>
+                    _ : UniT | _ : VarT | _ : SecT =>
                     true
                 case _ =>
                     false
@@ -435,6 +549,9 @@ trait Compiler {
                             appC(k, r))))
 
             case Eql() =>
+                tailCompile(equal, k)
+
+            case SecEql() =>
                 tailCompile(equal, k)
 
             case False() =>

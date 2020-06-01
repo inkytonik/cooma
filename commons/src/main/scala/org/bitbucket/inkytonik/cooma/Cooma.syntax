@@ -40,6 +40,7 @@ Expression =
   | 'Strings'                                                {Strings}
   | 'Type'                                                   {TypT}
   | 'equal'                                                  {Eql}
+  | 'equalS'                                                 {SecEql}
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
   | IdnUse                                                   {Idn}.
   

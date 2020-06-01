@@ -116,27 +116,50 @@ object SymbolTable extends Environments[CoomaEntity] {
     def mkPrimTypeWithArgNames(args : Vector[(String, Expression)], retType : Expression) : FunT =
         FunT(ArgumentTypes(args.map { case (x, e) => ArgumentType(Some(IdnDef(x)), e) }), retType)
 
-    def mkIntUnPrimType(retType : Expression) : FunT =
-        mkPrimType(Vector(IntT()), retType)
+    def mkIntUnPrimType(retType : Expression, secret : Boolean) : FunT =
+        if (secret) {
+            mkPrimType(Vector(SecT(IntT())), retType)
+        } else {
+            mkPrimType(Vector(IntT()), retType)
+        }
 
-    def mkIntBinPrimType(retType : Expression) : FunT =
-        mkPrimType(Vector(IntT(), IntT()), retType)
+    def mkIntBinPrimType(retType : Expression, secret : Boolean) : FunT =
+        if (secret) {
+            mkPrimType(Vector(SecT(IntT()), SecT(IntT())), retType)
+        } else {
+            mkPrimType(Vector(IntT(), IntT()), retType)
+        }
 
     val primitivesTypesTable = Map(
         "Equal" -> mkPrimTypeWithArgNames(Vector(("t", TypT()), ("l", Idn(IdnUse("t"))), ("l", Idn(IdnUse("t")))), boolT),
-        "IntAbs" -> mkIntUnPrimType(IntT()),
-        "IntAdd" -> mkIntBinPrimType(IntT()),
-        "IntSub" -> mkIntBinPrimType(IntT()),
-        "IntMul" -> mkIntBinPrimType(IntT()),
-        "IntDiv" -> mkIntBinPrimType(IntT()),
-        "IntPow" -> mkIntBinPrimType(IntT()),
-        "IntGt" -> mkIntBinPrimType(boolT),
-        "IntGte" -> mkIntBinPrimType(boolT),
-        "IntLt" -> mkIntBinPrimType(boolT),
-        "IntLte" -> mkIntBinPrimType(boolT),
+        "IntAbs" -> mkIntUnPrimType(IntT(), false),
+        "IntAdd" -> mkIntBinPrimType(IntT(), false),
+        "IntSub" -> mkIntBinPrimType(IntT(), false),
+        "IntMul" -> mkIntBinPrimType(IntT(), false),
+        "IntDiv" -> mkIntBinPrimType(IntT(), false),
+        "IntPow" -> mkIntBinPrimType(IntT(), false),
+        "IntGt" -> mkIntBinPrimType(boolT, false),
+        "IntGte" -> mkIntBinPrimType(boolT, false),
+        "IntLt" -> mkIntBinPrimType(boolT, false),
+        "IntLte" -> mkIntBinPrimType(boolT, false),
         "StrConcat" -> mkPrimType(Vector(StrT(), StrT()), StrT()),
         "StrLength" -> mkPrimType(Vector(StrT()), IntT()),
-        "StrSubstr" -> mkPrimType(Vector(StrT(), IntT()), StrT())
+        "StrSubstr" -> mkPrimType(Vector(StrT(), IntT()), StrT()),
+        // Secret versions
+        "EqualS" -> mkPrimTypeWithArgNames(Vector(("t", TypT()), ("l", Idn(IdnUse("t"))), ("l", Idn(IdnUse("t")))), secBoolT),
+        "IntAbsS" -> mkIntUnPrimType(SecT(IntT()), true),
+        "IntAddS" -> mkIntBinPrimType(SecT(IntT()), true),
+        "IntSubS" -> mkIntBinPrimType(SecT(IntT()), true),
+        "IntMulS" -> mkIntBinPrimType(SecT(IntT()), true),
+        "IntDivS" -> mkIntBinPrimType(SecT(IntT()), true),
+        "IntPowS" -> mkIntBinPrimType(SecT(IntT()), true),
+        "IntGtS" -> mkIntBinPrimType(secBoolT, true),
+        "IntGteS" -> mkIntBinPrimType(secBoolT, true),
+        "IntLtS" -> mkIntBinPrimType(secBoolT, true),
+        "IntLteS" -> mkIntBinPrimType(secBoolT, true),
+        "StrConcatS" -> mkPrimType(Vector(SecT(StrT()), SecT(StrT())), SecT(StrT())),
+        "StrLengthS" -> mkPrimType(Vector(SecT(StrT())), SecT(IntT())),
+        "StrSubstrS" -> mkPrimType(Vector(SecT(StrT()), SecT(IntT())), SecT(StrT()))
     )
 
 }

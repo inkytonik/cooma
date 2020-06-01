@@ -759,11 +759,21 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 ExecTest(
                     "Booleans",
                     "Booleans",
-                    "{ and = <function>, not = <function>, or = <function> }",
+                    """{
+                      |    and = <function>,
+                      |    not = <function>,
+                      |    or = <function>,
+                      |    andS = <function>,
+                      |    notS = <function>,
+                      |    orS = <function>
+                      |}""",
                     """{
                        |    and : (Boolean, Boolean) Boolean,
                        |    not : (Boolean) Boolean,
-                       |    or : (Boolean, Boolean) Boolean
+                       |    or : (Boolean, Boolean) Boolean,
+                       |    andS : (Boolean!, Boolean!) Boolean!,
+                       |    notS : (Boolean!) Boolean!,
+                       |    orS : (Boolean!, Boolean!) Boolean!
                        |}""",
                     "Booleans"
                 ),
@@ -780,7 +790,17 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    lt = <function>,
                       |    lte = <function>,
                       |    gt = <function>,
-                      |    gte = <function>
+                      |    gte = <function>,
+                      |    absS = <function>,
+                      |    addS = <function>,
+                      |    divS = <function>,
+                      |    mulS = <function>,
+                      |    powS = <function>,
+                      |    subS = <function>,
+                      |    ltS = <function>,
+                      |    lteS = <function>,
+                      |    gtS = <function>,
+                      |    gteS = <function>
                       |}""",
                     """{
                       |    abs : (Int) Int,
@@ -792,7 +812,17 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    lt : (Int, Int) Boolean,
                       |    lte : (Int, Int) Boolean,
                       |    gt : (Int, Int) Boolean,
-                      |    gte : (Int, Int) Boolean
+                      |    gte : (Int, Int) Boolean,
+                      |    absS : (Int!) Int!,
+                      |    addS : (Int!, Int!) Int!,
+                      |    divS : (Int!, Int!) Int!,
+                      |    mulS : (Int!, Int!) Int!,
+                      |    powS : (Int!, Int!) Int!,
+                      |    subS : (Int!, Int!) Int!,
+                      |    ltS : (Int!, Int!) Boolean!,
+                      |    lteS : (Int!, Int!) Boolean!,
+                      |    gtS : (Int!, Int!) Boolean!,
+                      |    gteS : (Int!, Int!) Boolean!
                       |}""",
                     "Ints"
                 ),
@@ -809,7 +839,17 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |    lt = <function>,
                        |    lte = <function>,
                        |    gt = <function>,
-                       |    gte = <function>
+                       |    gte = <function>,
+                       |    absS = <function>,
+                       |    addS = <function>,
+                       |    divS = <function>,
+                       |    mulS = <function>,
+                       |    powS = <function>,
+                       |    subS = <function>,
+                       |    ltS = <function>,
+                       |    lteS = <function>,
+                       |    gtS = <function>,
+                       |    gteS = <function>
                        |} >""",
                     """<
                        |    v : {
@@ -822,7 +862,17 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |        lt : (Int, Int) Boolean,
                        |        lte : (Int, Int) Boolean,
                        |        gt : (Int, Int) Boolean,
-                       |        gte : (Int, Int) Boolean
+                       |        gte : (Int, Int) Boolean,
+                       |        absS : (Int!) Int!,
+                       |        addS : (Int!, Int!) Int!,
+                       |        divS : (Int!, Int!) Int!,
+                       |        mulS : (Int!, Int!) Int!,
+                       |        powS : (Int!, Int!) Int!,
+                       |        subS : (Int!, Int!) Int!,
+                       |        ltS : (Int!, Int!) Boolean!,
+                       |        lteS : (Int!, Int!) Boolean!,
+                       |        gtS : (Int!, Int!) Boolean!,
+                       |        gteS : (Int!, Int!) Boolean!
                        |    }
                        |>"""
                 ),
@@ -842,7 +892,17 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |            lt = <function>,
                        |            lte = <function>,
                        |            gt = <function>,
-                       |            gte = <function>
+                       |            gte = <function>,
+                       |            absS = <function>,
+                       |            addS = <function>,
+                       |            divS = <function>,
+                       |            mulS = <function>,
+                       |            powS = <function>,
+                       |            subS = <function>,
+                       |            ltS = <function>,
+                       |            lteS = <function>,
+                       |            gtS = <function>,
+                       |            gteS = <function>
                        |        }
                        |    }
                        |}""",
@@ -859,7 +919,17 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        |            lt : (Int, Int) Boolean,
                        |            lte : (Int, Int) Boolean,
                        |            gt : (Int, Int) Boolean,
-                       |            gte : (Int, Int) Boolean
+                       |            gte : (Int, Int) Boolean,
+                       |            absS : (Int!) Int!,
+                       |            addS : (Int!, Int!) Int!,
+                       |            divS : (Int!, Int!) Int!,
+                       |            mulS : (Int!, Int!) Int!,
+                       |            powS : (Int!, Int!) Int!,
+                       |            subS : (Int!, Int!) Int!,
+                       |            ltS : (Int!, Int!) Boolean!,
+                       |            lteS : (Int!, Int!) Boolean!,
+                       |            gtS : (Int!, Int!) Boolean!,
+                       |            gteS : (Int!, Int!) Boolean!
                        |        }
                        |    }
                        |}"""
