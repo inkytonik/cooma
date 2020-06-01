@@ -27,7 +27,7 @@ The Cooma project at Macquarie University is investigating secure programming la
 
 * Implicit argument resolution to avoid passing many capability parameters (["COCHIS: Stable and coherent implicits", Schrivjers, Oliveira, Wadler and Mantirosian, JFP, 2019](http://dx.doi.org/10.1017/s0956796818000242))
 
-* Basic information flow analysis with the notion of public and secret data.
+* Information flow control to respect a "no write-down" security policy.
 
 ## Status
 
@@ -41,6 +41,7 @@ Specification and reference implementation is under way.
 * Single shared frontend (parsing, semantic analysis, compilation to continuation-based IR)
 * Two IR backends (reference and Truffle/GraalVM)
 * File-based execution and read-eval-print loop (REPL)
+* Public and Secret types
 
 ### Related projects
 
@@ -276,6 +277,37 @@ cooma> val y : Int! = x
 y : Int! = 10
 ```
 
+Functions must abide by the security policy: the value produces by a function must be equal to or higher then it's inputs (where a secret is considered > public).
+```ml
+cooma> fun(a : Int!, b : Int) a
+res0 : (a : Int!, b : Int) Int! = <function>
+
+cooma> fun(a : Int!, b : Int) b
+1:1:error: security property violated, return type is less secure then one or more of the arguments
+fun(a : Int!, b : Int) b
+^
+```
+
+This applies to match statements: the value returned from a case statement must be equal to or higher then it's inputs.
+```ml
+cooma> val s : Boolean! = true
+s : Boolean! = true
+
+cooma> s match { case True(_) => true case False(_) => false }
+1:27:error: security policy violated, case return value < False : Unit, True : Unit > is less secure then field type Unit!
+s match { case True(_) => true case False(_) => false }
+                          ^
+1:49:error: security policy violated, case return value < False : Unit, True : Unit > is less secure then field type Unit!
+s match { case True(_) => true case False(_) => false }
+                                                ^
+
+cooma> val r : Int! = 10
+r : Int! = 10
+
+cooma> s match { case True(_) => r case False(_) => r }
+res0 : Int! = 10
+```
+
 Capabilities can also be secret. This means there corresponding `read()` and `write()` methods also only consume or produce secret data.
 ```ml
 cooma> def f(r : Reader!) String! = r.read()
@@ -288,4 +320,13 @@ cooma> def f(r : Reader!, w : Writer) Unit = w.write(r.read())
 1:47:error: expected String, got r.read() of type String!
 def f(r : Reader!, w : Writer) Unit = w.write(r.read())
                                               ^
+```
+
+Primitive operations including secret values are prefixed by a trailing 'S'
+```ml
+cooma> Ints.addS(10, 10)
+res0 : Int! = 20
+
+cooma> equalS(Int!, 10, 10)
+res0 : Boolean! = true
 ```
