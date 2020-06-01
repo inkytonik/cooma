@@ -98,7 +98,7 @@ class SemanticAnalyser(
             case _ => true // We can't check non-type values
         }
 
-    // Enforce security property is satisfied on functions
+    // Enforce security policy is satisfied on functions
     def checkFunction(f : Fun) : Messages =
         tipe(f) match {
             case Some(fun @ FunT(_, _)) =>
@@ -216,7 +216,7 @@ class SemanticAnalyser(
     def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
         checkMatchDiscType(e) ++
             checkMatchCaseNum(e, cs) ++
-            checkMatchSec(e, cs) // Check security prop
+            checkMatchSec(e, cs) // Check security policy
 
     def checkMatchDiscType(e : Expression) : Messages =
         tipe(e) match {
@@ -236,17 +236,31 @@ class SemanticAnalyser(
                 noMessages
         }
 
-    // Check security property holds for matches by creating a function to represent match (in accordance w/ proof.)
-    def checkMatchSec(e : Expression, cs : Vector[Case]) : Messages =
-        cs.foldLeft(noMessages)((m, c) => (tipe(e), tipe(c.expression)) match {
-            case (Some(t), Some(u)) =>
-                secProp(FunT(ArgumentTypes(Vector(ArgumentType(None, t))), u)) match {
-                    case true => m
-                    case false =>
-                        m ++ error(c.expression, "security property violated, case return value is less secure then a field in the variant being matched on")
-                }
-            case _ => m
-        })
+    // Check security policy holds for matches by creating a function to represent match (in accordance w/ proof.)
+    def checkMatchSec(e : Expression, cs : Vector[Case]) : Messages = {
+        val caseTypes = tipe(e) match {
+            case Some(VarT(fields)) => // Vector[FieldType (identifier, expression)] -> Vector[(identifier, expression)]
+                fields.map(f => (f.identifier, f.expression))
+            case _ => Vector()
+        }
+        if (caseTypes.isEmpty) {
+            noMessages // If caseTypes is empty, e isn't a variant - checkMatchDiscType will catch error
+        } else {
+            cs.foldLeft(noMessages)((m, c) =>
+                caseTypes.find(tup => tup._1 == c.identifier) match { // Find corresponding case type in caseTypes
+                    case Some((_, t)) => tipe(c.expression) match {
+                        case Some(u) =>
+                            secProp(FunT(ArgumentTypes(Vector(ArgumentType(None, t))), u)) match {
+                                case true => m
+                                case false =>
+                                    m ++ error(c.expression, s"security policy violated, case return value ${show(u)} is less secure then field type ${show(t)}")
+                            }
+                        case _ => m
+                    }
+                    case None => m // Can't find corresponding type - picked up by a different rule
+                })
+        }
+    }
 
     def checkRecordUse(e : Expression) : Messages =
         tipe(e) match {
