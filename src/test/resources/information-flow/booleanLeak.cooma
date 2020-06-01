@@ -1,0 +1,17 @@
+fun(w : Writer) {
+    def leak(s : String, w : Writer) Unit = {
+        w.write(s)
+    }
+
+    val secret : Boolean! = true
+    secret match {
+        case True(_) => {
+            val result : Unit! = leak("The result was True!", w)
+            result
+        }
+        case False(_) => {
+            val result : Unit! = leak("The result was False!", w)
+            result
+        }
+    }
+}

@@ -1,3 +1,4 @@
-fun(r : Reader, w : Writer) {
-    w.write(r.read())
+fun(w : Writer, r : Reader, s : String!) {
+    val a = w.write(r.read())
+    s
 }
