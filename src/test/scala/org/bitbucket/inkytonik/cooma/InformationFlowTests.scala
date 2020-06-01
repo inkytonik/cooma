@@ -151,65 +151,65 @@ class InformationFlowTests extends Tests {
             // ),
 
             // Secret matches
-            InformationFlowTest(
-                "match on variant with secret field can return secret value",
-                """{ val x : < a : Int! > = < a = 10 >
-                    x match {
-                        case a(x) => x
-                    }
-                }""",
-                ""
-            ),
-            InformationFlowTest(
-                "match on variant with secret field cannot return public value",
-                "{ val x : < a : Int! > = < a = 10 > x match { case a(x) => 0 } }",
-                """|1:60:error: security property violated, case return value is less secure then a field in the variant being matched on
-                   |{ val x : < a : Int! > = < a = 10 > x match { case a(x) => 0 } }
-                   |                                                           ^
-                   |"""
-            ),
-            InformationFlowTest(
-                "match on variant with public field can return secret value",
-                "{ def f (s : String!, v : < a : Int> ) String! = v match { case a(x) => s } f(\"Hello\", < a = 10 >) }",
-                ""
-            ),
-            InformationFlowTest(
-                "match on variant with public field can return public value",
-                "{ val x : < a : Int > = < a = 10 > x match { case a(x) => x } }",
-                ""
-            ),
-            InformationFlowTest(
-                "match on variant with mixed fields can return secret value - called with public option",
-                "{ def f (s : Int!, v : < a : Int, b : Int! >) Int! = v match { case a(x) => s case b(x) => s } f(0, < a = 10 >) }",
-                ""
-            ),
-            InformationFlowTest(
-                "match on variant with mixed fields can return secret value - called with secret option",
-                "{ def f (s : Int!, v : < a : Int, b : Int! >) Int! = v match { case a(x) => s case b(x) => s } f(0, < b = 10 >) }",
-                ""
-            ),
-            InformationFlowTest(
-                "match on variant with mixed fields cannot return public value - called with public option",
-                "{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < a = 10 >) }",
-                """|1:75:error: security property violated, case return value is less secure then a field in the variant being matched on
-                   |{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < a = 10 >) }
-                   |                                                                          ^
-                   |1:90:error: security property violated, case return value is less secure then a field in the variant being matched on
-                   |{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < a = 10 >) }
-                   |                                                                                         ^
-                   |"""
-            ),
-            InformationFlowTest(
-                "match on variant with mixed fields cannot return public value - called with secret option",
-                "{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < b = 10 >) }",
-                """|1:75:error: security property violated, case return value is less secure then a field in the variant being matched on
-                   |{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < b = 10 >) }
-                   |                                                                          ^
-                   |1:90:error: security property violated, case return value is less secure then a field in the variant being matched on
-                   |{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < b = 10 >) }
-                   |                                                                                         ^
-                   |"""
-            ),
+            // InformationFlowTest(
+            //     "match on variant with secret field can return secret value",
+            //     """{ val x : < a : Int! > = < a = 10 >
+            //         x match {
+            //             case a(x) => x
+            //         }
+            //     }""",
+            //     ""
+            // ),
+            // InformationFlowTest(
+            //     "match on variant with secret field cannot return public value",
+            //     "{ val x : < a : Int! > = < a = 10 > x match { case a(x) => 0 } }",
+            //     """|1:60:error: security property violated, case return value is less secure then a field in the variant being matched on
+            //        |{ val x : < a : Int! > = < a = 10 > x match { case a(x) => 0 } }
+            //        |                                                           ^
+            //        |"""
+            // ),
+            // InformationFlowTest(
+            //     "match on variant with public field can return secret value",
+            //     "{ def f (s : String!, v : < a : Int> ) String! = v match { case a(x) => s } f(\"Hello\", < a = 10 >) }",
+            //     ""
+            // ),
+            // InformationFlowTest(
+            //     "match on variant with public field can return public value",
+            //     "{ val x : < a : Int > = < a = 10 > x match { case a(x) => x } }",
+            //     ""
+            // ),
+            // InformationFlowTest(
+            //     "match on variant with mixed fields can return secret value - called with public option",
+            //     "{ def f (s : Int!, v : < a : Int, b : Int! >) Int! = v match { case a(x) => s case b(x) => s } f(0, < a = 10 >) }",
+            //     ""
+            // ),
+            // InformationFlowTest(
+            //     "match on variant with mixed fields can return secret value - called with secret option",
+            //     "{ def f (s : Int!, v : < a : Int, b : Int! >) Int! = v match { case a(x) => s case b(x) => s } f(0, < b = 10 >) }",
+            //     ""
+            // ),
+            // InformationFlowTest(
+            //     "match on variant with mixed fields cannot return public value - called with public option",
+            //     "{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < a = 10 >) }",
+            //     """|1:75:error: security property violated, case return value is less secure then a field in the variant being matched on
+            //        |{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < a = 10 >) }
+            //        |                                                                          ^
+            //        |1:90:error: security property violated, case return value is less secure then a field in the variant being matched on
+            //        |{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < a = 10 >) }
+            //        |                                                                                         ^
+            //        |"""
+            // ),
+            // InformationFlowTest(
+            //     "match on variant with mixed fields cannot return public value - called with secret option",
+            //     "{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < b = 10 >) }",
+            //     """|1:75:error: security property violated, case return value is less secure then a field in the variant being matched on
+            //        |{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < b = 10 >) }
+            //        |                                                                          ^
+            //        |1:90:error: security property violated, case return value is less secure then a field in the variant being matched on
+            //        |{ def f (s : Int, v : < a : Int, b : Int! >) Int = v match { case a(x) => s case b(x) => s } f(0, < b = 10 >) }
+            //        |                                                                                         ^
+            //        |"""
+            // ),
 
             // Explicit flows
             InformationFlowTest(
