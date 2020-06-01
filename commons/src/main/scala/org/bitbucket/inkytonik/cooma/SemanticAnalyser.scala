@@ -55,8 +55,12 @@ class SemanticAnalyser(
                 checkMainProgram(e) ++
                     checkExpressionType(e) ++
                     check(e) {
-                        case App(f, as) =>
-                            checkApplication(f, as)
+                        case App(f, as) => {
+                            f match {
+                                case Eql() => checkApplication(f, as) ++ checkEquals(f, as)
+                                case _     => checkApplication(f, as)
+                            }
+                        }
                         case a @ Cat(l, r) =>
                             checkConcat(a, l, r)
                         case Idn(u @ IdnUse(i)) if entity(u) == UnknownEntity() =>
@@ -157,6 +161,13 @@ class SemanticAnalyser(
                 error(f, s"application of non-function type ${show(alias(t))}")
             case _ =>
                 noMessages
+        }
+
+    def checkEquals(f : Expression, as : Vector[Expression]) : Messages =
+        // We know f = Eql() so check to see what type has been given
+        as(0) match {
+            case t : SecT => error(as.head, s"use of public equals on secret type ${show(t)}, did you mean to you equalS?")
+            case _        => noMessages
         }
 
     def checkCase(c : Case) : Messages =

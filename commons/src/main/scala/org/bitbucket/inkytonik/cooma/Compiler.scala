@@ -352,7 +352,7 @@ trait Compiler {
                 compile(equal, kappa)
 
             case SecEql() =>
-                compile(equal, kappa)
+                compile(equalS, kappa)
 
             case False() =>
                 compile(Var(Field("False", Uni())), kappa)
@@ -552,7 +552,7 @@ trait Compiler {
                 tailCompile(equal, k)
 
             case SecEql() =>
-                tailCompile(equal, k)
+                tailCompile(equalS, k)
 
             case False() =>
                 tailCompile(Var(Field("False", Uni())), k)
