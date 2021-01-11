@@ -13,7 +13,7 @@ class TruffleBackend(config : Config) extends Backend {
     import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
     import scala.math.BigInt
 
-    override def backendName : String = "Graal"
+    override def backendName : String = "Graal VM"
 
     // Terms
     override type Term = CoomaTermNode
