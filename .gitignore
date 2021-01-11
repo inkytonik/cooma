@@ -2,6 +2,8 @@ target
 .bloop
 .metals
 .DS_Store
+.idea
+.vscode
 doc/theory.synctex.gz
 doc/theory.aux
 doc/theory.fdb_latexmk
