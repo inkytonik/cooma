@@ -8,6 +8,10 @@ The Cooma project at Macquarie University is investigating secure programming la
 ## Participants
 
 * Anthony Sloane (Anthony.Sloane@mq.edu.au)
+* Nicholas Weston
+
+## Previous Participants
+
 * Diego Ocampo Herrera
 * Cameron Pappas
 * Scott Buckley
