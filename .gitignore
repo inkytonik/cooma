@@ -1,6 +1,8 @@
 target
 .bloop
+.bsp
 .metals
+metals.sbt
 .DS_Store
 .idea
 .vscode
