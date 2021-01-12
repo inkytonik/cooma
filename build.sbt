@@ -7,18 +7,18 @@ import scala.sys.process._
 name := "cooma"
 version := "0.1.0"
 organization in ThisBuild := "org.bitbucket.inkytonik.cooma"
-scalaVersion in ThisBuild := "2.13.1"
+scalaVersion in ThisBuild := "2.13.4"
 
 lazy val kiamaDependencies = Seq(
-	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0",
-	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0" % "test" classifier ("tests"),
-	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0",
-	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0" % "test" classifier ("tests")
+	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.4.0",
+	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.4.0" % "test" classifier ("tests"),
+	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.4.0",
+	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.4.0" % "test" classifier ("tests")
 )
 
 lazy val commonsettings = Seq(
 	organization := "org.bitbucket.inkytonik.cooma",
-	scalaVersion := "2.13.1",
+	scalaVersion := "2.13.4",
 
 	unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.13/classes/org/bitbucket/inkytonik/cooma/truffle",
 	scalacOptions ++=
@@ -121,9 +121,9 @@ lazy val root = (project in file("."))
 		commonsettings,
 		mainClass in Compile := (mainClass in Compile in reference).value,
 		libraryDependencies ++= Seq(
-			"org.scalatest" %% "scalatest" % "3.1.0" % "test",
-			"org.scalatestplus" %% "scalacheck-1-14" % "3.1.0.0" % "test",
-			"org.scalacheck" %% "scalacheck" % "1.14.3" % "test",
+            "org.scalatest" %% "scalatest" % "3.2.3" % "test",
+			"org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0" % "test",
+            "org.scalacheck" %% "scalacheck" % "1.15.2" % "test",
 			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2"
 		) ++ kiamaDependencies
 	)
@@ -187,7 +187,7 @@ lazy val trufflecomponent = (project in file("truffle-component"))
 			baseDirectory.value + "/make_component.sh" !
 		},
 		installGraalVMComponent := {
-			buildComponent.value
+			// buildComponent.value
 			baseDirectory.value + "/install_component.sh" !
 		}
 	)

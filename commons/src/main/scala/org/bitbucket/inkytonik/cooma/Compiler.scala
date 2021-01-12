@@ -306,6 +306,9 @@ trait Compiler {
             // Types erase to unit
             case IsType() =>
                 compile(Uni(), kappa)
+
+            case _ =>
+                sys.error(s"compile: unexpected expression $exp")
         }
 
     object IsType {
@@ -368,6 +371,9 @@ trait Compiler {
 
             case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _, None) +: otherArgs), _, e)) =>
                 defTerm(f, k, x, compileDefBody(otherArgs, e, k))
+
+            case _ =>
+                sys.error(s"compileDef: unexpected definition $fd")
         }
     }
 
@@ -393,6 +399,9 @@ trait Compiler {
 
             case Vector() =>
                 kappa(Vector())
+
+            case _ =>
+                sys.error(s"compileRec: unexpected fields $fields")
         }
 
     def compilePrimArgs(
@@ -406,6 +415,9 @@ trait Compiler {
 
             case Vector() =>
                 kappa(Vector())
+
+            case _ =>
+                sys.error(s"compilePrimArgs: unexpected fields $args")
         }
 
     def tailCompile(exp : Expression, k : String) : Term =
@@ -507,6 +519,9 @@ trait Compiler {
             // Types erase to unit
             case IsType() =>
                 tailCompile(Uni(), k)
+
+            case _ =>
+                sys.error(s"tailCompile: unexpected expression $exp")
         }
 
     def tailCompileCapFun(n : String, x : String, e : Expression, k : String) : Term = {

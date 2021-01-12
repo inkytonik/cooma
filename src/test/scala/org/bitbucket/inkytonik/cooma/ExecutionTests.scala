@@ -1759,7 +1759,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             truffleOutContent.reset()
             result
         } else {
-            config.stringEmitter.result
+            config.stringEmitter.result()
         }
     }
 

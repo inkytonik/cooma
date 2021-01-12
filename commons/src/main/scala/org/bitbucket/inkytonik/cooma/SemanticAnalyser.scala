@@ -10,7 +10,7 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
 import org.bitbucket.inkytonik.cooma.SymbolTable._
 import org.bitbucket.inkytonik.kiama.attribution.Attribution
 import org.bitbucket.inkytonik.kiama.relation.Tree
@@ -321,6 +321,8 @@ class SemanticAnalyser(
                 fieldCount(fields, i) > 1
             case tree.parent.pair(Field(i, _), _ : Var) =>
                 false
+            case _ =>
+                sys.error(s"isDuplicateField: unexpected field $f")
         }
 
     def fieldCount(fields : Vector[Field], i : String) : Int =
@@ -332,6 +334,8 @@ class SemanticAnalyser(
                 fields.map(_.identifier).count(_ == i) > 1
             case tree.parent.pair(FieldType(i, _), VarT(fields)) =>
                 fields.map(_.identifier).count(_ == i) > 1
+            case _ =>
+                sys.error(s"isDuplicateFieldType: unexpected field type $ft")
         }
 
     def overlappingFields(
@@ -576,7 +580,7 @@ class SemanticAnalyser(
                 None
         }
 
-    abstract class MatchType
+    sealed abstract class MatchType
     case class BadCases() extends MatchType
     case class OkCases(optType : Option[Expression]) extends MatchType
 
