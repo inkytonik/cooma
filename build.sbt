@@ -84,13 +84,14 @@ lazy val commonsettings = Seq(
 	headerLicense := Some(HeaderLicense.Custom(
 		"""|This file is part of Cooma.
 		   |
-		   |Copyright (C) 2019 Anthony M Sloane, Macquarie University.
+		   |Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
 		   |
 		   |This Source Code Form is subject to the terms of the Mozilla Public
 		   |License, v. 2.0. If a copy of the MPL was not distributed with this
 		   |file, You can obtain one at http://mozilla.org/MPL/2.0/.
 		   |""".stripMargin
 	)),
+	Test/headerLicense := headerLicense.value,
 	updateOptions := updateOptions.value.withCachedResolution(true)
 )
 
@@ -195,7 +196,9 @@ lazy val trufflecomponent = (project in file("truffle-component"))
 		installGraalVMComponent := {
 			// buildComponent.value
 			baseDirectory.value + "/install_component.sh" !
-		}
+		},
+		headerLicense := (commons/headerLicense).value,
+		Test/headerLicense := (commons/headerLicense).value
 	)
 
 // Custom tasks
