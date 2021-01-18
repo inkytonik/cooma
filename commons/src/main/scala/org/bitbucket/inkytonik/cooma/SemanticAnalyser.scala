@@ -565,8 +565,6 @@ class SemanticAnalyser(
                     case _ =>
                         None
                 }
-            case FieldEntity(Field(_, e)) =>
-                tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
                 unaliasFunT(e, argsToArgTypes(as), t)
             case LetEntity(Let(_, i, None, e)) =>
