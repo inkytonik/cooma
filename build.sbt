@@ -16,11 +16,11 @@ lazy val kiamaDependencies = Seq(
 	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.4.0" % "test" classifier ("tests")
 )
 
-Global/excludeLintKeys ++=
-	Set(
-		buildInfoKeys,
-		buildInfoPackage
-	)
+// Global/excludeLintKeys ++=
+// 	Set(
+// 		buildInfoKeys,
+// 		buildInfoPackage
+// 	)
 
 lazy val commonsettings = Seq(
 	organization := "org.bitbucket.inkytonik.cooma",
