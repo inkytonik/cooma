@@ -43,16 +43,16 @@ trait Server {
                             case UnknownEntity() =>
                                 s"unknown ${n.identifier}"
                             case e : CoomaOkEntity =>
-                                val typeStr =
+                                val title = s"${e.desc} ${n.identifier}"
+                                val tipe =
                                     analyser.entityType(e) match {
                                         case Some(tipe) =>
-                                            s" : ${show(tipe)}"
+                                            show(tipe)
                                         case _ =>
                                             ""
                                     }
-                                val title = s"${e.desc} ${n.identifier}$typeStr"
-                                val p = hoverDocument(e.decl).layout
-                                s"$title\n\n```cooma\n$p```"
+                                val decl = hoverDocument(e.decl).layout
+                                s"### $title\n\n```cooma\n$tipe\n\n$decl\n```"
                         }
                 }
         })
@@ -67,8 +67,6 @@ trait Server {
                     toDoc(d)
                 case c : Case =>
                     toDoc(c)
-                case f : Field =>
-                    toDoc(f)
                 case v : Let =>
                     toDoc(v)
                 case _ =>

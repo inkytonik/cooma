@@ -47,7 +47,11 @@ object SymbolTable extends Environments[CoomaEntity] {
     }
 
     case class LetEntity(decl : Let) extends CoomaOkEntity {
-        val desc = "let"
+        val desc =
+            decl.letKind match {
+                case Type() => "type"
+                case Val()  => "value"
+            }
     }
 
     /**
