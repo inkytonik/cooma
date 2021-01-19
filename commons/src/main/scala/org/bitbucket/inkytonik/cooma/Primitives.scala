@@ -14,6 +14,7 @@ import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter, IOExcept
 
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
+import scalaj.http.Http
 
 object Primitives {
 
@@ -186,6 +187,20 @@ object Primitives {
 
         def show = s"consoleWrite $filename"
 
+    }
+
+    case class HttpRequestP[I <: Backend](url : String) extends Primitive[I] {
+        val numArgs = 0
+
+        def run(interp : I)(
+            rho : interp.Env,
+            xs : Seq[String],
+            args : Seq[String]
+        ) : interp.ValueR = {
+            interp.strR(Http(url).asString.body)
+        }
+
+        def show = s"httpRequest $url"
     }
 
     case class RecSelectP[I <: Backend]() extends Primitive[I] {
