@@ -109,6 +109,9 @@ class ReferenceBackend(
     def capabilityP(cap : String) : Primitive =
         CapabilityP(cap)
 
+    def httpRequestP(url : String) : Primitive =
+        HttpRequestP(url)
+
     def writerWriteP(filename : String) : Primitive = {
         val stdout = new StringWriter() {
             override def write(s : String) : Unit = getConfig.output().emit(s)

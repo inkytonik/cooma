@@ -41,7 +41,7 @@ trait Compiler {
      * Name of capability type?
      */
     def isCapabilityName(n : String) : Boolean =
-        (n == "Writer") || (n == "Reader") || (n == "ReaderWriter")
+        (n == "HttpClient") || (n == "Writer") || (n == "Reader") || (n == "ReaderWriter")
 
     /**
      * Case class and map that stores primitives metadata.
@@ -84,6 +84,7 @@ trait Compiler {
             }
 
             t match {
+                case HttpClientT()   => compileCapArg("HttpClient")
                 case ReaderT()       => compileCapArg("Reader")
                 case ReaderWriterT() => compileCapArg("ReaderWriter")
                 case WriterT()       => compileCapArg("Writer")
@@ -324,7 +325,7 @@ trait Compiler {
     object IsType {
         def unapply(e : Expression) : Boolean =
             e match {
-                case BoolT() | ReaderT() | ReaderWriterT() | WriterT() |
+                case BoolT() | HttpClientT() | ReaderT() | ReaderWriterT() | WriterT() |
                     _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT |
                     _ : UniT | _ : VarT =>
                     true

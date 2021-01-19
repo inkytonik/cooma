@@ -73,6 +73,11 @@ object SymbolTable extends Environments[CoomaEntity] {
     val boolT : Expression =
         VarT(Vector(FieldType("False", UniT()), FieldType("True", UniT())))
 
+    val httpClientT : Expression =
+        RecT(Vector(
+            FieldType("request", FunT(ArgumentTypes(Vector()), StrT()))
+        ))
+
     val readerT : Expression =
         RecT(Vector(
             FieldType("read", FunT(ArgumentTypes(Vector()), StrT()))

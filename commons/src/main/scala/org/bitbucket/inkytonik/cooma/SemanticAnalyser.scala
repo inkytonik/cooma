@@ -224,7 +224,7 @@ class SemanticAnalyser(
 
     def checkMainArgument(arg : Argument) : Messages =
         arg.expression match {
-            case ReaderT() | ReaderWriterT() | StrT() | WriterT() =>
+            case HttpClientT() | ReaderT() | ReaderWriterT() | StrT() | WriterT() =>
                 noMessages
             case _ =>
                 error(arg.expression, "illegal main program argument type")
@@ -406,6 +406,9 @@ class SemanticAnalyser(
                 }
 
             case _ : FunT =>
+                Some(TypT())
+
+            case HttpClientT() =>
                 Some(TypT())
 
             case u @ Idn(IdnUse(x)) =>
@@ -602,6 +605,7 @@ class SemanticAnalyser(
 
     def alias(e : Expression) : Expression =
         e match {
+            case `httpClientT`              => HttpClientT()
             case `boolT`                    => BoolT()
             case `readerT`                  => ReaderT()
             case `readerWriterT`            => ReaderWriterT()
@@ -631,6 +635,9 @@ class SemanticAnalyser(
         t match {
             case BoolT() =>
                 Some(boolT)
+
+            case HttpClientT() =>
+                Some(httpClientT)
 
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {

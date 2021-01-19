@@ -98,6 +98,8 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
         def printArgument(argument : Argument) : Unit = {
             config.output().emit(s"  ${argument.idnDef.identifier}: ")
             argument.expression match {
+                case HttpClientT() =>
+                    config.output().emit("a HTTP client")
                 case ReaderT() =>
                     config.output().emit("a reader")
                 case ReaderWriterT() =>

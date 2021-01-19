@@ -106,6 +106,12 @@ object Primitives {
             }
 
             name match {
+                case "HttpClient" =>
+                    try {
+                        makeCapability(Vector(("request", interp.httpRequestP(argument))))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
                 case "Writer" =>
                     try {
                         makeCapability(Vector(("write", interp.writerWriteP(argument))))
@@ -190,15 +196,14 @@ object Primitives {
     }
 
     case class HttpRequestP[I <: Backend](url : String) extends Primitive[I] {
-        val numArgs = 0
+        val numArgs = 1
 
         def run(interp : I)(
             rho : interp.Env,
             xs : Seq[String],
             args : Seq[String]
-        ) : interp.ValueR = {
+        ) : interp.ValueR =
             interp.strR(Http(url).asString.body)
-        }
 
         def show = s"httpRequest $url"
     }
