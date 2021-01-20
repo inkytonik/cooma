@@ -14,7 +14,7 @@ Expression {paren} =
     "fun" '(' Arguments ")" Expression                       {Fun, right, 4}
   | '(' ArgumentTypes ")" Expression                         {FunT, right, 4}
   | Expression sp "match" '{' nest(Case+) \n '}'             {Mat, left, 3}
-  | Expression "&" Expression                                {Cat, left, 2}
+  | Expression sp "&" Expression                             {Cat, left, 2}
   | Expression '(' Expression ** "," ')'                     {App, left, 1}
   | Expression '.' FieldUse                                  {Sel, left, 1}
   | '{' '}'                                                  {Uni}
