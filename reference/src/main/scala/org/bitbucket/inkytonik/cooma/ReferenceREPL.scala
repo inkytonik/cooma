@@ -17,7 +17,6 @@ trait ReferenceREPL extends REPL {
     self : Compiler with ReferenceBackend =>
 
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinter.{any, layout}
 
     var currentDynamicEnv : Env = _
 

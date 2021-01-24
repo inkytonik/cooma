@@ -183,7 +183,7 @@ trait Compiler {
     def mkStrIntPrimField(fieldName : String, primName : String) : Field =
         mkPrimField(fieldName, Vector(StrT(), IntT()), primName)
 
-    val equal =
+    val equalPrim =
         Fun(
             Arguments(Vector(
                 Argument(IdnDef("t"), TypT(), None),
@@ -197,7 +197,7 @@ trait Compiler {
             ))
         )
 
-    val ints =
+    val intPrims =
         Rec(Vector(
             mkInt1PrimField("abs", "IntAbs"),
             mkInt2PrimField("add", "IntAdd"),
@@ -211,7 +211,7 @@ trait Compiler {
             mkInt2PrimField("gte", "IntGte")
         ))
 
-    val strings =
+    val stringPrims =
         Rec(Vector(
             mkStr2PrimField("concat", "StrConcat"),
             mkStr1PrimField("length", "StrLength"),
@@ -248,7 +248,7 @@ trait Compiler {
                             kappa(r))))
 
             case Eql() =>
-                compile(equal, kappa)
+                compile(equalPrim, kappa)
 
             case False() =>
                 compile(Var(Field("False", Uni())), kappa)
@@ -266,7 +266,7 @@ trait Compiler {
                 kappa(i)
 
             case Ints() =>
-                compile(ints, kappa)
+                compile(intPrims, kappa)
 
             case Mat(e, cs) =>
                 compileMatch(e, cs, kappa)
@@ -297,7 +297,7 @@ trait Compiler {
                     kappa(s))
 
             case Strings() =>
-                compile(strings, kappa)
+                compile(stringPrims, kappa)
 
             case True() =>
                 compile(Var(Field("True", Uni())), kappa)
@@ -457,7 +457,7 @@ trait Compiler {
                             appC(k, r))))
 
             case Eql() =>
-                tailCompile(equal, k)
+                tailCompile(equalPrim, k)
 
             case False() =>
                 tailCompile(Var(Field("False", Uni())), k)
@@ -478,7 +478,7 @@ trait Compiler {
                 appC(k, x)
 
             case Ints() =>
-                tailCompile(ints, k)
+                tailCompile(intPrims, k)
 
             case Mat(e, cs) =>
                 tailCompileMatch(e, cs, k)
@@ -510,7 +510,7 @@ trait Compiler {
                     appC(k, s))
 
             case Strings() =>
-                tailCompile(strings, k)
+                tailCompile(stringPrims, k)
 
             case True() =>
                 tailCompile(Var(Field("True", Uni())), k)

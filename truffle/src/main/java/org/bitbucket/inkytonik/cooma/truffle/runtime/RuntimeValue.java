@@ -29,7 +29,7 @@ public abstract class RuntimeValue implements TruffleObject, PrettyPrintable {
     public String pprint() {
         try {
             StringBackend backend = new StringBackend(80);
-            DataLayouter layouter = new DataLayouter(backend, 4);
+            DataLayouter layouter = new DataLayouter(backend, 2);
             layouter.print(this);
             layouter.close();
             return backend.getString();

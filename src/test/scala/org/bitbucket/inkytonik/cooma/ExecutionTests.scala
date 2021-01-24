@@ -761,28 +761,58 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "Booleans",
                     "{ and = <function>, not = <function>, or = <function> }",
                     """{
-                       |    and : (Boolean, Boolean) Boolean,
-                       |    not : (Boolean) Boolean,
-                       |    or : (Boolean, Boolean) Boolean
-                       |}""",
+                      |  and : (Boolean, Boolean) Boolean,
+                      |  not : (Boolean) Boolean,
+                      |  or : (Boolean, Boolean) Boolean
+                      |}""",
                     "Booleans"
                 ),
                 ExecTest(
                     "Ints",
                     "Ints",
                     """{
-                      |    abs = <function>,
-                      |    add = <function>,
-                      |    div = <function>,
-                      |    mul = <function>,
-                      |    pow = <function>,
-                      |    sub = <function>,
-                      |    lt = <function>,
-                      |    lte = <function>,
-                      |    gt = <function>,
-                      |    gte = <function>
+                      |  abs = <function>,
+                      |  add = <function>,
+                      |  div = <function>,
+                      |  mul = <function>,
+                      |  pow = <function>,
+                      |  sub = <function>,
+                      |  lt = <function>,
+                      |  lte = <function>,
+                      |  gt = <function>,
+                      |  gte = <function>
                       |}""",
                     """{
+                      |  abs : (Int) Int,
+                      |  add : (Int, Int) Int,
+                      |  div : (Int, Int) Int,
+                      |  mul : (Int, Int) Int,
+                      |  pow : (Int, Int) Int,
+                      |  sub : (Int, Int) Int,
+                      |  lt : (Int, Int) Boolean,
+                      |  lte : (Int, Int) Boolean,
+                      |  gt : (Int, Int) Boolean,
+                      |  gte : (Int, Int) Boolean
+                      |}""",
+                    "Ints"
+                ),
+                ExecTest(
+                    "< v = Ints >",
+                    "< v = Ints >",
+                    """< v = {
+                      |  abs = <function>,
+                      |  add = <function>,
+                      |  div = <function>,
+                      |  mul = <function>,
+                      |  pow = <function>,
+                      |  sub = <function>,
+                      |  lt = <function>,
+                      |  lte = <function>,
+                      |  gt = <function>,
+                      |  gte = <function>
+                      |} >""",
+                    """<
+                      |  v : {
                       |    abs : (Int) Int,
                       |    add : (Int, Int) Int,
                       |    div : (Int, Int) Int,
@@ -793,78 +823,47 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                       |    lte : (Int, Int) Boolean,
                       |    gt : (Int, Int) Boolean,
                       |    gte : (Int, Int) Boolean
+                      |  }
+                      |>"""
+                ),
+                ExecTest(
+                    "{ x = { a = 1, b = Ints } }",
+                    "{ x = { a = 1, b = Ints } }",
+                    """{
+                      |  x = {
+                      |    a = 1,
+                      |    b = {
+                      |      abs = <function>,
+                      |      add = <function>,
+                      |      div = <function>,
+                      |      mul = <function>,
+                      |      pow = <function>,
+                      |      sub = <function>,
+                      |      lt = <function>,
+                      |      lte = <function>,
+                      |      gt = <function>,
+                      |      gte = <function>
+                      |    }
+                      |  }
                       |}""",
-                    "Ints"
-                ),
-                ExecTest(
-                    "< v = Ints >",
-                    "< v = Ints >",
-                    """< v = {
-                       |    abs = <function>,
-                       |    add = <function>,
-                       |    div = <function>,
-                       |    mul = <function>,
-                       |    pow = <function>,
-                       |    sub = <function>,
-                       |    lt = <function>,
-                       |    lte = <function>,
-                       |    gt = <function>,
-                       |    gte = <function>
-                       |} >""",
-                    """<
-                       |    v : {
-                       |        abs : (Int) Int,
-                       |        add : (Int, Int) Int,
-                       |        div : (Int, Int) Int,
-                       |        mul : (Int, Int) Int,
-                       |        pow : (Int, Int) Int,
-                       |        sub : (Int, Int) Int,
-                       |        lt : (Int, Int) Boolean,
-                       |        lte : (Int, Int) Boolean,
-                       |        gt : (Int, Int) Boolean,
-                       |        gte : (Int, Int) Boolean
-                       |    }
-                       |>"""
-                ),
-                ExecTest(
-                    "{ x = { a = 1, b = Ints } }",
-                    "{ x = { a = 1, b = Ints } }",
                     """{
-                       |    x = {
-                       |        a = 1,
-                       |        b = {
-                       |            abs = <function>,
-                       |            add = <function>,
-                       |            div = <function>,
-                       |            mul = <function>,
-                       |            pow = <function>,
-                       |            sub = <function>,
-                       |            lt = <function>,
-                       |            lte = <function>,
-                       |            gt = <function>,
-                       |            gte = <function>
-                       |        }
-                       |    }
-                       |}""",
-                    """{
-                       |    x : {
-                       |        a : Int,
-                       |        b : {
-                       |            abs : (Int) Int,
-                       |            add : (Int, Int) Int,
-                       |            div : (Int, Int) Int,
-                       |            mul : (Int, Int) Int,
-                       |            pow : (Int, Int) Int,
-                       |            sub : (Int, Int) Int,
-                       |            lt : (Int, Int) Boolean,
-                       |            lte : (Int, Int) Boolean,
-                       |            gt : (Int, Int) Boolean,
-                       |            gte : (Int, Int) Boolean
-                       |        }
-                       |    }
-                       |}"""
-                ),
-                ExecTest(
+                      |  x : {
+                      |    a : Int,
+                      |    b : {
+                      |      abs : (Int) Int,
+                      |      add : (Int, Int) Int,
+                      |      div : (Int, Int) Int,
+                      |      mul : (Int, Int) Int,
+                      |      pow : (Int, Int) Int,
+                      |      sub : (Int, Int) Int,
+                      |      lt : (Int, Int) Boolean,
+                      |      lte : (Int, Int) Boolean,
+                      |      gt : (Int, Int) Boolean,
+                      |      gte : (Int, Int) Boolean
+                      |    }
+                      |  }
+                      |}"""
+                ), ExecTest(
                     "equal has the correct type",
                     "equal",
                     "<function>",

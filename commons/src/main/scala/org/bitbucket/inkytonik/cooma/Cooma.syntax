@@ -5,6 +5,8 @@ header {
     import scala.math.BigInt;
 }
 
+option defaultIndent (2);
+
 // Cooma source language
 
 Program =

@@ -22,7 +22,6 @@ class ReferenceBackend(
 
     import org.bitbucket.inkytonik.cooma.Primitives._
     import org.bitbucket.inkytonik.cooma.Util.escape
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
 
     override def backendName : String = "Reference"
@@ -205,6 +204,7 @@ class ReferenceBackend(
     /*
      * Custom IR pretty-printer that escapes string terms.
      */
+
     def showTerm(t : Term) : String =
         formatTerm(t, 5).layout
 

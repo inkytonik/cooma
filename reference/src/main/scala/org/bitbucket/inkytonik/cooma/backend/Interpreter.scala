@@ -11,12 +11,13 @@
 package org.bitbucket.inkytonik.cooma
 package backend
 
-class Interpreter(config : Config) {
+import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
+
+class Interpreter(config : Config) extends PrettyPrinter {
 
     self : ReferenceBackend =>
 
     import org.bitbucket.inkytonik.cooma.Util.escape
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
     import scala.annotation.tailrec
 
@@ -212,6 +213,8 @@ class Interpreter(config : Config) {
     /*
 	 * Pretty-printer for runtime result values.
 	 */
+
+    override val defaultIndent = 2
 
     def showRuntimeValue(v : ValueR) : String =
         formatRuntimeValue(v).layout
