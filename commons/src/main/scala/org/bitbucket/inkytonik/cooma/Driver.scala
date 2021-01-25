@@ -46,6 +46,18 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
 
     val analysers = scala.collection.mutable.Map[Source, SemanticAnalyser]()
 
+    override def compileSource(source : Source, config : Config) : Unit = {
+        sources(source.name) = source
+        makeast(source, config) match {
+            case Left(ast) =>
+                process(source, ast, config)
+            case Right(messages) =>
+                clearSyntacticMessages(source, config)
+                clearSemanticMessages(source, config)
+                report(source, messages, config)
+        }
+    }
+
     override def makeast(source : Source, config : Config) : Either[Program, Messages] = {
         val p = new CoomaParser(source, positions)
         val pr = p.pProgram(0)
