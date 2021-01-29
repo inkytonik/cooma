@@ -26,7 +26,6 @@ class SemanticAnalyser(
     import org.bitbucket.inkytonik.kiama.util.Messaging.{check, collectMessages, error, Messages, noMessages}
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.SemanticAnalysis.subtype
     import org.bitbucket.inkytonik.cooma.SymbolTable.primitivesTypesTable
 
     val decorators = new Decorators(tree)
@@ -150,20 +149,43 @@ class SemanticAnalyser(
         }
 
     def checkConcat(e : Cat, l : Expression, r : Expression) : Messages = {
-        checkRecordUse(l) ++
-            checkRecordUse(r) ++
-            ((tipe(l), tipe(r)) match {
-                case (Some(RecT(rl)), Some(RecT(rr))) =>
-                    val overlap = overlappingFields(rl, rr)
-                    if (overlap.isEmpty)
+        def checkOverlapping(rl : Vector[FieldType], rr : Vector[FieldType]) : Messages = {
+            val overlap = overlappingFields(rl, rr)
+            if (overlap.isEmpty)
+                noMessages
+            else {
+                val fieldsMsg = overlap.mkString(", ")
+                error(e, s"record concatenation has overlapping field(s) $fieldsMsg")
+            }
+        }
+        (tipe(l), tipe(r)) match {
+            case (None, _) | (_, None) =>
+                // error occurred elsewhere
+                noMessages
+            case (Some(RecT(rl)), Some(RecT(rr))) =>
+                // term-level concatenation
+                checkOverlapping(rl, rr)
+            case (Some(RecT(_)), Some(t)) =>
+                // term-level concatenation, invalid right operand
+                error(e, s"expected record, got ${show(alias(t))}")
+            case (Some(TypT()), Some(TypT())) =>
+                // type-level concatenation
+                (unalias(e, l), unalias(e, r)) match {
+                    case (None, _) | (_, None) =>
                         noMessages
-                    else {
-                        val fieldsMsg = overlap.mkString(", ")
-                        error(e, s"record concatenation has overlapping field(s) $fieldsMsg")
-                    }
-                case _ =>
-                    noMessages
-            })
+                    case (Some(RecT(rl)), Some(RecT(rr))) =>
+                        checkOverlapping(rl, rr)
+                    case (Some(RecT(_)), Some(t)) =>
+                        error(e, s"expected record type, got ${show(alias(t))}")
+                    case (Some(t), _) =>
+                        error(e, s"expected record type, got ${show(alias(t))}")
+                }
+            case (Some(TypT()), Some(t)) =>
+                // type-level concatenation, invalid right operand
+                error(e, s"expected type, got ${show(alias(t))}")
+            case (Some(t), _) =>
+                error(e, s"expected record or type, got ${show(alias(t))}")
+        }
     }
 
     def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
@@ -184,14 +206,6 @@ class SemanticAnalyser(
                 error(cs(0), s"expected ${fields.length} cases, got ${cs.length}")
             case _ =>
                 noMessages
-        }
-
-    def checkRecordUse(e : Expression) : Messages =
-        tipe(e) match {
-            case Some(RecT(_)) | None =>
-                noMessages
-            case Some(t) =>
-                error(e, s"expected record type, got ${show(alias(t))}")
         }
 
     def checkFieldUse(e : Expression, f : FieldUse) : Messages = {
@@ -373,13 +387,23 @@ class SemanticAnalyser(
             case BoolT() =>
                 Some(TypT())
 
-            case Cat(e1, e2) =>
+            case n @ Cat(e1, e2) =>
                 (tipe(e1), tipe(e2)) match {
                     case (Some(RecT(r1)), Some(RecT(r2))) =>
                         if (overlappingFields(r1, r2).isEmpty)
                             Some(RecT(r1 ++ r2))
                         else
                             None
+                    case (Some(TypT()), Some(TypT())) =>
+                        (unalias(n, e1), unalias(n, e2)) match {
+                            case (Some(RecT(r1)), Some(RecT(r2))) =>
+                                if (overlappingFields(r1, r2).isEmpty)
+                                    Some(TypT())
+                                else
+                                    None
+                            case _ =>
+                                None
+                        }
                     case _ =>
                         None
                 }
@@ -632,6 +656,14 @@ class SemanticAnalyser(
             case BoolT() =>
                 Some(boolT)
 
+            case Cat(l, r) =>
+                (unalias(n, l), unalias(n, r)) match {
+                    case (Some(RecT(l)), Some(RecT(r))) =>
+                        Some(RecT(l ++ r))
+                    case _ =>
+                        None
+                }
+
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {
                     case ArgumentEntity(Argument(_, TypT(), _)) =>
@@ -808,29 +840,24 @@ class SemanticAnalyser(
                 replType(input).map(alias)
         }
 
-}
-
-object SemanticAnalysis {
-
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-
     def fieldtypeNames(fts : Vector[FieldType]) : Vector[String] =
         fts.map(_.identifier)
 
-    def subtype(t : Expression, u : Expression) : Boolean =
+    def subtype(t : Expression, u : Expression) : Boolean = {
         (t == u) ||
-            ((t, u) match {
-                case (RecT(tr), RecT(ur)) =>
+            ((unalias(t, t), unalias(t, t)) match {
+                case (Some(RecT(tr)), Some(RecT(ur))) =>
                     val urn = fieldtypeNames(ur)
                     urn.diff(fieldtypeNames(tr)).isEmpty && subtypesFields(urn, tr, ur)
-                case (VarT(tr), VarT(ur)) =>
+                case (Some(VarT(tr)), Some(VarT(ur))) =>
                     val trn = fieldtypeNames(tr)
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
-                case (FunT(ArgumentTypes(ts), t), FunT(ArgumentTypes(us), u)) =>
+                case (Some(FunT(ArgumentTypes(ts), t)), Some(FunT(ArgumentTypes(us), u))) =>
                     subtypesArgs(us, ts) && subtype(t, u)
                 case _ =>
                     false
             })
+    }
 
     def subtypesArgs(ts : Vector[ArgumentType], us : Vector[ArgumentType]) : Boolean =
         (ts.length == us.length) &&
