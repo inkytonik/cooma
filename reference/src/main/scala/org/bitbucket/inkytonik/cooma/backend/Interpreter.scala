@@ -45,7 +45,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
         if (config.server()) {
             if (driver.settingBool("showTrace"))
-                driver.publishProduct(source, "trace", "cooma")
+                driver.publishProduct(source, "trace", "IR")
         }
         interpret(term, emptyEnv, args, config) match {
             case err @ ErrR(msg) =>
