@@ -74,7 +74,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
             }
             if (config.server()) {
                 if (driver.settingBool("showTrace")) {
-                    driver.publishProduct(source, "trace", "cooma", formatState(rho, term), true)
+                    driver.publishProduct(source, "trace", "IR", formatState(rho, term), true)
                 }
             }
 
