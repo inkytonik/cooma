@@ -43,6 +43,10 @@ class Interpreter(config : Config) extends PrettyPrinter {
         ConsVE(env, i, v)
 
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
+        if (config.server()) {
+            if (driver.settingBool("showTrace"))
+                driver.publishProduct(source, "trace", "cooma")
+        }
         interpret(term, emptyEnv, args, config) match {
             case err @ ErrR(msg) =>
                 config.output().emitln(showRuntimeValue(err))
@@ -63,7 +67,17 @@ class Interpreter(config : Config) extends PrettyPrinter {
     def interpret(term : Term, env : Env, args : Seq[String], config : Config) : ValueR = {
 
         @tailrec
-        def interpretAux(rho : Env, term : Term) : ValueR =
+        def interpretAux(rho : Env, term : Term) : ValueR = {
+
+            if (config.trace()) {
+                config.output().emit(showState(rho, term))
+            }
+            if (config.server()) {
+                if (driver.settingBool("showTrace")) {
+                    driver.publishProduct(source, "trace", "cooma", formatState(rho, term), true)
+                }
+            }
+
             term match {
                 case AppC("$halt", x) =>
                     lookupR(rho, x)
@@ -137,6 +151,8 @@ class Interpreter(config : Config) extends PrettyPrinter {
                     val rho2 : Env = ConsVE(rho, x, interpretValue(v, rho))
                     interpretAux(rho2, t)
             }
+
+        }
 
         def interpretValue(value : Value, rho : Env) : ValueR =
             value match {
@@ -216,11 +232,23 @@ class Interpreter(config : Config) extends PrettyPrinter {
 
     override val defaultIndent = 2
 
+    def showState(rho : Env, term : Term) : String =
+        formatState(rho, term).layout
+
+    def formatState(rho : Env, term : Term) : Document =
+        pretty(toDocEnv(rho) <> toDocTerm(term) <> line)
+
     def showRuntimeValue(v : ValueR) : String =
         formatRuntimeValue(v).layout
 
     def formatRuntimeValue(v : ValueR, w : Width = defaultWidth) : Document =
         pretty(group(toDocRuntimeValue(v)), w)
+
+    def showEnv(rho : Env) : String =
+        formatEnv(rho, 5).layout
+
+    def formatEnv(rho : Env, w : Width = defaultWidth) : Document =
+        pretty(group(toDocEnv(rho)), w)
 
     def toDocRuntimeValue(v : ValueR) : Doc =
         v match {
@@ -244,5 +272,20 @@ class Interpreter(config : Config) extends PrettyPrinter {
 
     def toDocField(field : FldR) : Doc =
         value(field.x) <+> text("=") <+> toDocRuntimeValue(field.v)
+
+    def toDocEnv(rho : Env) : Doc =
+        rho match {
+            case ConsCE(e, x, ClsC(_, k, body)) =>
+                line <> x <+> k <+> "=" <+> toDocTerm(body) <> toDocEnv(e)
+
+            case ConsFE(e, ce, ds) =>
+                hcat(ds.map(toDocDefTerm)) <@> toDocEnv(e)
+
+            case ConsVE(e, x, v) =>
+                line <> x <+> "=" <+> toDocRuntimeValue(v) <> toDocEnv(e)
+
+            case NilE() =>
+                line
+        }
 
 }
