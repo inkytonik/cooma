@@ -48,11 +48,11 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
 
     override def compileSource(source : Source, config : Config) : Unit = {
         sources(source.name) = source
+        clearSyntacticMessages(source, config)
         makeast(source, config) match {
             case Left(ast) =>
                 process(source, ast, config)
             case Right(messages) =>
-                clearSyntacticMessages(source, config)
                 clearSemanticMessages(source, config)
                 report(source, messages, config)
         }
