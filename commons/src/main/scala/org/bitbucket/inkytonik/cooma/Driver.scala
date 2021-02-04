@@ -100,8 +100,6 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
             argument.expression match {
                 case ReaderT() =>
                     config.output().emit("a reader")
-                case ReaderWriterT() =>
-                    config.output().emit("a reader writer")
                 case StrT() =>
                     config.output().emit("a string")
                 case WriterT() =>

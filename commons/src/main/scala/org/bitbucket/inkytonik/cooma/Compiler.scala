@@ -84,9 +84,8 @@ trait Compiler {
             }
 
             t match {
-                case ReaderT()       => compileCapArg("Reader")
-                case ReaderWriterT() => compileCapArg("ReaderWriter")
-                case WriterT()       => compileCapArg("Writer")
+                case ReaderT() => compileCapArg("Reader")
+                case WriterT() => compileCapArg("Writer")
 
                 case StrT() =>
                     letV(a, prmV(argumentP(nArg), Vector()),
@@ -324,7 +323,7 @@ trait Compiler {
     object IsType {
         def unapply(e : Expression) : Boolean =
             e match {
-                case BoolT() | ReaderT() | ReaderWriterT() | WriterT() |
+                case BoolT() | ReaderT() | WriterT() |
                     _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT |
                     _ : UniT | _ : VarT =>
                     true

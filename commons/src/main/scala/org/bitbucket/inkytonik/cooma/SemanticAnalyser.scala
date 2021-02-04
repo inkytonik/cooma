@@ -238,7 +238,7 @@ class SemanticAnalyser(
 
     def checkMainArgument(arg : Argument) : Messages =
         arg.expression match {
-            case ReaderT() | ReaderWriterT() | StrT() | WriterT() =>
+            case ReaderT() | StrT() | WriterT() =>
                 noMessages
             case _ =>
                 error(arg.expression, "illegal main program argument type")
@@ -477,9 +477,6 @@ class SemanticAnalyser(
             case ReaderT() =>
                 Some(TypT())
 
-            case ReaderWriterT() =>
-                Some(TypT())
-
             case Rec(fields) =>
                 makeRow(fields).map(RecT)
 
@@ -628,7 +625,6 @@ class SemanticAnalyser(
         e match {
             case `boolT`                    => BoolT()
             case `readerT`                  => ReaderT()
-            case `readerWriterT`            => ReaderWriterT()
             case `writerT`                  => WriterT()
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
             case RecT(fs)                   => RecT(aliasFieldTypes(fs))
@@ -679,9 +675,6 @@ class SemanticAnalyser(
 
             case ReaderT() =>
                 Some(readerT)
-
-            case ReaderWriterT() =>
-                Some(readerWriterT)
 
             case RecT(fieldTypes) =>
                 unaliasRecT(n, fieldTypes)
