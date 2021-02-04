@@ -76,7 +76,7 @@ trait Compiler {
 
         def compileTopArg(a : String, t : Expression, e : Expression) : Term = {
 
-            def compileCapArg(n : String) : Term = {
+            def compileCapArg(n : Seq[String]) : Term = {
                 val x = fresh("x")
                 letV(x, prmV(argumentP(nArg), Vector()),
                     letV(a, prmV(capabilityP(n), Vector(x)),
@@ -84,15 +84,22 @@ trait Compiler {
             }
 
             t match {
-                case ReaderT() => compileCapArg("Reader")
-                case WriterT() => compileCapArg("Writer")
-
                 case StrT() =>
                     letV(a, prmV(argumentP(nArg), Vector()),
                         compileTop(e, nArg + 1))
-
-                case _ =>
-                    sys.error(s"compileTopArg: ${show(t)} arguments not supported")
+                case t =>
+                    def aux(t : Expression) : Seq[String] =
+                        t match {
+                            case Cat(e1, e2) =>
+                                aux(e1) ++ aux(e2)
+                            case ReaderT() =>
+                                Seq("Reader")
+                            case WriterT() =>
+                                Seq("Writer")
+                            case t =>
+                                sys.error(s"compileTopArg: ${show(t)} arguments not supported")
+                        }
+                    compileCapArg(aux(t))
             }
 
         }
@@ -332,16 +339,6 @@ trait Compiler {
             }
     }
 
-    def compileCapFun(n : String, x : String, e : Expression, kappa : String => Term) : Term = {
-        val f = fresh("f")
-        val j = fresh("k")
-        val y = fresh("y")
-        letV(f, funV(j, y,
-            letV(x, prmV(capabilityP(n), Vector(y)),
-                tailCompile(e, j))),
-            kappa(f))
-    }
-
     def compileFun(x : String, t : Expression, e : Expression, kappa : String => Term) : Term = {
         val f = fresh("f")
         val j = fresh("k")
@@ -532,16 +529,6 @@ trait Compiler {
             case _ =>
                 sys.error(s"tailCompile: unexpected expression $exp")
         }
-
-    def tailCompileCapFun(n : String, x : String, e : Expression, k : String) : Term = {
-        val f = fresh("f")
-        val j = fresh("k")
-        val y = fresh("y")
-        letV(f, funV(j, y,
-            letV(x, prmV(capabilityP(n), Vector(y)),
-                tailCompile(e, j))),
-            appC(k, x))
-    }
 
     def tailCompileFun(x : String, t : Expression, e : Expression, k : String) : Term = {
         val f = fresh("f")

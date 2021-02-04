@@ -15,6 +15,9 @@ import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter, IOExcept
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
 
+import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
+
 object Primitives {
 
     trait Primitive[I <: Backend] {
@@ -70,13 +73,13 @@ object Primitives {
         def show = s"readerRead $filename"
     }
 
-    case class CapabilityP[I <: Backend](cap : String) extends Primitive[I] {
+    case class CapabilityP[I <: Backend](cap : Seq[String]) extends Primitive[I] {
         val numArgs = 1
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
             capability(interp)(rho, cap, xs.head)
 
-        def capability(interp : I)(rho : interp.Env, name : String, x : String) : interp.ValueR = {
+        def capability(interp : I)(rho : interp.Env, names : Seq[String], x : String) : interp.ValueR = {
 
             def makeCapability(pairs : Vector[(String, interp.Primitive)]) : interp.ValueR = {
                 interp.recR(
@@ -104,31 +107,32 @@ object Primitives {
                 }
             }
 
-            name match {
-                case "Writer" =>
-                    try {
-                        makeCapability(Vector(("write", interp.writerWriteP(argument))))
-                    } catch {
-                        case capE : CapabilityException => interp.errR(capE.getMessage)
-                    }
-                case "Reader" =>
-                    try {
-                        makeCapability(Vector(("read", interp.readerReadP(argument))))
-                    } catch {
-                        case capE : CapabilityException => interp.errR(capE.getMessage)
-                    }
-                case "ReaderWriter" =>
-                    try {
-                        makeCapability(Vector(
-                            ("read", interp.readerReadP(argument)),
-                            ("write", interp.writerWriteP(argument))
-                        ))
-                    } catch {
-                        case capE : CapabilityException => interp.errR(capE.getMessage)
-                    }
-                case _ =>
-                    sys.error(s"capability: unknown primitive $name")
-            }
+            @tailrec
+            def aux(
+                names : Seq[String],
+                result : Vector[(String, interp.Primitive)] = Vector.empty
+            ) : interp.ValueR =
+                names match {
+                    case hd +: tl =>
+                        Try(
+                            hd match {
+                                case "Writer" => "write" -> interp.writerWriteP(argument)
+                                case "Reader" => "read" -> interp.readerReadP(argument)
+                                case name     => sys.error(s"capability: unknown primitive $name")
+                            }
+                        ) match {
+                                case Success(pair) =>
+                                    aux(tl, result :+ pair)
+                                case Failure(capE : CapabilityException) =>
+                                    interp.errR(capE.getMessage)
+                                case Failure(e) =>
+                                    throw e
+                            }
+                    case _ =>
+                        makeCapability(result)
+                }
+
+            aux(names)
         }
 
         def show = s"cap $cap"

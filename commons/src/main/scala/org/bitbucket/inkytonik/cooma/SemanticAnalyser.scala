@@ -236,13 +236,16 @@ class SemanticAnalyser(
                 noMessages
         }
 
-    def checkMainArgument(arg : Argument) : Messages =
-        arg.expression match {
-            case ReaderT() | StrT() | WriterT() =>
-                noMessages
-            case _ =>
-                error(arg.expression, "illegal main program argument type")
-        }
+    def checkMainArgument(arg : Argument) : Messages = {
+        def aux(t : Expression) : Boolean =
+            t match {
+                case ReaderT() | StrT() | WriterT() => true
+                case Cat(l, r)                      => aux(l) && aux(r)
+                case _                              => false
+            }
+        if (aux(arg.expression)) noMessages
+        else error(arg.expression, "illegal main program argument type")
+    }
 
     object Scope {
         def unapply(n : ASTNode) : Boolean =
