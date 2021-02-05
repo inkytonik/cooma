@@ -79,10 +79,10 @@ class Interpreter(config : Config) extends PrettyPrinter {
             }
 
             term match {
-                case AppC("$halt", x) =>
+                case AppC(_, "$halt", x) =>
                     lookupR(rho, x)
 
-                case AppC(k, x) =>
+                case AppC(_, k, x) =>
                     lookupC(rho, k) match {
                         case ClsC(rho2, y, t) =>
                             interpretAux(ConsVE(rho2, y, lookupR(rho, x)), t)
@@ -91,7 +91,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
                             sys.error(s"interpret AppC: $k is $v")
                     }
 
-                case AppF(f, k, x) =>
+                case AppF(_, f, k, x) =>
                     lookupR(rho, f) match {
                         case ClsR(rho2, j, y, t) =>
                             interpretAux(
@@ -110,12 +110,12 @@ class Interpreter(config : Config) extends PrettyPrinter {
                             sys.error(s"interpret AppF: $f is $v")
                     }
 
-                case CasV(x, cs) =>
+                case CasV(_, x, cs) =>
                     lookupR(rho, x) match {
                         case VarR(c1, v) =>
                             val optK =
                                 cs.collectFirst {
-                                    case CaseTerm(c2, k) if c1 == c2 =>
+                                    case CaseTerm(_, c2, k) if c1 == c2 =>
                                         k
                                 }
                             optK match {
@@ -139,15 +139,15 @@ class Interpreter(config : Config) extends PrettyPrinter {
                             sys.error(s"interpret CasV: $x is $v")
                     }
 
-                case LetC(k, x, t1, t2) =>
+                case LetC(_, k, x, t1, t2) =>
                     val rho2 = ConsCE(rho, k, ClsC(rho, x, t1))
                     interpretAux(rho2, t2)
 
-                case LetF(ds, t) =>
+                case LetF(_, ds, t) =>
                     lazy val rho2 : Env = ConsFE(rho, () => rho2, ds)
                     interpretAux(rho2, t)
 
-                case LetV(x, v, t) =>
+                case LetV(_, x, v, t) =>
                     val rho2 : Env = ConsVE(rho, x, interpretValue(v, rho))
                     interpretAux(rho2, t)
             }
@@ -189,7 +189,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
 
             case ConsFE(rho2, rho2f, ds) =>
                 ds.collectFirst {
-                    case DefTerm(f, k, y, e) if x == f =>
+                    case DefTerm(_, f, k, y, e) if x == f =>
                         ClsR(rho2f(), k, y, e)
                 } match {
                     case Some(v) =>

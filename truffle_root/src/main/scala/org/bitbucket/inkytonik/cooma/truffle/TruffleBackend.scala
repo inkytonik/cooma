@@ -16,7 +16,9 @@ class TruffleBackend(config : Config) extends Backend {
 
     import java.io.PrintWriter
     import java.math.BigInteger
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
     import org.bitbucket.inkytonik.cooma.Primitives._
+    import org.bitbucket.inkytonik.kiama.relation.Bridge
     import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
     import org.bitbucket.inkytonik.cooma.truffle.runtime._
@@ -30,32 +32,32 @@ class TruffleBackend(config : Config) extends Backend {
 
     override type Value = CoomaValueNode
 
-    def appC(k : String, x : String) : CoomaTermNode =
+    def appC(source : Bridge[ASTNode], k : String, x : String) : CoomaTermNode =
         CoomaAppCTermNodeGen.create(k, x)
 
-    def appF(f : String, k : String, x : String) : CoomaTermNode =
+    def appF(source : Bridge[ASTNode], f : String, k : String, x : String) : CoomaTermNode =
         CoomaAppFTermNodeGen.create(f, k, x)
 
     type CaseTerm = CoomaCaseTerm
 
-    def casV(x : String, cs : Vector[CaseTerm]) : CoomaTermNode =
+    def casV(source : Bridge[ASTNode], x : String, cs : Vector[CaseTerm]) : CoomaTermNode =
         new CoomaCasVTermNode(x, cs.toArray)
 
-    def letC(k : String, x : String, t : Term, body : Term) : CoomaTermNode =
+    def letC(source : Bridge[ASTNode], k : String, x : String, t : Term, body : Term) : CoomaTermNode =
         new CoomaLetCTermNode(k, x, t, body)
 
     type DefTerm = CoomaDefTerm
 
-    def letF(ds : Vector[DefTerm], body : Term) : CoomaTermNode =
+    def letF(source : Bridge[ASTNode], ds : Vector[DefTerm], body : Term) : CoomaTermNode =
         new CoomaLetFTermNode(ds.toArray, body)
 
-    def letV(x : String, v : Value, body : Term) : Term =
+    def letV(source : Bridge[ASTNode], x : String, v : Value, body : Term) : Term =
         new CoomaLetVTermNode(x, v, body)
 
-    def caseTerm(c : String, k : String) : CaseTerm =
+    def caseTerm(source : Bridge[ASTNode], c : String, k : String) : CaseTerm =
         new CoomaCaseTerm(c, k)
 
-    def defTerm(f : String, k : String, x : String, body : Term) : DefTerm =
+    def defTerm(source : Bridge[ASTNode], f : String, k : String, x : String, body : Term) : DefTerm =
         new CoomaDefTerm(f, k, x, body)
 
     // Values

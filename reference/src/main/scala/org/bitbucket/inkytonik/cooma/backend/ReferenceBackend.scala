@@ -20,9 +20,11 @@ class ReferenceBackend(
     config : Config
 ) extends Interpreter(config) with Backend {
 
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
     import org.bitbucket.inkytonik.cooma.Primitives._
     import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
+    import org.bitbucket.inkytonik.kiama.relation.Bridge
 
     override def backendName : String = "Reference"
 
@@ -38,46 +40,48 @@ class ReferenceBackend(
 
     case class FieldValue(f : String, x : String)
 
-    sealed abstract class Term
-    case class AppC(k : String, x : String) extends Term
-    case class AppF(f : String, k : String, x : String) extends Term
-    case class CasV(x : String, ks : Vector[CaseTerm]) extends Term
-    case class LetC(k : String, x : String, t : Term, body : Term) extends Term
-    case class LetF(ds : Vector[DefTerm], body : Term) extends Term
-    case class LetV(x : String, v : Value, body : Term) extends Term
+    sealed abstract class Term {
+        def source : Bridge[ASTNode]
+    }
+    case class AppC(source : Bridge[ASTNode], k : String, x : String) extends Term
+    case class AppF(source : Bridge[ASTNode], f : String, k : String, x : String) extends Term
+    case class CasV(source : Bridge[ASTNode], x : String, ks : Vector[CaseTerm]) extends Term
+    case class LetC(source : Bridge[ASTNode], k : String, x : String, t : Term, body : Term) extends Term
+    case class LetF(source : Bridge[ASTNode], ds : Vector[DefTerm], body : Term) extends Term
+    case class LetV(source : Bridge[ASTNode], x : String, v : Value, body : Term) extends Term
 
-    case class CaseTerm(c : String, k : String)
-    case class DefTerm(f : String, k : String, x : String, body : Term)
+    case class CaseTerm(source : Bridge[ASTNode], c : String, k : String)
+    case class DefTerm(source : Bridge[ASTNode], f : String, k : String, x : String, body : Term)
 
     override type OutputValueR = ValueR
 
     // Terms
 
-    def appC(k : String, x : String) : Term =
-        AppC(k, x)
+    def appC(source : Bridge[ASTNode], k : String, x : String) : Term =
+        AppC(source, k, x)
 
-    def appF(f : String, k : String, x : String) : Term =
-        AppF(f, k, x)
+    def appF(source : Bridge[ASTNode], f : String, k : String, x : String) : Term =
+        AppF(source, f, k, x)
 
-    def casV(x : String, cs : Vector[CaseTerm]) : Term =
-        CasV(x, cs)
+    def casV(source : Bridge[ASTNode], x : String, cs : Vector[CaseTerm]) : Term =
+        CasV(source, x, cs)
 
-    def letC(k : String, x : String, t : Term, body : Term) : Term =
-        LetC(k, x, t, body)
+    def letC(source : Bridge[ASTNode], k : String, x : String, t : Term, body : Term) : Term =
+        LetC(source, k, x, t, body)
 
-    def letF(ds : Vector[DefTerm], body : Term) : Term =
-        LetF(ds, body)
+    def letF(source : Bridge[ASTNode], ds : Vector[DefTerm], body : Term) : Term =
+        LetF(source, ds, body)
 
     // Values
 
-    def letV(x : String, v : Value, body : Term) : Term =
-        LetV(x, v, body)
+    def letV(source : Bridge[ASTNode], x : String, v : Value, body : Term) : Term =
+        LetV(source, x, v, body)
 
-    def caseTerm(c : String, k : String) : CaseTerm =
-        CaseTerm(c, k)
+    def caseTerm(source : Bridge[ASTNode], c : String, k : String) : CaseTerm =
+        CaseTerm(source, c, k)
 
-    def defTerm(f : String, k : String, x : String, body : Term) : DefTerm =
-        DefTerm(f, k, x, body)
+    def defTerm(source : Bridge[ASTNode], f : String, k : String, x : String, body : Term) : DefTerm =
+        DefTerm(source, f, k, x, body)
 
     def funV(k : String, x : String, body : Term) : Value =
         FunV(k, x, body)
@@ -212,30 +216,39 @@ class ReferenceBackend(
         pretty(group(toDocTerm(t)), w)
 
     def toDocTerm(t : Term) : Doc =
-        t match {
-            case AppC(k, x) =>
-                k <+> x
-            case AppF(f, k, x) =>
-                f <+> k <+> x
-            case CasV(x, ks) =>
-                "case" <+> value(x) <+> ssep(ks.map(toDocCaseTerm), space)
-            case LetC(k, x, t, body) =>
-                "letc" <+> value(k) <+> value(x) <+> "=" <+> align(toDocTerm(t)) <@>
-                    toDocTerm(body)
-            case v @ LetF(ds, body) =>
-                "letf" <> nest(ssep(ds.map(toDocDefTerm), emptyDoc)) <@>
-                    toDocTerm(body)
-            case LetV(x, v, body) =>
-                "letv" <+> value(x) <+> "=" <+> align(toDocValue(v)) <@>
-                    toDocTerm(body)
-        }
+        link(
+            t.source.cross,
+            t match {
+                case AppC(_, k, x) =>
+                    k <+> x
+                case AppF(_, f, k, x) =>
+                    f <+> k <+> x
+                case CasV(_, x, ks) =>
+                    "case" <+> value(x) <+> ssep(ks.map(toDocCaseTerm), space)
+                case LetC(_, k, x, t, body) =>
+                    "letc" <+> value(k) <+> value(x) <+> "=" <+> align(toDocTerm(t)) <@>
+                        toDocTerm(body)
+                case v @ LetF(_, ds, body) =>
+                    "letf" <> nest(ssep(ds.map(toDocDefTerm), emptyDoc)) <@>
+                        toDocTerm(body)
+                case LetV(_, x, v, body) =>
+                    "letv" <+> value(x) <+> "=" <+> align(toDocValue(v)) <@>
+                        toDocTerm(body)
+            }
+        )
 
     def toDocCaseTerm(caseTerm : CaseTerm) : Doc =
-        '(' <> value(caseTerm.c) <+> value(caseTerm.k) <> ')'
+        link(
+            caseTerm.source.cross,
+            '(' <> value(caseTerm.c) <+> value(caseTerm.k) <> ')'
+        )
 
     def toDocDefTerm(defTerm : DefTerm) : Doc =
-        line <> value(defTerm.f) <+> value(defTerm.k) <+> value(defTerm.x) <+>
-            text("=") <+> align(toDocTerm(defTerm.body))
+        link(
+            defTerm.source.cross,
+            line <> value(defTerm.f) <+> value(defTerm.k) <+> value(defTerm.x) <+>
+                text("=") <+> align(toDocTerm(defTerm.body))
+        )
 
     def toDocValue(v : Value) : Doc =
         v match {

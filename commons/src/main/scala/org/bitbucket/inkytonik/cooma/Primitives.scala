@@ -87,8 +87,8 @@ object Primitives {
                         interp.fldR(
                             pair._1, interp.clsR(
                                 interp.emptyEnv, k, y,
-                                interp.letV(p, interp.prmV(pair._2, Vector(y)),
-                                    interp.appC(k, p))
+                                interp.letV(null, p, interp.prmV(pair._2, Vector(y)),
+                                    interp.appC(null, k, p))
                             )
                         )
                     })
