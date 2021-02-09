@@ -182,9 +182,9 @@ class SemanticAnalyser(
                 }
             case (Some(TypT()), Some(t)) =>
                 // type-level concatenation, invalid right operand
-                error(r, s"expected type, got ${show(alias(t))}")
+                error(r, s"expected record type, got ${show(alias(t))}")
             case (Some(t), _) =>
-                error(l, s"expected record or type, got ${show(alias(t))}")
+                error(l, s"expected record or record type, got ${show(alias(t))}")
         }
     }
 

@@ -1207,9 +1207,14 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
+                "record type concatenation",
+                "{ x: Int, y: String } & { z: Int }",
+                ""
+            ),
+            SemanticTest(
                 "bad record concatenation (left)",
                 "3 & { x = 1 }",
-                """|1:1:error: expected record or type, got Int
+                """|1:1:error: expected record or record type, got Int
                    |3 & { x = 1 }
                    |^
                    |"""
@@ -1225,7 +1230,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad record concatenation (both)",
                 "3 & 4",
-                """|1:1:error: expected record or type, got Int
+                """|1:1:error: expected record or record type, got Int
                    |3 & 4
                    |^
                    |"""
@@ -1245,6 +1250,46 @@ class SemanticTests extends Tests {
                    |{ w = 0, x = 1, y = 2 } & { y = 1, x = 2 }
                    |^
                    |"""
+            ),
+            SemanticTest(
+                "bad record type concatenation (left)",
+                "3 & { x: Int }",
+                """|1:1:error: expected record or record type, got Int
+                   |3 & { x: Int }
+                   |^
+                   |""".stripMargin
+            ),
+            SemanticTest(
+                "bad record type concatenation (right)",
+                "{ x: Int } & 3",
+                """|1:14:error: expected record type, got Int
+                   |{ x: Int } & 3
+                   |             ^
+                   |""".stripMargin
+            ),
+            SemanticTest(
+                "bad record type concatenation (overlapping fields)",
+                "{ x: Int, y: Int } & { x: Int, y: String, z: Int }",
+                """|1:1:error: record concatenation has overlapping field(s) x, y
+                   |{ x: Int, y: Int } & { x: Int, y: String, z: Int }
+                   |^
+                   |""".stripMargin
+            ),
+            SemanticTest(
+                "bad record concatenation (value on left, type on right)",
+                "{ x = 1 } & { y: String }",
+                """|1:13:error: expected record, got Type
+                   |{ x = 1 } & { y: String }
+                   |            ^
+                   |""".stripMargin
+            ),
+            SemanticTest(
+                "bad record concatenation (type on left, value on right)",
+                "{ x: Int } & { y = 4 }",
+                """|1:14:error: expected record type, got { y : Int }
+                   |{ x: Int } & { y = 4 }
+                   |             ^
+                   |""".stripMargin
             ),
 
             // primitives
