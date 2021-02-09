@@ -145,7 +145,7 @@ class TruffleBackend(config : Config) extends Backend {
     def varR(c : String, v : ValueR) : ValueR =
         new VarRuntimeValue(c, v)
 
-    def clsR(env : Env, f : String, x : String, e : Term) : ValueR =
+    def clsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) : ValueR =
         new FunctionClosure(env, f, x, e)
 
     def recR(fields : Vector[FldR]) : ValueR =

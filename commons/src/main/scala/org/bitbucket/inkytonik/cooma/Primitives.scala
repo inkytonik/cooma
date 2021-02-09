@@ -86,6 +86,7 @@ object Primitives {
                         val p = fresh("p")
                         interp.fldR(
                             pair._1, interp.clsR(
+                                null,
                                 interp.emptyEnv, k, y,
                                 interp.letV(null, p, interp.prmV(pair._2, Vector(y)),
                                     interp.appC(null, k, p))

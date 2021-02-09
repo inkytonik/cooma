@@ -60,7 +60,7 @@ trait Backend {
     def strR(str : String) : ValueR
     def varR(c : String, v : ValueR) : ValueR
     def intR(num : BigInt) : ValueR
-    def clsR(env : Env, f : String, x : String, e : Term) : ValueR
+    def clsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) : ValueR
     def recR(fields : Vector[FldR]) : ValueR
 
     val unitR : ValueR = recR(Vector())

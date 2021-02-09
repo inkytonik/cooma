@@ -154,8 +154,8 @@ class ReferenceBackend(
     def intR(num : BigInt) : ValueR =
         IntR(num)
 
-    def clsR(env : Env, f : String, x : String, e : Term) : ValueR =
-        ClsR(env, f, x, e)
+    def clsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) : ValueR =
+        ClsR(source, env, f, x, e)
 
     def recR(fields : Vector[FldR]) : ValueR =
         RecR(fields)
