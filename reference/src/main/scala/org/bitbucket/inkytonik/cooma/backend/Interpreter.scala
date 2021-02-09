@@ -281,13 +281,13 @@ class Interpreter(config : Config) extends PrettyPrinter {
     def toDocEnv(rho : Env) : Doc =
         rho match {
             case ConsCE(e, x, ClsC(_, k, body)) =>
-                line <> x <+> k <+> "=" <+> toDocTerm(body) <> toDocEnv(e)
+                line <> x <+> k <+> "=" <+> align(toDocTerm(body)) <> toDocEnv(e)
 
             case ConsFE(e, ce, ds) =>
                 hcat(ds.map(toDocDefTerm)) <@> toDocEnv(e)
 
             case ConsVE(e, x, v) =>
-                line <> x <+> "=" <+> toDocRuntimeValue(v) <> toDocEnv(e)
+                line <> x <+> "=" <+> align(toDocRuntimeValue(v)) <> toDocEnv(e)
 
             case NilE() =>
                 line
