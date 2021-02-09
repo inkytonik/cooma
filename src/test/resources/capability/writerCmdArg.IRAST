@@ -5,31 +5,42 @@ LetV(
             0),
         Vector()),
     LetV(
-        "w",
-        PrmV(
-            CapabilityP(
-                "Writer"),
-            Vector(
-                "x1")),
+        "c2",
+        RecV(
+            Vector()),
         LetV(
-            "f4",
+            "c3",
             PrmV(
-                RecSelectP(),
+                CapabilityP(
+                    "Writer"),
                 Vector(
-                    "w",
-                    "write")),
+                    "x1")),
             LetV(
-                "s5",
-                StrV(
-                    "Hello world!
+                "w",
+                PrmV(
+                    RecConcatP(),
+                    Vector(
+                        "c2",
+                        "c3")),
+                LetV(
+                    "f6",
+                    PrmV(
+                        RecSelectP(),
+                        Vector(
+                            "w",
+                            "write")),
+                    LetV(
+                        "s7",
+                        StrV(
+                            "Hello world!
 "),
-                LetC(
-                    "k2",
-                    "r3",
-                    AppC(
-                        "$halt",
-                        "r3"),
-                    AppF(
-                        "f4",
-                        "k2",
-                        "s5"))))))
+                        LetC(
+                            "k4",
+                            "r5",
+                            AppC(
+                                "$halt",
+                                "r5"),
+                            AppF(
+                                "f6",
+                                "k4",
+                                "s7"))))))))

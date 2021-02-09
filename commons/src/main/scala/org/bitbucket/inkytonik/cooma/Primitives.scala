@@ -10,13 +10,10 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter, IOException, InputStreamReader, Writer}
+import java.io._
 
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
-
-import scala.annotation.tailrec
-import scala.util.{Failure, Success, Try}
 
 object Primitives {
 
@@ -73,13 +70,13 @@ object Primitives {
         def show = s"readerRead $filename"
     }
 
-    case class CapabilityP[I <: Backend](cap : Seq[String]) extends Primitive[I] {
+    case class CapabilityP[I <: Backend](cap : String) extends Primitive[I] {
         val numArgs = 1
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
             capability(interp)(rho, cap, xs.head)
 
-        def capability(interp : I)(rho : interp.Env, names : Seq[String], x : String) : interp.ValueR = {
+        def capability(interp : I)(rho : interp.Env, name : String, x : String) : interp.ValueR = {
 
             def makeCapability(pairs : Vector[(String, interp.Primitive)]) : interp.ValueR = {
                 interp.recR(
@@ -107,32 +104,22 @@ object Primitives {
                 }
             }
 
-            @tailrec
-            def aux(
-                names : Seq[String],
-                result : Vector[(String, interp.Primitive)] = Vector.empty
-            ) : interp.ValueR =
-                names match {
-                    case hd +: tl =>
-                        Try(
-                            hd match {
-                                case "Writer" => "write" -> interp.writerWriteP(argument)
-                                case "Reader" => "read" -> interp.readerReadP(argument)
-                                case name     => sys.error(s"capability: unknown primitive $name")
-                            }
-                        ) match {
-                                case Success(pair) =>
-                                    aux(tl, result :+ pair)
-                                case Failure(capE : CapabilityException) =>
-                                    interp.errR(capE.getMessage)
-                                case Failure(e) =>
-                                    throw e
-                            }
-                    case _ =>
-                        makeCapability(result)
-                }
-
-            aux(names)
+            name match {
+                case "Writer" =>
+                    try {
+                        makeCapability(Vector(("write", interp.writerWriteP(argument))))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
+                case "Reader" =>
+                    try {
+                        makeCapability(Vector(("read", interp.readerReadP(argument))))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
+                case _ =>
+                    sys.error(s"capability: unknown primitive $name")
+            }
         }
 
         def show = s"cap $cap"
@@ -144,13 +131,19 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
             xs match {
                 case Vector(l, r) =>
-                    interp.isRecR(interp.lookupR(rho, l)) match {
-                        case Some(lFields) =>
-                            interp.isRecR(interp.lookupR(rho, r)) match {
-                                case Some(rFields) => interp.recR(lFields ++ rFields)
-                                case None          => sys.error(s"$show: right argument $r of & is non-record")
-                            }
-                        case None => sys.error(s"$show: left argument $l of & is non-record")
+                    val vl = interp.lookupR(rho, l)
+                    val vr = interp.lookupR(rho, r)
+                    def aux(v : interp.ValueR, side : String) : Either[String, Vector[interp.FldR]] =
+                        (interp.isRecR(v), interp.isErrR(v)) match {
+                            case (Some(fields), _) => Right(fields)
+                            case (_, Some(error))  => Left(error)
+                            case _                 => sys.error(s"$show: $side argument $r of & is non-record")
+                        }
+                    (aux(vl, "left"), aux(vr, "right")) match {
+                        case (Right(lFields), Right(rFields)) =>
+                            interp.recR(lFields ++ rFields)
+                        case (l, r) =>
+                            interp.errR(Seq(l, r).flatMap(_.swap.toOption).mkString(", "))
                     }
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")

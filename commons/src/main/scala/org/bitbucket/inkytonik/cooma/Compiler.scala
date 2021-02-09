@@ -78,9 +78,26 @@ trait Compiler {
 
             def compileCapArg(n : Seq[String]) : Term = {
                 val x = fresh("x")
+                def aux(n : Seq[String], prev : String) : Term = {
+                    val c0 = fresh("c")
+                    n match {
+                        case hd +: Nil =>
+                            letV(c0, prmV(capabilityP(hd), Vector(x)),
+                                letV(a, prmV(recConcatP(), Vector(prev, c0)),
+                                    compileTop(e, nArg + 1)))
+                        case hd +: (tl @ _ +: _) =>
+                            val c1 = fresh("c")
+                            letV(c0, prmV(capabilityP(hd), Vector(x)),
+                                letV(c1, prmV(recConcatP(), Vector(prev, c0)),
+                                    aux(tl, c1)))
+                        case n =>
+                            throw new MatchError(n)
+                    }
+                }
+
+                val c = fresh("c")
                 letV(x, prmV(argumentP(nArg), Vector()),
-                    letV(a, prmV(capabilityP(n), Vector(x)),
-                        compileTop(e, nArg + 1)))
+                    letV(c, recV(Vector()), aux(n, c)))
             }
 
             t match {

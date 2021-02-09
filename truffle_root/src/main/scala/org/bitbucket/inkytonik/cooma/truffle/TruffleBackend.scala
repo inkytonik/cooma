@@ -97,7 +97,7 @@ class TruffleBackend(config : Config) extends Backend {
     def argumentP(i : Int) : Primitive =
         ArgumentP(i)
 
-    def capabilityP(cap : Seq[String]) : Primitive =
+    def capabilityP(cap : String) : Primitive =
         CapabilityP(cap)
 
     def writerWriteP(filename : String) : Primitive =
