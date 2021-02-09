@@ -841,7 +841,7 @@ class SemanticAnalyser(
 
     def subtype(t : Expression, u : Expression) : Boolean = {
         (t == u) ||
-            ((unalias(t, t), unalias(t, t)) match {
+            ((unalias(t, t), unalias(u, u)) match {
                 case (Some(RecT(tr)), Some(RecT(ur))) =>
                     val urn = fieldtypeNames(ur)
                     urn.diff(fieldtypeNames(tr)).isEmpty && subtypesFields(urn, tr, ur)

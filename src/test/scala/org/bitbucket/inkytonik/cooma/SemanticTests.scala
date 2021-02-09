@@ -1608,8 +1608,10 @@ class SemanticTests extends Tests {
     // Subtyping
 
     {
-        import org.bitbucket.inkytonik.cooma.SemanticAnalysis.{subtype, subtypes}
         import org.bitbucket.inkytonik.kiama.util.Positions
+
+        val analyser = new SemanticAnalyser(new Tree[ASTNode, ASTNode](Uni()))
+        import analyser.{subtype, subtypes}
 
         def parseType(s : String) : Expression = {
             val source = new StringSource(s)
@@ -1630,8 +1632,7 @@ class SemanticTests extends Tests {
         val reflSubtypeTests =
             Vector(
                 "Int",
-                "Str",
-                "foo",
+                "String",
                 "{x : Int}",
                 "{a : Int, b : String}",
                 "{r : Int, s : { a : Int, b : String}}",
