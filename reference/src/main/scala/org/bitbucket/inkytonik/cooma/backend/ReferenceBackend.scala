@@ -200,10 +200,10 @@ class ReferenceBackend(
         }
 
     def getFieldName(value : FldR) : String =
-        value.x
+        value.f
 
     def getFieldValue(value : FldR) : ValueR =
-        value.v
+        value.x
 
     /*
      * Custom IR pretty-printer that escapes string terms.

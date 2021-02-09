@@ -29,7 +29,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
     case class StrR(str : String) extends ValueR
     case class VarR(c : String, v : ValueR) extends ValueR
 
-    case class FldR(x : String, v : ValueR)
+    case class FldR(f : String, x : ValueR)
 
     case class ClsC(env : Env, k : String, e : Term)
 
@@ -276,7 +276,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
         }
 
     def toDocField(field : FldR) : Doc =
-        value(field.x) <+> "=" <+> toDocRuntimeValue(field.v)
+        value(field.f) <+> "=" <+> toDocRuntimeValue(field.x)
 
     def toDocEnv(rho : Env) : Doc =
         rho match {
