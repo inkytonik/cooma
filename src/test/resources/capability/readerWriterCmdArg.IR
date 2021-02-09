@@ -1,0 +1,13 @@
+letv x1 = arg 0
+letv c2 = {}
+letv c3 = cap Reader x1
+letv c4 = concat c2 c3
+letv c5 = cap Writer x1
+letv rw = concat c4 c5
+letc k6 result = letc k7 _ = $halt result
+                 letv f8 = select rw write
+                 letv s9 = "Hello, world!"
+                 f8 k7 s9
+letv f10 = select rw read
+letv u11 = {}
+f10 k6 u11

@@ -1313,7 +1313,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     OptionTest("Usage", "--usage", "capability/readerCmdArg", "usage", Seq()),
                     OptionTest("Cooma AST print", "-C", "capability/writerCmdArg", "coomaAST", Seq("/dev/null")),
                     OptionTest("IR print", "-i", "capability/writerCmdArg", "IR", Seq("/dev/null")),
-                    OptionTest("IR AST print", "-I", "capability/writerCmdArg", "IRAST", Seq("/dev/null"))
+                    OptionTest("IR AST print", "-I", "capability/writerCmdArg", "IRAST", Seq("/dev/null")),
+                    OptionTest("IR print", "-i", "capability/readerWriterCmdArg", "IR", Seq("/dev/null")),
                 )
 
             for (aTest <- optionTests) {
