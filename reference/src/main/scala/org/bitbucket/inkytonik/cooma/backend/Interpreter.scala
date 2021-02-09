@@ -18,7 +18,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
     self : ReferenceBackend =>
 
     import org.bitbucket.inkytonik.cooma.Util.escape
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
+    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, emptyDocument, Width}
     import scala.annotation.tailrec
 
     sealed abstract class ValueR
@@ -80,6 +80,11 @@ class Interpreter(config : Config) extends PrettyPrinter {
 
             term match {
                 case AppC(_, "$halt", x) =>
+                    if (config.server()) {
+                        if (driver.settingBool("showTrace")) {
+                            driver.publishProduct(source, "trace", "IR", emptyDocument, true)
+                        }
+                    }
                     lookupR(rho, x)
 
                 case AppC(_, k, x) =>
