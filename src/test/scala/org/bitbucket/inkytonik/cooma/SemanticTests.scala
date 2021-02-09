@@ -542,29 +542,6 @@ class SemanticTests extends Tests {
                    |                   ^
                    |"""
             ),
-            SemanticTest(
-                "ReaderWriter is built-in record type",
-                "fun (rw : ReaderWriter) { val s = rw.read() rw.write(s) }",
-                ""
-            ),
-            SemanticTest(
-                "ReaderWriter read field has correct type",
-                "{ def f (rw : ReaderWriter) String = rw.read() 0 }",
-                ""
-            ),
-            SemanticTest(
-                "ReaderWriter write field has correct type",
-                """{ def f (rw : ReaderWriter) Unit = rw.write("hi") 0 }""",
-                ""
-            ),
-            SemanticTest(
-                "ReaderWriter doesn't have non-write field",
-                "fun (rw : ReaderWriter) rw.foo",
-                """|1:28:error: foo is not a field of record type ReaderWriter
-                   |fun (rw : ReaderWriter) rw.foo
-                   |                           ^
-                   |"""
-            ),
 
             // Selection
 
