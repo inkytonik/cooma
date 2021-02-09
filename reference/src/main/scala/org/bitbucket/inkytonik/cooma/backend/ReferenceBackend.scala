@@ -247,13 +247,13 @@ class ReferenceBackend(
         link(
             defTerm.source.cross,
             line <> value(defTerm.f) <+> value(defTerm.k) <+> value(defTerm.x) <+>
-                text("=") <+> align(toDocTerm(defTerm.body))
+                "=" <+> align(toDocTerm(defTerm.body))
         )
 
     def toDocValue(v : Value) : Doc =
         v match {
             case FunV(k, x, t) =>
-                "fun" <+> k <+> x <+> text("=") <+> align(toDocTerm(t))
+                "fun" <+> k <+> x <+> "=" <+> align(toDocTerm(t))
             case IntV(i) =>
                 value(i)
             case PrmV(p, xs) =>
@@ -261,15 +261,15 @@ class ReferenceBackend(
             case RecV(Vector()) =>
                 "{}"
             case RecV(fs) =>
-                "{" <+> ssep(fs.map(toDocFieldValue), "," <> space) <+> text("}")
+                "{" <+> ssep(fs.map(toDocFieldValue), "," <> space) <+> "}"
             case StrV(v1) =>
-                "\"" <> value(escape(v1)) <> text("\"")
+                "\"" <> value(escape(v1)) <> "\""
             case VarV(v1, v2) =>
-                "<" <+> value(v1) <+> "=" <+> value(v2) <+> text(">")
+                "<" <+> value(v1) <+> "=" <+> value(v2) <+> ">"
         }
 
     def toDocFieldValue(field : FieldValue) : Doc =
-        value(field.f) <+> text("=") <+> value(field.x)
+        value(field.f) <+> "=" <+> value(field.x)
 
     def getConfig : Config = config
 

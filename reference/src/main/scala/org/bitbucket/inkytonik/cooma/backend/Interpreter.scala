@@ -276,7 +276,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
         }
 
     def toDocField(field : FldR) : Doc =
-        value(field.x) <+> text("=") <+> toDocRuntimeValue(field.v)
+        value(field.x) <+> "=" <+> toDocRuntimeValue(field.v)
 
     def toDocEnv(rho : Env) : Doc =
         rho match {
