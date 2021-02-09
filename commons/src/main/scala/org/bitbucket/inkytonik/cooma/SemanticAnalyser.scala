@@ -167,7 +167,7 @@ class SemanticAnalyser(
                 checkOverlapping(rl, rr)
             case (Some(RecT(_)), Some(t)) =>
                 // term-level concatenation, invalid right operand
-                error(e, s"expected record, got ${show(alias(t))}")
+                error(r, s"expected record, got ${show(alias(t))}")
             case (Some(TypT()), Some(TypT())) =>
                 // type-level concatenation
                 (unalias(e, l), unalias(e, r)) match {
@@ -176,15 +176,15 @@ class SemanticAnalyser(
                     case (Some(RecT(rl)), Some(RecT(rr))) =>
                         checkOverlapping(rl, rr)
                     case (Some(RecT(_)), Some(t)) =>
-                        error(e, s"expected record type, got ${show(alias(t))}")
+                        error(r, s"expected record type, got ${show(alias(t))}")
                     case (Some(t), _) =>
-                        error(e, s"expected record type, got ${show(alias(t))}")
+                        error(l, s"expected record type, got ${show(alias(t))}")
                 }
             case (Some(TypT()), Some(t)) =>
                 // type-level concatenation, invalid right operand
-                error(e, s"expected type, got ${show(alias(t))}")
+                error(r, s"expected type, got ${show(alias(t))}")
             case (Some(t), _) =>
-                error(e, s"expected record or type, got ${show(alias(t))}")
+                error(l, s"expected record or type, got ${show(alias(t))}")
         }
     }
 

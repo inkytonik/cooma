@@ -1232,7 +1232,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad record concatenation (left)",
                 "3 & { x = 1 }",
-                """|1:1:error: expected record type, got Int
+                """|1:1:error: expected record or type, got Int
                    |3 & { x = 1 }
                    |^
                    |"""
@@ -1240,7 +1240,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad record concatenation (right)",
                 "{ x = 1 } & 3",
-                """|1:13:error: expected record type, got Int
+                """|1:13:error: expected record, got Int
                    |{ x = 1 } & 3
                    |            ^
                    |"""
@@ -1248,12 +1248,9 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad record concatenation (both)",
                 "3 & 4",
-                """|1:1:error: expected record type, got Int
+                """|1:1:error: expected record or type, got Int
                    |3 & 4
                    |^
-                   |1:5:error: expected record type, got Int
-                   |3 & 4
-                   |    ^
                    |"""
             ),
             SemanticTest(
