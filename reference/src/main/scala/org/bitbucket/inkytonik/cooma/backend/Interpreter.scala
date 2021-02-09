@@ -241,7 +241,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
         formatState(rho, term).layout
 
     def formatState(rho : Env, term : Term) : Document =
-        pretty(toDocEnv(rho) <> toDocTerm(term) <> line)
+        pretty(toDocEnv(rho) <@> toDocTerm(term) <> line)
 
     def showRuntimeValue(v : ValueR) : String =
         formatRuntimeValue(v).layout
@@ -284,7 +284,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
                 line <> x <+> k <+> "=" <+> align(toDocTerm(body)) <> toDocEnv(e)
 
             case ConsFE(e, ce, ds) =>
-                hcat(ds.map(toDocDefTerm)) <@> toDocEnv(e)
+                hcat(ds.map(toDocDefTerm)) <> toDocEnv(e)
 
             case ConsVE(e, x, v) =>
                 line <> x <+> "=" <+> align(toDocRuntimeValue(v)) <> toDocEnv(e)
