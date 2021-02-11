@@ -27,9 +27,76 @@ trait Server {
         for (
             analyser <- analysers.get(position.source);
             nodes = analyser.tree.nodes;
-            relevantNodes = positions.findNodesContaining(nodes, position);
+            relevantNodes = findNodesContaining(nodes, position);
             info <- f((position.source.name, analyser, relevantNodes))
         ) yield info
+
+    // Make position checking slightly more permissive by allowing the finish
+    // offset to be included. This means that in Code we can find definitions
+    // etc from the position immediately after the idn, which seems to match
+    // the behaviour of Code better than what Kiama does by default.
+
+    def between[T](position : Position, t : T, start : Position, finish : Position) : Boolean =
+        (start <= position) && (position <= finish)
+
+    def findNodesContaining[T](nodes : Vector[T], position : Position) : Vector[T] =
+        nodes.collect(t =>
+            (positions.getStart(t), positions.getFinish(t)) match {
+                case (Some(start), Some(finish)) if between(position, t, start, finish) =>
+                    t
+            })
+
+    // Definition
+
+    override def getDefinition(position : Position) : Option[ASTNode] =
+        getRelevantInfo(position, {
+            case (uri, analyser, nodes) =>
+                nodes.collectFirst {
+                    case n : IdnDef => analyser.defentity(n)
+                    case n : IdnUse => analyser.entity(n)
+                }.toList.collectFirst {
+                    case e : CoomaOkEntity =>
+                        e.decl
+                }
+        })
+
+    // References
+
+    override def getReferences(position : Position, includeDecl : Boolean) : Option[Vector[ASTNode]] =
+        getRelevantInfo(position, {
+            case (uri, analyser, nodes) =>
+                nodes.collectFirst {
+                    case n : IdnDef => analyser.defentity(n)
+                    case n : IdnUse => analyser.entity(n)
+                }.toList.collectFirst {
+                    case e : CoomaOkEntity =>
+                        val uses = analyser.tree.nodes.collect {
+                            case u : IdnUse if analyser.entity(u) == e =>
+                                u
+                        }
+                        if (includeDecl)
+                            idndefOfEntityDecl(e) match {
+                                case Some(decl) =>
+                                    decl +: uses
+                                case None =>
+                                    uses
+                            }
+                        else
+                            uses
+                }
+        })
+
+    def idndefOfEntityDecl(entity : CoomaOkEntity) : Option[IdnDef] =
+        entity match {
+            case ArgumentEntity(decl)  => Some(decl.idnDef)
+            case CaseValueEntity(decl) => Some(decl.idnDef)
+            case FunctionEntity(decl)  => Some(decl.idnDef)
+            case LetEntity(decl)       => Some(decl.idnDef)
+            case _ =>
+                None
+        }
+
+    // Hover
 
     override def getHover(position : Position) : Option[String] =
         getRelevantInfo(position, {
