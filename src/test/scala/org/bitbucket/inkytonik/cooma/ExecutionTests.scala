@@ -1722,14 +1722,20 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             val name = s"Reader & Writer command arguments ($filename)"
             val rw = makeTempFilename(".txt")
             val args = Seq(rw)
-            val readContent = "The file contents\n"
-            val writeContent = "Hello, world!\n"
 
             test(s"${backend.name}: run: $name") {
-                createFile(rw, readContent)
+                createFile(rw, "The file contents\n")
                 val result = runFile(filename, backend.options, backend, args)
-                result shouldBe readContent
-                FileSource(rw).content shouldBe writeContent
+                result shouldBe ""
+                FileSource(rw).content shouldBe "Hello, world!\n"
+                deleteFile(rw)
+            }
+
+            test(s"${backend.name}: run: $name: result") {
+                createFile(rw, "The file contents\n")
+                val result = runFile(filename, backend.options :+ "-r", backend, args)
+                result shouldBe "\"The file contents\\n\"\n"
+                FileSource(rw).content shouldBe "Hello, world!\n"
                 deleteFile(rw)
             }
         }

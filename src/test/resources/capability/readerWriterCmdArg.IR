@@ -4,7 +4,7 @@ letv c3 = cap Writer x1
 letv rw = concat c2 c3
 letc k4 result = letc k5 _ = $halt result
                  letv f6 = select rw write
-                 letv s7 = "Hello, world!"
+                 letv s7 = "Hello, world!\n"
                  f6 k5 s7
 letv f8 = select rw read
 letv u9 = {}

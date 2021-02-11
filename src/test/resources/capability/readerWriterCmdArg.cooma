@@ -1,5 +1,5 @@
 fun (rw : Reader & Writer) {
     val result = rw.read()
-    val _ = rw.write("Hello, world!")
+    val _ = rw.write("Hello, world!\n")
     result
 }
