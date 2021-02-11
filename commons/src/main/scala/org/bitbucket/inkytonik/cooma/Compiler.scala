@@ -94,10 +94,17 @@ trait Compiler {
                             throw new MatchError(n)
                     }
                 }
-
-                val c = fresh("c")
-                letV(x, prmV(argumentP(nArg), Vector()),
-                    letV(c, recV(Vector()), aux(n, c)))
+                n match {
+                    case hd +: Nil =>
+                        letV(x, prmV(argumentP(nArg), Vector()),
+                            letV(a, prmV(capabilityP(hd), Vector(x)), compileTop(e, nArg + 1)))
+                    case hd +: tl =>
+                        val c = fresh("c")
+                        letV(x, prmV(argumentP(nArg), Vector()),
+                            letV(c, prmV(capabilityP(hd), Vector(x)), aux(tl, c)))
+                    case n =>
+                        throw new MatchError(n)
+                }
             }
 
             t match {
