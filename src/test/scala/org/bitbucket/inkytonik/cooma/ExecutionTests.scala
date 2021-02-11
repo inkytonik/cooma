@@ -1718,6 +1718,23 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         {
+            val filename = "src/test/resources/capability/readerWriterCmdArg.cooma"
+            val name = s"Reader & Writer command arguments ($filename)"
+            val rw = makeTempFilename(".txt")
+            val args = Seq(rw)
+            val readContent = "The file contents\n"
+            val writeContent = "Hello, world!\n"
+
+            test(s"${backend.name}: run: $name") {
+                createFile(rw, readContent)
+                val result = runFile(filename, backend.options, backend, args)
+                result shouldBe readContent
+                FileSource(rw).content shouldBe writeContent
+                deleteFile(rw)
+            }
+        }
+
+        {
             val filename = "src/test/resources/primitives/intAdd.cooma"
             val name = s"Primitives file execution($filename)"
             val expectedResult = "0\n"
