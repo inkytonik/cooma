@@ -102,6 +102,8 @@ trait Server {
         getRelevantInfo(position, {
             case (uri, analyser, nodes) =>
                 nodes.collectFirst {
+                    case n : IdnDef =>
+                        idnDefHover(n, analyser)
                     case n : IdnUse =>
                         idnUseHover(n, analyser)
                     case n : Field =>
@@ -137,14 +139,20 @@ trait Server {
         }
     }
 
+    def idnDefHover(n : IdnDef, analyser : SemanticAnalyser) : String =
+        entityHover(analyser.defentity(n), n.identifier, analyser)
+
     def idnUseHover(n : IdnUse, analyser : SemanticAnalyser) : String =
-        analyser.entity(n) match {
+        entityHover(analyser.entity(n), n.identifier, analyser)
+
+    def entityHover(e : CoomaEntity, i : String, analyser : SemanticAnalyser) : String =
+        e match {
             case MultipleEntity() =>
-                s"multiply-defined ${n.identifier}"
+                s"multiply-defined $i"
             case UnknownEntity() =>
-                s"unknown ${n.identifier}"
+                s"unknown $i"
             case e : CoomaOkEntity =>
-                hoverMarkdown(s"${e.desc} ${n.identifier}", analyser.entityType(e),
+                hoverMarkdown(s"${e.desc} $i", analyser.entityType(e),
                     Some(toDoc(e.decl)))
         }
 
@@ -155,7 +163,7 @@ trait Server {
 
     def selHover(n : Sel, analyser : SemanticAnalyser) : String = {
         val doc = toDoc(n.expression) <+> ":" <+> optToDoc(analyser.tipe(n.expression))
-        hoverMarkdown(s"selection ${layout(toDoc(n))}", analyser.tipe(n), Some(doc))
+        hoverMarkdown(s"selection ${show(n)}", analyser.tipe(n), Some(doc))
     }
 
     def optToDoc(optNode : Option[ASTNode]) : Doc =
@@ -171,7 +179,7 @@ trait Server {
 
         def md(rest : String) : String = {
             val ts = tipe.map(show(_)).getOrElse("")
-            s"### $title\n\n```cooma\n$ts\n$rest```"
+            s"### $title\n\n```cooma\n$ts\n$rest\n\n```"
         }
 
         optDoc match {
