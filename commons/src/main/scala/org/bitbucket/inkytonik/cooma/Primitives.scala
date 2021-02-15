@@ -197,17 +197,28 @@ object Primitives {
 
     }
 
-    case class HttpClientP[I <: Backend](method : String, url : String) extends Primitive[I] {
+    trait HttpService {
+        def request(method : String, url : String) : (Int, String)
+    }
+
+    case class HttpClientP[I <: Backend](
+        method : String,
+        url : String,
+        service: HttpService = (method: String, url: String) => {
+            val response = Http(url).method(method).asString
+            (response.code, response.body)
+        }
+    ) extends Primitive[I] {
         val numArgs = 1
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val x = xs.head
             interp.isStrR(interp.lookupR(rho, x)) match {
                 case Some(suffix) =>
-                    val response = Http(url + suffix).method(method).asString
+                    val (code, body) = service.request(method, url + suffix)
                     interp.recR(Vector(
-                        interp.fldR("code", interp.intR(response.code)),
-                        interp.fldR("body", interp.strR(response.body))
+                        interp.fldR("code", interp.intR(code)),
+                        interp.fldR("body", interp.strR(body))
                     ))
                 case None =>
                     sys.error(s"$show: can't find string operand $x")
