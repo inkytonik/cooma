@@ -43,6 +43,7 @@ trait Backend {
     type Primitive
     def argumentP(i : Int) : Primitive
     def capabilityP(cap : String) : Primitive
+    def httpClientP(method : String, url : String) : Primitive
     def readerReadP(filename : String) : Primitive
     def recConcatP() : Primitive
     def recSelectP() : Primitive

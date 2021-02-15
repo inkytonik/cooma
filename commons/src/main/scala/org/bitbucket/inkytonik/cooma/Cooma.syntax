@@ -55,8 +55,12 @@ ArgumentType =
   (IdnDef sp ":")? Expression.
 
 CapName =
-    'Reader'    {ReaderT}
-  | 'Writer'    {WriterT}.
+    'HttpDelete'    {HttpDeleteT}
+  | 'HttpGet'       {HttpGetT}
+  | 'HttpPost'      {HttpPostT}
+  | 'HttpPut'       {HttpPutT}
+  | 'Reader'        {ReaderT}
+  | 'Writer'        {WriterT}.
 
 Case =
   \n "case" Identifier '(' IdnDef ")" '=>' nestnl(Expression).

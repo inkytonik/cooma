@@ -180,7 +180,8 @@ lazy val commons = (project in file("commons"))
 	.enablePlugins(BuildInfoPlugin)
 	.settings(
 		commonsettings,
-		libraryDependencies ++= kiamaDependencies)
+		libraryDependencies ++= kiamaDependencies,
+		libraryDependencies ++= Seq("org.scalaj" %% "scalaj-http" % "2.4.2"))
 
 
 lazy val buildComponent = taskKey[Unit]("Generates the component jar for GraalVM installation.")
