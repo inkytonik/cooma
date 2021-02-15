@@ -204,7 +204,7 @@ object Primitives {
     case class HttpClientP[I <: Backend](
         method : String,
         url : String,
-        service: HttpService = (method: String, url: String) => {
+        service : HttpService = (method : String, url : String) => {
             val response = Http(url).method(method).asString
             (response.code, response.body)
         }
