@@ -76,34 +76,34 @@ trait Compiler {
 
         def compileTopArg(a : String, t : Expression, e : Expression) : Term = {
 
-            def compileCapArg(n : Seq[String]) : Term = {
+            def compileCapArg(n : List[String]) : Term = {
                 val x = fresh("x")
-                def aux(n : Seq[String], prev : String) : Term = {
+                def aux(n : List[String], prev : String) : Term = {
                     val c0 = fresh("c")
                     n match {
-                        case hd +: Nil =>
+                        case hd :: Nil =>
                             letV(c0, prmV(capabilityP(hd), Vector(x)),
                                 letV(a, prmV(recConcatP(), Vector(prev, c0)),
                                     compileTop(e, nArg + 1)))
-                        case hd +: (tl @ _ +: _) =>
+                        case hd :: (tl @ _ :: _) =>
                             val c1 = fresh("c")
                             letV(c0, prmV(capabilityP(hd), Vector(x)),
                                 letV(c1, prmV(recConcatP(), Vector(prev, c0)),
                                     aux(tl, c1)))
-                        case n =>
-                            throw new MatchError(n)
+                        case Nil =>
+                            sys.error("compileCapArg: unexpected Nil")
                     }
                 }
                 n match {
-                    case hd +: Nil =>
+                    case hd :: Nil =>
                         letV(x, prmV(argumentP(nArg), Vector()),
                             letV(a, prmV(capabilityP(hd), Vector(x)), compileTop(e, nArg + 1)))
-                    case hd +: tl =>
+                    case hd :: tl =>
                         val c = fresh("c")
                         letV(x, prmV(argumentP(nArg), Vector()),
                             letV(c, prmV(capabilityP(hd), Vector(x)), aux(tl, c)))
-                    case n =>
-                        throw new MatchError(n)
+                    case Nil =>
+                        sys.error("compileCapArg: unexpected Nil")
                 }
             }
 
@@ -112,14 +112,14 @@ trait Compiler {
                     letV(a, prmV(argumentP(nArg), Vector()),
                         compileTop(e, nArg + 1))
                 case t =>
-                    def aux(t : Expression) : Seq[String] =
+                    def aux(t : Expression) : List[String] =
                         t match {
                             case Cat(e1, e2) =>
-                                aux(e1) ++ aux(e2)
+                                aux(e1) ::: aux(e2)
                             case ReaderT() =>
-                                Seq("Reader")
+                                "Reader" :: Nil
                             case WriterT() =>
-                                Seq("Writer")
+                                "Writer" :: Nil
                             case t =>
                                 sys.error(s"compileTopArg: ${show(t)} arguments not supported")
                         }
