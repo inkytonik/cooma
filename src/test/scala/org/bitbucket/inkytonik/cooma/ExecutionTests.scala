@@ -1315,6 +1315,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     OptionTest("IR print", "-i", "capability/writerCmdArg", "IR", Seq("/dev/null")),
                     OptionTest("IR AST print", "-I", "capability/writerCmdArg", "IRAST", Seq("/dev/null")),
                     OptionTest("IR print", "-i", "capability/readerWriterCmdArg", "IR", Seq("/dev/null")),
+                    OptionTest("Usage", "--usage", "capability/readerWriterCmdArg", "usage", Seq("/dev/null"))
                 )
 
             for (aTest <- optionTests) {
