@@ -1312,7 +1312,9 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     OptionTest("Usage", "--usage", "capability/readerCmdArg", "usage", Seq()),
                     OptionTest("Cooma AST print", "-C", "capability/writerCmdArg", "coomaAST", Seq("/dev/null")),
                     OptionTest("IR print", "-i", "capability/writerCmdArg", "IR", Seq("/dev/null")),
-                    OptionTest("IR AST print", "-I", "capability/writerCmdArg", "IRAST", Seq("/dev/null"))
+                    OptionTest("IR AST print", "-I", "capability/writerCmdArg", "IRAST", Seq("/dev/null")),
+                    OptionTest("IR print", "-i", "capability/readerWriterCmdArg", "IR", Seq("/dev/null")),
+                    OptionTest("Usage", "--usage", "capability/readerWriterCmdArg", "usage", Seq("/dev/null"))
                 )
 
             for (aTest <- optionTests) {
@@ -1712,6 +1714,29 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 val result = runFile(filename, backend.options, backend, Seq(writer))
                 result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 1)\n"
                 deleteFile(writer)
+            }
+        }
+
+        {
+            val filename = "src/test/resources/capability/readerWriterCmdArg.cooma"
+            val name = s"Reader & Writer command arguments ($filename)"
+            val rw = makeTempFilename(".txt")
+            val args = Seq(rw)
+
+            test(s"${backend.name}: run: $name") {
+                createFile(rw, "The file contents\n")
+                val result = runFile(filename, backend.options, backend, args)
+                result shouldBe ""
+                FileSource(rw).content shouldBe "Hello, world!\n"
+                deleteFile(rw)
+            }
+
+            test(s"${backend.name}: run: $name: result") {
+                createFile(rw, "The file contents\n")
+                val result = runFile(filename, backend.options :+ "-r", backend, args)
+                result shouldBe "\"The file contents\\n\"\n"
+                FileSource(rw).content shouldBe "Hello, world!\n"
+                deleteFile(rw)
             }
         }
 

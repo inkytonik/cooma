@@ -77,24 +77,54 @@ trait Compiler {
 
         def compileTopArg(arg : Argument, a : String, t : Expression, e : Expression) : Term = {
 
-            def compileCapArg(n : String) : Term = {
+            def compileCapArg(n : List[String]) : Term = {
                 val x = fresh("x")
-                letV(Bridge(arg), x, prmV(argumentP(nArg), Vector()),
-                    letV(Bridge(arg), a, prmV(capabilityP(n), Vector(x)),
-                        compileTop(e, nArg + 1)))
+                def aux(n : List[String], prev : String) : Term = {
+                    val c0 = fresh("c")
+                    n match {
+                        case hd :: Nil =>
+                            letV(Bridge(arg), c0, prmV(capabilityP(hd), Vector(x)),
+                                letV(Bridge(arg), a, prmV(recConcatP(), Vector(prev, c0)),
+                                    compileTop(e, nArg + 1)))
+                        case hd :: (tl @ _ :: _) =>
+                            val c1 = fresh("c")
+                            letV(Bridge(arg), c0, prmV(capabilityP(hd), Vector(x)),
+                                letV(Bridge(arg), c1, prmV(recConcatP(), Vector(prev, c0)),
+                                    aux(tl, c1)))
+                        case Nil =>
+                            sys.error("compileCapArg: unexpected Nil")
+                    }
+                }
+                n match {
+                    case hd :: Nil =>
+                        letV(Bridge(arg), x, prmV(argumentP(nArg), Vector()),
+                            letV(Bridge(arg), a, prmV(capabilityP(hd), Vector(x)), compileTop(e, nArg + 1)))
+                    case hd :: tl =>
+                        val c = fresh("c")
+                        letV(Bridge(arg), x, prmV(argumentP(nArg), Vector()),
+                            letV(Bridge(arg), c, prmV(capabilityP(hd), Vector(x)), aux(tl, c)))
+                    case Nil =>
+                        sys.error("compileCapArg: unexpected Nil")
+                }
             }
 
             t match {
-                case ReaderT()       => compileCapArg("Reader")
-                case ReaderWriterT() => compileCapArg("ReaderWriter")
-                case WriterT()       => compileCapArg("Writer")
-
                 case StrT() =>
-                    letV(Bridge(t), a, prmV(argumentP(nArg), Vector()),
+                    letV(Bridge(arg), a, prmV(argumentP(nArg), Vector()),
                         compileTop(e, nArg + 1))
-
-                case _ =>
-                    sys.error(s"compileTopArg: ${show(t)} arguments not supported")
+                case t =>
+                    def aux(t : Expression) : List[String] =
+                        t match {
+                            case Cat(e1, e2) =>
+                                aux(e1) ::: aux(e2)
+                            case ReaderT() =>
+                                "Reader" :: Nil
+                            case WriterT() =>
+                                "Writer" :: Nil
+                            case t =>
+                                sys.error(s"compileTopArg: ${show(t)} arguments not supported")
+                        }
+                    compileCapArg(aux(t))
             }
 
         }
@@ -337,7 +367,7 @@ trait Compiler {
     object IsType {
         def unapply(e : Expression) : Boolean =
             e match {
-                case BoolT() | ReaderT() | ReaderWriterT() | WriterT() |
+                case BoolT() | ReaderT() | WriterT() |
                     _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT |
                     _ : UniT | _ : VarT =>
                     true

@@ -10,7 +10,7 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import java.io.{BufferedReader, BufferedWriter, FileReader, FileWriter, IOException, InputStreamReader, Writer}
+import java.io._
 
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
@@ -118,15 +118,6 @@ object Primitives {
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
-                case "ReaderWriter" =>
-                    try {
-                        makeCapability(Vector(
-                            ("read", interp.readerReadP(argument)),
-                            ("write", interp.writerWriteP(argument))
-                        ))
-                    } catch {
-                        case capE : CapabilityException => interp.errR(capE.getMessage)
-                    }
                 case _ =>
                     sys.error(s"capability: unknown primitive $name")
             }
@@ -141,13 +132,19 @@ object Primitives {
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
             xs match {
                 case Vector(l, r) =>
-                    interp.isRecR(interp.lookupR(rho, l)) match {
-                        case Some(lFields) =>
-                            interp.isRecR(interp.lookupR(rho, r)) match {
-                                case Some(rFields) => interp.recR(lFields ++ rFields)
-                                case None          => sys.error(s"$show: right argument $r of & is non-record")
-                            }
-                        case None => sys.error(s"$show: left argument $l of & is non-record")
+                    val vl = interp.lookupR(rho, l)
+                    val vr = interp.lookupR(rho, r)
+                    def aux(v : interp.ValueR, side : String) : Either[String, Vector[interp.FldR]] =
+                        (interp.isRecR(v), interp.isErrR(v)) match {
+                            case (Some(fields), _) => Right(fields)
+                            case (_, Some(error))  => Left(error)
+                            case _                 => sys.error(s"$show: $side argument $r of & is non-record")
+                        }
+                    (aux(vl, "left"), aux(vr, "right")) match {
+                        case (Right(lFields), Right(rFields)) =>
+                            interp.recR(lFields ++ rFields)
+                        case (l, r) =>
+                            interp.errR(Seq(l, r).flatMap(_.swap.toOption).mkString(", "))
                     }
                 case _ =>
                     sys.error(s"$show: unexpectedly got arguments $xs")

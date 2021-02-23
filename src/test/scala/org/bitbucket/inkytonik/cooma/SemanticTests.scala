@@ -542,29 +542,6 @@ class SemanticTests extends Tests {
                    |                   ^
                    |"""
             ),
-            SemanticTest(
-                "ReaderWriter is built-in record type",
-                "fun (rw : ReaderWriter) { val s = rw.read() rw.write(s) }",
-                ""
-            ),
-            SemanticTest(
-                "ReaderWriter read field has correct type",
-                "{ def f (rw : ReaderWriter) String = rw.read() 0 }",
-                ""
-            ),
-            SemanticTest(
-                "ReaderWriter write field has correct type",
-                """{ def f (rw : ReaderWriter) Unit = rw.write("hi") 0 }""",
-                ""
-            ),
-            SemanticTest(
-                "ReaderWriter doesn't have non-write field",
-                "fun (rw : ReaderWriter) rw.foo",
-                """|1:28:error: foo is not a field of record type ReaderWriter
-                   |fun (rw : ReaderWriter) rw.foo
-                   |                           ^
-                   |"""
-            ),
 
             // Selection
 
@@ -1230,9 +1207,14 @@ class SemanticTests extends Tests {
                 ""
             ),
             SemanticTest(
+                "record type concatenation",
+                "{ x: Int, y: String } & { z: Int }",
+                ""
+            ),
+            SemanticTest(
                 "bad record concatenation (left)",
                 "3 & { x = 1 }",
-                """|1:1:error: expected record type, got Int
+                """|1:1:error: expected record or record type, got Int
                    |3 & { x = 1 }
                    |^
                    |"""
@@ -1240,7 +1222,7 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad record concatenation (right)",
                 "{ x = 1 } & 3",
-                """|1:13:error: expected record type, got Int
+                """|1:13:error: expected record, got Int
                    |{ x = 1 } & 3
                    |            ^
                    |"""
@@ -1248,12 +1230,9 @@ class SemanticTests extends Tests {
             SemanticTest(
                 "bad record concatenation (both)",
                 "3 & 4",
-                """|1:1:error: expected record type, got Int
+                """|1:1:error: expected record or record type, got Int
                    |3 & 4
                    |^
-                   |1:5:error: expected record type, got Int
-                   |3 & 4
-                   |    ^
                    |"""
             ),
             SemanticTest(
@@ -1271,6 +1250,46 @@ class SemanticTests extends Tests {
                    |{ w = 0, x = 1, y = 2 } & { y = 1, x = 2 }
                    |^
                    |"""
+            ),
+            SemanticTest(
+                "bad record type concatenation (left)",
+                "3 & { x: Int }",
+                """|1:1:error: expected record or record type, got Int
+                   |3 & { x: Int }
+                   |^
+                   |""".stripMargin
+            ),
+            SemanticTest(
+                "bad record type concatenation (right)",
+                "{ x: Int } & 3",
+                """|1:14:error: expected record type, got Int
+                   |{ x: Int } & 3
+                   |             ^
+                   |""".stripMargin
+            ),
+            SemanticTest(
+                "bad record type concatenation (overlapping fields)",
+                "{ x: Int, y: Int } & { x: Int, y: String, z: Int }",
+                """|1:1:error: record concatenation has overlapping field(s) x, y
+                   |{ x: Int, y: Int } & { x: Int, y: String, z: Int }
+                   |^
+                   |""".stripMargin
+            ),
+            SemanticTest(
+                "bad record concatenation (value on left, type on right)",
+                "{ x = 1 } & { y: String }",
+                """|1:13:error: expected record, got Type
+                   |{ x = 1 } & { y: String }
+                   |            ^
+                   |""".stripMargin
+            ),
+            SemanticTest(
+                "bad record concatenation (type on left, value on right)",
+                "{ x: Int } & { y = 4 }",
+                """|1:14:error: expected record type, got { y : Int }
+                   |{ x: Int } & { y = 4 }
+                   |             ^
+                   |""".stripMargin
             ),
 
             // primitives
@@ -1608,8 +1627,10 @@ class SemanticTests extends Tests {
     // Subtyping
 
     {
-        import org.bitbucket.inkytonik.cooma.SemanticAnalysis.{subtype, subtypes}
         import org.bitbucket.inkytonik.kiama.util.Positions
+
+        val analyser = new SemanticAnalyser(new Tree[ASTNode, ASTNode](Uni()))
+        import analyser.{subtype, subtypes}
 
         def parseType(s : String) : Expression = {
             val source = new StringSource(s)
@@ -1630,8 +1651,7 @@ class SemanticTests extends Tests {
         val reflSubtypeTests =
             Vector(
                 "Int",
-                "Str",
-                "foo",
+                "String",
                 "{x : Int}",
                 "{a : Int, b : String}",
                 "{r : Int, s : { a : Int, b : String}}",

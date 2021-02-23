@@ -78,12 +78,6 @@ object SymbolTable extends Environments[CoomaEntity] {
             FieldType("read", FunT(ArgumentTypes(Vector()), StrT()))
         ))
 
-    val readerWriterT : Expression =
-        RecT(Vector(
-            FieldType("read", FunT(ArgumentTypes(Vector()), StrT())),
-            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), StrT()))), UniT()))
-        ))
-
     val writerT : Expression =
         RecT(Vector(
             FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), StrT()))), UniT()))
