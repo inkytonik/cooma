@@ -97,18 +97,16 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
 
         def printArgument(argument : Argument) : Unit = {
             config.output().emit(s"  ${argument.idnDef.identifier}: ")
-            argument.expression match {
-                case ReaderT() =>
-                    config.output().emit("a reader")
-                case ReaderWriterT() =>
-                    config.output().emit("a reader writer")
-                case StrT() =>
-                    config.output().emit("a string")
-                case WriterT() =>
-                    config.output().emit("a writer")
-                case tipe =>
-                    config.output().emit(s"unsupported argument type ${show(tipe)}")
-            }
+            def aux(t : Expression) : Seq[String] =
+                t match {
+                    case Cat(e1, e2) => aux(e1) ++ aux(e2)
+                    case ReaderT()   => Seq("a reader")
+                    case StrT()      => Seq("a string")
+                    case WriterT()   => Seq("a writer")
+                    case t           => Seq(s"unsupported argument type ${show(t)}")
+                }
+            val description = aux(argument.expression).mkString(", ")
+            config.output().emit(description)
             argument.optStringLit match {
                 case Some(doc) =>
                     config.output().emitln(s" $doc")

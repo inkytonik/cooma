@@ -1,0 +1,4 @@
+arguments:
+  rw: a reader, a writer
+result type:
+  String

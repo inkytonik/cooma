@@ -135,7 +135,7 @@ trait REPL extends REPLBase[Config] {
         def unapply(e : Expression) : Boolean =
             e match {
                 case BoolT() | Booleans() | False() | Idn(IdnUse(_)) | IntT() | Ints() |
-                    ReaderT() | ReaderWriterT() | WriterT() | Strings() | StrT() | True() =>
+                    ReaderT() | WriterT() | Strings() | StrT() | True() =>
                     true
                 case _ =>
                     false

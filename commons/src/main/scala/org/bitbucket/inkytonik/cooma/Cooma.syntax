@@ -32,7 +32,6 @@ Expression {paren} =
   | 'Int'                                                    {IntT}
   | 'Ints'                                                   {Ints}
   | 'Reader'                                                 {ReaderT}
-  | 'ReaderWriter'                                           {ReaderWriterT}
   | 'Writer'                                                 {WriterT}
   | StringLit                                                {Str}
   | 'String'                                                 {StrT}
