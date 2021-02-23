@@ -51,7 +51,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
     val thread = new Thread(() => {
         try {
-            HttpServer.run(Nil)
+            HttpServer.main(Array.empty)
         } catch {
             case _ : InterruptedException => ()
         }
@@ -1324,8 +1324,8 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     OptionTest("IR AST print", "-I", "capability/writerCmdArg", "IRAST", Seq("/dev/null")),
                     OptionTest("IR print", "-i", "capability/readerWriterCmdArg", "IR", Seq("/dev/null")),
                     OptionTest("Usage", "--usage", "capability/readerWriterCmdArg", "usage", Seq("/dev/null")),
-                    OptionTest("IR print", "-i", "capability/httpClientCmdArg", "IR", Seq("localhost:8080")),
-                    OptionTest("Usage", "--usage", "capability/httpClientCmdArg", "usage", Seq("localhost:8080"))
+                    OptionTest("IR print", "-i", "capability/httpClientCmdArg", "IR", Seq("http://localhost:8080")),
+                    OptionTest("Usage", "--usage", "capability/httpClientCmdArg", "usage", Seq("http://localhost:8080"))
                 )
 
             for (aTest <- optionTests) {
@@ -1748,6 +1748,63 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 result shouldBe "\"The file contents\\n\"\n"
                 FileSource(rw).content shouldBe "Hello, world!\n"
                 deleteFile(rw)
+            }
+        }
+
+        {
+            val filename = "src/test/resources/capability/httpGet.cooma"
+            val name = s"single HTTP capability ($filename)"
+            val args = Seq("http://localhost:8080")
+
+            test(s"${backend.name}: run: $name") {
+                val result = runFile(filename, backend.options :+ "-r", backend, args)
+                result shouldBe "{ code = 200, body = \"GET / response\" }\n"
+            }
+        }
+
+        {
+            val filename = "src/test/resources/capability/httpGetFoo.cooma"
+            val name = s"single HTTP capability with suffix ($filename)"
+            val args = Seq("http://localhost:8080")
+
+            test(s"${backend.name}: run: $name") {
+                val result = runFile(filename, backend.options :+ "-r", backend, args)
+                result shouldBe "{ code = 200, body = \"GET /foo response\" }\n"
+            }
+        }
+
+        {
+            val filename = "src/test/resources/capability/httpGetPostPut.cooma"
+            val name = s"multiple HTTP capabilities ($filename)"
+            val args = Seq("http://localhost:8080")
+
+            test(s"${backend.name}: run: $name") {
+                val result = runFile(filename, backend.options :+ "-r", backend, args)
+                result shouldBe "{ x0 = \"GET / response\", x1 = \"POST / response\", x2 = \"PUT / response\" }\n"
+            }
+        }
+
+        {
+            val filename = "src/test/resources/capability/httpNotPermitted.cooma"
+            val name = s"HTTP capability not permitted ($filename)"
+            val args = Seq("http://localhost:8080")
+
+            test(s"${backend.name}: run: $name") {
+                val result = runFile(filename, backend.options :+ "-r", backend, args)
+                result shouldBe
+                    """|src/test/resources/capability/httpNotPermitted.cooma:2:16:error: delete is not a field of record type {
+                       |    get : (suffix : String) {
+                       |        code : Int,
+                       |        body : String
+                       |    },
+                       |    put : (suffix : String) {
+                       |        code : Int,
+                       |        body : String
+                       |    }
+                       |}
+                       |    httpClient.delete("")
+                       |               ^
+                       |""".stripMargin
             }
         }
 
