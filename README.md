@@ -260,4 +260,12 @@ A Reader capability is only provided if the designated file can be read.
 cooma: Reader capability unavailable: can't read /does/not/exist
 ```
 
-The built-in ReaderWriter capability combines Reader and Writer.
+The Reader and Writer capabiities can be combined into a single argument using type concatenation.
+
+```ml
+fun (rw : Reader & Writer) {
+    val result = rw.read()
+    val _ = rw.write("Hello, world!\n")
+    result
+}
+```

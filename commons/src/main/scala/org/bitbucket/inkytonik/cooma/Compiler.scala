@@ -42,7 +42,7 @@ trait Compiler {
      * Name of capability type?
      */
     def isCapabilityName(n : String) : Boolean =
-        (n == "Writer") || (n == "Reader") || (n == "ReaderWriter")
+        (n == "Writer") || (n == "Reader")
 
     /**
      * Case class and map that stores primitives metadata.
