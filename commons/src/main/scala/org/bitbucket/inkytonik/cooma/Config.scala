@@ -38,6 +38,10 @@ class Config(args : Seq[String]) extends REPLConfig(args) {
         descr = "Print the result value in compiler mode (default: false)",
         default = Some(false))
 
+    lazy val trace = opt[Boolean]("trace", short = 'T',
+        descr = "Trace the IR execution (default: false)",
+        default = Some(false))
+
     lazy val typePrint = opt[Boolean]("typePrint", short = 't',
         descr = "Print the program type in compiler mode (default: false)",
         default = Some(false))

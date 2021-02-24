@@ -12,19 +12,22 @@ package org.bitbucket.inkytonik.cooma
 
 trait Backend {
 
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
+    import org.bitbucket.inkytonik.kiama.relation.Bridge
+
     type Term
-    def appC(k : String, x : String) : Term
-    def appF(f : String, k : String, x : String) : Term
-    def casV(x : String, cs : Vector[CaseTerm]) : Term
-    def letC(k : String, x : String, t : Term, body : Term) : Term
-    def letF(ds : Vector[DefTerm], body : Term) : Term
-    def letV(x : String, v : Value, body : Term) : Term
+    def appC(source : Bridge[ASTNode], k : String, x : String) : Term
+    def appF(source : Bridge[ASTNode], f : String, k : String, x : String) : Term
+    def casV(source : Bridge[ASTNode], x : String, cs : Vector[CaseTerm]) : Term
+    def letC(source : Bridge[ASTNode], k : String, x : String, t : Term, body : Term) : Term
+    def letF(source : Bridge[ASTNode], ds : Vector[DefTerm], body : Term) : Term
+    def letV(source : Bridge[ASTNode], x : String, v : Value, body : Term) : Term
 
     type CaseTerm
-    def caseTerm(c : String, k : String) : CaseTerm
+    def caseTerm(source : Bridge[ASTNode], c : String, k : String) : CaseTerm
 
     type DefTerm
-    def defTerm(f : String, k : String, x : String, body : Term) : DefTerm
+    def defTerm(source : Bridge[ASTNode], f : String, k : String, x : String, body : Term) : DefTerm
 
     type Value
     def funV(k : String, x : String, body : Term) : Value
@@ -57,7 +60,7 @@ trait Backend {
     def strR(str : String) : ValueR
     def varR(c : String, v : ValueR) : ValueR
     def intR(num : BigInt) : ValueR
-    def clsR(env : Env, f : String, x : String, e : Term) : ValueR
+    def clsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) : ValueR
     def recR(fields : Vector[FldR]) : ValueR
 
     val unitR : ValueR = recR(Vector())

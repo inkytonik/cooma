@@ -323,6 +323,20 @@ class SemanticAnalyser(
                 lookup(env(n), n.identifier, UnknownEntity())
         }
 
+    lazy val defentity : IdnDef => CoomaEntity =
+        attr {
+            case tree.parent(p) =>
+                p match {
+                    case decl : Argument => ArgumentEntity(decl)
+                    case decl : Case     => CaseValueEntity(decl)
+                    case decl : Def      => FunctionEntity(decl)
+                    case decl : Let      => LetEntity(decl)
+                    case _               => UnknownEntity()
+                }
+            case n =>
+                sys.error(s"defentity: unexpected IdnDef $n")
+        }
+
     def isDuplicateCase(c : Case, m : Mat) =
         m.cases.map(_.identifier).count(_ == c.identifier) > 1
 
@@ -589,8 +603,6 @@ class SemanticAnalyser(
                     case _ =>
                         None
                 }
-            case FieldEntity(Field(_, e)) =>
-                tipe(e)
             case FunctionEntity(Def(_, Body(Arguments(as), t, e))) =>
                 unaliasFunT(e, argsToArgTypes(as), t)
             case LetEntity(Let(_, i, None, e)) =>
