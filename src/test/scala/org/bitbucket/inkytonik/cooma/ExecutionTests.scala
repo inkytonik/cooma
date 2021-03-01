@@ -1793,14 +1793,14 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 val result = runFile(filename, backend.options :+ "-r", backend, args)
                 result shouldBe
                     """|src/test/resources/capability/httpNotPermitted.cooma:2:16:error: delete is not a field of record type {
-                       |    get : (suffix : String) {
-                       |        code : Int,
-                       |        body : String
-                       |    },
-                       |    put : (suffix : String) {
-                       |        code : Int,
-                       |        body : String
-                       |    }
+                       |  get : (suffix : String) {
+                       |    code : Int,
+                       |    body : String
+                       |  },
+                       |  put : (suffix : String) {
+                       |    code : Int,
+                       |    body : String
+                       |  }
                        |}
                        |    httpClient.delete("")
                        |               ^
