@@ -166,9 +166,9 @@ lazy val truffle = (project in file("truffle"))
 		commonsettings,
 		compileOrder := CompileOrder.Mixed,
 		libraryDependencies ++= Seq(
-				"org.projectlombok" % "lombok" % "1.16.16",
-				"org.graalvm.truffle" % "truffle-api" % "20.0.0",
-				"org.graalvm.truffle" % "truffle-dsl-processor" % "20.0.0",
+				"org.projectlombok" % "lombok" % "1.18.18",
+				"org.graalvm.truffle" % "truffle-api" % "21.0.0.2",
+				"org.graalvm.truffle" % "truffle-dsl-processor" % "21.0.0.2",
 				"com.io7m.jpplib" % "com.io7m.jpplib.core" % "0.8.0",
 				"org.slf4j" % "slf4j-log4j12" % "1.7.21"
 			)
