@@ -31,6 +31,10 @@ lazy val commonsettings = Seq(
 			"-Xcheckinit",
 			"-Xlint:-stars-align,_"
 		),
+	javacOptions ++=
+		Seq(
+			"-Xlint:deprecation,unchecked",
+		),
 	resolvers ++= Seq (
 		Resolver.sonatypeRepo ("releases"),
 		Resolver.sonatypeRepo ("snapshots"),
