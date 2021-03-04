@@ -2,10 +2,12 @@ package org.bitbucket.inkytonik.cooma.truffle.runtime;
 
 import com.oracle.truffle.api.interop.TruffleObject;
 import de.uka.ilkd.pp.DataLayouter;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import scala.collection.immutable.Vector;
 
 @Value
+@EqualsAndHashCode(callSuper=false)
 public class VecRuntimeValue extends RuntimeValue implements TruffleObject, Comparable<VecRuntimeValue> {
 
 	private final Vector<RuntimeValue> vector;
@@ -24,6 +26,5 @@ public class VecRuntimeValue extends RuntimeValue implements TruffleObject, Comp
 	public <Exc extends java.lang.Exception> void prettyPrint(DataLayouter<Exc> l) throws Exc {
 		l.print(this.toString());
 	}
-
 
 }

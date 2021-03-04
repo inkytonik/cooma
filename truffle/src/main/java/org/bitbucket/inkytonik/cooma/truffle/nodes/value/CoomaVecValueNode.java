@@ -9,6 +9,8 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.VecRuntimeValue;
 import scala.Option;
 import scala.collection.immutable.Vector;
+import scala.collection.immutable.VectorBuilder;
+import scala.collection.Iterator;
 
 @Getter
 @RequiredArgsConstructor
@@ -19,11 +21,15 @@ public class CoomaVecValueNode extends CoomaValueNode {
 
 	@Override
 	public RuntimeValue evaluate(VirtualFrame frame) {
-		Vector<RuntimeValue> values = vector.map(this::obtainFromRho);
-		Option<RuntimeValue> error = values.find( r -> r instanceof ErrorRuntimeValue);
-		if (error.isDefined()){
-			return error.get();
+		VectorBuilder<RuntimeValue> values = new VectorBuilder<RuntimeValue>();
+		Iterator<String> iter = vector.iterator();
+		while (iter.hasNext()) {
+			RuntimeValue value = obtainFromRho(iter.next());
+			if (value instanceof ErrorRuntimeValue)
+				return value;
+			values.addOne(value);
 		}
-		return new VecRuntimeValue(values);
+		return new VecRuntimeValue(values.result());
 	}
+
 }
