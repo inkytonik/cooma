@@ -10,25 +10,13 @@
 
 package org.bitbucket.inkytonik.cooma.truffle;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.TruffleException;
 
-public class CoomaFrontendException extends RuntimeException implements TruffleException {
+public class CoomaFrontendException extends AbstractTruffleException {
 
-	private static final long serialVersionUID = 7667192711474L;
-
-	private final Node location;
-
-	@TruffleBoundary
     public CoomaFrontendException(String message) {
 		super(message);
-		location = null;
-	}
-
-	@Override
-	public Node getLocation() {
-		return location;
 	}
 
 }
