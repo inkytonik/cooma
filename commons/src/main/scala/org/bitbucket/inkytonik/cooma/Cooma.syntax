@@ -33,8 +33,7 @@ Expression {paren} =
   | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
   | 'Int'                                                    {IntT}
   | 'Ints'                                                   {Ints}
-  | 'Reader'                                                 {ReaderT}
-  | 'Writer'                                                 {WriterT}
+  | CapName                                                  {CapT}
   | StringLit                                                {Str}
   | 'String'                                                 {StrT}
   | 'Strings'                                                {Strings}
@@ -54,6 +53,10 @@ ArgumentTypes =
 
 ArgumentType =
   (IdnDef sp ":")? Expression.
+
+CapName =
+    'Reader'    {ReaderT}
+  | 'Writer'    {WriterT}.
 
 Case =
   \n "case" Identifier '(' IdnDef ")" '=>' nestnl(Expression).
