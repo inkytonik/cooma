@@ -239,9 +239,9 @@ class SemanticAnalyser(
     def checkMainArgument(arg : Argument) : Messages = {
         def aux(t : Expression) : Boolean =
             t match {
-                case ReaderT() | StrT() | WriterT() => true
-                case Cat(l, r)                      => aux(l) && aux(r)
-                case _                              => false
+                case CapT(_) | StrT() => true
+                case Cat(l, r)        => aux(l) && aux(r)
+                case _                => false
             }
         if (aux(arg.expression)) noMessages
         else error(arg.expression, "illegal main program argument type")
@@ -404,6 +404,9 @@ class SemanticAnalyser(
             case BoolT() =>
                 Some(TypT())
 
+            case CapT(_) =>
+                Some(TypT())
+
             case n @ Cat(e1, e2) =>
                 (tipe(e1), tipe(e2)) match {
                     case (Some(RecT(r1)), Some(RecT(r2))) =>
@@ -491,9 +494,6 @@ class SemanticAnalyser(
                         None
                 }
 
-            case ReaderT() =>
-                Some(TypT())
-
             case Rec(fields) =>
                 makeRow(fields).map(RecT)
 
@@ -543,9 +543,6 @@ class SemanticAnalyser(
 
             case Var(field) =>
                 makeRow(Vector(field)).map(VarT)
-
-            case WriterT() =>
-                Some(TypT())
 
             case _ : VarT =>
                 Some(TypT())
@@ -639,8 +636,8 @@ class SemanticAnalyser(
     def alias(e : Expression) : Expression =
         e match {
             case `boolT`                    => BoolT()
-            case `readerT`                  => ReaderT()
-            case `writerT`                  => WriterT()
+            case `readerT`                  => CapT(ReaderT())
+            case `writerT`                  => CapT(WriterT())
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
             case RecT(fs)                   => RecT(aliasFieldTypes(fs))
             case VarT(fs)                   => VarT(aliasFieldTypes(fs))
@@ -667,6 +664,12 @@ class SemanticAnalyser(
             case BoolT() =>
                 Some(boolT)
 
+            case CapT(ReaderT()) =>
+                Some(readerT)
+
+            case CapT(WriterT()) =>
+                Some(writerT)
+
             case Cat(l, r) =>
                 (unalias(n, l), unalias(n, r)) match {
                     case (Some(RecT(l)), Some(RecT(r))) =>
@@ -688,17 +691,11 @@ class SemanticAnalyser(
             case FunT(ArgumentTypes(us), u) =>
                 unaliasFunT(n, us, u)
 
-            case ReaderT() =>
-                Some(readerT)
-
             case RecT(fieldTypes) =>
                 unaliasRecT(n, fieldTypes)
 
             case VarT(fieldTypes) =>
                 unaliasVarT(n, fieldTypes)
-
-            case WriterT() =>
-                Some(writerT)
 
             case _ =>
                 Some(t)

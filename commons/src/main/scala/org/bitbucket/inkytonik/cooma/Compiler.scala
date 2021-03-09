@@ -39,12 +39,6 @@ trait Compiler {
     }
 
     /**
-     * Name of capability type?
-     */
-    def isCapabilityName(n : String) : Boolean =
-        (n == "Writer") || (n == "Reader")
-
-    /**
      * Case class and map that stores primitives metadata.
      */
     case class PrimitiveMeta(prm : Primitive)
@@ -117,10 +111,8 @@ trait Compiler {
                         t match {
                             case Cat(e1, e2) =>
                                 aux(e1) ::: aux(e2)
-                            case ReaderT() =>
-                                "Reader" :: Nil
-                            case WriterT() =>
-                                "Writer" :: Nil
+                            case CapT(name) =>
+                                name.productPrefix.init :: Nil
                             case t =>
                                 sys.error(s"compileTopArg: ${show(t)} arguments not supported")
                         }
@@ -367,7 +359,7 @@ trait Compiler {
     object IsType {
         def unapply(e : Expression) : Boolean =
             e match {
-                case BoolT() | ReaderT() | WriterT() |
+                case BoolT() | CapT(_) |
                     _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT |
                     _ : UniT | _ : VarT =>
                     true
