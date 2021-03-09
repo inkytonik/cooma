@@ -128,10 +128,13 @@ lazy val root = (project in file("."))
 		commonsettings,
 		mainClass in Compile := (mainClass in Compile in reference).value,
 		libraryDependencies ++= Seq(
+			"org.http4s" %% "http4s-blaze-server" % "0.21.16" % "test",
+			"org.http4s" %% "http4s-blaze-client" % "0.21.16" % "test",
+			"org.http4s" %% "http4s-dsl" % "0.21.16" % "test",
             "org.scalatest" %% "scalatest" % "3.2.3" % "test",
 			"org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0" % "test",
             "org.scalacheck" %% "scalacheck" % "1.15.2" % "test",
-			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2"
+			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2",
 		) ++ kiamaDependencies
 	)
 	.dependsOn(
@@ -181,11 +184,8 @@ lazy val commons = (project in file("commons"))
 	.settings(
 		commonsettings,
 		libraryDependencies ++= kiamaDependencies,
-		libraryDependencies ++= Seq(
-			"org.scalaj" %% "scalaj-http" % "2.4.2",
-			"org.http4s" %% "http4s-blaze-server" % "0.21.16",
-			"org.http4s" %% "http4s-blaze-client" % "0.21.16",
-			"org.http4s" %% "http4s-dsl" % "0.21.16"))
+		libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.4.2"
+	)
 
 
 lazy val buildComponent = taskKey[Unit]("Generates the component jar for GraalVM installation.")
