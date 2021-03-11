@@ -17,6 +17,8 @@ trait Compiler {
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.Primitives._
+
+    import org.bitbucket.inkytonik.cooma.SymbolTable.{intT, PrimitiveType, strT, typT, uniT}
     import org.bitbucket.inkytonik.cooma.Util.{fresh, resetFresh, unescape}
     import org.bitbucket.inkytonik.kiama.relation.Bridge
 
@@ -103,7 +105,7 @@ trait Compiler {
             }
 
             t match {
-                case StrT() =>
+                case `strT` =>
                     letV(Bridge(arg), a, prmV(argumentP(nArg), Vector()),
                         compileTop(e, nArg + 1))
                 case t =>
@@ -192,24 +194,24 @@ trait Compiler {
     }
 
     def mkInt1PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(IntT()), primName)
+        mkPrimField(fieldName, Vector(intT), primName)
 
     def mkInt2PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(IntT(), IntT()), primName)
+        mkPrimField(fieldName, Vector(intT, intT), primName)
 
     def mkStr1PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(StrT()), primName)
+        mkPrimField(fieldName, Vector(strT), primName)
 
     def mkStr2PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(StrT(), StrT()), primName)
+        mkPrimField(fieldName, Vector(strT, strT), primName)
 
     def mkStrIntPrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(StrT(), IntT()), primName)
+        mkPrimField(fieldName, Vector(strT, intT), primName)
 
     val equalPrim =
         Fun(
             Arguments(Vector(
-                Argument(IdnDef("t"), TypT(), None),
+                Argument(IdnDef("t"), typT, None),
                 Argument(IdnDef("l"), Idn(IdnUse("t")), None),
                 Argument(IdnDef("r"), Idn(IdnUse("t")), None)
             )),
@@ -289,13 +291,16 @@ trait Compiler {
                 compile(exp, Var(Field("False", Uni())), kappa)
 
             case Fun(Arguments(Vector()), e) =>
-                compileFun(exp, "_", UniT(), e, kappa)
+                compileFun(exp, "_", uniT, e, kappa)
 
             case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
                 compileFun(exp, x, t, e, kappa)
 
             case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
                 compileFun(exp, x, t, Fun(Arguments(as), e), kappa)
+
+            case Type() =>
+                compile(exp, Uni(), kappa)
 
             case Idn(IdnUse(i)) =>
                 kappa(i)
@@ -348,20 +353,15 @@ trait Compiler {
                     letV(Bridge(source), r, varV(field.identifier, z),
                         kappa(r)))
 
-            // Types erase to unit
-            case IsType() =>
-                compile(exp, Uni(), kappa)
-
             case _ =>
                 sys.error(s"compile: unexpected expression $exp")
         }
 
-    object IsType {
+    object Type {
         def unapply(e : Expression) : Boolean =
             e match {
-                case BoolT() | CapT(_) |
-                    _ : FunT | _ : IntT | _ : RecT | _ : StrT | _ : TypT |
-                    _ : UniT | _ : VarT =>
+                case BoolT() | CapT(_) | _ : FunT | _ : RecT | _ : VarT |
+                    PrimitiveType() =>
                     true
                 case _ =>
                     false
@@ -403,7 +403,7 @@ trait Compiler {
         val k = fresh("k")
         fd match {
             case Def(IdnDef(f), Body(Arguments(Vector()), t, e)) =>
-                compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), UniT(), None))), t, e)))
+                compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), uniT, None))), t, e)))
 
             case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _, None) +: otherArgs), _, e)) =>
                 defTerm(Bridge(fd), f, k, x, compileDefBody(otherArgs, e, k))
@@ -492,7 +492,7 @@ trait Compiler {
                 tailCompile(exp, Var(Field("False", Uni())), k)
 
             case Fun(Arguments(Vector()), e) =>
-                tailCompileFun(exp, "_", UniT(), e, k)
+                tailCompileFun(exp, "_", uniT, e, k)
 
             case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
                 tailCompileFun(exp, x, t, e, k)
@@ -502,6 +502,9 @@ trait Compiler {
 
             case Fun(Arguments(a +: as), e) =>
                 tailCompile(exp, Fun(Arguments(Vector(a)), Fun(Arguments(as), e)), k)
+
+            case Type() =>
+                tailCompile(exp, Uni(), k)
 
             case Idn(IdnUse(x)) =>
                 appC(Bridge(source), k, x)
@@ -554,10 +557,6 @@ trait Compiler {
                 compile(source, field.expression, z =>
                     letV(Bridge(source), r, varV(field.identifier, z),
                         appC(Bridge(source), k, r)))
-
-            // Types erase to unit
-            case IsType() =>
-                tailCompile(exp, Uni(), k)
 
             case _ =>
                 sys.error(s"tailCompile: unexpected expression $exp")

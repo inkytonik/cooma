@@ -8,12 +8,16 @@ Program(
               Argument(
                 IdnDef(
                   "x"),
-                IntT(),
+                Idn(
+                  IdnUse(
+                    "Int")),
                 None),
               Argument(
                 IdnDef(
                   "y"),
-                StrT(),
+                Idn(
+                  IdnUse(
+                    "String")),
                 None))),
           Idn(
             IdnUse(

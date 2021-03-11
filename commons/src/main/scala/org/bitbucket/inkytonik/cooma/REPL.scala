@@ -134,8 +134,8 @@ trait REPL extends REPLBase[Config] {
     object AlreadyBoundIdn {
         def unapply(e : Expression) : Boolean =
             e match {
-                case BoolT() | Booleans() | CapT(_) | False() | Idn(IdnUse(_)) | IntT() | Ints() |
-                    Strings() | StrT() | True() =>
+                case BoolT() | Booleans() | CapT(_) | False() | Idn(IdnUse(_)) | Ints() |
+                    Strings() | True() =>
                     true
                 case _ =>
                     false
@@ -243,7 +243,7 @@ trait REPL extends REPLBase[Config] {
         config : Config,
         eval : => Unit
     ) =
-        if (aliasedType == TypT())
+        if (aliasedType == typT)
             output(i, optTypeValue, aliasedType, None, config)
         else
             eval
@@ -260,7 +260,7 @@ trait REPL extends REPLBase[Config] {
     ) : Unit = {
         val value =
             aliasedType match {
-                case TypT() =>
+                case `typT` =>
                     optTypeValue match {
                         case Some(typeValue) =>
                             s" = ${show(typeValue)}"

@@ -70,17 +70,42 @@ object SymbolTable extends Environments[CoomaEntity] {
         override val isError = true
     }
 
+    // Short-hands for primitive types
+
+    val intT : Expression = Idn(IdnUse("Int"))
+    val strT : Expression = Idn(IdnUse("String"))
+    val typT : Expression = Idn(IdnUse("Type"))
+    val uniT : Expression = Idn(IdnUse("Unit"))
+
+    def isPrimitiveTypeName(s : String) : Boolean =
+        (s == "Int") | (s == "String") | (s == "Type") | (s == "Unit")
+
+    object PrimitiveType {
+        def unapply(e : Expression) : Boolean =
+            e match {
+                case Idn(IdnUse(s)) if isPrimitiveTypeName(s) =>
+                    true
+                case _ =>
+                    false
+            }
+    }
+
+    object PrimitiveTypeName {
+        def unapply(s : String) : Boolean =
+            PrimitiveType.unapply(Idn(IdnUse(s)))
+    }
+
     val boolT : Expression =
-        VarT(Vector(FieldType("False", UniT()), FieldType("True", UniT())))
+        VarT(Vector(FieldType("False", uniT), FieldType("True", uniT)))
 
     val readerT : Expression =
         RecT(Vector(
-            FieldType("read", FunT(ArgumentTypes(Vector()), StrT()))
+            FieldType("read", FunT(ArgumentTypes(Vector()), strT))
         ))
 
     val writerT : Expression =
         RecT(Vector(
-            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), StrT()))), UniT()))
+            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), strT))), uniT))
         ))
 
     def mkPrimType(args : Vector[Expression], retType : Expression) : FunT =
@@ -90,26 +115,26 @@ object SymbolTable extends Environments[CoomaEntity] {
         FunT(ArgumentTypes(args.map { case (x, e) => ArgumentType(Some(IdnDef(x)), e) }), retType)
 
     def mkIntUnPrimType(retType : Expression) : FunT =
-        mkPrimType(Vector(IntT()), retType)
+        mkPrimType(Vector(intT), retType)
 
     def mkIntBinPrimType(retType : Expression) : FunT =
-        mkPrimType(Vector(IntT(), IntT()), retType)
+        mkPrimType(Vector(intT, intT), retType)
 
     val primitivesTypesTable = Map(
-        "Equal" -> mkPrimTypeWithArgNames(Vector(("t", TypT()), ("l", Idn(IdnUse("t"))), ("l", Idn(IdnUse("t")))), boolT),
-        "IntAbs" -> mkIntUnPrimType(IntT()),
-        "IntAdd" -> mkIntBinPrimType(IntT()),
-        "IntSub" -> mkIntBinPrimType(IntT()),
-        "IntMul" -> mkIntBinPrimType(IntT()),
-        "IntDiv" -> mkIntBinPrimType(IntT()),
-        "IntPow" -> mkIntBinPrimType(IntT()),
+        "Equal" -> mkPrimTypeWithArgNames(Vector(("t", typT), ("l", Idn(IdnUse("t"))), ("l", Idn(IdnUse("t")))), boolT),
+        "IntAbs" -> mkIntUnPrimType(intT),
+        "IntAdd" -> mkIntBinPrimType(intT),
+        "IntSub" -> mkIntBinPrimType(intT),
+        "IntMul" -> mkIntBinPrimType(intT),
+        "IntDiv" -> mkIntBinPrimType(intT),
+        "IntPow" -> mkIntBinPrimType(intT),
         "IntGt" -> mkIntBinPrimType(boolT),
         "IntGte" -> mkIntBinPrimType(boolT),
         "IntLt" -> mkIntBinPrimType(boolT),
         "IntLte" -> mkIntBinPrimType(boolT),
-        "StrConcat" -> mkPrimType(Vector(StrT(), StrT()), StrT()),
-        "StrLength" -> mkPrimType(Vector(StrT()), IntT()),
-        "StrSubstr" -> mkPrimType(Vector(StrT(), IntT()), StrT())
+        "StrConcat" -> mkPrimType(Vector(strT, strT), strT),
+        "StrLength" -> mkPrimType(Vector(strT), intT),
+        "StrSubstr" -> mkPrimType(Vector(strT, intT), strT)
     )
 
 }
