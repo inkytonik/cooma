@@ -122,6 +122,16 @@ object SymbolTable extends Environments[CoomaEntity] {
             FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), strT))), uniT))
         ))
 
+    val folderReaderT : Expression =
+        RecT(Vector(
+            FieldType("read", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("suffix")), StrT()))), StrT()))
+        ))
+
+    val folderWriterT : Expression =
+        RecT(Vector(
+            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("suffix")), StrT()), ArgumentType(Some(IdnDef("text")), StrT()))), UniT()))
+        ))
+
     def mkPrimType(args : Vector[Expression], retType : Expression) : FunT =
         FunT(ArgumentTypes(args.map { case e => ArgumentType(None, e) }), retType)
 

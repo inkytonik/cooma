@@ -16,13 +16,15 @@ class TruffleBackend(config : Config) extends Backend {
 
     import java.io.PrintWriter
     import java.math.BigInteger
+
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
     import org.bitbucket.inkytonik.cooma.Primitives._
-    import org.bitbucket.inkytonik.kiama.relation.Bridge
-    import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
-    import org.bitbucket.inkytonik.cooma.truffle.runtime._
+    import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
+    import org.bitbucket.inkytonik.cooma.truffle.runtime._
+    import org.bitbucket.inkytonik.kiama.relation.Bridge
+
     import scala.math.BigInt
 
     override def backendName : String = "Graal VM"
@@ -110,6 +112,12 @@ class TruffleBackend(config : Config) extends Backend {
 
     def readerReadP(filename : String) : Primitive =
         ReaderReadP(filename)
+
+    def folderReaderReadP(root : String) : Primitive =
+        FolderReaderReadP(root)
+
+    def folderWriterWriteP(root : String) : Primitive =
+        FolderWriterWriteP(root)
 
     def recConcatP() : Primitive =
         RecConcatP()

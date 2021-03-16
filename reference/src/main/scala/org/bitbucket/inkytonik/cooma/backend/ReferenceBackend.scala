@@ -112,6 +112,12 @@ class ReferenceBackend(
     def capabilityP(cap : String) : Primitive =
         CapabilityP(cap)
 
+    def folderReaderReadP(root : String) : Primitive =
+        FolderReaderReadP(root)
+
+    def folderWriterWriteP(root : String) : Primitive =
+        FolderWriterWriteP(root)
+
     def httpClientP(method : String, url : String) : Primitive =
         HttpClientP(method, url)
 

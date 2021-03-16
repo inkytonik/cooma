@@ -12,6 +12,7 @@ package org.bitbucket.inkytonik.cooma
 
 import java.io._
 
+import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
 import scalaj.http.Http
@@ -117,9 +118,15 @@ object Primitives {
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
-                case "Writer" =>
+                case "FolderReader" =>
                     try {
-                        makeCapability(Vector(("write", interp.writerWriteP(argument))))
+                        makeCapability(Vector(("read", interp.folderReaderReadP(argument))))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
+                case "FolderWriter" =>
+                    try {
+                        makeCapability(Vector(("write", interp.folderWriterWriteP(argument))))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
@@ -129,12 +136,65 @@ object Primitives {
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
+                case "Writer" =>
+                    try {
+                        makeCapability(Vector(("write", interp.writerWriteP(argument))))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
                 case _ =>
                     sys.error(s"capability: unknown primitive $name")
             }
         }
 
         def show = s"cap $cap"
+    }
+
+    case class FolderReaderReadP[I <: Backend](root : String) extends Primitive[I] {
+        val numArgs = 1
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            val filename = {
+                val suffix = interp.lookupR(rho, xs(0))
+                interp.isStrR(suffix)
+                    .map(suffix => s"$root/$suffix")
+                    .getOrElse(sys.error(s"$show: expected String, got $suffix"))
+            }
+            val in = new BufferedReader(new FileReader(filename))
+            try {
+                interp.strR(readReaderContents(in))
+            } catch {
+                case e : IOException => sys.error(e.getMessage)
+            }
+        }
+
+        def show = s"folderReaderRead $root"
+    }
+
+    case class FolderWriterWriteP[I <: Backend](root : String) extends Primitive[I] {
+        val numArgs = 1
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            val filename = {
+                val suffix = interp.lookupR(rho, xs(0))
+                interp.isStrR(suffix)
+                    .map(suffix => s"$root/$suffix")
+                    .getOrElse(sys.error(s"$show: expected String, got $suffix"))
+            }
+            val text = {
+                val text = interp.lookupR(rho, xs(1))
+                interp.isStrR(text).getOrElse(sys.error(s"$show: can't write $text"))
+            }
+            val out = new BufferedWriter(new FileWriter(filename))
+            try {
+                out.write(text)
+            } finally {
+                out.close()
+            }
+            interp.recR(Vector())
+        }
+
+        def show = s"folderWriterWrite $root"
     }
 
     case class RecConcatP[I <: Backend]() extends Primitive[I] {

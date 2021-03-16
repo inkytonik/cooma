@@ -51,7 +51,9 @@ ArgumentType =
   (IdnDef sp ":")? Expression.
 
 CapName =
-    'HttpDelete'    {HttpDeleteT}
+    'FolderReader'  {FolderReaderT}
+  | 'FolderWriter'  {FolderWriterT}.
+  | 'HttpDelete'    {HttpDeleteT}
   | 'HttpGet'       {HttpGetT}
   | 'HttpPost'      {HttpPostT}
   | 'HttpPut'       {HttpPutT}

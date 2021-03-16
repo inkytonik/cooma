@@ -637,6 +637,8 @@ class SemanticAnalyser(
             case `httpGetT`                 => CapT(HttpGetT())
             case `httpPostT`                => CapT(HttpPostT())
             case `httpPutT`                 => CapT(HttpPutT())
+            case `folderReaderT`            => CapT(FolderReaderT())
+            case `folderWriterT`            => CapT(FolderWriterT())
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
             case RecT(fs)                   => RecT(aliasFieldTypes(fs))
             case VarT(fs)                   => VarT(aliasFieldTypes(fs))
@@ -668,6 +670,12 @@ class SemanticAnalyser(
 
             case CapT(WriterT()) =>
                 Some(writerT)
+
+            case CapT(FolderReaderT()) =>
+                Some(folderReaderT)
+
+            case CapT(FolderWriterT()) =>
+                Some(folderWriterT)
 
             case Cat(l, r) =>
                 (unalias(n, l), unalias(n, r)) match {
