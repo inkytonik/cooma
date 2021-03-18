@@ -1,0 +1,10 @@
+letv x1 = arg 0
+letv c2 = cap HttpDelete x1
+letv c3 = cap HttpGet x1
+letv c4 = concat c2 c3
+letv c5 = cap HttpPost x1
+letv c6 = concat c4 c5
+letv c7 = cap HttpPut x1
+letv httpClient = concat c6 c7
+letv u8 = {}
+$halt u8

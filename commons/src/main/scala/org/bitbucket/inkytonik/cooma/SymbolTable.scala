@@ -73,6 +73,20 @@ object SymbolTable extends Environments[CoomaEntity] {
     val boolT : Expression =
         VarT(Vector(FieldType("False", UniT()), FieldType("True", UniT())))
 
+    private def httpT(method : String) : Expression =
+        RecT(Vector(FieldType(method, FunT(
+            ArgumentTypes(Vector(ArgumentType(Some(IdnDef("suffix")), StrT()))),
+            RecT(Vector(
+                FieldType("code", IntT()),
+                FieldType("body", StrT())
+            ))
+        ))))
+
+    val httpDeleteT : Expression = httpT("delete")
+    val httpGetT : Expression = httpT("get")
+    val httpPostT : Expression = httpT("post")
+    val httpPutT : Expression = httpT("put")
+
     val readerT : Expression =
         RecT(Vector(
             FieldType("read", FunT(ArgumentTypes(Vector()), StrT()))

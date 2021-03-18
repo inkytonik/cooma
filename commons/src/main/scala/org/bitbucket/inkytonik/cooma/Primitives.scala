@@ -14,6 +14,7 @@ import java.io._
 
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
+import scalaj.http.Http
 
 object Primitives {
 
@@ -106,6 +107,16 @@ object Primitives {
             }
 
             name match {
+                case "HttpDelete" | "HttpGet" | "HttpPost" | "HttpPut" =>
+                    val method = name.substring(4)
+                    try {
+                        makeCapability(Vector((
+                            method.toLowerCase,
+                            interp.httpClientP(method.toUpperCase, argument)
+                        )))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
                 case "Writer" =>
                     try {
                         makeCapability(Vector(("write", interp.writerWriteP(argument))))
@@ -184,6 +195,32 @@ object Primitives {
 
         def show = s"consoleWrite $filename"
 
+    }
+
+    case class HttpClientP[I <: Backend](
+        method : String,
+        url : String
+    ) extends Primitive[I] {
+        val numArgs = 1
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
+            val x = xs.head
+            interp.isStrR(interp.lookupR(rho, x)) match {
+                case Some(suffix) =>
+                    val (code, body) = {
+                        val response = Http(url + suffix).method(method).asString
+                        (response.code, response.body)
+                    }
+                    interp.recR(Vector(
+                        interp.fldR("code", interp.intR(code)),
+                        interp.fldR("body", interp.strR(body))
+                    ))
+                case None =>
+                    sys.error(s"$show: can't find string operand $x")
+            }
+        }
+
+        def show = s"httpClient ($method): $url"
     }
 
     case class RecSelectP[I <: Backend]() extends Primitive[I] {

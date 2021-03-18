@@ -1,0 +1,7 @@
+fun (httpClient : HttpGet & HttpPost & HttpPut) {
+    {
+        x0 = httpClient.get("").body,
+        x1 = httpClient.post("").body,
+        x2 = httpClient.put("").body
+    }
+}

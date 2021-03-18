@@ -1,0 +1,4 @@
+arguments:
+  httpClient: a HTTP client (DELETE), a HTTP client (GET), a HTTP client (POST), a HTTP client (PUT)
+result type:
+  Unit

@@ -507,6 +507,23 @@ class SemanticTests extends Tests {
                    |"""
             ),
             SemanticTest(
+                "HttpGet is a record with a get field",
+                "fun (httpClient : HttpGet) httpClient.get(\"\")",
+                ""
+            ),
+            SemanticTest(
+                "HttpDelete & HttpGet & HttpPost & HttpPut is a record with the respective fields",
+                """|fun (httpClient : HttpDelete & HttpGet & HttpPost & HttpPut) {
+                   |    val _ = httpClient.delete("")
+                   |    val _ = httpClient.get("")
+                   |    val _ = httpClient.post("")
+                   |    val _ = httpClient.put("")
+                   |    {}
+                   |}
+                   |""".stripMargin,
+                ""
+            ),
+            SemanticTest(
                 "Reader is a record with a read field",
                 "fun (r : Reader) r.read()",
                 ""

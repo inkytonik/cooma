@@ -638,6 +638,10 @@ class SemanticAnalyser(
             case `boolT`                    => BoolT()
             case `readerT`                  => CapT(ReaderT())
             case `writerT`                  => CapT(WriterT())
+            case `httpDeleteT`              => CapT(HttpDeleteT())
+            case `httpGetT`                 => CapT(HttpGetT())
+            case `httpPostT`                => CapT(HttpPostT())
+            case `httpPutT`                 => CapT(HttpPutT())
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
             case RecT(fs)                   => RecT(aliasFieldTypes(fs))
             case VarT(fs)                   => VarT(aliasFieldTypes(fs))
@@ -690,6 +694,18 @@ class SemanticAnalyser(
 
             case FunT(ArgumentTypes(us), u) =>
                 unaliasFunT(n, us, u)
+
+            case CapT(HttpDeleteT()) =>
+                Some(httpDeleteT)
+
+            case CapT(HttpGetT()) =>
+                Some(httpGetT)
+
+            case CapT(HttpPostT()) =>
+                Some(httpPostT)
+
+            case CapT(HttpPutT()) =>
+                Some(httpPutT)
 
             case RecT(fieldTypes) =>
                 unaliasRecT(n, fieldTypes)
