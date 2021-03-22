@@ -1,0 +1,5 @@
+fun (writer: FolderWriter) {
+    val _ = writer.write("a.txt", "text a")
+    val _ = writer.write("sub/b.txt", "text b")
+    {}
+}

@@ -112,13 +112,15 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
             config.output().emit(s"  ${argument.idnDef.identifier}: ")
             def aux(t : Expression) : Seq[String] =
                 t match {
+                    case Cat(e1, e2)           => aux(e1) ++ aux(e2)
+                    case CapT(FolderReaderT()) => Seq("a folder reader")
+                    case CapT(FolderWriterT()) => Seq("a folder writer")
+                    case CapT(ReaderT())       => Seq("a reader")
+                    case CapT(WriterT())       => Seq("a writer")
                     case CapT(HttpDeleteT()) => Seq("a HTTP client (DELETE)")
                     case CapT(HttpGetT())    => Seq("a HTTP client (GET)")
                     case CapT(HttpPostT())   => Seq("a HTTP client (POST)")
                     case CapT(HttpPutT())    => Seq("a HTTP client (PUT)")
-                    case CapT(ReaderT())     => Seq("a reader")
-                    case CapT(WriterT())     => Seq("a writer")
-                    case Cat(e1, e2)         => aux(e1) ++ aux(e2)
                     case `strT`              => Seq("a string")
                     case t                   => Seq(s"unsupported argument type ${show(t)}")
                 }

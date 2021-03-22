@@ -1,0 +1,5 @@
+fun (reader: FolderReader) {
+    val a = reader.read("a.txt")
+    val b = reader.read("sub/b.txt")
+    Strings.concat(a, b)
+}

@@ -80,22 +80,33 @@ object Primitives {
 
         def capability(interp : I)(rho : interp.Env, name : String, x : String) : interp.ValueR = {
 
-            def makeCapability(pairs : Vector[(String, interp.Primitive)]) : interp.ValueR = {
-                interp.recR(
-                    pairs.map(pair => {
+            def makeCapability(pairs : Vector[(String, interp.Primitive, Int)]) : interp.ValueR = {
+                interp.recR(pairs.map {
+                    case (fieldName, primitive, numArgs) =>
                         val k = fresh("k")
                         val y = fresh("y")
                         val p = fresh("p")
-                        interp.fldR(
-                            pair._1, interp.clsR(
-                                null,
-                                interp.emptyEnv, k, y,
-                                interp.letV(null, p, interp.prmV(pair._2, Vector(y)),
-                                    interp.appC(null, k, p))
-                            )
-                        )
-                    })
-                )
+                        numArgs match {
+                            case 1 =>
+                                interp.fldR(fieldName, interp.clsR(
+                                    null, interp.emptyEnv, k, y,
+                                    interp.letV(null, p, interp.prmV(primitive, Vector(y)),
+                                        interp.appC(null, k, p))
+                                ))
+                            case 2 =>
+                                val k1 = fresh("k")
+                                val y1 = fresh("y")
+                                interp.fldR(fieldName, interp.clsR(
+                                    null, interp.emptyEnv, k, y,
+                                    interp.letV(null, p, interp.funV(
+                                        k1, y1,
+                                        interp.letV(null, p, interp.prmV(primitive, Vector(y, y1)),
+                                            interp.appC(null, k1, p))
+                                    ), interp.appC(null, k, p))
+                                ))
+                            case n => sys.error(s"$show: $n arguments not supported")
+                        }
+                })
             }
 
             val value = interp.lookupR(rho, x)
@@ -120,25 +131,25 @@ object Primitives {
                     }
                 case "FolderReader" =>
                     try {
-                        makeCapability(Vector(("read", interp.folderReaderReadP(argument))))
+                        makeCapability(Vector(("read", interp.folderReaderReadP(argument), 1)))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
                 case "FolderWriter" =>
                     try {
-                        makeCapability(Vector(("write", interp.folderWriterWriteP(argument))))
+                        makeCapability(Vector(("write", interp.folderWriterWriteP(argument), 2)))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
                 case "Reader" =>
                     try {
-                        makeCapability(Vector(("read", interp.readerReadP(argument))))
+                        makeCapability(Vector(("read", interp.readerReadP(argument), 1)))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
                 case "Writer" =>
                     try {
-                        makeCapability(Vector(("write", interp.writerWriteP(argument))))
+                        makeCapability(Vector(("write", interp.writerWriteP(argument), 1)))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
@@ -172,7 +183,7 @@ object Primitives {
     }
 
     case class FolderWriterWriteP[I <: Backend](root : String) extends Primitive[I] {
-        val numArgs = 1
+        val numArgs = 2
 
         def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
             val filename = {
