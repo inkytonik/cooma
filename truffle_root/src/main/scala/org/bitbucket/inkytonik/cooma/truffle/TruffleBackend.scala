@@ -102,6 +102,9 @@ class TruffleBackend(config : Config) extends Backend {
     def capabilityP(cap : String) : Primitive =
         CapabilityP(cap)
 
+    def httpClientP(method : String, url : String) : Primitive =
+        HttpClientP(method, url)
+
     def writerWriteP(filename : String) : Primitive =
         WriterWriteP(filename, new PrintWriter(System.out))
 

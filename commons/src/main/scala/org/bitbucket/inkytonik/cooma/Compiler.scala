@@ -40,6 +40,15 @@ trait Compiler {
         compileHalt(prog.expression)
     }
 
+    lazy val capabilityNames =
+        Set("HttpGet", "HttpDelete", "HttpPut", "HttpPost", "Reader", "Writer")
+
+    /**
+     * Name of capability type?
+     */
+    def isCapabilityName(n : String) : Boolean =
+        capabilityNames(n)
+
     /**
      * Case class and map that stores primitives metadata.
      */
