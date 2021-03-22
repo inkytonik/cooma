@@ -17,6 +17,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
 
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, pretty, show}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.SymbolTable.strT
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.{Messages, noMessages}
@@ -118,7 +119,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                     case CapT(ReaderT())     => Seq("a reader")
                     case CapT(WriterT())     => Seq("a writer")
                     case Cat(e1, e2)         => aux(e1) ++ aux(e2)
-                    case StrT()              => Seq("a string")
+                    case `strT`              => Seq("a string")
                     case t                   => Seq(s"unsupported argument type ${show(t)}")
                 }
             val description = aux(argument.expression).mkString(", ")

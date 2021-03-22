@@ -26,13 +26,15 @@ class SemanticAnalyser(
     import org.bitbucket.inkytonik.kiama.util.Messaging.{check, collectMessages, error, Messages, noMessages}
     import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.SymbolTable.primitivesTypesTable
 
     val decorators = new Decorators(tree)
     import decorators._
 
     lazy val errors : Messages =
         collectMessages(tree) {
+            case i @ IdnDef(s) if isPrimitiveTypeName(s) =>
+                error(i, s"$s is a reserved primitive type name")
+
             case tree.parent.pair(d @ IdnDef(i), p) =>
                 lookup(env(p), i, UnknownEntity()) match {
                     case MultipleEntity() =>
@@ -58,6 +60,8 @@ class SemanticAnalyser(
                             checkApplication(f, as)
                         case a @ Cat(l, r) =>
                             checkConcat(a, l, r)
+                        case PrimitiveType() =>
+                            noMessages
                         case Idn(u @ IdnUse(i)) if entity(u) == UnknownEntity() =>
                             error(u, s"$i is not declared")
                         case Mat(e, cs) =>
@@ -168,7 +172,7 @@ class SemanticAnalyser(
             case (Some(RecT(_)), Some(t)) =>
                 // term-level concatenation, invalid right operand
                 error(r, s"expected record, got ${show(alias(t))}")
-            case (Some(TypT()), Some(TypT())) =>
+            case (Some(`typT`), Some(`typT`)) =>
                 // type-level concatenation
                 (unalias(e, l), unalias(e, r)) match {
                     case (None, _) | (_, None) =>
@@ -180,7 +184,7 @@ class SemanticAnalyser(
                     case (Some(t), _) =>
                         error(l, s"expected record type, got ${show(alias(t))}")
                 }
-            case (Some(TypT()), Some(t)) =>
+            case (Some(`typT`), Some(t)) =>
                 // type-level concatenation, invalid right operand
                 error(r, s"expected record type, got ${show(alias(t))}")
             case (Some(t), _) =>
@@ -239,7 +243,7 @@ class SemanticAnalyser(
     def checkMainArgument(arg : Argument) : Messages = {
         def aux(t : Expression) : Boolean =
             t match {
-                case CapT(_) | StrT() => true
+                case CapT(_) | `strT` => true
                 case Cat(l, r)        => aux(l) && aux(r)
                 case _                => false
             }
@@ -402,10 +406,10 @@ class SemanticAnalyser(
                 )))
 
             case BoolT() =>
-                Some(TypT())
+                Some(typT)
 
             case CapT(_) =>
-                Some(TypT())
+                Some(typT)
 
             case n @ Cat(e1, e2) =>
                 (tipe(e1), tipe(e2)) match {
@@ -414,11 +418,11 @@ class SemanticAnalyser(
                             Some(RecT(r1 ++ r2))
                         else
                             None
-                    case (Some(TypT()), Some(TypT())) =>
+                    case (Some(`typT`), Some(`typT`)) =>
                         (unalias(n, e1), unalias(n, e2)) match {
                             case (Some(RecT(r1)), Some(RecT(r2))) =>
                                 if (overlappingFields(r1, r2).isEmpty)
-                                    Some(TypT())
+                                    Some(typT)
                                 else
                                     None
                             case _ =>
@@ -431,7 +435,7 @@ class SemanticAnalyser(
             case _ : Eql =>
                 Some(FunT(
                     ArgumentTypes(Vector(
-                        ArgumentType(Some(IdnDef("t")), TypT()),
+                        ArgumentType(Some(IdnDef("t")), typT),
                         ArgumentType(None, Idn(IdnUse("t"))),
                         ArgumentType(None, Idn(IdnUse("t"))),
                     )),
@@ -450,7 +454,10 @@ class SemanticAnalyser(
                 }
 
             case _ : FunT =>
-                Some(TypT())
+                Some(typT)
+
+            case PrimitiveType() =>
+                Some(typT)
 
             case u @ Idn(IdnUse(x)) =>
                 entityType(lookup(env(u), x, UnknownEntity()))
@@ -469,9 +476,6 @@ class SemanticAnalyser(
                     FieldType("gte", primitivesTypesTable("IntGte"))
                 )))
 
-            case IntT() =>
-                Some(TypT())
-
             case m : Mat =>
                 matchType(m) match {
                     case OkCases(optType) =>
@@ -481,7 +485,7 @@ class SemanticAnalyser(
                 }
 
             case _ : Num =>
-                Some(IntT())
+                Some(intT)
 
             case n @ Prm(i, args) =>
                 primitivesTypesTable.get(i) match {
@@ -498,7 +502,7 @@ class SemanticAnalyser(
                 makeRow(fields).map(RecT)
 
             case _ : RecT =>
-                Some(TypT())
+                Some(typT)
 
             case Sel(r, FieldUse(f)) =>
                 tipe(r) match {
@@ -517,7 +521,7 @@ class SemanticAnalyser(
                 }
 
             case _ : Str =>
-                Some(StrT())
+                Some(strT)
 
             case Strings() =>
                 Some(RecT(Vector(
@@ -526,26 +530,17 @@ class SemanticAnalyser(
                     FieldType("substr", primitivesTypesTable("StrSubstr"))
                 )))
 
-            case StrT() =>
-                Some(TypT())
-
             case True() =>
                 Some(boolT)
 
-            case TypT() =>
-                Some(TypT())
-
             case Uni() =>
-                Some(UniT())
-
-            case UniT() =>
-                Some(TypT())
+                Some(uniT)
 
             case Var(field) =>
                 makeRow(Vector(field)).map(VarT)
 
             case _ : VarT =>
-                Some(TypT())
+                Some(typT)
         }
 
     def substArgTypes[T](x : String, t : Expression, a : T) = {
@@ -567,7 +562,7 @@ class SemanticAnalyser(
             None
         else
             ts.head match {
-                case ArgumentType(Some(IdnDef(x)), TypT()) =>
+                case ArgumentType(Some(IdnDef(x)), `typT`) =>
                     appType(f, substArgTypes(x, as.head, ts.tail), substArgTypes(x, as.head, t), as.tail)
                 case _ =>
                     appType(f, ts.tail, t, as.tail)
@@ -682,9 +677,12 @@ class SemanticAnalyser(
                         None
                 }
 
+            case PrimitiveType() =>
+                Some(t)
+
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {
-                    case ArgumentEntity(Argument(_, TypT(), _)) =>
+                    case ArgumentEntity(Argument(_, `typT`, _)) =>
                         Some(t)
                     case LetEntity(Let(_, _, _, v)) if t != v =>
                         unalias(n, v)
@@ -793,32 +791,32 @@ class SemanticAnalyser(
                 }
 
             case tree.parent(_ : Argument) =>
-                Some(TypT())
+                Some(typT)
 
             case tree.parent(_ : ArgumentType) =>
-                Some(TypT())
+                Some(typT)
 
             case tree.parent.pair(a, Body(_, t, e)) =>
                 if (a eq t)
-                    Some(TypT())
+                    Some(typT)
                 else
                     unalias(e, t)
 
             case tree.parent(_ : FieldType) =>
-                Some(TypT())
+                Some(typT)
 
             case tree.parent(_ : FunT) =>
-                Some(TypT())
+                Some(typT)
 
             case tree.parent.pair(a : Expression, Let(_, _, Some(t), e)) =>
                 if (a eq t)
-                    Some(TypT())
+                    Some(typT)
                 else
                     unalias(e, t)
 
             case tree.parent.pair(a : Expression, Prm("Equal", Vector(t, l, r))) =>
                 if (a eq t)
-                    Some(TypT())
+                    Some(typT)
                 else
                     unalias(t, t)
 

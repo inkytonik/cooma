@@ -166,6 +166,38 @@ class SemanticTests extends Tests {
             // Uses
 
             SemanticTest(
+                "Int can't be used as user identifier",
+                "{ val Int = 0 1 }",
+                """|1:7:error: Int is a reserved primitive type name
+                   |{ val Int = 0 1 }
+                   |      ^
+                   |"""
+            ),
+            SemanticTest(
+                "String can't be used as user identifier",
+                "{ val String = 0 1 }",
+                """|1:7:error: String is a reserved primitive type name
+                   |{ val String = 0 1 }
+                   |      ^
+                   |"""
+            ),
+            SemanticTest(
+                "Type can't be used as user identifier",
+                "{ val Type = 0 1 }",
+                """|1:7:error: Type is a reserved primitive type name
+                   |{ val Type = 0 1 }
+                   |      ^
+                   |"""
+            ),
+            SemanticTest(
+                "Unit can't be used as user identifier",
+                "{ val Unit = 0 1 }",
+                """|1:7:error: Unit is a reserved primitive type name
+                   |{ val Unit = 0 1 }
+                   |      ^
+                   |"""
+            ),
+            SemanticTest(
                 "val not usable in its own type",
                 "{ val x : x = 0 1 }",
                 """|1:11:error: x is not declared
