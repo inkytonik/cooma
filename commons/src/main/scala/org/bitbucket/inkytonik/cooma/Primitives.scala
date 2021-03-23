@@ -84,29 +84,22 @@ object Primitives {
             def makeCapability(pairs : Vector[(String, interp.Primitive, Int)]) : interp.ValueR = {
                 interp.recR(pairs.map {
                     case (fieldName, primitive, numArgs) =>
+                        val p = fresh("p")
+                        def aux(numArgs : Int, args : Vector[String], k0 : String) : interp.Term = {
+                            val k = fresh("k")
+                            val y = fresh("y")
+                            if (numArgs > 0)
+                                interp.letV(null, p, interp.funV(k, y, aux(numArgs - 1, args :+ y, k)),
+                                    interp.appC(null, k0, p))
+                            else
+                                interp.letV(null, p, interp.prmV(primitive, args), interp.appC(null, k0, p))
+                        }
                         val k = fresh("k")
                         val y = fresh("y")
-                        val p = fresh("p")
-                        numArgs match {
-                            case 1 =>
-                                interp.fldR(fieldName, interp.clsR(
-                                    null, interp.emptyEnv, k, y,
-                                    interp.letV(null, p, interp.prmV(primitive, Vector(y)),
-                                        interp.appC(null, k, p))
-                                ))
-                            case 2 =>
-                                val k1 = fresh("k")
-                                val y1 = fresh("y")
-                                interp.fldR(fieldName, interp.clsR(
-                                    null, interp.emptyEnv, k, y,
-                                    interp.letV(null, p, interp.funV(
-                                        k1, y1,
-                                        interp.letV(null, p, interp.prmV(primitive, Vector(y, y1)),
-                                            interp.appC(null, k1, p))
-                                    ), interp.appC(null, k, p))
-                                ))
-                            case n => sys.error(s"$show: $n arguments not supported")
-                        }
+                        interp.fldR(fieldName, interp.clsR(
+                            null, interp.emptyEnv, k, y,
+                            aux(numArgs - 1, Vector(y), k)
+                        ))
                 })
             }
 
