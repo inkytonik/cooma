@@ -125,7 +125,7 @@ object Primitives {
                     try {
                         makeCapability(Vector((
                             method.toLowerCase,
-                            interp.httpClientP(method.toUpperCase, argument)
+                            interp.httpClientP(method.toUpperCase, argument), 1
                         )))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)

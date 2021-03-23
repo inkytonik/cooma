@@ -52,7 +52,7 @@ ArgumentType =
 
 CapName =
     'FolderReader'  {FolderReaderT}
-  | 'FolderWriter'  {FolderWriterT}.
+  | 'FolderWriter'  {FolderWriterT}
   | 'HttpDelete'    {HttpDeleteT}
   | 'HttpGet'       {HttpGetT}
   | 'HttpPost'      {HttpPostT}
