@@ -176,7 +176,7 @@ object Primitives {
                     if (Paths.get(filename).normalize.startsWith(Paths.get(root).normalize))
                         handleFile(interp)(rho, new File(filename), tl)
                     else
-                        sys.error(s"$show: $filename is not a descendant of $root")
+                        interp.errR(s"$show: $filename is not a descendant of $root")
                 case Nil =>
                     sys.error(s"$show: folder primitives require at least one argument")
             }

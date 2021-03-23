@@ -1,0 +1,4 @@
+fun (reader: FolderReader) {
+    reader.read("../a.txt")
+}
+

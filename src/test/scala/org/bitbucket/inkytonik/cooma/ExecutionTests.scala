@@ -1708,6 +1708,17 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         {
+            val sourceFilename = "src/test/resources/capability/folderReaderDescendantCheckFail.cooma"
+            val name = s"FolderWriter command arguments ($sourceFilename): descendant check fail"
+            val root = Paths.get("./src/main/resources/tmp/sub")
+
+            test(s"${backend.name} run: $name") {
+                val result = runFile(sourceFilename, backend.options, backend, Seq(root.toString))
+                result shouldBe "cooma: folderReaderRead ./src/main/resources/tmp/sub: ./src/main/resources/tmp/sub/../a.txt is not a descendant of ./src/main/resources/tmp/sub\n"
+            }
+        }
+
+        {
             val filename = "src/test/resources/capability/writerAndReaderCmdArg.cooma"
             val name = s"writer and reader command arguments ($filename)"
             val writer = makeTempFilename(".txt")
