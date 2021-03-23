@@ -11,6 +11,7 @@
 package org.bitbucket.inkytonik.cooma
 
 import java.io._
+import java.nio.file.Paths
 
 import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
 import org.bitbucket.inkytonik.cooma.Util.fresh
@@ -161,17 +162,33 @@ object Primitives {
         def show = s"cap $cap"
     }
 
-    case class FolderReaderReadP[I <: Backend](root : String) extends Primitive[I] {
+    trait FolderP[I <: Backend] extends Primitive[I] {
+        def root : String
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs.toList match {
+                case suffixIdn :: tl =>
+                    val suffix = interp.lookupR(rho, suffixIdn)
+                    val filename =
+                        interp.isStrR(suffix)
+                            .map(suffix => s"$root/$suffix")
+                            .getOrElse(sys.error(s"$show: expected String, got $suffix"))
+                    if (Paths.get(filename).normalize.startsWith(Paths.get(root).normalize))
+                        handleFile(interp)(rho, new File(filename), tl)
+                    else
+                        sys.error(s"$show: $filename is not a descendant of $root")
+                case Nil =>
+                    sys.error(s"$show: folder primitives require at least one argument")
+            }
+
+        def handleFile(interp : I)(rho : interp.Env, file : File, xs : Seq[String]) : interp.ValueR
+    }
+
+    case class FolderReaderReadP[I <: Backend](root : String) extends FolderP[I] {
         val numArgs = 1
 
-        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            val filename = {
-                val suffix = interp.lookupR(rho, xs(0))
-                interp.isStrR(suffix)
-                    .map(suffix => s"$root/$suffix")
-                    .getOrElse(sys.error(s"$show: expected String, got $suffix"))
-            }
-            val in = new BufferedReader(new FileReader(filename))
+        override def handleFile(interp : I)(rho : interp.Env, file : File, xs : Seq[String]) : interp.ValueR = {
+            val in = new BufferedReader(new FileReader(file))
             try {
                 interp.strR(readReaderContents(in))
             } catch {
@@ -182,21 +199,15 @@ object Primitives {
         def show = s"folderReaderRead $root"
     }
 
-    case class FolderWriterWriteP[I <: Backend](root : String) extends Primitive[I] {
+    case class FolderWriterWriteP[I <: Backend](root : String) extends FolderP[I] {
         val numArgs = 2
 
-        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR = {
-            val filename = {
-                val suffix = interp.lookupR(rho, xs(0))
-                interp.isStrR(suffix)
-                    .map(suffix => s"$root/$suffix")
-                    .getOrElse(sys.error(s"$show: expected String, got $suffix"))
-            }
+        override def handleFile(interp : I)(rho : interp.Env, file : File, xs : Seq[String]) : interp.ValueR = {
             val text = {
-                val text = interp.lookupR(rho, xs(1))
+                val text = interp.lookupR(rho, xs.head)
                 interp.isStrR(text).getOrElse(sys.error(s"$show: can't write $text"))
             }
-            val out = new BufferedWriter(new FileWriter(filename))
+            val out = new BufferedWriter(new FileWriter(file))
             try {
                 out.write(text)
             } finally {
