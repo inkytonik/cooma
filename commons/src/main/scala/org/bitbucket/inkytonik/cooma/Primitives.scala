@@ -11,7 +11,9 @@
 package org.bitbucket.inkytonik.cooma
 
 import java.io._
+import java.nio.file.Paths
 
+import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
 import org.bitbucket.inkytonik.cooma.Util.fresh
 import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
 import scalaj.http.Http
@@ -79,22 +81,26 @@ object Primitives {
 
         def capability(interp : I)(rho : interp.Env, name : String, x : String) : interp.ValueR = {
 
-            def makeCapability(pairs : Vector[(String, interp.Primitive)]) : interp.ValueR = {
-                interp.recR(
-                    pairs.map(pair => {
+            def makeCapability(pairs : Vector[(String, interp.Primitive, Int)]) : interp.ValueR = {
+                interp.recR(pairs.map {
+                    case (fieldName, primitive, numArgs) =>
+                        val p = fresh("p")
+                        def aux(numArgs : Int, args : Vector[String], k0 : String) : interp.Term = {
+                            val k = fresh("k")
+                            val y = fresh("y")
+                            if (numArgs > 0)
+                                interp.letV(null, p, interp.funV(k, y, aux(numArgs - 1, args :+ y, k)),
+                                    interp.appC(null, k0, p))
+                            else
+                                interp.letV(null, p, interp.prmV(primitive, args), interp.appC(null, k0, p))
+                        }
                         val k = fresh("k")
                         val y = fresh("y")
-                        val p = fresh("p")
-                        interp.fldR(
-                            pair._1, interp.clsR(
-                                null,
-                                interp.emptyEnv, k, y,
-                                interp.letV(null, p, interp.prmV(pair._2, Vector(y)),
-                                    interp.appC(null, k, p))
-                            )
-                        )
-                    })
-                )
+                        interp.fldR(fieldName, interp.clsR(
+                            null, interp.emptyEnv, k, y,
+                            aux(numArgs - 1, Vector(y), k)
+                        ))
+                })
             }
 
             val value = interp.lookupR(rho, x)
@@ -112,20 +118,32 @@ object Primitives {
                     try {
                         makeCapability(Vector((
                             method.toLowerCase,
-                            interp.httpClientP(method.toUpperCase, argument)
+                            interp.httpClientP(method.toUpperCase, argument), 1
                         )))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
-                case "Writer" =>
+                case "FolderReader" =>
                     try {
-                        makeCapability(Vector(("write", interp.writerWriteP(argument))))
+                        makeCapability(Vector(("read", interp.folderReaderReadP(argument), 1)))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
+                case "FolderWriter" =>
+                    try {
+                        makeCapability(Vector(("write", interp.folderWriterWriteP(argument), 2)))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
                 case "Reader" =>
                     try {
-                        makeCapability(Vector(("read", interp.readerReadP(argument))))
+                        makeCapability(Vector(("read", interp.readerReadP(argument), 1)))
+                    } catch {
+                        case capE : CapabilityException => interp.errR(capE.getMessage)
+                    }
+                case "Writer" =>
+                    try {
+                        makeCapability(Vector(("write", interp.writerWriteP(argument), 1)))
                     } catch {
                         case capE : CapabilityException => interp.errR(capE.getMessage)
                     }
@@ -135,6 +153,63 @@ object Primitives {
         }
 
         def show = s"cap $cap"
+    }
+
+    trait FolderP[I <: Backend] extends Primitive[I] {
+        def root : String
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs.toList match {
+                case suffixIdn :: tl =>
+                    val suffix = interp.lookupR(rho, suffixIdn)
+                    val filename =
+                        interp.isStrR(suffix)
+                            .map(suffix => s"$root/$suffix")
+                            .getOrElse(sys.error(s"$show: expected String, got $suffix"))
+                    if (Paths.get(filename).normalize.startsWith(Paths.get(root).normalize))
+                        handleFile(interp)(rho, new File(filename), tl)
+                    else
+                        interp.errR(s"$show: $filename is not a descendant of $root")
+                case Nil =>
+                    sys.error(s"$show: folder primitives require at least one argument")
+            }
+
+        def handleFile(interp : I)(rho : interp.Env, file : File, xs : Seq[String]) : interp.ValueR
+    }
+
+    case class FolderReaderReadP[I <: Backend](root : String) extends FolderP[I] {
+        val numArgs = 1
+
+        override def handleFile(interp : I)(rho : interp.Env, file : File, xs : Seq[String]) : interp.ValueR = {
+            val in = new BufferedReader(new FileReader(file))
+            try {
+                interp.strR(readReaderContents(in))
+            } catch {
+                case e : IOException => sys.error(e.getMessage)
+            }
+        }
+
+        def show = s"folderReaderRead $root"
+    }
+
+    case class FolderWriterWriteP[I <: Backend](root : String) extends FolderP[I] {
+        val numArgs = 2
+
+        override def handleFile(interp : I)(rho : interp.Env, file : File, xs : Seq[String]) : interp.ValueR = {
+            val text = {
+                val text = interp.lookupR(rho, xs.head)
+                interp.isStrR(text).getOrElse(sys.error(s"$show: can't write $text"))
+            }
+            val out = new BufferedWriter(new FileWriter(file))
+            try {
+                out.write(text)
+            } finally {
+                out.close()
+            }
+            interp.recR(Vector())
+        }
+
+        def show = s"folderWriterWrite $root"
     }
 
     case class RecConcatP[I <: Backend]() extends Primitive[I] {

@@ -591,6 +591,16 @@ class SemanticTests extends Tests {
                    |                   ^
                    |"""
             ),
+            SemanticTest(
+                "FolderReader has correct type",
+                """{ def f (r : FolderReader) String = r.read("a.txt") {} }""",
+                ""
+            ),
+            SemanticTest(
+                "FolderWriter has correct type",
+                """{ def f (w : FolderWriter) Unit = w.write("a.txt", "text") {} }""",
+                ""
+            ),
 
             // Selection
 

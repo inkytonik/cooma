@@ -1668,6 +1668,57 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         }
 
         {
+            val sourceFilename = "src/test/resources/capability/folderReaderCmdArg.cooma"
+            val name = s"FolderReader command arguments ($sourceFilename)"
+            val root = Paths.get("./src/main/resources/tmp")
+            val sub = root.resolve("sub")
+            val a = root.resolve("a.txt")
+            val b = sub.resolve("b.txt")
+
+            test(s"${backend.name} run: $name") {
+                sub.toFile.mkdirs()
+                Files.write(a, "text a".getBytes)
+                Files.write(b, "text b".getBytes)
+                val result = runFile(sourceFilename, backend.options :+ "-r", backend, Seq(root.toString))
+                result shouldBe "\"text atext b\"\n"
+                b.toFile.delete()
+                a.toFile.delete()
+                sub.toFile.delete()
+            }
+        }
+
+        {
+            val sourceFilename = "src/test/resources/capability/folderWriterCmdArg.cooma"
+            val name = s"FolderWriter command arguments ($sourceFilename)"
+            val root = Paths.get("./src/main/resources/tmp")
+            val sub = root.resolve("sub")
+            val a = root.resolve("a.txt")
+            val b = sub.resolve("b.txt")
+
+            test(s"${backend.name} run: $name") {
+                sub.toFile.mkdirs()
+                val result = runFile(sourceFilename, backend.options, backend, Seq(root.toString))
+                result shouldBe ""
+                new String(Files.readAllBytes(a)) shouldBe "text a"
+                new String(Files.readAllBytes(b)) shouldBe "text b"
+                b.toFile.delete()
+                a.toFile.delete()
+                sub.toFile.delete()
+            }
+        }
+
+        {
+            val sourceFilename = "src/test/resources/capability/folderReaderDescendantCheckFail.cooma"
+            val name = s"FolderWriter command arguments ($sourceFilename): descendant check fail"
+            val root = Paths.get("./src/main/resources/tmp/sub")
+
+            test(s"${backend.name} run: $name") {
+                val result = runFile(sourceFilename, backend.options, backend, Seq(root.toString))
+                result shouldBe "cooma: folderReaderRead ./src/main/resources/tmp/sub: ./src/main/resources/tmp/sub/../a.txt is not a descendant of ./src/main/resources/tmp/sub\n"
+            }
+        }
+
+        {
             val filename = "src/test/resources/capability/writerAndReaderCmdArg.cooma"
             val name = s"writer and reader command arguments ($filename)"
             val writer = makeTempFilename(".txt")
