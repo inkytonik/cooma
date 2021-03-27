@@ -171,7 +171,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
                     IntR(i)
 
                 case PrmV(p, xs) =>
-                    p.eval(this)(rho, xs, args)
+                    p.eval(rho, xs, args)
 
                 case RecV(fields) =>
                     RecR(fields.map {

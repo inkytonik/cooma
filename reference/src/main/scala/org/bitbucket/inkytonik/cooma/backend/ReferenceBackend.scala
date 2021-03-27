@@ -18,17 +18,14 @@ class ReferenceBackend(
     val driver : Driver,
     val source : Source,
     config : Config
-) extends Interpreter(config) with Backend {
+) extends Interpreter(config) with Backend with Primitives[ReferenceBackend] {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
-    import org.bitbucket.inkytonik.cooma.Primitives._
     import org.bitbucket.inkytonik.cooma.Util.escape
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
     import org.bitbucket.inkytonik.kiama.relation.Bridge
 
     override def backendName : String = "Reference"
-
-    type Primitive = org.bitbucket.inkytonik.cooma.Primitives.Primitive[ReferenceBackend]
 
     sealed abstract class Value
     case class FunV(k : String, x : String, body : Term) extends Value
@@ -141,13 +138,13 @@ class ReferenceBackend(
         EqualP()
 
     def intBinP(op : Primitives.IntPrimBinOp) : Primitive =
-        Primitives.IntBinOp(op)
+        IntBinOp(op)
 
     def intRelP(op : Primitives.IntPrimRelOp) : Primitive =
-        Primitives.IntRelOp(op)
+        IntRelOp(op)
 
     def stringP(op : Primitives.StrPrimOp) : Primitive =
-        Primitives.StringPrimitive(op)
+        StringPrimitive(op)
 
     // Runtime values
 

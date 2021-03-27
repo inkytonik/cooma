@@ -10,9 +10,9 @@
 
 package org.bitbucket.inkytonik.cooma.truffle
 
-import org.bitbucket.inkytonik.cooma.{Backend, Config}
+import org.bitbucket.inkytonik.cooma.{Backend, Config, Primitives}
 
-class TruffleBackend(config : Config) extends Backend {
+class TruffleBackend(config : Config) extends Backend with Primitives[TruffleBackend] {
 
     import java.io.PrintWriter
     import java.math.BigInteger
@@ -71,7 +71,7 @@ class TruffleBackend(config : Config) extends Backend {
         new CoomaIntValueNode(i.bigInteger)
 
     def prmV(p : Primitive, xs : Vector[String]) : Value =
-        new CoomaPrimitiveValue(this, p, xs.toArray)
+        new CoomaPrimitiveValue(p, xs.toArray)
 
     def recV(fs : Vector[FieldValue]) : Value =
         new CoomaRecValueNode(fs.toArray)
@@ -95,8 +95,6 @@ class TruffleBackend(config : Config) extends Backend {
      */
     def showTerm(t : Term) : String =
         t.toString
-
-    type Primitive = org.bitbucket.inkytonik.cooma.Primitives.Primitive[TruffleBackend]
 
     def argumentP(i : Int) : Primitive =
         ArgumentP(i)
