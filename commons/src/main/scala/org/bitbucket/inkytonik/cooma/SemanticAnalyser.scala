@@ -70,6 +70,8 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
+                        case Vec(e) =>
+                            checkVectorElements(e)
                     }
         }
 
@@ -86,6 +88,20 @@ class SemanticAnalyser(
                 error(prm, s"primitive ${prm.identifier} not found")
         }
     }
+
+    def checkVectorElements(elems : VecElems) : Messages =
+        if (elems.optExpressions.isEmpty)
+            noMessages
+        else
+            tipe(elems.optExpressions.head) match {
+                case Some(firstType) =>
+                    if (elems.optExpressions.forall(e => subtype(tipe(e), firstType)))
+                        noMessages
+                    else
+                        error(elems, s"all the elements in this vector must be of type ${show(firstType)}")
+                case None =>
+                    noMessages
+            }
 
     def checkExpressionType(e : Expression) : Messages =
         (tipe(e), expectedType(e)) match {
@@ -111,7 +127,7 @@ class SemanticAnalyser(
                     noMessages
             case Some(t) =>
                 error(f, s"application of non-function type ${show(alias(t))}")
-            case _ =>
+            case None =>
                 noMessages
         }
 
@@ -541,6 +557,30 @@ class SemanticAnalyser(
 
             case _ : VarT =>
                 Some(typT)
+
+            case Vec(elems) =>
+                if (elems.optExpressions.isEmpty)
+                    Some(VecNilT())
+                else
+                    tipe(elems.optExpressions.head) match {
+                        case Some(firstType) =>
+                            Some(VecT(firstType))
+                        case None =>
+                            None
+                    }
+
+            case _ : VecNilT | _ : VecT =>
+                Some(typT)
+
+            case Vectors() =>
+                Some(RecT(Vector(
+                    FieldType("append", primitivesTypesTable("VecAppend")),
+                    FieldType("concat", primitivesTypesTable("VecConcat")),
+                    FieldType("get", primitivesTypesTable("VecGet")),
+                    FieldType("length", primitivesTypesTable("VecLength")),
+                    FieldType("prepend", primitivesTypesTable("VecPrepend")),
+                    FieldType("put", primitivesTypesTable("VecPut"))
+                )))
         }
 
     def substArgTypes[T](x : String, t : Expression, a : T) = {
@@ -642,6 +682,7 @@ class SemanticAnalyser(
             case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
             case RecT(fs)                   => RecT(aliasFieldTypes(fs))
             case VarT(fs)                   => VarT(aliasFieldTypes(fs))
+            case VecT(t)                    => VecT(alias(t))
             case _                          => e
         }
 
@@ -665,17 +706,29 @@ class SemanticAnalyser(
             case BoolT() =>
                 Some(boolT)
 
-            case CapT(ReaderT()) =>
-                Some(readerT)
-
-            case CapT(WriterT()) =>
-                Some(writerT)
-
             case CapT(FolderReaderT()) =>
                 Some(folderReaderT)
 
             case CapT(FolderWriterT()) =>
                 Some(folderWriterT)
+
+            case CapT(HttpDeleteT()) =>
+                Some(httpDeleteT)
+
+            case CapT(HttpGetT()) =>
+                Some(httpGetT)
+
+            case CapT(HttpPostT()) =>
+                Some(httpPostT)
+
+            case CapT(HttpPutT()) =>
+                Some(httpPutT)
+
+            case CapT(ReaderT()) =>
+                Some(readerT)
+
+            case CapT(WriterT()) =>
+                Some(writerT)
 
             case Cat(l, r) =>
                 (unalias(n, l), unalias(n, r)) match {
@@ -701,23 +754,14 @@ class SemanticAnalyser(
             case FunT(ArgumentTypes(us), u) =>
                 unaliasFunT(n, us, u)
 
-            case CapT(HttpDeleteT()) =>
-                Some(httpDeleteT)
-
-            case CapT(HttpGetT()) =>
-                Some(httpGetT)
-
-            case CapT(HttpPostT()) =>
-                Some(httpPostT)
-
-            case CapT(HttpPutT()) =>
-                Some(httpPutT)
-
             case RecT(fieldTypes) =>
                 unaliasRecT(n, fieldTypes)
 
             case VarT(fieldTypes) =>
                 unaliasVarT(n, fieldTypes)
+
+            case VecT(t) =>
+                unaliasVecT(n, t)
 
             case _ =>
                 Some(t)
@@ -779,6 +823,12 @@ class SemanticAnalyser(
 
     def unaliasVarT(n : ASTNode, fts : Vector[FieldType]) : Option[VarT] =
         unaliasFieldTypes(n, fts).map(VarT)
+
+    def unaliasVecT(n : ASTNode, t : Expression) : Option[VecT] =
+        unalias(n, t) match {
+            case Some(u) => Some(VecT(u))
+            case None    => None
+        }
 
     lazy val blockTipe : BlockExp => Option[Expression] =
         attr {
@@ -870,6 +920,14 @@ class SemanticAnalyser(
     def fieldtypeNames(fts : Vector[FieldType]) : Vector[String] =
         fts.map(_.identifier)
 
+    def subtype(ot : Option[Expression], u : Expression) : Boolean =
+        ot match {
+            case Some(t) =>
+                subtype(t, u)
+            case None =>
+                true
+        }
+
     def subtype(t : Expression, u : Expression) : Boolean = {
         (t == u) ||
             ((unalias(t, t), unalias(u, u)) match {
@@ -881,6 +939,10 @@ class SemanticAnalyser(
                     trn.diff(fieldtypeNames(ur)).isEmpty && subtypesFields(trn, tr, ur)
                 case (Some(FunT(ArgumentTypes(ts), t)), Some(FunT(ArgumentTypes(us), u))) =>
                     subtypesArgs(us, ts) && subtype(t, u)
+                case (Some(VecNilT()), Some(VecT(_))) =>
+                    true
+                case (Some(VecT(t)), Some(VecT(u))) =>
+                    subtype(t, u)
                 case _ =>
                     false
             })

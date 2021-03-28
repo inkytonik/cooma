@@ -37,6 +37,7 @@ class ReferenceBackend(
     case class RecV(fs : Vector[FieldValue]) extends Value
     case class StrV(s : String) extends Value
     case class VarV(v : String, x : String) extends Value
+    case class VecV(es : Vector[String]) extends Value
 
     case class FieldValue(f : String, x : String)
 
@@ -101,6 +102,9 @@ class ReferenceBackend(
     def varV(v : String, x : String) : Value =
         VarV(v, x)
 
+    def vecV(es : Vector[String]) : Value =
+        VecV(es)
+
     def fieldValue(f : String, x : String) : FieldValue =
         FieldValue(f, x)
 
@@ -149,6 +153,24 @@ class ReferenceBackend(
     def stringP(op : Primitives.StrPrimOp) : Primitive =
         Primitives.StringPrimitive(op)
 
+    def vecAppendP() : Primitive =
+        VecAppendP()
+
+    def vecConcatP() : Primitive =
+        VecConcatP()
+
+    def vecGetP() : Primitive =
+        VecGetP()
+
+    def vecLengthP() : Primitive =
+        VecLengthP()
+
+    def vecPrependP() : Primitive =
+        VecPrependP()
+
+    def vecPutP() : Primitive =
+        VecPutP()
+
     // Runtime values
 
     def errR(msg : String) : ValueR =
@@ -168,6 +190,9 @@ class ReferenceBackend(
 
     def recR(fields : Vector[FldR]) : ValueR =
         RecR(fields)
+
+    def vecR(es : Vector[ValueR]) : ValueR =
+        VecR(es)
 
     def fldR(x : String, v : ValueR) : FldR =
         FldR(x, v)
@@ -200,6 +225,12 @@ class ReferenceBackend(
         value match {
             case VarR(c, v) => Some((c, v))
             case _          => None
+        }
+
+    def isVecR(value : ValueR) : Option[Vector[ValueR]] =
+        value match {
+            case VecR(es) => Some(es)
+            case _        => None
         }
 
     def isFldR(value : FldR) : Option[(String, ValueR)] =
@@ -275,6 +306,8 @@ class ReferenceBackend(
                 "\"" <> value(escape(v1)) <> "\""
             case VarV(v1, v2) =>
                 "<" <+> value(v1) <+> "=" <+> value(v2) <+> ">"
+            case VecV(es) =>
+                "[" <> ssep(es.map(text), ",") <> "]"
         }
 
     def toDocFieldValue(field : FieldValue) : Doc =

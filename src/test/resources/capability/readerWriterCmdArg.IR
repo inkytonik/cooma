@@ -1,11 +1,11 @@
-letv x1 = arg 0
-letv c2 = cap Reader x1
-letv c3 = cap Writer x1
-letv rw = concat c2 c3
+letv x1 = Argument 0
+letv c2 = Capability Reader x1
+letv c3 = Capability Writer x1
+letv rw = RecConcat c2 c3
 letc k4 result = letc k5 _ = $halt result
-                 letv f6 = select rw write
+                 letv f6 = RecSelect rw write
                  letv s7 = "Hello, world!\n"
                  f6 k5 s7
-letv f8 = select rw read
+letv f8 = RecSelect rw read
 letv u9 = {}
 f8 k4 u9

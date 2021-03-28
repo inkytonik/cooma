@@ -34,6 +34,10 @@ Expression {paren} =
   | CapName                                                  {CapT}
   | StringLit                                                {Str}
   | 'Strings'                                                {Strings}
+  | '[' VecElems ']'                                         {Vec}
+  | 'Vector' '(' ')'                                         {VecNilT}
+  | 'Vector' '(' Expression ')'                              {VecT}
+  | 'Vectors'                                                {Vectors}
   | 'equal'                                                  {Eql}
   | "prim" Identifier '(' Expression ** "," ')'              {Prm}
   | IdnUse                                                   {Idn}.
@@ -92,6 +96,9 @@ LetKind =
 
 FieldType =
   \n Identifier sp ":" Expression.
+
+VecElems =
+  Expression ** ",".
 
 // Lexical syntax
 

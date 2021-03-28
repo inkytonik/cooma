@@ -36,6 +36,7 @@ trait Backend {
     def recV(fs : Vector[FieldValue]) : Value
     def strV(s : String) : Value
     def varV(v : String, x : String) : Value
+    def vecV(e : Vector[String]) : Value
 
     type FieldValue
     def fieldValue(f : String, x : String) : FieldValue
@@ -49,6 +50,12 @@ trait Backend {
     def readerReadP(filename : String) : Primitive
     def recConcatP() : Primitive
     def recSelectP() : Primitive
+    def vecAppendP() : Primitive
+    def vecConcatP() : Primitive
+    def vecGetP() : Primitive
+    def vecLengthP() : Primitive
+    def vecPrependP() : Primitive
+    def vecPutP() : Primitive
     def writerWriteP(filename : String) : Primitive
 
     def equalP : Primitive
@@ -65,6 +72,7 @@ trait Backend {
     def intR(num : BigInt) : ValueR
     def clsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) : ValueR
     def recR(fields : Vector[FldR]) : ValueR
+    def vecR(elems : Vector[ValueR]) : ValueR
 
     val unitR : ValueR = recR(Vector())
     val falseR : ValueR = varR("False", unitR)
@@ -75,6 +83,7 @@ trait Backend {
     def isIntR(value : ValueR) : Option[BigInt]
     def isRecR(value : ValueR) : Option[Vector[FldR]]
     def isVarR(value : ValueR) : Option[(String, ValueR)]
+    def isVecR(value : ValueR) : Option[Vector[ValueR]]
 
     type FldR
     def fldR(x : String, v : ValueR) : FldR

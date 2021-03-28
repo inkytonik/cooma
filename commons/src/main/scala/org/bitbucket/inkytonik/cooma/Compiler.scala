@@ -68,7 +68,13 @@ trait Compiler {
         "IntLte" -> PrimitiveMeta(intRelP(LTE)),
         "StrConcat" -> PrimitiveMeta(stringP(CONCAT)),
         "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
-        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR))
+        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR)),
+        "VecAppend" -> PrimitiveMeta(vecAppendP()),
+        "VecConcat" -> PrimitiveMeta(vecConcatP()),
+        "VecGet" -> PrimitiveMeta(vecGetP()),
+        "VecLength" -> PrimitiveMeta(vecLengthP()),
+        "VecPrepend" -> PrimitiveMeta(vecPrependP()),
+        "VecPut" -> PrimitiveMeta(vecPutP())
     )
 
     /**
@@ -188,17 +194,19 @@ trait Compiler {
             )
         )
 
-    val booleans =
+    val booleanPrims =
         Rec(Vector(
             Field("and", and),
             Field("not", not),
             Field("or", or)
         ))
 
-    def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field = {
-        val argNames = (1 to argTypes.length).map(i => s"arg$i")
-        val args = argNames.zip(argTypes).map { case (n, t) => Argument(IdnDef(n), t, None) }
-        val params = argNames.map(n => Idn(IdnUse(n))).toVector
+    def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field =
+        mkPrimFieldArgNames(fieldName, (1 to argTypes.length).map(i => s"arg$i").zip(argTypes), primName)
+
+    def mkPrimFieldArgNames(fieldName : String, argNames : Seq[(String, Expression)], primName : String) : Field = {
+        val args = argNames.map { case (n, t) => Argument(IdnDef(n), t, None) }
+        val params = argNames.map { case (n, _) => Idn(IdnUse(n)) }.toVector
         Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
     }
 
@@ -216,6 +224,9 @@ trait Compiler {
 
     def mkStrIntPrimField(fieldName : String, primName : String) : Field =
         mkPrimField(fieldName, Vector(strT, intT), primName)
+
+    def mkVectorPrimFieldArgNames(fieldName : String, argNames : Seq[(String, Expression)], primName : String) : Field =
+        mkPrimFieldArgNames(fieldName, Vector(("t", typT), ("v", VecT(Idn(IdnUse("t"))))) ++ argNames, primName)
 
     val equalPrim =
         Fun(
@@ -252,6 +263,16 @@ trait Compiler {
             mkStrIntPrimField("substr", "StrSubstr")
         ))
 
+    val vectorPrims =
+        Rec(Vector(
+            mkVectorPrimFieldArgNames("append", Vector(("e", Idn(IdnUse("t")))), "VecAppend"),
+            mkVectorPrimFieldArgNames("concat", Vector(("vr", VecT(Idn(IdnUse("t"))))), "VecConcat"),
+            mkVectorPrimFieldArgNames("get", Vector(("i", intT)), "VecGet"),
+            mkVectorPrimFieldArgNames("length", Vector(), "VecLength"),
+            mkVectorPrimFieldArgNames("prepend", Vector(("e", Idn(IdnUse("t")))), "VecPrepend"),
+            mkVectorPrimFieldArgNames("put", Vector(("i", intT), ("e", Idn(IdnUse("t")))), "VecPut")
+        ))
+
     /**
      * Short-hand for compiling where the source expression and the expression
      * being compiled are the same.
@@ -284,7 +305,7 @@ trait Compiler {
                 compileBlockExp(be, kappa)
 
             case Booleans() =>
-                compile(exp, booleans, kappa)
+                compile(exp, booleanPrims, kappa)
 
             case Cat(r1, r2) =>
                 val r = fresh("r")
@@ -362,6 +383,15 @@ trait Compiler {
                     letV(Bridge(source), r, varV(field.identifier, z),
                         kappa(r)))
 
+            case Vec(VecElems(e)) =>
+                val v = fresh("v")
+                compilePrimArgs(e, elems =>
+                    letV(Bridge(source), v, vecV(elems),
+                        kappa(v)))
+
+            case Vectors() =>
+                compile(exp, vectorPrims, kappa)
+
             case _ =>
                 sys.error(s"compile: unexpected expression $exp")
         }
@@ -370,7 +400,7 @@ trait Compiler {
         def unapply(e : Expression) : Boolean =
             e match {
                 case BoolT() | CapT(_) | _ : FunT | _ : RecT | _ : VarT |
-                    PrimitiveType() =>
+                    _ : VecT | _ : VecNilT | PrimitiveType() =>
                     true
                 case _ =>
                     false
@@ -485,7 +515,7 @@ trait Compiler {
                 tailCompileBlockExp(be, k)
 
             case Booleans() =>
-                tailCompile(booleans, k)
+                tailCompile(booleanPrims, k)
 
             case Cat(r1, r2) =>
                 val r = fresh("r")
@@ -566,6 +596,15 @@ trait Compiler {
                 compile(source, field.expression, z =>
                     letV(Bridge(source), r, varV(field.identifier, z),
                         appC(Bridge(source), k, r)))
+
+            case Vec(e) =>
+                val v = fresh("v")
+                compilePrimArgs(e.optExpressions, elems =>
+                    letV(Bridge(source), v, vecV(elems),
+                        appC(Bridge(source), k, v)))
+
+            case Vectors() =>
+                tailCompile(exp, vectorPrims, k)
 
             case _ =>
                 sys.error(s"tailCompile: unexpected expression $exp")

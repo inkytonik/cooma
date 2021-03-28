@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 MAIN_CLASS="org.bitbucket.inkytonik.cooma.CoomaIRTruffleMain"
 SCRIPT_HOME="$(cd "$(dirname "$0")" && pwd -P)"
-VERSION="19.3.1"
+VERSION="20.0.0"
 GRAALVM_VERSION=$(grep "GRAALVM_VERSION" "$SCRIPT_HOME/../release" 2> /dev/null)
 
 #######################################################################
@@ -13,7 +13,7 @@ GRAALVM_VERSION=$(grep "GRAALVM_VERSION" "$SCRIPT_HOME/../release" 2> /dev/null)
 if [[ "$GRAALVM_VERSION" != "" ]]; then
     LANGUAGE_PATH="$SCRIPT_HOME/../jre/languages/cooma/truffle_root.jar"
     JAVACMD="$SCRIPT_HOME/java"
-    GRAALVM_VERSION=$(echo "$GRAALVM_VERSION" | awk 'BEGIN {FS="="} {print $2}')
+    GRAALVM_VERSION=$(echo "$GRAALVM_VERSION" | awk 'BEGIN {FS="="} {print $2}' | tr -d '"')
     if [[ "$GRAALVM_VERSION" != "$VERSION" ]]; then
         echo "Installed in wrong version of GraalVM. Expected: $VERSION, found $GRAALVM_VERSION"
         exit 1
@@ -25,7 +25,7 @@ else
     if [[ "$JAVA_HOME" != "" ]]; then
         GRAALVM_VERSION=$(grep "GRAALVM_VERSION" "$JAVA_HOME"/release)
         if [[ "$GRAALVM_VERSION" != "" ]]; then
-            GRAALVM_VERSION=$(echo "$GRAALVM_VERSION" | awk 'BEGIN {FS="="} {print $2}')
+            GRAALVM_VERSION=$(echo "$GRAALVM_VERSION" | awk 'BEGIN {FS="="} {print $2}' | tr -d '"')
             if [[ "$GRAALVM_VERSION" != "$VERSION" ]]; then
                 echo "Wrong version of GraalVM in \$JAVA_HOME. Expected: $VERSION, found $GRAALVM_VERSION"
                 exit 1
@@ -66,5 +66,3 @@ else
     TRUFFLE_API_PATH="$HOME/.m2/repository/org/graalvm/truffle/truffle-api/$VERSION/truffle-api-$VERSION.jar"
     "$JAVACMD" "${JAVA_ARGS[@]}" -cp "$GRAAL_SDK_PATH":"$LAUNCHER_PATH":"$LANGUAGE_PATH":"$TRUFFLE_API_PATH" "$MAIN_CLASS" "${PROGRAM_ARGS[@]}"
 fi
-
-
