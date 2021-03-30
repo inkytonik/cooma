@@ -138,6 +138,9 @@ object SymbolTable extends Environments[CoomaEntity] {
     def mkPrimTypeWithArgNames(args : Vector[(String, Expression)], retType : Expression) : FunT =
         FunT(ArgumentTypes(args.map { case (x, e) => ArgumentType(Some(IdnDef(x)), e) }), retType)
 
+    def mkVectorPrimTypeWithArgNames(args : Vector[(String, Expression)], retType : Expression) : FunT =
+        mkPrimTypeWithArgNames(Vector(("t", typT), ("v", VecT(Idn(IdnUse("t"))))) ++ args, retType)
+
     def mkIntUnPrimType(retType : Expression) : FunT =
         mkPrimType(Vector(intT), retType)
 
@@ -158,7 +161,13 @@ object SymbolTable extends Environments[CoomaEntity] {
         "IntLte" -> mkIntBinPrimType(boolT),
         "StrConcat" -> mkPrimType(Vector(strT, strT), strT),
         "StrLength" -> mkPrimType(Vector(strT), intT),
-        "StrSubstr" -> mkPrimType(Vector(strT, intT), strT)
+        "StrSubstr" -> mkPrimType(Vector(strT, intT), strT),
+        "VecAppend" -> mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t")))),
+        "VecConcat" -> mkVectorPrimTypeWithArgNames(Vector(("vr", VecT(Idn(IdnUse("t"))))), VecT(Idn(IdnUse("t")))),
+        "VecGet" -> mkVectorPrimTypeWithArgNames(Vector(("i", intT)), Idn(IdnUse("t"))),
+        "VecLength" -> mkVectorPrimTypeWithArgNames(Vector(), intT),
+        "VecPrepend" -> mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t")))),
+        "VecPut" -> mkVectorPrimTypeWithArgNames(Vector(("i", intT), ("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t"))))
     )
 
 }

@@ -43,7 +43,7 @@ object Primitives {
             else
                 interp.strR(args(i))
 
-        def show = s"arg $i"
+        def show = s"Argument $i"
     }
 
     case class ReaderReadP[I <: Backend](filename : String) extends Primitive[I] {
@@ -70,7 +70,7 @@ object Primitives {
             }
         }
 
-        def show = s"readerRead $filename"
+        def show = s"ReaderRead $filename"
     }
 
     case class CapabilityP[I <: Backend](cap : String) extends Primitive[I] {
@@ -152,7 +152,7 @@ object Primitives {
             }
         }
 
-        def show = s"cap $cap"
+        def show = s"Capability $cap"
     }
 
     trait FolderP[I <: Backend] extends Primitive[I] {
@@ -189,7 +189,7 @@ object Primitives {
             }
         }
 
-        def show = s"folderReaderRead $root"
+        def show = s"FolderReaderRead $root"
     }
 
     case class FolderWriterWriteP[I <: Backend](root : String) extends FolderP[I] {
@@ -209,7 +209,7 @@ object Primitives {
             interp.recR(Vector())
         }
 
-        def show = s"folderWriterWrite $root"
+        def show = s"FolderWriterWrite $root"
     }
 
     case class RecConcatP[I <: Backend]() extends Primitive[I] {
@@ -236,7 +236,7 @@ object Primitives {
                     sys.error(s"$show: unexpectedly got arguments $xs")
             }
 
-        def show = "concat"
+        def show = "RecConcat"
     }
 
     case class WriterWriteP[I <: Backend](filename : String, stdout : Writer) extends Primitive[I] {
@@ -268,7 +268,7 @@ object Primitives {
             interp.recR(Vector())
         }
 
-        def show = s"consoleWrite $filename"
+        def show = s"WriterWrite $filename"
 
     }
 
@@ -295,7 +295,7 @@ object Primitives {
             }
         }
 
-        def show = s"httpClient ($method): $url"
+        def show = s"HttpClient ($method): $url"
     }
 
     case class RecSelectP[I <: Backend]() extends Primitive[I] {
@@ -323,7 +323,7 @@ object Primitives {
                     sys.error(s"$show: unexpectedly got arguments $xs")
             }
 
-        def show = "select"
+        def show = "RecSelect"
     }
 
     case class EqualP[I <: Backend]() extends Primitive[I] {
@@ -358,8 +358,12 @@ object Primitives {
                                         (interp.isVarR(lvalue), interp.isVarR(rvalue)) match {
                                             case (Some((lc, lv)), Some((rc, rv))) =>
                                                 (lc == rc) && (equal(lv, rv))
-                                            case _ =>
-                                                false
+                                            case _ => (interp.isVecR(lvalue), interp.isVecR(rvalue)) match {
+                                                case (Some(lv), Some(rv)) =>
+                                                    lv.corresponds(rv)(equal)
+                                                case _ =>
+                                                    false
+                                            }
                                         }
                                 }
                         }
@@ -378,7 +382,7 @@ object Primitives {
 
         }
 
-        def show = "equal"
+        def show = "Equal"
     }
 
     abstract class IntPrimitive[I <: Backend] extends Primitive[I] {
@@ -399,7 +403,7 @@ object Primitives {
         def prefix : String
         val name = productPrefix.toLowerCase
         val camelName = s"${name.head.toUpper}${name.tail}"
-        lazy val primName = s"$prefix$camelName"
+        lazy val primName = s"$prefix${camelName}"
     }
 
     trait IntPrimOp extends PrimOp with Product {
@@ -535,6 +539,134 @@ object Primitives {
                     sys.error(s"$show $op: unexpectedly got arguments $xs")
             }
         }
+    }
+
+    abstract class VecPrimitive[I <: Backend]() extends Primitive[I] {
+        def lookupVector(interp : I)(rho : interp.Env, name : String) : Vector[interp.ValueR] = {
+            interp.isVecR(interp.lookupR(rho, name)) match {
+                case Some(value) =>
+                    value
+                case None =>
+                    val msg = s"$show: $name is ${interp.lookupR(rho, name)}, expected Vector value"
+                    sys.error(msg)
+            }
+        }
+    }
+
+    case class VecLengthP[I <: Backend]() extends VecPrimitive[I] {
+        val numArgs = 2
+
+        def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs match {
+                case Vector(_, v) =>
+                    interp.intR(lookupVector(interp)(rho, v).length)
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+
+        def show = "VecLength"
+    }
+
+    case class VecGetP[I <: Backend]() extends VecPrimitive[I] {
+        def numArgs : Int = 3
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs match {
+                case Vector(_, vec, i) => interp.isIntR(interp.lookupR(rho, i)) match {
+                    case Some(i) =>
+                        val elems = lookupVector(interp)(rho, vec)
+                        val index = i.toInt
+                        if (elems.indices contains index)
+                            elems(index)
+                        else
+                            interp.errR(s"vector index out of bounds - size: ${elems.size}, index: $index")
+                    case _ =>
+                        sys.error(s"$show: can't find integer (index) operand ${xs.head}")
+                }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+
+        def show = "VecGet"
+    }
+
+    sealed abstract class VecAddOp extends Product with Serializable
+
+    object VecAddOp {
+        final case object Prepend extends VecAddOp
+        final case object Append extends VecAddOp
+        final case object Put extends VecAddOp
+    }
+
+    abstract class VecAddPrimitive[I <: Backend]() extends VecPrimitive[I] {
+        def numArgs : Int = 4
+
+        def op : VecAddOp
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs match {
+                case Vector(_, vec, i, e) =>
+                    val elems = lookupVector(interp)(rho, vec)
+                    op match {
+                        case VecAddOp.Append =>
+                            interp.vecR(elems :+ interp.lookupR(rho, e))
+                        case VecAddOp.Prepend =>
+                            interp.vecR(interp.lookupR(rho, e) +: elems)
+                        case VecAddOp.Put =>
+                            interp.isIntR(interp.lookupR(rho, i)) match {
+                                case Some(idx) =>
+                                    if (elems.indices contains idx)
+                                        interp.vecR(elems.updated(idx.intValue, interp.lookupR(rho, e)))
+                                    else
+                                        interp.errR(s"vector index out of bounds - size: ${elems.size}, index: $idx")
+                                case None =>
+                                    sys.error(s"$show: can't find index operand $i")
+                            }
+                    }
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+    }
+
+    abstract class VecAddNoIndexPrimitive[I <: Backend]() extends VecAddPrimitive[I] {
+        override def numArgs : Int = 3
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs match {
+                case Vector(t, vec, e) =>
+                    super.run(interp)(rho, Vector(t, vec, "", e), args)
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+    }
+
+    case class VecAppendP[I <: Backend]() extends VecAddNoIndexPrimitive[I] {
+        def op : VecAddOp = VecAddOp.Append
+        def show = "VecAppend"
+    }
+
+    case class VecPrependP[I <: Backend]() extends VecAddNoIndexPrimitive[I] {
+        def op : VecAddOp = VecAddOp.Prepend
+        def show = "VecPrepend"
+    }
+
+    case class VecPutP[I <: Backend]() extends VecAddPrimitive[I] {
+        def op : VecAddOp = VecAddOp.Put
+        def show = "VecPut"
+    }
+
+    case class VecConcatP[I <: Backend]() extends VecPrimitive[I] {
+        def numArgs : Int = 3
+
+        override def run(interp : I)(rho : interp.Env, xs : Seq[String], args : Seq[String]) : interp.ValueR =
+            xs match {
+                case Vector(_, vecl, vecr) =>
+                    interp.vecR(lookupVector(interp)(rho, vecl) ++ lookupVector(interp)(rho, vecr))
+                case _ =>
+                    sys.error(s"$show: unexpectedly got arguments $xs")
+            }
+
+        def show = "VecConcat"
     }
 
 }

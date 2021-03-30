@@ -1,0 +1,35 @@
+letc k1 x = letv f10 = fun k11 t = letv f12 = fun k13 v = letv f14 = fun k15 e = letv r16 = VecAppend t v e
+                                                                                 k15 r16
+                                                          k13 f14
+                                   k11 f12
+            letv f17 = fun k18 t = letv f19 = fun k20 v = letv f21 = fun k22 vr = letv r23 = VecConcat t v vr
+                                                                                  k22 r23
+                                                          k20 f21
+                                   k18 f19
+            letv f24 = fun k25 t = letv f26 = fun k27 v = letv f28 = fun k29 i = letv r30 = VecGet t v i
+                                                                                 k29 r30
+                                                          k27 f28
+                                   k25 f26
+            letv f31 = fun k32 t = letv f33 = fun k34 v = letv r35 = VecLength t v
+                                                          k34 r35
+                                   k32 f33
+            letv f36 = fun k37 t = letv f38 = fun k39 v = letv f40 = fun k41 e = letv r42 = VecPrepend t v e
+                                                                                 k41 r42
+                                                          k39 f40
+                                   k37 f38
+            letv f43 = fun k44 t = letv f45 = fun k46 v = letv f47 = fun k48 i = letv f49 = fun k50 e = letv r51 = VecPut t v i e
+                                                                                                        k50 r51
+                                                                                 k48 f49
+                                                          k46 f47
+                                   k44 f45
+            letv r9 = { append = f10, concat = f17, get = f24, length = f31, prepend = f36, put = f43 }
+            letv f8 = RecSelect r9 get
+            letv u52 = {}
+            letc k6 r7 = letc k4 r5 = letv i53 = 0
+                                      letc k2 r3 = $halt r3
+                                      r5 k2 i53
+                         r7 k4 x
+            f8 k6 u52
+letv i55 = 999
+letv v54 = [i55]
+k1 v54

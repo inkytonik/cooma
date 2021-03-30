@@ -70,6 +70,12 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
             expectedREPLVar : String = "res0"
         )
 
+        case class ExecTestError(
+            name : String,
+            program : String,
+            expectedErrorMessage : String
+        )
+
         val execTests =
             Vector(
                 // Primitive values
@@ -234,7 +240,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        val r = { x = 10, y = 20 }
                        val s = { a = "Hi" }
                        {r & s}.x
-                   }""",
+                    }""",
                     "10",
                     "Int"
                 ),
@@ -244,7 +250,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                        val r = { x = 10, y = 20 }
                        val s = { a = "Hi" }
                        {r & s}.a
-                   }""",
+                    }""",
                     """"Hi"""",
                     "String"
                 ),
@@ -967,6 +973,36 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                     "equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
                     "false",
                     "Boolean"
+                ),
+                ExecTest(
+                    "equality of vectors (equal, nil)",
+                    "equal(Vector(), [], [])",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "equality of vectors (equal, flat)",
+                    "equal(Vector(Int), [1, 2, 3], [1, 2, 3])",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "equality of vectors (equal, nested)",
+                    "equal(Vector({a : Int}), [{a = 1}, {a = 2}], [{a = 1}, {a = 2}])",
+                    "true",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "equality of vectors (unequal, flat)",
+                    "equal(Vector(Int), [1, 2, 3], [1, 2])",
+                    "false",
+                    "Boolean"
+                ),
+                ExecTest(
+                    "equality of vectors (unequal, nested)",
+                    "equal(Vector({a : Int}), [{a = 1}, {a = 2}], [{a = 2}, {a = 2}])",
+                    "false",
+                    "Boolean"
                 )
 
             ) ++ allInt1PrimBinOps.flatMap(op => {
@@ -993,7 +1029,6 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                             "(Int) Int"
                         )
                     )
-
                 }) ++ allIntPrimRelOps.flatMap(op => {
                     Vector(
                         ExecTest(
@@ -1040,7 +1075,203 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                         "<function>",
                         "(Int) String"
                     )
-                )
+                ) ++ Vector(
+                        ExecTest(
+                            s"nil vector literal",
+                            "[]",
+                            "[]",
+                            "Vector()"
+                        ),
+                        ExecTest(
+                            s"non-nil vector literal (literals)",
+                            "[1, 2, 3]",
+                            "[1, 2, 3]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            s"non-nil vector literal (sub-expressions)",
+                            "[prim IntAdd(1,2), prim IntSub(2, 1)]",
+                            "[3, 1]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "empty Int Vector declaration",
+                            """{
+                                val x : Vector(Int) = []
+                                x
+                            }""",
+                            "[]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "multi-dimensional vector",
+                            "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+                            "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+                            "Vector(Vector(Int))"
+                        ),
+                        ExecTest(
+                            "vector of records declaration",
+                            "[{ a = 65 }, { a = -50 }]",
+                            "[{ a = 65 }, { a = -50 }]",
+                            "Vector({ a : Int })"
+                        ),
+                        ExecTest(
+                            "Boolean vector declaration",
+                            "[true, false]",
+                            "[true, false]",
+                            "Vector(Boolean)"
+                        ),
+                        ExecTest(
+                            "Boolean vector declaration with operations",
+                            """[Booleans.and(false, false),
+                                Booleans.and(false, true),
+                                Booleans.and(true, false),
+                                Booleans.and(true, true)]""",
+                            "[false, false, false, true]",
+                            "Vector(Boolean)"
+                        ),
+                        ExecTest(
+                            "Unit vector declaration",
+                            "[{}]",
+                            "[{}]",
+                            "Vector(Unit)"
+                        ),
+                        ExecTest(
+                            "String vector declaration",
+                            """["hello", "world"]""",
+                            """["hello", "world"]""",
+                            "Vector(String)"
+                        ),
+                        ExecTest(
+                            "variant Vector declaration",
+                            "[< a = 1 >]",
+                            "[< a = 1 >]",
+                            "Vector(< a : Int >)"
+                        ),
+                        ExecTest(
+                            "Vector operations - get",
+                            """{
+                                val x = [1,2,3]
+                                Vectors.get(Int, x, 0)
+                            }""",
+                            "1",
+                            "Int"
+                        ),
+                        ExecTest(
+                            "Vector operations - get - upper bound",
+                            """{
+                                val x = [1,2,3]
+                                Vectors.get(Int, x, 2)
+                            }""",
+                            "3",
+                            "Int"
+                        ),
+                        ExecTest(
+                            "Vector operations - put on vector",
+                            """{
+                                val x : Vector(Int) = [1]
+                                Vectors.put(Int, x, 0, 5)
+                            }""",
+                            "[5]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "Vector operations - append",
+                            """{
+                                val x = [1,2,3]
+                                val z = Vectors.append(Int, x, 4)
+                                z
+                            }""",
+                            "[1, 2, 3, 4]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "Vector operations - append on empty vector",
+                            """{
+                                val x = []
+                                Vectors.append(Int, x, 4)
+                            }""",
+                            "[4]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "Vector operations - prepend",
+                            """{
+                                val x = [1,2,3]
+                                val z = Vectors.prepend(Int, x, 4)
+                                z
+                            }""",
+                            "[4, 1, 2, 3]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "Vector operations - prepend on empty vector",
+                            """{
+                                val x = []
+                                Vectors.prepend(Int, x, 4)
+                            }""",
+                            "[4]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "Vector operations - empty vector length",
+                            """{
+                                val x = []
+                                Vectors.length(Int, x)
+                            }""",
+                            "0",
+                            "Int"
+                        ),
+                        ExecTest(
+                            "Vector operations - vector length",
+                            """{
+                                val x = [1,2,3]
+                                Vectors.length(Int, x)
+                            }""",
+                            "3",
+                            "Int"
+                        ),
+                        ExecTest(
+                            "Vector operations - empty concat - both",
+                            """{
+                                val x = []
+                                val y = []
+                                Vectors.concat(Int, x, y)
+                            }""",
+                            "[]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "Vector operations - empty concat - left",
+                            """{
+                                val x = []
+                                val y = [1]
+                                Vectors.concat(Int, x, y)
+                            }""",
+                            "[1]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "Vector operations - empty concat - right",
+                            """{
+                                val x = [1]
+                                val y = []
+                                Vectors.concat(Int, x, y)
+                            }""",
+                            "[1]",
+                            "Vector(Int)"
+                        ),
+                        ExecTest(
+                            "Vector operations - concat ",
+                            """{
+                                val x = [1,2,3]
+                                val y = [4,5,6]
+                                Vectors.concat(Int, x, y)
+                            }""",
+                            "[1, 2, 3, 4, 5, 6]",
+                            "Vector(Int)"
+                        )
+                    )
 
         for (aTest <- execTests) {
             test(s"${backend.name} run: ${aTest.name}") {
@@ -1051,6 +1282,70 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
                 val result = runString(aTest.name, aTest.program, Seq("-r") ++ backend.options, backend)
                 val expectedValue = aTest.expectedCompiledResult.stripMargin
                 result shouldBe s"$expectedValue\n"
+            }
+        }
+
+        val execTestsError =
+            Vector(
+                ExecTestError(
+                    "vector with internal error",
+                    "[prim IntAdd(1,1), prim IntDiv(1, 0)]",
+                    "cooma: Error executing integer div: BigInteger divide by zero"
+                ),
+                ExecTestError(
+                    "Vector operations - get - out of bounds",
+                    """{
+                        val x : Vector(Int) = [1,2,3]
+                        Vectors.get(Int, x, 4)
+                    }""",
+                    "cooma: vector index out of bounds - size: 3, index: 4"
+                ),
+                ExecTestError(
+                    "Vector operations - get - out of bounds - negative index",
+                    """{
+                        val x : Vector(Int) = [1,2,3]
+                        Vectors.get(Int, x, -1)
+                    }""",
+                    "cooma: vector index out of bounds - size: 3, index: -1"
+                ),
+                ExecTestError(
+                    "Vector operations - get - out of bounds - empty vector ",
+                    """{
+                        val x : Vector(Int) = []
+                        Vectors.get(Int, x, 0)
+                    }""",
+                    "cooma: vector index out of bounds - size: 0, index: 0"
+                ),
+                ExecTestError(
+                    "Vector operations - put on empty vector ",
+                    """{
+                        val x : Vector(Int) = []
+                        Vectors.put(Int, x, 0, 5)
+                    }""",
+                    "cooma: vector index out of bounds - size: 0, index: 0"
+                ),
+                ExecTestError(
+                    "Vector operations - put on vector, index out ouf bounds ",
+                    """{
+                        val x : Vector(Int) = [1]
+                        Vectors.put(Int, x, 1, 5)
+                    }""",
+                    "cooma: vector index out of bounds - size: 1, index: 1"
+                ),
+                ExecTestError(
+                    "Vector operations - put on vector, index out ouf bounds (negative) ",
+                    """{
+                        val x : Vector(Int) = [1]
+                        Vectors.put(Int, x, -1, 5)
+                    }""",
+                    "cooma: vector index out of bounds - size: 1, index: -1"
+                ),
+            )
+
+        for (aTest <- execTestsError) {
+            test(s"${backend.name} run: ${aTest.name}") {
+                val errorMessage = runString(aTest.name, aTest.program, backend.options, backend)
+                errorMessage shouldBe s"${aTest.expectedErrorMessage}\n"
             }
         }
 
@@ -1714,7 +2009,7 @@ class ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
 
             test(s"${backend.name} run: $name") {
                 val result = runFile(sourceFilename, backend.options, backend, Seq(root.toString))
-                result shouldBe "cooma: folderReaderRead ./src/main/resources/tmp/sub: ./src/main/resources/tmp/sub/../a.txt is not a descendant of ./src/main/resources/tmp/sub\n"
+                result shouldBe "cooma: FolderReaderRead ./src/main/resources/tmp/sub: ./src/main/resources/tmp/sub/../a.txt is not a descendant of ./src/main/resources/tmp/sub\n"
             }
         }
 

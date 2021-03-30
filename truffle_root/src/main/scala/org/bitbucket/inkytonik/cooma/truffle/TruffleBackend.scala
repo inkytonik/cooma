@@ -82,6 +82,9 @@ class TruffleBackend(config : Config) extends Backend {
     def varV(c : String, x : String) : Value =
         new CoomaVarValueNode(c, x)
 
+    def vecV(es : Vector[String]) : Value =
+        new CoomaVecValueNode(es)
+
     override type FieldValue = org.bitbucket.inkytonik.cooma.truffle.nodes.value.FieldValue
 
     def fieldValue(f : String, x : String) : FieldValue =
@@ -137,6 +140,24 @@ class TruffleBackend(config : Config) extends Backend {
     def stringP(op : StrPrimOp) : Primitive =
         StringPrimitive(op)
 
+    def vecAppendP() : Primitive =
+        VecAppendP()
+
+    def vecConcatP() : Primitive =
+        VecConcatP()
+
+    def vecGetP() : Primitive =
+        VecGetP()
+
+    def vecLengthP() : Primitive =
+        VecLengthP()
+
+    def vecPrependP() : Primitive =
+        VecPrependP()
+
+    def vecPutP() : Primitive =
+        VecPutP()
+
     // Runtime Values
 
     override type ValueR = RuntimeValue
@@ -161,6 +182,9 @@ class TruffleBackend(config : Config) extends Backend {
 
     def recR(fields : Vector[FldR]) : ValueR =
         new RecRuntimeValue(fields.toArray)
+
+    def vecR(es : Vector[ValueR]) : ValueR =
+        new VecRuntimeValue(es)
 
     def fldR(x : String, v : ValueR) : FldR =
         new FieldValueRuntime(x, v)
@@ -195,6 +219,12 @@ class TruffleBackend(config : Config) extends Backend {
     def isVarR(value : ValueR) : Option[(String, ValueR)] =
         value match {
             case varr : VarRuntimeValue => Some((varr.getC(), varr.getV()))
+            case _                      => None
+        }
+
+    def isVecR(value : ValueR) : Option[Vector[ValueR]] =
+        value match {
+            case varr : VecRuntimeValue => Some(varr.getVector)
             case _                      => None
         }
 

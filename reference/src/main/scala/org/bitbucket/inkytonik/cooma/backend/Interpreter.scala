@@ -30,6 +30,7 @@ class Interpreter(config : Config) extends PrettyPrinter {
     case class RecR(fields : Vector[FldR]) extends ValueR
     case class StrR(str : String) extends ValueR
     case class VarR(c : String, v : ValueR) extends ValueR
+    case class VecR(elems : Vector[ValueR]) extends ValueR
 
     case class FldR(f : String, x : ValueR)
 
@@ -184,6 +185,12 @@ class Interpreter(config : Config) extends PrettyPrinter {
 
                 case VarV(c, v) =>
                     VarR(c, lookupR(rho, v))
+
+                case VecV(elems) =>
+                    val results = elems.map(s => lookupR(rho, s))
+                    results.collectFirst {
+                        case e : ErrR => e
+                    }.getOrElse(VecR(results))
             }
 
         interpretAux(env, term)
@@ -279,6 +286,8 @@ class Interpreter(config : Config) extends PrettyPrinter {
                 c.toLowerCase()
             case VarR(v1, v2) =>
                 "<" <+> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <+> ">"
+            case VecR(elems) =>
+                "[" <> ssep(elems.map(toDocRuntimeValue), ", ") <> "]"
         }
 
     def toDocField(field : FldR) : Doc =
