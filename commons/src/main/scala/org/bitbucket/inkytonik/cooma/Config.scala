@@ -34,6 +34,18 @@ class Config(args : Seq[String]) extends REPLConfig(args) {
         descr = "Print the AST of the intermediate representation (default: false)",
         default = Some(false))
 
+    lazy val preludePath = opt[String]("preludePath", short = 'p',
+        descr = "The path to the prelude code (default: prelude/prelude.cooma)",
+        default = Some("prelude/prelude.cooma"))
+
+    lazy val compilePrelude = opt[Boolean]("compilePrelude", short = 'P',
+        descr = "Compile the Cooma program as a prelude (default: false)",
+        default = Some(false))
+
+    lazy val noPrelude = opt[Boolean]("noPrelude", short = 'Q',
+        descr = "Don't use a prelude (default: false)",
+        default = Some(false))
+
     lazy val resultPrint = opt[Boolean]("resultPrint", short = 'r',
         descr = "Print the result value in compiler mode (default: false)",
         default = Some(false))

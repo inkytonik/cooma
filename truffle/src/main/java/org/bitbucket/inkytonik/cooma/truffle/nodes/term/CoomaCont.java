@@ -8,6 +8,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.bitbucket.inkytonik.cooma
+package org.bitbucket.inkytonik.cooma.truffle.nodes.term;
 
-class CoomaParserPrettyPrinterImpl extends CoomaParserPrettyPrinter
+public abstract class CoomaCont {
+
+}

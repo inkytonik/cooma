@@ -25,18 +25,18 @@ import lombok.Getter;
 @NodeInfo(shortName = "recV", description = "Record value")
 public class CoomaRecValueNode extends CoomaValueNode {
 
-    private final FieldValue[] fs;
+    private final CoomaFldV[] fields;
 
-    public CoomaRecValueNode(FieldValue[] fs) {
-        this.fs = fs;
+    public CoomaRecValueNode(CoomaFldV[] fields) {
+        this.fields = fields;
     }
 
     @Override
     public RuntimeValue evaluate(VirtualFrame frame) {
-        List<FieldValueRuntime> fieldRL = Arrays.stream(fs)
-                .map((FieldValue fs) -> new FieldValueRuntime(fs.getF(), obtainFromRho(fs.getX())))
+        List<FieldValueRuntime> fieldRL = Arrays.stream(fields)
+                .map((CoomaFldV field) -> new FieldValueRuntime(field.getF(), obtainFromRho(field.getX())))
                 .collect(Collectors.toList());
-        return new RecRuntimeValue(fieldRL.toArray(new FieldValueRuntime[fs.length]));
+        return new RecRuntimeValue(fieldRL.toArray(new FieldValueRuntime[fields.length]));
     }
 
 }

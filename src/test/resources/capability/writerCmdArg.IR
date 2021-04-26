@@ -1,6 +1,11 @@
-letv x1 = Argument 0
-letv w = Capability Writer x1
-letv f4 = RecSelect w write
-letv s5 = "Hello world!\n"
-letc k2 r3 = $halt r3
-f4 k2 s5
+%letv $x1 =
+  %prim Argument 0
+%in %letv w =
+  %prim Capability Writer $x1
+%in %letv $f4 =
+  %prim RecSelect w write
+%in %letv $s5 =
+  "Hello world!\n"
+%in %letc $k2 $r3 =
+  %halt $r3
+%in $f4 $k2 $s5

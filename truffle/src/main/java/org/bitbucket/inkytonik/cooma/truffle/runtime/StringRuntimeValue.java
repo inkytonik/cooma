@@ -23,7 +23,7 @@ public class StringRuntimeValue extends RuntimeValue implements TruffleObject, C
 
     @Override
     public String toString() {
-        return String.format("\"%s\"", Util.escape(innerValue));
+        return String.format("\"%s\"", innerValue);
     }
 
     @Override

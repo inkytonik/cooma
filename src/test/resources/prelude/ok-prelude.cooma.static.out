@@ -1,0 +1,16 @@
+Foo :
+  Type =
+  Int
+add :
+  (l : Int, r : Int) Int
+sub :
+  (l : Int, r : Int) Int
+x :
+  {
+    a : Int,
+    b : Int,
+    c : String,
+    d : <
+      e : Int
+    >
+  }

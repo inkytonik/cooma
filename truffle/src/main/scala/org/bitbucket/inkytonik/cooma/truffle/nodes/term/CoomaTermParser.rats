@@ -1,0 +1,308 @@
+module org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermParser;
+
+header {
+    import org.bitbucket.inkytonik.cooma.Backend;
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.*;
+    import org.bitbucket.inkytonik.cooma.truffle.nodes.term.*;
+    import org.bitbucket.inkytonik.cooma.truffle.nodes.value.*;
+    import scala.collection.immutable.Vector;
+    import scala.math.BigInt;
+}
+
+body {
+    private Backend backend;
+
+    public void setBackend(Backend backend) {
+        this.backend = backend;
+    }
+
+    public Column errorColumn(ParseError error) {
+        return column(error.index);
+    }
+}
+
+public CoomaTermNode DynamicPrelude =
+    Spacing Term EOF;
+
+// Notes
+//  - The nulls below are for source node links, but are ignored by
+//    the Truffle backend
+//  - In some places we avoid the backend API since it requires Scala
+//    types such as Vectors whereas we get xtc Pairs from the parser.
+//    In these case we convert the pairs to an array and create the
+//    relevant node directly.
+
+public CoomaTermNode Term =
+    void:"%case":Symbol5 x:Identifier cs:(CaseTerm)* {
+        // yyValue = (CoomaTermNode)backend.casV(null, x, cs);
+        yyValue = new CoomaCasVTermNode(x, cs.list().toArray(new CoomaCaseTerm[0]));
+    }
+    / void:"%letc":Symbol5 i:Identifier x:Identifier  void:"=":Symbol1 t1:Term void:"%in":Symbol3 t2:Term {
+        yyValue = (CoomaTermNode)backend.letC(i, x, t1, t2);
+    }
+    / void:"%letf":Symbol5 ds:(DefTerm)+ void:"%in":Symbol3 t:Term {
+        // yyValue = (CoomaTermNode)backend.letF(null, ds, t);
+        yyValue = new CoomaLetFTermNode(ds.list().toArray(new CoomaDefTerm[0]), t);
+    }
+    / void:"%letv":Symbol5 i:Identifier void:"=":Symbol1 v:Value void:"%in":Symbol3 t:Term {
+        yyValue = (CoomaTermNode)backend.letV(i, v, t);
+    }
+    / f:Identifier k:Identifier x:Identifier {
+        yyValue = (CoomaTermNode)backend.appF(f, k, x);
+    }
+    / c:Cont x:Identifier {
+        yyValue = (CoomaTermNode)backend.appC(c, x);
+    }
+    ;
+
+public CoomaCont Cont =
+    k:Identifier {
+        yyValue = (CoomaCont)backend.idnC(k);
+    }
+    / void:"%halt":Symbol5 {
+        yyValue = (CoomaCont)backend.haltC();
+    }
+    ;
+
+public CoomaCaseTerm CaseTerm =
+    void:"(":Symbol1 c:Identifier k:Identifier void:")":Symbol1 {
+        yyValue = (CoomaCaseTerm)backend.caseTerm(c, k);
+    }
+    ;
+
+public CoomaDefTerm DefTerm =
+     f:Identifier k:Identifier x:Identifier  void:"=":Symbol1 t:Term {
+        yyValue = (CoomaDefTerm)backend.defTerm(f, k, x, t);
+    }
+    ;
+
+public CoomaValueNode Value =
+    void:"%fun":Symbol4 k:Identifier x:Identifier  void:"=":Symbol1 t:Term {
+        yyValue = (CoomaValueNode)backend.funV(k, x, t);
+    }
+    / v:IntLit {
+        yyValue = (CoomaValueNode)backend.intV(BigInt.apply(v));
+    }
+    / void:"%prim":Symbol5 p:Primitive xs:(Identifier)* {
+        // yyValue = (CoomaValueNode)backend.prmV(backend, p, xs.toArray);
+        yyValue = new CoomaPrimitiveValue(backend, p, xs.list().toArray(new String[0]));
+    }
+    / void:"{":Symbol1 fs:(FldV)* void:"}":Symbol1 {
+        // yyValue = (CoomaValueNode)backend.recV(fs);
+        yyValue = new CoomaRecValueNode(fs.list().toArray(new CoomaFldV[0]));
+    }
+    / void:"\"":Symbol1 v:StringChars void:"\"":Symbol1 {
+        yyValue = (CoomaValueNode)backend.strV(v);
+    }
+    / void:"<":Symbol1 f:FldV void:">":Symbol1 {
+        yyValue = (CoomaValueNode)backend.varV(f);
+    }
+    / void:"[":Symbol1 es:vecElems void:"]":Symbol1 {
+        // yyValue = (CoomaValueNode)backend.vecV(es);
+        yyValue = new CoomaVecValueNode(es);
+    }
+    ;
+
+public Vector<String> vecElems =
+    vecElemsAux
+    / {
+        yyValue = ParserSupport.emptyStringVector();
+    }
+    ;
+
+public Vector<String> vecElemsAux =
+    v1:Identifier v2:(void:",":Symbol1 Identifier)* {
+        yyValue = ParserSupport.singleAndPairToStringVector(v1, v2);
+    }
+    ;
+
+public CoomaFldV FldV =
+     f:Identifier  void:"=":Symbol1 x:Identifier {
+        yyValue = (CoomaFldV)backend.fldV(f, x);
+    }
+    ;
+
+public Primitive Primitive =
+    void:"Argument":Word v1:IntLit {
+        yyValue = new ArgumentP(Integer.parseInt(v1));
+    }
+    / void:"Capability":Word v1:Identifier {
+        yyValue = new CapabilityP(v1);
+    }
+    / void:"FolderReaderRead":Word v1:Filename {
+        yyValue = new FolderReaderReadP(v1);
+    }
+    / void:"FolderWriterWrite":Word v1:Filename {
+        yyValue = new FolderWriterWriteP(v1);
+    }
+    / void:"HttpClient":Word v1:Identifier  v2:StringLit {
+        yyValue = new HttpClientP(v1, v2);
+    }
+    / void:"ReaderRead":Word v1:Filename {
+        yyValue = new ReaderReadP(v1);
+    }
+    / void:"RecConcat":Word {
+        yyValue = new RecConcatP();
+    }
+    / void:"RecSelect":Word {
+        yyValue = new RecSelectP();
+    }
+    / void:"WriterWrite":Word v1:Filename {
+        yyValue = new WriterWriteP(v1);
+    }
+    / v1:UserPrimitive {
+        yyValue = new UserP(v1);
+    }
+    ;
+
+public UserPrimitive UserPrimitive =
+    void:"Equal":Word {
+        yyValue = new EqualP();
+    }
+    / void:"IntAbs":Word {
+        yyValue = new IntAbsP();
+    }
+    / void:"IntAdd":Word {
+        yyValue = new IntAddP();
+    }
+    / void:"IntDiv":Word {
+        yyValue = new IntDivP();
+    }
+    / void:"IntGte":Word {
+        yyValue = new IntGteP();
+    }
+    / void:"IntGt":Word {
+        yyValue = new IntGtP();
+    }
+    / void:"IntLte":Word {
+        yyValue = new IntLteP();
+    }
+    / void:"IntLt":Word {
+        yyValue = new IntLtP();
+    }
+    / void:"IntMul":Word {
+        yyValue = new IntMulP();
+    }
+    / void:"IntPow":Word {
+        yyValue = new IntPowP();
+    }
+    / void:"IntSub":Word {
+        yyValue = new IntSubP();
+    }
+    / void:"StrConcat":Word {
+        yyValue = new StrConcatP();
+    }
+    / void:"StrLength":Word {
+        yyValue = new StrLengthP();
+    }
+    / void:"StrSubstr":Word {
+        yyValue = new StrSubstrP();
+    }
+    / void:"VecAppend":Word {
+        yyValue = new VecAppendP();
+    }
+    / void:"VecConcat":Word {
+        yyValue = new VecConcatP();
+    }
+    / void:"VecGet":Word {
+        yyValue = new VecGetP();
+    }
+    / void:"VecLength":Word {
+        yyValue = new VecLengthP();
+    }
+    / void:"VecPrepend":Word {
+        yyValue = new VecPrependP();
+    }
+    / void:"VecPut":Word {
+        yyValue = new VecPutP();
+    }
+    ;
+
+public String Filename =
+    FilenameForm Spacing
+    ;
+
+public String FilenameForm =
+    ([a-zA-Z])+
+    ;
+
+// Lexical symbols
+
+String Symbol1 =
+    Symbol1Alts Spacing;
+
+transient String Symbol1Alts =
+    "=" / "(" / ")" / "{" / "}" / "\\" / "\"" / "<" / ">" / "[" / "]" / ",";
+
+String Symbol3 =
+    Symbol3Alts Spacing;
+
+transient String Symbol3Alts =
+    "%in";
+
+String Symbol4 =
+    Symbol4Alts Spacing;
+
+transient String Symbol4Alts =
+    "%fun";
+
+String Symbol5 =
+    Symbol5Alts Spacing;
+
+transient String Symbol5Alts =
+    "%letc" / "%halt" / "%letf" / "%prim" / "%letv" / "%case";
+
+public String IntLit =
+    IntLitForm Spacing
+    ;
+
+public String IntLitForm =
+    ("-")? Digits
+    ;
+
+public String Digits =
+    (Digit)+
+    ;
+
+public String Digit =
+    [0-9]
+    ;
+
+public String StringLit =
+    StringLitForm Spacing
+    ;
+
+public String StringLitForm =
+    "\"" StringChars "\""
+    ;
+
+public String StringChars =
+    (StringChar)*
+    ;
+
+public String StringChar =
+    ("\\" ([btnfr]/("\\"/"\""))/!("\"") _)
+    ;
+
+public transient void Spacing   = (Space / Comment)*;
+public transient void Space     = ' ' / '\t' / '\f' / EOL;
+public transient void EOL       = '\r' '\n' / '\r' / '\n';
+
+public transient void Comment   = SLComment / MLComment;
+public transient void SLComment = "//" (!EOL _)* (EOL / EOF);
+public transient void MLComment = "/*" (MLComment / !"*/" _)* "*/";
+
+public String Identifier =
+    Word;
+
+public String Word =
+    WordCharacters Spacing;
+
+public transient String WordCharacters =
+    h:_ &{
+        Character.isJavaIdentifierStart (h)
+    } (t:_ &{
+        Character.isJavaIdentifierPart (t)
+    })*;
+
+public transient void EOF = !_;

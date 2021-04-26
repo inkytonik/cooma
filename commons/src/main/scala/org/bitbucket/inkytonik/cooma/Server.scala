@@ -17,7 +17,7 @@ trait Server {
     import org.bitbucket.inkytonik.kiama.==>
     import org.bitbucket.inkytonik.kiama.util.Position
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter._
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter._
     import org.bitbucket.inkytonik.cooma.SymbolTable._
 
     def getRelevantInfo[I](
@@ -143,7 +143,10 @@ trait Server {
         entityHover(analyser.defentity(n), n.identifier, analyser)
 
     def idnUseHover(n : IdnUse, analyser : SemanticAnalyser) : String =
-        entityHover(analyser.entity(n), n.identifier, analyser)
+        if (isPrimitiveTypeName(n.identifier))
+            hoverMarkdown(s"reserved primitive type ${n.identifier}", Some(typT))
+        else
+            entityHover(analyser.entity(n), n.identifier, analyser)
 
     def entityHover(e : CoomaEntity, i : String, analyser : SemanticAnalyser) : String =
         e match {
@@ -151,14 +154,19 @@ trait Server {
                 s"multiply-defined $i"
             case UnknownEntity() =>
                 s"unknown $i"
+            case PredefFunctionEntity(name, tipe) =>
+                hoverMarkdown(s"prelude functon $name", Some(tipe))
+            case PredefLetEntity(name, tipe, value) =>
+                hoverMarkdown(s"prelude let $name", Some(tipe), Some(toDoc(value)))
             case e : CoomaOkEntity =>
                 hoverMarkdown(s"${e.desc} $i", analyser.entityType(e),
                     Some(toDoc(e.decl)))
         }
 
     def prmHover(n : Prm, analyser : SemanticAnalyser) : String = {
-        val i = n.identifier
-        hoverMarkdown(s"primitive $i", primitivesTypesTable.get(i))
+        val prim = n.userPrimitive
+        val tipe = userPrimitiveType(prim)
+        hoverMarkdown(s"primitive ${show(prim)}", Some(tipe))
     }
 
     def selHover(n : Sel, analyser : SemanticAnalyser) : String = {

@@ -11,127 +11,120 @@
 package org.bitbucket.inkytonik.cooma
 package backend
 
-import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
-
-class Interpreter(config : Config) extends PrettyPrinter {
+class Interpreter(config : Config) {
 
     self : ReferenceBackend =>
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
-    import org.bitbucket.inkytonik.cooma.Util.escape
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter._
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, emptyDocument, Width}
+    import org.bitbucket.inkytonik.kiama.util.{FileSource, Messaging, Positions}
     import scala.annotation.tailrec
-    import org.bitbucket.inkytonik.kiama.relation.Bridge
+
+    case class Result(rho : Env, value : ValueR)
 
     sealed abstract class ValueR
-    case class ClsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) extends ValueR
+    case class ClsR(f : String, x : String, env : Env, e : Term) extends ValueR
     case class ErrR(msg : String) extends ValueR
     case class IntR(num : BigInt) extends ValueR
     case class RecR(fields : Vector[FldR]) extends ValueR
     case class StrR(str : String) extends ValueR
-    case class VarR(c : String, v : ValueR) extends ValueR
+    case class VarR(field : FldR) extends ValueR
     case class VecR(elems : Vector[ValueR]) extends ValueR
 
     case class FldR(f : String, x : ValueR)
 
-    case class ClsC(env : Env, k : String, e : Term)
+    case class ClsC(k : String, env : Env, e : Term)
 
     sealed abstract class Env
-    case class ConsCE(source : Bridge[ASTNode], env : Env, x : String, v : ClsC) extends Env
-    case class ConsFE(env : Env, clsEnv : () => Env, ds : Vector[DefTerm]) extends Env
-    case class ConsVE(source : Bridge[ASTNode], env : Env, x : String, v : ValueR) extends Env
+    case class ConsCE(x : String, v : ClsC, env : Env) extends Env
+    case class ConsFE(ds : Vector[DefTerm], env : Env) extends Env
+    case class ConsVE(x : String, v : ValueR, env : Env) extends Env
     case class NilE() extends Env
 
-    def consEnv(env : Env, i : String, v : ValueR) : Env =
-        ConsVE(null, env, i, v)
-
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
-        if (config.server()) {
+        if (config.server())
             if (driver.settingBool("showTrace"))
                 driver.publishProduct(source, "trace", "IR")
-        }
-        interpret(term, emptyEnv, args, config) match {
-            case err @ ErrR(msg) =>
-                config.output().emitln(showRuntimeValue(err))
-                if (config.server()) {
+        val env = preludeDynamicEnv(config)
+        val result = interpret(term, env, args, config)
+        result.value match {
+            case ErrR(msg) =>
+                config.output().emitln(showRuntimeValue(result.value))
+                if (config.server())
                     if (driver.settingBool("showResult"))
                         driver.publishProduct(source, "result", "cooma", pretty(value(msg)))
-                }
-            case v =>
+            case result =>
                 if (config.resultPrint())
-                    config.output().emitln(showRuntimeValue(v))
-                if (config.server()) {
+                    config.output().emitln(showRuntimeValue(result))
+                if (config.server())
                     if (driver.settingBool("showResult"))
-                        driver.publishProduct(source, "result", "cooma", formatRuntimeValue(v, 5))
-                }
+                        driver.publishProduct(source, "result", "cooma", formatRuntimeValue(result, 5))
         }
     }
 
-    def interpret(term : Term, env : Env, args : Seq[String], config : Config) : ValueR = {
+    def interpret(term : Term, rho : Env, args : Seq[String], config : Config) : Result = {
 
         @tailrec
-        def interpretAux(rho : Env, term : Term) : ValueR = {
+        def interpretAux(rho : Env, term : Term) : Result = {
 
-            if (config.trace()) {
+            if (config.trace())
                 config.output().emit(showState(rho, term))
-            }
-            if (config.server()) {
-                if (driver.settingBool("showTrace")) {
+            if (config.server())
+                if (driver.settingBool("showTrace"))
                     driver.publishProduct(source, "trace", "IR", formatState(rho, term), true)
-                }
-            }
 
             term match {
-                case AppC(_, "$halt", x) =>
+                case AppC(HaltC(), x) =>
                     if (config.server()) {
                         if (driver.settingBool("showTrace")) {
                             driver.publishProduct(source, "trace", "IR", emptyDocument, true)
                         }
                     }
-                    lookupR(rho, x)
+                    Result(rho, lookupR(rho, x))
 
-                case AppC(source, k, x) =>
+                case AppC(IdnC(k), x) =>
                     lookupC(rho, k) match {
-                        case ClsC(rho2, y, t) =>
-                            interpretAux(ConsVE(source, rho2, y, lookupR(rho, x)), t)
+                        case ClsC(y, rho2, t) =>
+                            interpretAux(ConsVE(y, lookupR(rho, x), rho2), t)
 
                         case v =>
                             sys.error(s"interpret AppC: $k is $v")
                     }
 
-                case AppF(_, f, k, x) =>
+                case AppF(f, k, x) =>
                     lookupR(rho, f) match {
-                        case ClsR(source, rho2, j, y, t) =>
+                        case ClsR(j, y, rho2, t) =>
                             interpretAux(
                                 ConsCE(
-                                    source,
-                                    ConsVE(source, rho2, y, lookupR(rho, x)),
                                     j,
-                                    lookupC(rho, k)
+                                    lookupC(rho, k),
+                                    ConsVE(y, lookupR(rho, x), rho2)
                                 ),
                                 t
                             )
 
-                        case err : ErrR =>
-                            err
+                        case error @ ErrR(_) =>
+                            Result(rho, error)
 
                         case v =>
                             sys.error(s"interpret AppF: $f is $v")
                     }
 
-                case CasV(_, x, cs) =>
+                case CasV(x, cs) =>
                     lookupR(rho, x) match {
-                        case VarR(c1, v) =>
+                        case VarR(FldR(c1, v)) =>
                             val optSourceK =
                                 cs.collectFirst {
-                                    case CaseTerm(source, c2, k) if c1 == c2 =>
-                                        (source, k)
+                                    case ct @ CaseTerm(c2, k) if c2 == c1 =>
+                                        (ct, k)
                                 }
                             optSourceK match {
-                                case Some((source, k)) =>
+                                case Some((ct, k)) =>
                                     lookupC(rho, k) match {
-                                        case ClsC(rho2, y, t) =>
-                                            interpretAux(ConsVE(source, rho2, y, v), t)
+                                        case ClsC(y, rho2, t) =>
+                                            val rho3 = ConsVE(y, v, rho2)
+                                            interpretAux(rho3, t)
 
                                         case v =>
                                             sys.error(s"interpret CasV: $k is $v")
@@ -141,50 +134,50 @@ class Interpreter(config : Config) extends PrettyPrinter {
                                     sys.error(s"interpret CasV: can't find case for variant $c1")
                             }
 
-                        case err : ErrR =>
-                            err
+                        case error @ ErrR(_) =>
+                            Result(rho, error)
 
                         case v =>
                             sys.error(s"interpret CasV: $x is $v")
                     }
 
-                case LetC(source, k, x, t1, t2) =>
-                    val rho2 = ConsCE(source, rho, k, ClsC(rho, x, t1))
+                case LetC(k, x, t1, t2) =>
+                    val rho2 = ConsCE(k, ClsC(x, rho, t1), rho)
                     interpretAux(rho2, t2)
 
-                case LetF(_, ds, t) =>
-                    lazy val rho2 : Env = ConsFE(rho, () => rho2, ds)
+                case LetF(ds, t) =>
+                    val rho2 = ConsFE(ds, rho)
                     interpretAux(rho2, t)
 
-                case LetV(source, x, v, t) =>
-                    val rho2 : Env = ConsVE(source, rho, x, interpretValue(source, v, rho))
+                case LetV(x, v, t) =>
+                    val rho2 : Env = ConsVE(x, interpretValue(v, rho), rho)
                     interpretAux(rho2, t)
             }
 
         }
 
-        def interpretValue(source : Bridge[ASTNode], value : Value, rho : Env) : ValueR =
+        def interpretValue(value : Value, rho : Env) : ValueR =
             value match {
                 case FunV(k, x, t) =>
-                    ClsR(source, rho, k, x, t)
+                    ClsR(k, x, rho, t)
 
                 case IntV(i) =>
                     IntR(i)
 
                 case PrmV(p, xs) =>
-                    p.eval(this)(rho, xs, args)
+                    evalPrim(p, rho, xs, args)
 
                 case RecV(fields) =>
                     RecR(fields.map {
-                        case FieldValue(f, v) =>
+                        case FldV(f, v) =>
                             FldR(f, lookupR(rho, v))
                     })
 
                 case StrV(s) =>
                     StrR(s)
 
-                case VarV(c, v) =>
-                    VarR(c, lookupR(rho, v))
+                case VarV(FldV(c, v)) =>
+                    VarR(FldR(c, lookupR(rho, v)))
 
                 case VecV(elems) =>
                     val results = elems.map(s => lookupR(rho, s))
@@ -193,19 +186,19 @@ class Interpreter(config : Config) extends PrettyPrinter {
                     }.getOrElse(VecR(results))
             }
 
-        interpretAux(env, term)
+        interpretAux(rho, term)
     }
 
     @tailrec
     final def lookupR(rho : Env, x : String) : ValueR =
         rho match {
-            case ConsCE(_, rho2, _, _) =>
+            case ConsCE(_, _, rho2) =>
                 lookupR(rho2, x)
 
-            case ConsFE(rho2, rho2f, ds) =>
+            case ConsFE(ds, rho2) =>
                 ds.collectFirst {
-                    case DefTerm(source, f, k, y, e) if x == f =>
-                        ClsR(source, rho2f(), k, y, e)
+                    case DefTerm(f, k, y, e) if x == f =>
+                        ClsR(k, y, rho, e)
                 } match {
                     case Some(v) =>
                         v
@@ -213,10 +206,10 @@ class Interpreter(config : Config) extends PrettyPrinter {
                         lookupR(rho2, x)
                 }
 
-            case ConsVE(_, rho2, y, v) if x == y =>
+            case ConsVE(y, v, _) if x == y =>
                 v
 
-            case ConsVE(_, rho2, _, _) =>
+            case ConsVE(_, _, rho2) =>
                 lookupR(rho2, x)
 
             case NilE() =>
@@ -225,33 +218,53 @@ class Interpreter(config : Config) extends PrettyPrinter {
 
     def lookupC(rho : Env, x : String) : ClsC =
         rho match {
-            case ConsCE(_, rho2, y, v) if x == y =>
+            case ConsCE(y, v, _) if x == y =>
                 v
 
-            case ConsCE(_, rho2, _, _) =>
+            case ConsCE(_, _, rho2) =>
                 lookupC(rho2, x)
 
-            case ConsFE(rho2, _, _) =>
+            case ConsFE(_, rho2) =>
                 lookupC(rho2, x)
 
-            case ConsVE(_, rho2, _, _) =>
+            case ConsVE(_, _, rho2) =>
                 lookupC(rho2, x)
 
             case NilE() =>
                 sys.error(s"lookupC: can't find $x")
         }
 
-    /*
-	 * Pretty-printer for runtime result values.
-	 */
+    def preludeDynamicEnv(config : Config) : Env =
+        if (config.noPrelude() || config.compilePrelude())
+            emptyEnv
+        else
+            readDynamicPrelude(s"${config.preludePath()}.dynamic", config)
 
-    override val defaultIndent = 2
+    def readDynamicPrelude(filename : String, config : Config) : Env = {
+        val source = FileSource(filename)
+        val positions = new Positions()
+        val p = new CoomaParser(source, positions)
+        val pr = p.pDynamicPrelude(0)
+        if (pr.hasValue) {
+            val prelude = p.value(pr).asInstanceOf[DynamicPrelude]
+            val preludeConfig = new Config(Seq("-Q", filename))
+            preludeConfig.verify()
+            val result = interpret(prelude.term, emptyEnv, Seq(), preludeConfig)
+            result.rho
+        } else {
+            config.output().emitln(s"cooma: can't parse dynamic prelude '$filename'")
+            val message = p.errorToMessage(pr.parseError)
+            val messaging = new Messaging(positions)
+            messaging.report(source, Vector(message), config.output())
+            sys.exit(1)
+        }
+    }
 
     def showState(rho : Env, term : Term) : String =
         formatState(rho, term).layout
 
     def formatState(rho : Env, term : Term) : Document =
-        pretty(toDocEnv(rho) <@> toDocTerm(term) <> line)
+        pretty(toDocEnv(rho) <@> toDoc(term) <> line)
 
     def showRuntimeValue(v : ValueR) : String =
         formatRuntimeValue(v).layout
@@ -267,11 +280,8 @@ class Interpreter(config : Config) extends PrettyPrinter {
 
     def toDocRuntimeValue(v : ValueR) : Doc =
         v match {
-            case ClsR(source, v1, v2, v3, v4) =>
-                link(
-                    source.cross,
-                    "<function>"
-                )
+            case ClsR(v1, v2, v3, v4) =>
+                "<function>"
             case ErrR(msg) =>
                 s"cooma: $msg"
             case IntR(i) =>
@@ -281,10 +291,10 @@ class Interpreter(config : Config) extends PrettyPrinter {
             case RecR(v1) =>
                 "{" <> nest(line <> ssep(v1.map(toDocField), "," <> line)) <@> "}"
             case StrR(v1) =>
-                "\"" <> value(escape(v1)) <> "\""
-            case VarR(c, `unitR`) =>
+                "\"" <> value(v1) <> "\""
+            case VarR(FldR(c, `uniR`)) =>
                 c.toLowerCase()
-            case VarR(v1, v2) =>
+            case VarR(FldR(v1, v2)) =>
                 "<" <+> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <+> ">"
             case VecR(elems) =>
                 "[" <> ssep(elems.map(toDocRuntimeValue), ", ") <> "]"
@@ -295,21 +305,12 @@ class Interpreter(config : Config) extends PrettyPrinter {
 
     def toDocEnv(rho : Env) : Doc =
         rho match {
-            case ConsCE(source, e, x, ClsC(_, k, body)) =>
-                link(
-                    source.cross,
-                    line <> x <+> k <+> "=" <+> align(toDocTerm(body)) <> toDocEnv(e)
-                )
-
-            case ConsFE(e, ce, ds) =>
-                hcat(ds.map(toDocDefTerm)) <> toDocEnv(e)
-
-            case ConsVE(source, e, x, v) =>
-                link(
-                    source.cross,
-                    line <> x <+> "=" <+> align(toDocRuntimeValue(v))
-                ) <> toDocEnv(e)
-
+            case ConsCE(x, ClsC(k, _, body), e) =>
+                line <> x <+> k <+> "=" <+> align(toDoc(body)) <> toDocEnv(e)
+            case ConsFE(ds, e) =>
+                hcat(ds.map(toDoc)) <> toDocEnv(e)
+            case ConsVE(x, v, e) =>
+                line <> x <+> "=" <+> align(toDocRuntimeValue(v)) <> toDocEnv(e)
             case NilE() =>
                 line
         }

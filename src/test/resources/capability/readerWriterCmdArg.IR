@@ -1,11 +1,22 @@
-letv x1 = Argument 0
-letv c2 = Capability Reader x1
-letv c3 = Capability Writer x1
-letv rw = RecConcat c2 c3
-letc k4 result = letc k5 _ = $halt result
-                 letv f6 = RecSelect rw write
-                 letv s7 = "Hello, world!\n"
-                 f6 k5 s7
-letv f8 = RecSelect rw read
-letv u9 = {}
-f8 k4 u9
+%letv $x1 =
+  %prim Argument 0
+%in %letv $c2 =
+  %prim Capability Reader $x1
+%in %letv $c3 =
+  %prim Capability Writer $x1
+%in %letv rw =
+  %prim RecConcat $c2 $c3
+%in %letc $k4 result =
+  %letc $k5 _ =
+    %halt result
+  %in %letv $f6 =
+    %prim RecSelect rw write
+  %in %letv $s7 =
+    "Hello, world!\n"
+  %in $f6 $k5 $s7
+%in %letv $f8 =
+  %prim RecSelect rw read
+%in %letv $u9 =
+  {
+  }
+%in $f8 $k4 $u9

@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma.test.execution.expression
 
-import org.bitbucket.inkytonik.cooma.Primitives.{allInt1PrimBinOps, allInt2PrimBinOps, allIntPrimRelOps}
+import org.bitbucket.inkytonik.cooma.Primitives._
 import org.bitbucket.inkytonik.cooma.test.ExpressionTests
 
 class PredefTests extends ExpressionTests {
@@ -96,9 +96,9 @@ class PredefTests extends ExpressionTests {
         "Booleans",
         "{ and = <function>, not = <function>, or = <function> }",
         """{
-          |  and : (Boolean, Boolean) Boolean,
-          |  not : (Boolean) Boolean,
-          |  or : (Boolean, Boolean) Boolean
+          |  and : (l : Boolean, r : Boolean) Boolean,
+          |  not : (b : Boolean) Boolean,
+          |  or : (l : Boolean, r : Boolean) Boolean
           |}""",
         "Booleans"
     )
@@ -119,16 +119,16 @@ class PredefTests extends ExpressionTests {
           |  gte = <function>
           |}""",
         """{
-          |  abs : (Int) Int,
-          |  add : (Int, Int) Int,
-          |  div : (Int, Int) Int,
-          |  mul : (Int, Int) Int,
-          |  pow : (Int, Int) Int,
-          |  sub : (Int, Int) Int,
-          |  lt : (Int, Int) Boolean,
-          |  lte : (Int, Int) Boolean,
-          |  gt : (Int, Int) Boolean,
-          |  gte : (Int, Int) Boolean
+          |  abs : (i : Int) Int,
+          |  add : (l : Int, r : Int) Int,
+          |  div : (l : Int, r : Int) Int,
+          |  mul : (l : Int, r : Int) Int,
+          |  pow : (l : Int, r : Int) Int,
+          |  sub : (l : Int, r : Int) Int,
+          |  lt : (l : Int, r : Int) Boolean,
+          |  lte : (l : Int, r : Int) Boolean,
+          |  gt : (l : Int, r : Int) Boolean,
+          |  gte : (l : Int, r : Int) Boolean
           |}""",
         "Ints"
     )
@@ -150,16 +150,16 @@ class PredefTests extends ExpressionTests {
           |} >""",
         """<
           |  v : {
-          |    abs : (Int) Int,
-          |    add : (Int, Int) Int,
-          |    div : (Int, Int) Int,
-          |    mul : (Int, Int) Int,
-          |    pow : (Int, Int) Int,
-          |    sub : (Int, Int) Int,
-          |    lt : (Int, Int) Boolean,
-          |    lte : (Int, Int) Boolean,
-          |    gt : (Int, Int) Boolean,
-          |    gte : (Int, Int) Boolean
+          |    abs : (i : Int) Int,
+          |    add : (l : Int, r : Int) Int,
+          |    div : (l : Int, r : Int) Int,
+          |    mul : (l : Int, r : Int) Int,
+          |    pow : (l : Int, r : Int) Int,
+          |    sub : (l : Int, r : Int) Int,
+          |    lt : (l : Int, r : Int) Boolean,
+          |    lte : (l : Int, r : Int) Boolean,
+          |    gt : (l : Int, r : Int) Boolean,
+          |    gte : (l : Int, r : Int) Boolean
           |  }
           |>"""
     )
@@ -188,16 +188,16 @@ class PredefTests extends ExpressionTests {
           |  x : {
           |    a : Int,
           |    b : {
-          |      abs : (Int) Int,
-          |      add : (Int, Int) Int,
-          |      div : (Int, Int) Int,
-          |      mul : (Int, Int) Int,
-          |      pow : (Int, Int) Int,
-          |      sub : (Int, Int) Int,
-          |      lt : (Int, Int) Boolean,
-          |      lte : (Int, Int) Boolean,
-          |      gt : (Int, Int) Boolean,
-          |      gte : (Int, Int) Boolean
+          |      abs : (i : Int) Int,
+          |      add : (l : Int, r : Int) Int,
+          |      div : (l : Int, r : Int) Int,
+          |      mul : (l : Int, r : Int) Int,
+          |      pow : (l : Int, r : Int) Int,
+          |      sub : (l : Int, r : Int) Int,
+          |      lt : (l : Int, r : Int) Boolean,
+          |      lte : (l : Int, r : Int) Boolean,
+          |      gt : (l : Int, r : Int) Boolean,
+          |      gte : (l : Int, r : Int) Boolean
           |    }
           |  }
           |}"""
@@ -207,7 +207,8 @@ class PredefTests extends ExpressionTests {
         "equal has the correct type",
         "equal",
         "<function>",
-        "(t : Type, t, t) Boolean"
+        "(t : Type, l : t, r : t) Boolean",
+        "equal"
     )
 
     test(
@@ -281,6 +282,13 @@ class PredefTests extends ExpressionTests {
     )
 
     test(
+        "equality of Units (equal)",
+        "equal(Unit, {}, {})",
+        "true",
+        "Boolean"
+    )
+
+    test(
         "equality of variants (equal, flat)",
         "equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
         "true",
@@ -316,76 +324,97 @@ class PredefTests extends ExpressionTests {
     )
 
     test(
-        s"Pre-defined Strings.concat has the correct type",
+        s"pre-defined Strings.concat has the correct type",
         "Strings.concat",
         "<function>",
-        "(String, String) String"
+        "(l : String, r : String) String"
     )
 
     test(
-        s"Pre-defined Strings.concat partial application has the correct type",
+        s"pre-defined Strings.concat partial application has the correct type",
         """Strings.concat("hi")""",
         "<function>",
-        "(String) String"
+        "(r : String) String"
     )
 
     test(
-        s"Pre-defined Strings.length has the correct type",
+        s"pre-defined Strings.length has the correct type",
         "Strings.length",
         "<function>",
-        "(String) Int"
+        "(s : String) Int"
     )
 
     test(
-        s"Pre-defined Strings.substr has the correct type",
+        s"pre-defined Strings.substr has the correct type",
         "Strings.substr",
         "<function>",
-        "(String, Int) String"
+        "(s : String, i : Int) String"
     )
 
     test(
-        s"Pre-defined Strings.substr partial application has the correct type",
+        s"pre-defined Strings.substr partial application has the correct type",
         """Strings.substr("hi")""",
         "<function>",
-        "(Int) String"
+        "(i : Int) String"
     )
 
     for (op <- allInt1PrimBinOps)
         test(
-            s"Pre-defined Ints.${op.name} has the correct type",
-            s"Ints.${op.name}",
+            s"pre-defined Ints.${primFunName(op)} has the correct type",
+            s"Ints.${primFunName(op)}",
             "<function>",
-            "(Int) Int"
+            "(i : Int) Int"
         )
 
     for (op <- allInt2PrimBinOps) {
         test(
-            s"Pre-defined Ints.${op.name} has the correct type",
-            s"Ints.${op.name}",
+            s"pre-defined Ints.${primFunName(op)} has the correct type",
+            s"Ints.${primFunName(op)}",
             "<function>",
-            "(Int, Int) Int"
+            "(l : Int, r : Int) Int"
         )
         test(
-            s"Pre-defined Ints.${op.name} partial application has the correct type",
-            s"Ints.${op.name}(1)",
+            s"pre-defined Ints.${primFunName(op)} partial application has the correct type",
+            s"Ints.${primFunName(op)}(1)",
             "<function>",
-            "(Int) Int"
+            "(r : Int) Int"
         )
     }
 
     for (op <- allIntPrimRelOps) {
         test(
-            s"Pre-defined Ints.${op.name} has the correct type",
-            s"Ints.${op.name}",
+            s"pre-defined Ints.${primFunName(op)} has the correct type",
+            s"Ints.${primFunName(op)}",
             "<function>",
-            "(Int, Int) Boolean"
+            "(l : Int, r : Int) Boolean"
         )
         test(
-            s"Pre-defined Ints.${op.name} partial application has the correct type",
-            s"Ints.${op.name}(1)",
+            s"pre-defined Ints.${primFunName(op)} partial application has the correct type",
+            s"Ints.${primFunName(op)}(1)",
             "<function>",
-            "(Int) Boolean"
+            "(r : Int) Boolean"
         )
     }
+
+    test(
+        "redefine pre-defined type",
+        "{ val Boolean = 1 Boolean }",
+        "1",
+        "Int"
+    )
+
+    test(
+        "redefine pre-defined value",
+        "{ val true = 1 true }",
+        "1",
+        "Int"
+    )
+
+    test(
+        "redefine pre-defined function",
+        "{ val equal = 1 equal }",
+        "1",
+        "Int"
+    )
 
 }

@@ -1,0 +1,60 @@
+%letc $k1 Foo =
+  %letf
+    add $k2 l =
+      %letv $f3 =
+        %fun $k4 r =
+          %letv $r5 =
+            %prim IntAdd l r
+          %in $k4 $r5
+      %in $k2 $f3
+  %in %letc $k6 sub =
+    %letc $k7 x =
+      %letv $u8 =
+        {
+        }
+      %in %halt $u8
+    %in %letv $i14 =
+      1
+    %in %letc $k12 $r13 =
+      %letv $i15 =
+        2
+      %in %letc $k10 $r11 =
+        %letv $i20 =
+          2
+        %in %letc $k18 $r19 =
+          %letv $i21 =
+            1
+          %in %letc $k16 $r17 =
+            %letv $s22 =
+              "Hello"
+            %in %letv $i24 =
+              3
+            %in %letv $r23 =
+              <
+                e = $i24
+              >
+            %in %letv $r9 =
+              {
+                a = $r11
+                b = $r17
+                c = $s22
+                d = $r23
+              }
+            %in $k7 $r9
+          %in $r19 $k16 $i21
+        %in sub $k18 $i20
+      %in $r13 $k10 $i15
+    %in add $k12 $i14
+  %in %letv $f25 =
+    %fun $k26 l =
+      %letv $f27 =
+        %fun $k28 r =
+          %letv $r29 =
+            %prim IntSub l r
+          %in $k28 $r29
+      %in $k26 $f27
+  %in $k6 $f25
+%in %letv $u30 =
+  {
+  }
+%in $k1 $u30

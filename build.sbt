@@ -60,14 +60,6 @@ lazy val commonsettings = Seq(
 	javaOptions in run ++= Seq("-Xss16m", "-Xmx1G"),
 	javaOptions in Test ++= Seq("-Xss16m", "-Xmx1G"),
 
-	// sbt-rats
-	ratsScalaRepetitionType := Some(VectorType),
-	ratsUseScalaOptions := true,
-	ratsUseScalaPositions := true,
-	ratsDefineASTClasses := true,
-	ratsDefinePrettyPrinter := true,
-	ratsUseKiama := 2,
-
 	// ScalariForm
 	scalariformPreferences := scalariformPreferences.value
 		.setPreference(AlignSingleLineCaseStatements, true)
@@ -134,7 +126,7 @@ lazy val root = (project in file("."))
             "org.scalatest" %% "scalatest" % "3.2.3" % "test",
 			"org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0" % "test",
             "org.scalacheck" %% "scalacheck" % "1.15.2" % "test",
-			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2",
+			"wolfendale" %% "scalacheck-gen-regexp" % "0.1.2"
 		) ++ kiamaDependencies
 	)
 	.dependsOn(
@@ -170,6 +162,10 @@ lazy val truffle = (project in file("truffle"))
 	.settings(
 		assemblySettings,
 		commonsettings,
+
+		// sbt-rats
+		ratsMainModule := Some ((Compile / scalaSource).value / "org" / "bitbucket" / "inkytonik" / "cooma" / "truffle" / "nodes" / "term" / "CoomaTermParser.rats"),
+
 		compileOrder := CompileOrder.Mixed,
 		libraryDependencies ++= Seq(
 				"org.projectlombok" % "lombok" % "1.16.16",
@@ -183,6 +179,15 @@ lazy val commons = (project in file("commons"))
 	.enablePlugins(BuildInfoPlugin)
 	.settings(
 		commonsettings,
+
+		// sbt-rats
+		ratsScalaRepetitionType := Some(VectorType),
+		ratsUseScalaOptions := true,
+		ratsUseScalaPositions := true,
+		ratsDefineASTClasses := true,
+		ratsDefinePrettyPrinter := true,
+		ratsUseKiama := 2,
+
 		libraryDependencies ++= kiamaDependencies,
 		libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.4.2"
 	)

@@ -15,7 +15,8 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bitbucket.inkytonik.cooma.Backend;
-import org.bitbucket.inkytonik.cooma.Primitives.Primitive;
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Primitive;
+import org.bitbucket.inkytonik.cooma.Primitives;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 import scala.jdk.javaapi.CollectionConverters;
 
@@ -30,12 +31,11 @@ public class CoomaPrimitiveValue extends CoomaValueNode {
 	private final Primitive p;
 	private final String[] xs;
 
-
-	@SuppressWarnings("unchecked")
 	@Override
 	public RuntimeValue evaluate(VirtualFrame frame) {
-		return (RuntimeValue) p.eval(backend, obtainRho(),
+		return (RuntimeValue) backend.evalPrim(p, obtainRho(),
 				CollectionConverters.asScala(Arrays.asList(xs)).toVector(),
 				CollectionConverters.asScala(Arrays.asList(getArgs()).iterator()).toVector());
 	}
+
 }

@@ -1,6 +1,7 @@
 package org.bitbucket.inkytonik.cooma.test.execution
 
-import org.bitbucket.inkytonik.cooma.Primitives._
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+import org.bitbucket.inkytonik.cooma.Primitives.primName
 import org.bitbucket.inkytonik.cooma.Util
 import org.bitbucket.inkytonik.cooma.test.ExecutionTests
 import org.scalacheck.Gen
@@ -11,22 +12,22 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
 
     // Primitive properties
 
-    def testInt1Prim(op : PrimOp, f : BigInt => BigInt) : Unit =
-        super.test(s"run: prim ${op.primName}")(implicit bc =>
-            forAll((i : BigInt) => runPrimTest(s"prim ${op.primName}", i.toString, "Int", f(i).toString)))
+    def testInt1Prim(op : UserPrimitive, f : BigInt => BigInt) : Unit =
+        super.test(s"run: prim ${primName(op)}")(implicit bc =>
+            forAll((i : BigInt) => runPrimTest(s"prim ${primName(op)}", i.toString, " : Int", f(i).toString)))
 
-    def testInt2Prim(op : PrimOp, f : (BigInt, BigInt) => BigInt) : Unit =
-        super.test(s"run: prim ${op.primName}")(implicit bc =>
-            forAll((l : BigInt, r : BigInt) => runPrimTest(s"prim ${op.primName}", s"$l, $r", "Int", f(l, r).toString)))
+    def testInt2Prim(op : UserPrimitive, f : (BigInt, BigInt) => BigInt) : Unit =
+        super.test(s"run: prim ${primName(op)}")(implicit bc =>
+            forAll((l : BigInt, r : BigInt) => runPrimTest(s"prim ${primName(op)}", s"$l, $r", " : Int", f(l, r).toString)))
 
-    def testIntRelPrim(op : PrimOp, f : (BigInt, BigInt) => Boolean) : Unit =
-        super.test(s"run: prim ${op.primName}")(implicit bc =>
-            forAll((l : BigInt, r : BigInt) => runPrimTest(s"prim ${op.primName}", s"$l, $r", "Boolean", f(l, r).toString)))
+    def testIntRelPrim(op : UserPrimitive, f : (BigInt, BigInt) => Boolean) : Unit =
+        super.test(s"run: prim ${primName(op)}")(implicit bc =>
+            forAll((l : BigInt, r : BigInt) => runPrimTest(s"prim ${primName(op)}", s"$l, $r", " : Boolean", f(l, r).toString)))
 
-    testInt1Prim(ABS, _.abs)
-    testInt2Prim(ADD, _ + _)
-    testInt2Prim(MUL, _ * _)
-    testInt2Prim(SUB, _ - _)
+    testInt1Prim(IntAbsP(), _.abs)
+    testInt2Prim(IntAddP(), _ + _)
+    testInt2Prim(IntMulP(), _ * _)
+    testInt2Prim(IntSubP(), _ - _)
 
     {
         val primName = "IntDiv"
@@ -35,7 +36,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
         super.test(s"run: prim $primName") { implicit bc =>
             forAll { (l : BigInt, r : BigInt) =>
                 whenever(r != 0) {
-                    runPrimTest(s"prim $primName", s"$l, $r", "Int", s"${func(l, r)}")
+                    runPrimTest(s"prim $primName", s"$l, $r", " : Int", s"${func(l, r)}")
                 }
             }
         }
@@ -45,7 +46,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                 val name = s"prim $primName"
                 val code = s"prim $primName($l, 0)"
                 val result1 = runString(name, code, Seq())
-                result1 shouldBe "cooma: Error executing integer div: BigInteger divide by zero\n"
+                result1 shouldBe "cooma: IntDiv: division by zero\n"
             }
         }
     }
@@ -58,7 +59,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
             forAll { l : BigInt =>
                 forAll(Gen.choose(0, 30)) { r : Int =>
                     whenever(r >= 0) {
-                        runPrimTest(s"prim $primName", s"$l, $r", "Int", s"${func(l, r)}")
+                        runPrimTest(s"prim $primName", s"$l, $r", " : Int", s"${func(l, r)}")
                     }
                 }
             }
@@ -75,17 +76,17 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
         }
     }
 
-    testIntRelPrim(GT, _ > _)
-    testIntRelPrim(GTE, _ >= _)
-    testIntRelPrim(LT, _ < _)
-    testIntRelPrim(LTE, _ <= _)
+    testIntRelPrim(IntGtP(), _ > _)
+    testIntRelPrim(IntGteP(), _ >= _)
+    testIntRelPrim(IntLtP(), _ < _)
+    testIntRelPrim(IntLteP(), _ <= _)
 
     {
         val primName = "Equal"
 
         test(s"run: Int prim $primName") { implicit bc =>
             forAll { (l : BigInt, r : BigInt) =>
-                runPrimTest(s"prim $primName", s"Int, $l, $r", "Boolean", (l == r).toString)
+                runPrimTest(s"prim $primName", s"Int, $l, $r", " : Boolean", (l == r).toString)
             }
         }
     }
@@ -102,7 +103,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
         test(s"run: prim $primName") { implicit bc =>
             forAll(stringLit, stringLit) { (l : String, r : String) =>
                 whenever(isStringLit(l) && isStringLit(r)) {
-                    runPrimTest(s"prim $primName", s""""$l", "$r"""", "String", s""""${func(l, r)}"""")
+                    runPrimTest(s"prim $primName", s""""$l", "$r"""", " : String", s""""${func(l, r)}"""")
                 }
             }
         }
@@ -115,7 +116,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
         test(s"run: String prim $primName") { implicit bc =>
             forAll(stringLit, stringLit) { (l : String, r : String) =>
                 whenever(isStringLit(l) && isStringLit(r)) {
-                    runPrimTest(s"prim $primName", s"""String, "$l", "$r"""", "Boolean", func(l, r).toString)
+                    runPrimTest(s"prim $primName", s"""String, "$l", "$r"""", " : Boolean", func(l, r).toString)
                 }
             }
         }
@@ -128,7 +129,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
         test(s"run: prim $primName") { implicit bc =>
             forAll(stringLit) { s : String =>
                 whenever(isStringLit(s)) {
-                    runPrimTest(s"prim $primName", s""""$s"""", "Int", s"${func(s)}")
+                    runPrimTest(s"prim $primName", s""""$s"""", " : Int", s"${func(s)}")
                 }
             }
         }
@@ -152,7 +153,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                     val s = Util.unescape(l)
                     forAll(indexesOf(s)) { i : Int =>
                         whenever((i >= 0) && (i <= s.length)) {
-                            runPrimTest(s"prim $primName", s""""$l", $i""", "String", s""""${func(s, i)}"""")
+                            runPrimTest(s"prim $primName", s""""$l", $i""", " : String", s""""${func(s, i)}"""")
                         }
                     }
                 }
@@ -166,7 +167,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                     forAll(notIndexesOf(s)) { i : Int =>
                         whenever((i < 0) || (i > s.length)) {
                             runBadPrimTest(s"prim $primName", s""""$l", $i""",
-                                s"""cooma: StrSubstr: index $i out of range for string "$s"""")
+                                s"""cooma: StrSubstr: index $i out of range for string "$l"""")
                         }
                     }
                 }
@@ -188,6 +189,136 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
         test(s"run: $name result") { implicit bc =>
             val result = runFile(filename, Seq("-r"), Seq())
             result shouldBe expectedResult
+        }
+    }
+
+    def vecToLiteral(v : Vector[Int]) = v.mkString("[", ", ", "]")
+
+    {
+        val primName = "VecAppend"
+        val func = (v : Vector[Int], i : Int) => v :+ i
+
+        test(s"run: prim $primName") { implicit bc =>
+            forAll { (v : Vector[Int], i : Int) =>
+                val arg2 = vecToLiteral(v)
+                val result = vecToLiteral(func(v, i))
+                runPrimTest(s"prim $primName", s"Int, $arg2, $i", "", result)
+            }
+        }
+    }
+
+    {
+        val primName = "VecConcat"
+        val func = (v1 : Vector[Int], v2 : Vector[Int]) => v1 ++ v2
+
+        test(s"run: prim $primName") { implicit bc =>
+            forAll { (v1 : Vector[Int], v2 : Vector[Int]) =>
+                val arg2 = vecToLiteral(v1)
+                val arg3 = vecToLiteral(v2)
+                val result = vecToLiteral(func(v1, v2))
+                runPrimTest(s"prim $primName", s"Int, $arg2, $arg3", "", result)
+            }
+        }
+    }
+
+    {
+        def indexesOf(v : Vector[Int]) : Gen[Int] =
+            for {
+                n <- Gen.choose(0, v.length)
+            } yield n
+        def notIndexesOf(v : Vector[Int]) : Gen[Int] =
+            for {
+                n <- Gen.oneOf(Gen.negNum[Int], Gen.posNum[Int] suchThat (i => (i < 0) || (i >= v.length)))
+            } yield n
+
+        {
+            val primName = "VecGet"
+            val func = (v : Vector[Int], i : Int) => v(i)
+
+            test(s"run: prim $primName") { implicit bc =>
+                forAll { (v : Vector[Int]) =>
+                    whenever(!v.isEmpty) {
+                        forAll(indexesOf(v)) { (i : Int) =>
+                            whenever((i >= 0) && (i < v.length)) {
+                                val arg2 = vecToLiteral(v)
+                                runPrimTest(s"prim $primName", s"Int, $arg2, $i", "", s"${func(v, i)}")
+                            }
+                        }
+                    }
+                }
+            }
+
+            test(s"run: prim $primName bad index") { implicit bc =>
+                forAll { (v : Vector[Int]) =>
+                    forAll(notIndexesOf(v)) { (i : Int) =>
+                        whenever((i < 0) || (i >= v.length)) {
+                            val arg2 = vecToLiteral(v)
+                            runBadPrimTest(s"prim $primName", s"Int, $arg2, $i",
+                                s"cooma: vector index out of bounds - size: ${v.length}, index: $i")
+                        }
+                    }
+                }
+            }
+        }
+
+        {
+            val primName = "VecPut"
+            val func = (v : Vector[Int], i : Int, e : Int) => v.updated(i, e)
+
+            test(s"run: prim $primName") { implicit bc =>
+                forAll { (v : Vector[Int]) =>
+                    whenever(!v.isEmpty) {
+                        forAll(indexesOf(v)) { (i : Int) =>
+                            whenever((i >= 0) && (i < v.length)) {
+                                forAll { (e : Int) =>
+                                    val arg2 = vecToLiteral(v)
+                                    val result = vecToLiteral(func(v, i, e))
+                                    runPrimTest(s"prim $primName", s"Int, $arg2, $i, $e", "", result)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            test(s"run: prim $primName bad index") { implicit bc =>
+                forAll { (v : Vector[Int]) =>
+                    forAll(notIndexesOf(v)) { (i : Int) =>
+                        whenever((i < 0) || (i >= v.length)) {
+                            forAll { (e : Int) =>
+                                val arg2 = vecToLiteral(v)
+                                runBadPrimTest(s"prim $primName", s"Int, $arg2, $i, $e",
+                                    s"cooma: vector index out of bounds - size: ${v.length}, index: $i")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    {
+        val primName = "VecLength"
+        val func = (v : Vector[Int]) => v.length
+
+        test(s"run: prim $primName") { implicit bc =>
+            forAll { (v : Vector[Int]) =>
+                val arg2 = vecToLiteral(v)
+                runPrimTest(s"prim $primName", s"Int, $arg2", " : Int", s"${func(v)}")
+            }
+        }
+    }
+
+    {
+        val primName = "VecPrepend"
+        val func = (v : Vector[Int], i : Int) => i +: v
+
+        test(s"run: prim $primName") { implicit bc =>
+            forAll { (v : Vector[Int], i : Int) =>
+                val arg2 = vecToLiteral(v)
+                val result = vecToLiteral(func(v, i))
+                runPrimTest(s"prim $primName", s"Int, $arg2, $i", "", result)
+            }
         }
     }
 

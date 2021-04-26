@@ -248,6 +248,21 @@ class BlockTests extends ExpressionTests {
     )
 
     test(
+        "nested def block (env capture)",
+        """{
+            val a = 1
+            val f = {
+                val a = 2
+                def f(x : Int) Int = prim IntAdd(x, a)
+                f
+            }
+            f(10)
+        }""",
+        "12",
+        "Int"
+    )
+
+    test(
         "variant argument",
         """{
             def f (r : < x : Int, y : Int, z : Int >) < x : Int, y : Int, z : Int > = r

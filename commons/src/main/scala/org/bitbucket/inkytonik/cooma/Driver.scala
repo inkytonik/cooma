@@ -15,9 +15,9 @@ import org.bitbucket.inkytonik.kiama.util.CompilerBase
 
 abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, pretty, show}
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout, pretty, show}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.SymbolTable.strT
+    import org.bitbucket.inkytonik.cooma.SymbolTable.{isCapabilityTypeName, preludeStaticEnv, strT}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.{Messages, noMessages}
@@ -85,7 +85,8 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
             noMessages
         } else {
             val tree = new Tree[ASTNode, Program](program)
-            val analyser = new SemanticAnalyser(tree)
+            val env = preludeStaticEnv(config)
+            val analyser = new SemanticAnalyser(tree, env)
             analysers.get(source) match {
                 case Some(prevAnalyser) =>
                     positions.resetAllAt(prevAnalyser.tree.nodes)
@@ -112,17 +113,14 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
             config.output().emit(s"  ${argument.idnDef.identifier}: ")
             def aux(t : Expression) : Seq[String] =
                 t match {
-                    case Cat(e1, e2)           => aux(e1) ++ aux(e2)
-                    case CapT(FolderReaderT()) => Seq("a folder reader")
-                    case CapT(FolderWriterT()) => Seq("a folder writer")
-                    case CapT(ReaderT())       => Seq("a reader")
-                    case CapT(WriterT())       => Seq("a writer")
-                    case CapT(HttpDeleteT())   => Seq("a HTTP client (DELETE)")
-                    case CapT(HttpGetT())      => Seq("a HTTP client (GET)")
-                    case CapT(HttpPostT())     => Seq("a HTTP client (POST)")
-                    case CapT(HttpPutT())      => Seq("a HTTP client (PUT)")
-                    case `strT`                => Seq("a string")
-                    case t                     => Seq(s"unsupported argument type ${show(t)}")
+                    case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>
+                        Seq(capabilityDesc(name))
+                    case Cat(e1, e2) =>
+                        aux(e1) ++ aux(e2)
+                    case `strT` =>
+                        Seq("a string")
+                    case t =>
+                        Seq(s"unsupported argument type ${show(t)}")
                 }
             val description = aux(argument.expression).mkString(", ")
             config.output().emit(description)
@@ -133,6 +131,20 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                     config.output().emitln("")
             }
         }
+
+        def capabilityDesc(name : String) : String =
+            name match {
+                case "FolderReader" => "a folder reader"
+                case "FolderWriter" => "a folder writer"
+                case "HttpDelete"   => "a HTTP client (DELETE)"
+                case "HttpGet"      => "a HTTP client (GET)"
+                case "HttpPost"     => "a HTTP client (POST)"
+                case "HttpPut"      => "a HTTP client (PUT)"
+                case "Reader"       => "a reader"
+                case "Writer"       => "a writer"
+                case _ =>
+                    sys.error(s"printCapabilityDesc: unknown capability name $name")
+            }
 
         def printArguments(arguments : Arguments) : Unit =
             arguments.optArguments match {
@@ -158,7 +170,11 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
     }
 
     override def format(prog : Program) : Document =
-        CoomaParserPrettyPrinter.format(prog, 5)
+        PrettyPrinter.format(prog, 5)
+
+}
+
+abstract class REPLDriver extends Driver {
 
     def createREPL(config : Config) : REPL with Compiler with Backend
 

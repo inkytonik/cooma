@@ -17,14 +17,14 @@ import org.bitbucket.inkytonik.kiama.relation.Tree
 
 class SemanticAnalyser(
     val tree : Tree[ASTNode, ASTNode],
-    predef : Environment = rootenv()
+    predefStaticEnv : Environment = rootenv()
 ) extends Attribution {
 
     import org.bitbucket.inkytonik.kiama.==>
     import org.bitbucket.inkytonik.kiama.attribution.Decorators
     import org.bitbucket.inkytonik.kiama.rewriting.Rewriter.{everywhere, rewrite, rule}
     import org.bitbucket.inkytonik.kiama.util.Messaging.{check, collectMessages, error, Messages, noMessages}
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
 
     val decorators = new Decorators(tree)
@@ -75,39 +75,11 @@ class SemanticAnalyser(
                     }
         }
 
-    def checkPrimitive(prm : Prm) : Messages = {
-        primitivesTypesTable.get(prm.identifier) match {
-            case Some(funT) =>
-                val numArgs = prm.optExpressions.length
-                val expectedNumArgs = funT.argumentTypes.optArgumentTypes.length
-                if (numArgs != expectedNumArgs)
-                    error(prm, s"primitive ${prm.identifier} expects $expectedNumArgs arguments got ${numArgs}")
-                else
-                    noMessages
-            case None =>
-                error(prm, s"primitive ${prm.identifier} not found")
-        }
-    }
-
-    def checkVectorElements(elems : VecElems) : Messages =
-        if (elems.optExpressions.isEmpty)
-            noMessages
-        else
-            tipe(elems.optExpressions.head) match {
-                case Some(firstType) =>
-                    if (elems.optExpressions.forall(e => subtype(tipe(e), firstType)))
-                        noMessages
-                    else
-                        error(elems, s"all the elements in this vector must be of type ${show(firstType)}")
-                case None =>
-                    noMessages
-            }
-
     def checkExpressionType(e : Expression) : Messages =
         (tipe(e), expectedType(e)) match {
             case (Some(t), Some(u)) if !subtype(t, u) =>
                 error(e, s"expected ${show(alias(u))}, got ${show(e)} of type ${show(alias(t))}")
-            case _ =>
+            case (a, b) =>
                 noMessages
         }
 
@@ -208,26 +180,6 @@ class SemanticAnalyser(
         }
     }
 
-    def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
-        checkMatchDiscType(e) ++
-            checkMatchCaseNum(e, cs)
-
-    def checkMatchDiscType(e : Expression) : Messages =
-        tipe(e) match {
-            case Some(VarT(_)) | None =>
-                noMessages
-            case Some(t) =>
-                error(e, s"match of non-variant type ${show(alias(t))}")
-        }
-
-    def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
-        tipe(e) match {
-            case Some(VarT(fields)) if fields.length != cs.length =>
-                error(cs(0), s"expected ${fields.length} cases, got ${cs.length}")
-            case _ =>
-                noMessages
-        }
-
     def checkFieldUse(e : Expression, f : FieldUse) : Messages = {
         val i = f.identifier
         tipe(e) match {
@@ -242,6 +194,25 @@ class SemanticAnalyser(
                 noMessages
         }
     }
+
+    def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
+        checkMatchCaseNum(e, cs) ++ checkMatchDiscType(e)
+
+    def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
+        tipe(e) match {
+            case Some(VarT(fields)) if fields.length != cs.length =>
+                error(cs(0), s"expected ${fields.length} cases, got ${cs.length}")
+            case _ =>
+                noMessages
+        }
+
+    def checkMatchDiscType(e : Expression) : Messages =
+        tipe(e) match {
+            case Some(VarT(_)) | None =>
+                noMessages
+            case Some(t) =>
+                error(e, s"match of non-variant type ${show(alias(t))}")
+        }
 
     def checkMainProgram(e : Expression) : Messages =
         e match {
@@ -259,13 +230,44 @@ class SemanticAnalyser(
     def checkMainArgument(arg : Argument) : Messages = {
         def aux(t : Expression) : Boolean =
             t match {
-                case CapT(_) | `strT` => true
-                case Cat(l, r)        => aux(l) && aux(r)
-                case _                => false
+                case `strT` =>
+                    true
+                case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>
+                    true
+                case Cat(l, r) =>
+                    aux(l) && aux(r)
+                case _ =>
+                    false
             }
-        if (aux(arg.expression)) noMessages
-        else error(arg.expression, "illegal main program argument type")
+        if (aux(arg.expression))
+            noMessages
+        else
+            error(arg.expression, "illegal main program argument type")
     }
+
+    def checkPrimitive(prm : Prm) : Messages = {
+        val tipe = userPrimitiveType(prm.userPrimitive)
+        val numArgs = prm.optExpressions.length
+        val expectedNumArgs = tipe.argumentTypes.optArgumentTypes.length
+        if (numArgs != expectedNumArgs)
+            error(prm, s"primitive ${show(prm.userPrimitive)} expects $expectedNumArgs arguments got ${numArgs}")
+        else
+            noMessages
+    }
+
+    def checkVectorElements(elems : VecElems) : Messages =
+        if (elems.optExpressions.isEmpty)
+            noMessages
+        else
+            tipe(elems.optExpressions.head) match {
+                case Some(firstType) =>
+                    if (elems.optExpressions.forall(e => subtype(tipe(e), firstType)))
+                        noMessages
+                    else
+                        error(elems, s"all the elements in this vector must be of type ${show(firstType)}")
+                case None =>
+                    noMessages
+            }
 
     object Scope {
         def unapply(n : ASTNode) : Boolean =
@@ -284,7 +286,7 @@ class SemanticAnalyser(
 
     def envin(in : ASTNode => Environment) : ASTNode ==> Environment = {
         case _ : Program | _ : REPLInput =>
-            predef
+            predefStaticEnv
 
         // Bodies of defs get all the bindings of the Defs group
         case tree.parent.pair(_ : Body, tree.parent(p : Defs)) =>
@@ -321,8 +323,8 @@ class SemanticAnalyser(
     /**
      * The "deepest" env of an expression, defined to be the env
      * of the plain expression, and the env of the body of a
-     * block expression (recursively). Currently only used when
-     * processing the predef.
+     * block expression (recursively). Used when extracting the
+     * predef env.
      */
     lazy val deepEnv : Expression => Environment =
         attr {
@@ -414,19 +416,6 @@ class SemanticAnalyser(
             case Blk(b) =>
                 blockTipe(b)
 
-            case Booleans() =>
-                Some(RecT(Vector(
-                    FieldType("and", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT)),
-                    FieldType("not", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT))), boolT)),
-                    FieldType("or", FunT(ArgumentTypes(Vector(ArgumentType(None, boolT), ArgumentType(None, boolT))), boolT))
-                )))
-
-            case BoolT() =>
-                Some(typT)
-
-            case CapT(_) =>
-                Some(typT)
-
             case n @ Cat(e1, e2) =>
                 (tipe(e1), tipe(e2)) match {
                     case (Some(RecT(r1)), Some(RecT(r2))) =>
@@ -448,19 +437,6 @@ class SemanticAnalyser(
                         None
                 }
 
-            case _ : Eql =>
-                Some(FunT(
-                    ArgumentTypes(Vector(
-                        ArgumentType(Some(IdnDef("t")), typT),
-                        ArgumentType(None, Idn(IdnUse("t"))),
-                        ArgumentType(None, Idn(IdnUse("t"))),
-                    )),
-                    boolT
-                ))
-
-            case False() =>
-                Some(boolT)
-
             case Fun(Arguments(as), e) =>
                 tipe(e) match {
                     case Some(t) =>
@@ -478,20 +454,6 @@ class SemanticAnalyser(
             case u @ Idn(IdnUse(x)) =>
                 entityType(lookup(env(u), x, UnknownEntity()))
 
-            case Ints() =>
-                Some(RecT(Vector(
-                    FieldType("abs", primitivesTypesTable("IntAbs")),
-                    FieldType("add", primitivesTypesTable("IntAdd")),
-                    FieldType("div", primitivesTypesTable("IntDiv")),
-                    FieldType("mul", primitivesTypesTable("IntMul")),
-                    FieldType("pow", primitivesTypesTable("IntPow")),
-                    FieldType("sub", primitivesTypesTable("IntSub")),
-                    FieldType("lt", primitivesTypesTable("IntLt")),
-                    FieldType("lte", primitivesTypesTable("IntLte")),
-                    FieldType("gt", primitivesTypesTable("IntGt")),
-                    FieldType("gte", primitivesTypesTable("IntGte"))
-                )))
-
             case m : Mat =>
                 matchType(m) match {
                     case OkCases(optType) =>
@@ -503,13 +465,10 @@ class SemanticAnalyser(
             case _ : Num =>
                 Some(intT)
 
-            case n @ Prm(i, args) =>
-                primitivesTypesTable.get(i) match {
-                    case Some(FunT(ArgumentTypes(ts), t)) =>
-                        if (args.length == ts.length)
-                            unalias(n, t)
-                        else
-                            None
+            case n @ Prm(p, args) =>
+                userPrimitiveType(p) match {
+                    case FunT(ArgumentTypes(ts), t) if args.length == ts.length =>
+                        unalias(n, t)
                     case _ =>
                         None
                 }
@@ -539,16 +498,6 @@ class SemanticAnalyser(
             case _ : Str =>
                 Some(strT)
 
-            case Strings() =>
-                Some(RecT(Vector(
-                    FieldType("concat", primitivesTypesTable("StrConcat")),
-                    FieldType("length", primitivesTypesTable("StrLength")),
-                    FieldType("substr", primitivesTypesTable("StrSubstr"))
-                )))
-
-            case True() =>
-                Some(boolT)
-
             case Uni() =>
                 Some(uniT)
 
@@ -571,16 +520,6 @@ class SemanticAnalyser(
 
             case _ : VecNilT | _ : VecT =>
                 Some(typT)
-
-            case Vectors() =>
-                Some(RecT(Vector(
-                    FieldType("append", primitivesTypesTable("VecAppend")),
-                    FieldType("concat", primitivesTypesTable("VecConcat")),
-                    FieldType("get", primitivesTypesTable("VecGet")),
-                    FieldType("length", primitivesTypesTable("VecLength")),
-                    FieldType("prepend", primitivesTypesTable("VecPrepend")),
-                    FieldType("put", primitivesTypesTable("VecPut"))
-                )))
         }
 
     def substArgTypes[T](x : String, t : Expression, a : T) = {
@@ -639,11 +578,15 @@ class SemanticAnalyser(
                 unaliasFunT(e, argsToArgTypes(as), t)
             case LetEntity(Let(_, i, None, e)) =>
                 tipe(e)
-            case LetEntity(Let(_, _, t, e)) =>
+            case LetEntity(Let(_, _, Some(LetType(tipe)), e)) =>
                 if (tree.nodes.contains(e))
-                    unalias(e, t)
+                    unalias(e, tipe)
                 else
-                    t
+                    Some(tipe)
+            case PredefFunctionEntity(_, tipe) =>
+                Some(tipe)
+            case PredefLetEntity(_, tipe, _) =>
+                Some(tipe)
             case _ =>
                 None
         }
@@ -670,20 +613,19 @@ class SemanticAnalyser(
 
     def alias(e : Expression) : Expression =
         e match {
-            case `boolT`                    => BoolT()
-            case `readerT`                  => CapT(ReaderT())
-            case `writerT`                  => CapT(WriterT())
-            case `httpDeleteT`              => CapT(HttpDeleteT())
-            case `httpGetT`                 => CapT(HttpGetT())
-            case `httpPostT`                => CapT(HttpPostT())
-            case `httpPutT`                 => CapT(HttpPutT())
-            case `folderReaderT`            => CapT(FolderReaderT())
-            case `folderWriterT`            => CapT(FolderWriterT())
-            case FunT(ArgumentTypes(as), t) => FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
-            case RecT(fs)                   => RecT(aliasFieldTypes(fs))
-            case VarT(fs)                   => VarT(aliasFieldTypes(fs))
-            case VecT(t)                    => VecT(alias(t))
-            case _                          => e
+            case FunT(ArgumentTypes(as), t) =>
+                FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
+            case RecT(fs) =>
+                RecT(aliasFieldTypes(fs))
+            case VarT(Vector(FieldType("False", `uniT`),
+                FieldType("True", `uniT`))) =>
+                Idn(IdnUse("Boolean"))
+            case VarT(fs) =>
+                VarT(aliasFieldTypes(fs))
+            case VecT(t) =>
+                VecT(alias(t))
+            case _ =>
+                e
         }
 
     def aliasArgType(a : ArgumentType) : ArgumentType =
@@ -703,33 +645,6 @@ class SemanticAnalyser(
 
     def unalias(n : ASTNode, t : Expression) : Option[Expression] =
         t match {
-            case BoolT() =>
-                Some(boolT)
-
-            case CapT(FolderReaderT()) =>
-                Some(folderReaderT)
-
-            case CapT(FolderWriterT()) =>
-                Some(folderWriterT)
-
-            case CapT(HttpDeleteT()) =>
-                Some(httpDeleteT)
-
-            case CapT(HttpGetT()) =>
-                Some(httpGetT)
-
-            case CapT(HttpPostT()) =>
-                Some(httpPostT)
-
-            case CapT(HttpPutT()) =>
-                Some(httpPutT)
-
-            case CapT(ReaderT()) =>
-                Some(readerT)
-
-            case CapT(WriterT()) =>
-                Some(writerT)
-
             case Cat(l, r) =>
                 (unalias(n, l), unalias(n, r)) match {
                     case (Some(RecT(l)), Some(RecT(r))) =>
@@ -747,7 +662,9 @@ class SemanticAnalyser(
                         Some(t)
                     case LetEntity(Let(_, _, _, v)) if t != v =>
                         unalias(n, v)
-                    case _ =>
+                    case PredefLetEntity(_, `typT`, v) =>
+                        unalias(n, v)
+                    case e =>
                         None
                 }
 
@@ -866,24 +783,30 @@ class SemanticAnalyser(
             case tree.parent(_ : FunT) =>
                 Some(typT)
 
-            case tree.parent.pair(a : Expression, Let(_, _, Some(t), e)) =>
-                if (a eq t)
-                    Some(typT)
-                else
-                    unalias(e, t)
+            case tree.parent(a : LetType) =>
+                Some(typT)
 
-            case tree.parent.pair(a : Expression, Prm("Equal", Vector(t, l, r))) =>
+            case tree.parent.pair(a : Expression, Let(_, _, Some(LetType(t)), e)) =>
+                unalias(e, t)
+
+            case tree.parent.pair(a : Expression, Let(_, _, None, e)) =>
+                unalias(e, tipe(e))
+
+            case tree.parent.pair(a : Expression, Prm(EqualP(), Vector(t, l, r))) =>
                 if (a eq t)
                     Some(typT)
                 else
                     unalias(t, t)
 
-            case tree.parent.pair(a : Expression, Prm(i, _)) =>
+            case tree.parent.pair(a : Expression, Prm(p, as)) =>
                 val argnum = tree.index(a)
-                primitivesTypesTable.get(i) match {
-                    case Some(FunT(ArgumentTypes(ts), _)) if ts.length > argnum =>
-                        unalias(a, ts(argnum).expression)
-                    case _ =>
+                userPrimitiveType(p) match {
+                    case FunT(ArgumentTypes(ts), _) if ts.length >= argnum =>
+                        if (as.length == ts.length)
+                            unalias(a, ts(argnum - 1).expression)
+                        else
+                            None
+                    case FunT(ArgumentTypes(ts), _) =>
                         None
                 }
 
@@ -899,7 +822,7 @@ class SemanticAnalyser(
                 unaliasFunT(e, argsToArgTypes(as), t)
             case REPLLet(Let(_, _, None, e)) =>
                 tipe(e)
-            case REPLLet(Let(_, _, t, e)) =>
+            case REPLLet(Let(_, _, Some(LetType(t)), e)) =>
                 unalias(e, t)
         }
 
@@ -907,6 +830,10 @@ class SemanticAnalyser(
         attr {
             case REPLExp(e) =>
                 unalias(e, e)
+            case REPLLet(Let(_, _, None, e)) =>
+                Some(e)
+            case REPLLet(Let(_, _, Some(LetType(t)), e)) =>
+                Some(e)
             case _ =>
                 None
         }

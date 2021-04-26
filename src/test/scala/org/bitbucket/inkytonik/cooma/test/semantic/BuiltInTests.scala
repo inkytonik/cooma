@@ -83,7 +83,7 @@ class BuiltInTests extends SemanticTests {
     test(
         "Reader doesn't have non-read field",
         "fun (r : Reader) r.foo",
-        """|1:20:error: foo is not a field of record type Reader
+        """|1:20:error: foo is not a field of record type { read : () String }
            |fun (r : Reader) r.foo
            |                   ^
            |"""
@@ -104,7 +104,7 @@ class BuiltInTests extends SemanticTests {
     test(
         "Writer doesn't have non-write field",
         "fun (w : Writer) w.foo",
-        """|1:20:error: foo is not a field of record type Writer
+        """|1:20:error: foo is not a field of record type { write : (s : String) Unit }
            |fun (w : Writer) w.foo
            |                   ^
            |"""

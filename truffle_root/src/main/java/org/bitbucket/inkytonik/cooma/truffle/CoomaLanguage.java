@@ -18,18 +18,30 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
+import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
+import org.bitbucket.inkytonik.cooma.Backend;
 import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.CoomaConstants;
 import org.bitbucket.inkytonik.cooma.Util;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.CoomaRootNode;
+import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
+import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermParser;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.*;
 import org.bitbucket.inkytonik.kiama.util.Emitter;
+import org.bitbucket.inkytonik.kiama.util.Positions;
 import org.bitbucket.inkytonik.kiama.util.StringEmitter;
 
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Arrays;
 
-import static scala.collection.JavaConverters.collectionAsScalaIterableConverter;
+import xtc.parser.Column;
+import xtc.parser.ParseError;
+import xtc.parser.Result;
+import xtc.parser.ParseException;
 
+import static scala.collection.JavaConverters.collectionAsScalaIterableConverter;
 
 @TruffleLanguage.Registration(id = CoomaConstants.ID, name = "cooma", defaultMimeType = CoomaConstants.MIME_TYPE,
 		characterMimeTypes = CoomaConstants.MIME_TYPE, contextPolicy = TruffleLanguage.ContextPolicy.SHARED,
@@ -38,6 +50,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
 	private TruffleDriver truffleDriver = new TruffleDriver();
 	private CoomaContext context;
+	private Boolean setInitialRho = true;
 
 	@Override
 	protected void finalizeContext(CoomaContext context) {
@@ -75,6 +88,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 	protected CoomaContext createContext(TruffleLanguage.Env env) {
 		String[] args = env.getApplicationArguments();
 		Config config = new Config(collectionAsScalaIterableConverter(Arrays.asList(args)).asScala().toSeq());
+		Positions positions = new Positions();
 		return new CoomaContext(env, new TruffleBackend(config), config);
 	}
 
@@ -101,9 +115,62 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 			truffleDriver.compileString("string source", source, config);
 		}
 
+		if (setInitialRho) {
+			Rho preludeRho = preludeDynamicEnv(context, config);
+			context.setRho(preludeRho);
+			setInitialRho = false;
+		}
+
 		context.setApplicationArguments(Util.getConfigFilenamesTail(config));
 		RootNode evalMain = new CoomaRootNode(this, context, truffleDriver.getCurrentCompiledNode());
 		return Truffle.getRuntime().createCallTarget(evalMain);
+	}
+
+    private Rho preludeDynamicEnv(CoomaContext context, Config config) {
+        if (config.noPrelude().isSupplied() || config.compilePrelude().isSupplied())
+            return new Rho();
+        else
+            return readDynamicPrelude(config.preludePath().apply() + ".dynamic", context, config);
+	}
+
+    private Rho readDynamicPrelude(String filename, CoomaContext context, Config config) {
+		try {
+			FileReader reader = new FileReader(filename);
+			CoomaTermParser p = new CoomaTermParser(reader, filename);
+			p.setBackend(new TruffleBackend(config));
+			Result pr = p.pDynamicPrelude(0);
+			if (pr.hasValue()) {
+				CoomaTermNode prelude = (CoomaTermNode)p.value(pr);
+				context.setRho(new Rho());
+				RootNode preludeRoot = new CoomaRootNode(this, context, prelude);
+				CallTarget callTarget = Truffle.getRuntime().createCallTarget(preludeRoot);
+				Object result = callTarget.call();
+				return context.getRho();
+			} else {
+				ParseError error = pr.parseError();
+				Column col = p.errorColumn(error);
+				output(config, "cooma: can't parse dynamic prelude '" + filename + "'");
+				output(config, filename + ":" + col.line + ":" + col.column + ": " + error.msg);
+				System.exit(1);
+			}
+		}
+		catch (FileNotFoundException e) {
+			output(config, "cooma: can't find dynamic prelude '" + filename + "'");
+			output(config, e.getMessage());
+		}
+		catch (IOException e) {
+			output(config, "cooma: I/O error reading dynamic prelude '" + filename + "'");
+			output(config, e.getMessage());
+		}
+		catch (ParseException e) {
+			output(config, "cooma: xtc parse exception reading dynamic prelude '" + filename + "'");
+			output(config, e.getMessage());
+		}
+		return new Rho();
+    }
+
+	private void output(Config config, String s) {
+		config.output().apply().emitln(s);
 	}
 
 	protected void compileFile(Config config) throws CoomaFrontendException {

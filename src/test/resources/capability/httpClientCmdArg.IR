@@ -1,10 +1,20 @@
-letv x1 = Argument 0
-letv c2 = Capability HttpDelete x1
-letv c3 = Capability HttpGet x1
-letv c4 = RecConcat c2 c3
-letv c5 = Capability HttpPost x1
-letv c6 = RecConcat c4 c5
-letv c7 = Capability HttpPut x1
-letv httpClient = RecConcat c6 c7
-letv u8 = {}
-$halt u8
+%letv $x1 =
+  %prim Argument 0
+%in %letv $c2 =
+  %prim Capability HttpDelete $x1
+%in %letv $c3 =
+  %prim Capability HttpGet $x1
+%in %letv $c4 =
+  %prim RecConcat $c2 $c3
+%in %letv $c5 =
+  %prim Capability HttpPost $x1
+%in %letv $c6 =
+  %prim RecConcat $c4 $c5
+%in %letv $c7 =
+  %prim Capability HttpPut $x1
+%in %letv httpClient =
+  %prim RecConcat $c6 $c7
+%in %letv $u8 =
+  {
+  }
+%in %halt $u8

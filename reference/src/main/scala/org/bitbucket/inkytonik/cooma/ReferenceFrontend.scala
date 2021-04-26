@@ -31,9 +31,10 @@ class ReferenceFrontend extends Frontend {
 
 }
 
-class ReferenceDriver extends Driver {
+class ReferenceDriver extends REPLDriver {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, pretty}
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Program
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, format => coomaFormat, layout, pretty}
     import org.bitbucket.inkytonik.kiama.util.StringSource
 
     override def run(config : Config) : Unit = {
@@ -50,16 +51,16 @@ class ReferenceDriver extends Driver {
         new ReferenceBackend(this, StringSource(""), config) with ReferenceREPL with Compiler
     }
 
-    override def process(source : Source, program : CoomaParserSyntax.Program, config : Config) : Unit = {
+    override def process(source : Source, program : Program, config : Config) : Unit = {
         val system = new ReferenceBackend(this, source, config) with Compiler
-        val term = system.compileCommand(program)
+        val term = system.compileCommand(program, positions)
         if (config.irPrint())
             config.output().emitln(system.showTerm(term))
         if (config.irASTPrint())
             config.output().emitln(layout(any(term), 5))
         if (config.server()) {
             if (settingBool("showIR"))
-                publishProduct(source, "IR", "IR", system.formatTerm(term, 5))
+                publishProduct(source, "IR", "IR", coomaFormat(term, 5))
             if (settingBool("showIRTree"))
                 publishProduct(source, "IRtree", "scala", pretty(any(term), 5))
         }
