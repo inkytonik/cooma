@@ -14,636 +14,524 @@ trait Compiler {
 
     self : Backend =>
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.show
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.Primitives._
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Program
+    import org.bitbucket.inkytonik.cooma.Util.resetFresh
+    import org.bitbucket.inkytonik.kiama.util.Positions
 
-    import org.bitbucket.inkytonik.cooma.SymbolTable.{intT, PrimitiveType, strT, typT, uniT}
-    import org.bitbucket.inkytonik.cooma.Util.{fresh, resetFresh, unescape}
-    import org.bitbucket.inkytonik.kiama.relation.Bridge
-
-    /**
-     * Compile a program that will run as a command with
-     * user-supplied command-line arguments.
-     */
-    def compileCommand(prog : Program) : Term = {
+    def compileCommand(prog : Program, positions : Positions) : Term = {
         resetFresh()
-        compileTop(prog.expression, 0)
+        val compiler = new CompilerCore(positions)
+        compiler.compileTop(prog.expression, 0)
     }
 
-    /**
-     * Compile a program that is evaluated as an expression
-     * with no command-line arguments.
-     */
-    def compileStandalone(prog : Program) : Term = {
+    def compileStandalone(prog : Program, positions : Positions) : Term = {
         resetFresh()
-        compileHalt(prog.expression)
+        val compiler = new CompilerCore(positions)
+        compiler.compileHalt(prog.expression)
     }
 
-    lazy val capabilityNames =
-        Set("HttpGet", "HttpDelete", "HttpPut", "HttpPost", "Reader", "Writer")
+    class CompilerCore(positions : Positions) {
 
-    /**
-     * Name of capability type?
-     */
-    def isCapabilityName(n : String) : Boolean =
-        capabilityNames(n)
+        import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{
+            CaseTerm => _,
+            DefTerm => _,
+            Cont => _,
+            FldV => _,
+            Term => _,
+            Value => _,
+            _
+        }
 
-    /**
-     * Case class and map that stores primitives metadata.
-     */
-    case class PrimitiveMeta(prm : Primitive)
+        import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
+        import org.bitbucket.inkytonik.cooma.SymbolTable.{isCapabilityTypeName, PrimitiveType, strT, uniT}
+        import org.bitbucket.inkytonik.cooma.Util.fresh
 
-    val primitivesTable = Map(
-        "Equal" -> PrimitiveMeta(equalP),
-        "IntAbs" -> PrimitiveMeta(intBinP(ABS)),
-        "IntAdd" -> PrimitiveMeta(intBinP(ADD)),
-        "IntSub" -> PrimitiveMeta(intBinP(SUB)),
-        "IntMul" -> PrimitiveMeta(intBinP(MUL)),
-        "IntDiv" -> PrimitiveMeta(intBinP(DIV)),
-        "IntPow" -> PrimitiveMeta(intBinP(POW)),
-        "IntGt" -> PrimitiveMeta(intRelP(GT)),
-        "IntGte" -> PrimitiveMeta(intRelP(GTE)),
-        "IntLt" -> PrimitiveMeta(intRelP(LT)),
-        "IntLte" -> PrimitiveMeta(intRelP(LTE)),
-        "StrConcat" -> PrimitiveMeta(stringP(CONCAT)),
-        "StrLength" -> PrimitiveMeta(stringP(LENGTH)),
-        "StrSubstr" -> PrimitiveMeta(stringP(SUBSTR)),
-        "VecAppend" -> PrimitiveMeta(vecAppendP()),
-        "VecConcat" -> PrimitiveMeta(vecConcatP()),
-        "VecGet" -> PrimitiveMeta(vecGetP()),
-        "VecLength" -> PrimitiveMeta(vecLengthP()),
-        "VecPrepend" -> PrimitiveMeta(vecPrependP()),
-        "VecPut" -> PrimitiveMeta(vecPutP())
-    )
+        lazy val capabilityNames =
+            Set("HttpGet", "HttpDelete", "HttpPut", "HttpPost", "Reader", "Writer")
 
-    /**
-     * Compile an expression to produce its value via the halt
-     * continuation.
-     */
-    def compileHalt(exp : Expression) : Term =
-        compile(exp, z => appC(Bridge(exp), "$halt", z))
+        /**
+         * Name of capability type?
+         */
+        def isCapabilityName(n : String) : Boolean =
+            capabilityNames(n)
 
-    def compileTop(exp : Expression, nArg : Int) : Term = {
+        /**
+         * Case class and map that stores primitives metadata.
+         */
+        case class PrimitiveMeta(prm : UserPrimitive)
 
-        def compileTopArg(arg : Argument, a : String, t : Expression, e : Expression) : Term = {
+        val primitivesTable = Map(
+            "Equal" -> PrimitiveMeta(EqualP()),
+            "IntAbs" -> PrimitiveMeta(IntAbsP()),
+            "IntAdd" -> PrimitiveMeta(IntAddP()),
+            "IntSub" -> PrimitiveMeta(IntSubP()),
+            "IntMul" -> PrimitiveMeta(IntMulP()),
+            "IntDiv" -> PrimitiveMeta(IntDivP()),
+            "IntPow" -> PrimitiveMeta(IntPowP()),
+            "IntGt" -> PrimitiveMeta(IntGtP()),
+            "IntGte" -> PrimitiveMeta(IntGteP()),
+            "IntLt" -> PrimitiveMeta(IntLtP()),
+            "IntLte" -> PrimitiveMeta(IntLteP()),
+            "StrConcat" -> PrimitiveMeta(StrConcatP()),
+            "StrLength" -> PrimitiveMeta(StrLengthP()),
+            "StrSubstr" -> PrimitiveMeta(StrSubstrP()),
+            "VecAppend" -> PrimitiveMeta(VecAppendP()),
+            "VecConcat" -> PrimitiveMeta(VecConcatP()),
+            "VecGet" -> PrimitiveMeta(VecGetP()),
+            "VecLength" -> PrimitiveMeta(VecLengthP()),
+            "VecPrepend" -> PrimitiveMeta(VecPrependP()),
+            "VecPut" -> PrimitiveMeta(VecPutP())
+        )
 
-            def compileCapArg(n : List[String]) : Term = {
-                val x = fresh("x")
-                def aux(n : List[String], prev : String) : Term = {
-                    val c0 = fresh("c")
+        // Tree node construction wrappers that copy source locations
+
+        def mkAppC(source : ASTNode, c : Cont, x : String) : Term =
+            positions.dupPos(source, appC(c, x))
+
+        def mkAppF(source : ASTNode, f : String, k : String, x : String) : Term =
+            positions.dupPos(source, appF(f, k, x))
+
+        def mkCasV(source : ASTNode, x : String, cs : Vector[CaseTerm]) : Term =
+            positions.dupPos(source, casV(x, cs))
+
+        def mkLetC(source : ASTNode, k : String, x : String, t : Term, body : Term) : Term =
+            positions.dupPos(source, letC(k, x, t, body))
+
+        def mkLetF(source : ASTNode, ds : Vector[DefTerm], body : Term) : Term =
+            positions.dupPos(source, letF(ds, body))
+
+        def mkLetV(source : ASTNode, x : String, v : Value, body : Term) : Term =
+            positions.dupPos(source, letV(x, v, body))
+
+        def mkCaseTerm(source : ASTNode, c : String, k : String) : CaseTerm =
+            positions.dupPos(source, caseTerm(c, k))
+
+        def mkDefTerm(source : ASTNode, f : String, k : String, x : String, body : Term) : DefTerm =
+            positions.dupPos(source, defTerm(f, k, x, body))
+
+        /**
+         * Compile an expression to produce its value via the halt
+         * continuation.
+         */
+        def compileHalt(exp : Expression) : Term =
+            compile(exp, z => mkAppC(exp, haltC(), z))
+
+        def compileTop(exp : Expression, nArg : Int) : Term = {
+
+            def compileTopArg(arg : Argument, a : String, t : Expression, e : Expression) : Term = {
+
+                def compileCapArg(n : List[String]) : Term = {
+                    val x = fresh("x")
+                    def aux(n : List[String], prev : String) : Term = {
+                        val c0 = fresh("c")
+                        n match {
+                            case hd :: Nil =>
+                                mkLetV(arg, c0, prmV(CapabilityP(hd), Vector(x)),
+                                    mkLetV(arg, a, prmV(RecConcatP(), Vector(prev, c0)),
+                                        compileTop(e, nArg + 1)))
+                            case hd :: (tl @ _ :: _) =>
+                                val c1 = fresh("c")
+                                mkLetV(arg, c0, prmV(CapabilityP(hd), Vector(x)),
+                                    mkLetV(arg, c1, prmV(RecConcatP(), Vector(prev, c0)),
+                                        aux(tl, c1)))
+                            case Nil =>
+                                sys.error("compileCapArg: unexpected Nil")
+                        }
+                    }
                     n match {
                         case hd :: Nil =>
-                            letV(Bridge(arg), c0, prmV(capabilityP(hd), Vector(x)),
-                                letV(Bridge(arg), a, prmV(recConcatP(), Vector(prev, c0)),
-                                    compileTop(e, nArg + 1)))
-                        case hd :: (tl @ _ :: _) =>
-                            val c1 = fresh("c")
-                            letV(Bridge(arg), c0, prmV(capabilityP(hd), Vector(x)),
-                                letV(Bridge(arg), c1, prmV(recConcatP(), Vector(prev, c0)),
-                                    aux(tl, c1)))
+                            mkLetV(arg, x, prmV(ArgumentP(nArg), Vector()),
+                                mkLetV(arg, a, prmV(CapabilityP(hd), Vector(x)), compileTop(e, nArg + 1)))
+                        case hd :: tl =>
+                            val c = fresh("c")
+                            mkLetV(arg, x, prmV(ArgumentP(nArg), Vector()),
+                                mkLetV(arg, c, prmV(CapabilityP(hd), Vector(x)), aux(tl, c)))
                         case Nil =>
                             sys.error("compileCapArg: unexpected Nil")
                     }
                 }
-                n match {
-                    case hd :: Nil =>
-                        letV(Bridge(arg), x, prmV(argumentP(nArg), Vector()),
-                            letV(Bridge(arg), a, prmV(capabilityP(hd), Vector(x)), compileTop(e, nArg + 1)))
-                    case hd :: tl =>
-                        val c = fresh("c")
-                        letV(Bridge(arg), x, prmV(argumentP(nArg), Vector()),
-                            letV(Bridge(arg), c, prmV(capabilityP(hd), Vector(x)), aux(tl, c)))
-                    case Nil =>
-                        sys.error("compileCapArg: unexpected Nil")
+
+                t match {
+                    case `strT` =>
+                        mkLetV(arg, a, prmV(ArgumentP(nArg), Vector()),
+                            compileTop(e, nArg + 1))
+                    case t =>
+                        def aux(t : Expression) : List[String] =
+                            t match {
+                                case Cat(e1, e2) =>
+                                    aux(e1) ::: aux(e2)
+                                case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>
+                                    name :: Nil
+                                case t =>
+                                    sys.error(s"compileTopArg: ${show(t)} arguments not supported")
+                            }
+                        compileCapArg(aux(t))
                 }
+
             }
 
-            t match {
-                case `strT` =>
-                    letV(Bridge(arg), a, prmV(argumentP(nArg), Vector()),
-                        compileTop(e, nArg + 1))
-                case t =>
-                    def aux(t : Expression) : List[String] =
-                        t match {
-                            case Cat(e1, e2) =>
-                                aux(e1) ::: aux(e2)
-                            case CapT(name) =>
-                                name.productPrefix.init :: Nil
-                            case t =>
-                                sys.error(s"compileTopArg: ${show(t)} arguments not supported")
-                        }
-                    compileCapArg(aux(t))
-            }
-
-        }
-
-        exp match {
-            case Fun(Arguments(Vector()), e) =>
-                compileHalt(e)
-            case Fun(Arguments(Vector(arg @ Argument(IdnDef(a), t, _))), e) =>
-                compileTopArg(arg, a, t, e)
-            case Fun(Arguments((arg @ Argument(IdnDef(a), t, _)) +: as), e) =>
-                compileTopArg(arg, a, t, Fun(Arguments(as), e))
-            case _ =>
-                compileHalt(exp)
-        }
-    }
-
-    val and =
-        Fun(
-            Arguments(Vector(
-                Argument(IdnDef("l"), BoolT(), None),
-                Argument(IdnDef("r"), BoolT(), None)
-            )),
-            Mat(
-                Idn(IdnUse("l")),
-                Vector(
-                    Case("False", IdnDef("_"), False()),
-                    Case("True", IdnDef("_"), Idn(IdnUse("r")))
-                )
-            )
-        )
-
-    val not =
-        Fun(
-            Arguments(Vector(
-                Argument(IdnDef("b"), BoolT(), None)
-            )),
-            Mat(
-                Idn(IdnUse("b")),
-                Vector(
-                    Case("False", IdnDef("_"), True()),
-                    Case("True", IdnDef("_"), False())
-                )
-            )
-        )
-
-    val or =
-        Fun(
-            Arguments(Vector(
-                Argument(IdnDef("l"), BoolT(), None),
-                Argument(IdnDef("r"), BoolT(), None)
-            )),
-            Mat(
-                Idn(IdnUse("l")),
-                Vector(
-                    Case("False", IdnDef("_"), Idn(IdnUse("r"))),
-                    Case("True", IdnDef("_"), True())
-                )
-            )
-        )
-
-    val booleanPrims =
-        Rec(Vector(
-            Field("and", and),
-            Field("not", not),
-            Field("or", or)
-        ))
-
-    def mkPrimField(fieldName : String, argTypes : Vector[Expression], primName : String) : Field =
-        mkPrimFieldArgNames(fieldName, (1 to argTypes.length).map(i => s"arg$i").zip(argTypes), primName)
-
-    def mkPrimFieldArgNames(fieldName : String, argNames : Seq[(String, Expression)], primName : String) : Field = {
-        val args = argNames.map { case (n, t) => Argument(IdnDef(n), t, None) }
-        val params = argNames.map { case (n, _) => Idn(IdnUse(n)) }.toVector
-        Field(fieldName, Fun(Arguments(args.toVector), Prm(primName, params)))
-    }
-
-    def mkInt1PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(intT), primName)
-
-    def mkInt2PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(intT, intT), primName)
-
-    def mkStr1PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(strT), primName)
-
-    def mkStr2PrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(strT, strT), primName)
-
-    def mkStrIntPrimField(fieldName : String, primName : String) : Field =
-        mkPrimField(fieldName, Vector(strT, intT), primName)
-
-    def mkVectorPrimFieldArgNames(fieldName : String, argNames : Seq[(String, Expression)], primName : String) : Field =
-        mkPrimFieldArgNames(fieldName, Vector(("t", typT), ("v", VecT(Idn(IdnUse("t"))))) ++ argNames, primName)
-
-    val equalPrim =
-        Fun(
-            Arguments(Vector(
-                Argument(IdnDef("t"), typT, None),
-                Argument(IdnDef("l"), Idn(IdnUse("t")), None),
-                Argument(IdnDef("r"), Idn(IdnUse("t")), None)
-            )),
-            Prm("Equal", Vector(
-                Idn(IdnUse("t")),
-                Idn(IdnUse("l")),
-                Idn(IdnUse("r"))
-            ))
-        )
-
-    val intPrims =
-        Rec(Vector(
-            mkInt1PrimField("abs", "IntAbs"),
-            mkInt2PrimField("add", "IntAdd"),
-            mkInt2PrimField("div", "IntDiv"),
-            mkInt2PrimField("mul", "IntMul"),
-            mkInt2PrimField("pow", "IntPow"),
-            mkInt2PrimField("sub", "IntSub"),
-            mkInt2PrimField("lt", "IntLt"),
-            mkInt2PrimField("lte", "IntLte"),
-            mkInt2PrimField("gt", "IntGt"),
-            mkInt2PrimField("gte", "IntGte")
-        ))
-
-    val stringPrims =
-        Rec(Vector(
-            mkStr2PrimField("concat", "StrConcat"),
-            mkStr1PrimField("length", "StrLength"),
-            mkStrIntPrimField("substr", "StrSubstr")
-        ))
-
-    val vectorPrims =
-        Rec(Vector(
-            mkVectorPrimFieldArgNames("append", Vector(("e", Idn(IdnUse("t")))), "VecAppend"),
-            mkVectorPrimFieldArgNames("concat", Vector(("vr", VecT(Idn(IdnUse("t"))))), "VecConcat"),
-            mkVectorPrimFieldArgNames("get", Vector(("i", intT)), "VecGet"),
-            mkVectorPrimFieldArgNames("length", Vector(), "VecLength"),
-            mkVectorPrimFieldArgNames("prepend", Vector(("e", Idn(IdnUse("t")))), "VecPrepend"),
-            mkVectorPrimFieldArgNames("put", Vector(("i", intT), ("e", Idn(IdnUse("t")))), "VecPut")
-        ))
-
-    /**
-     * Short-hand for compiling where the source expression and the expression
-     * being compiled are the same.
-     */
-    def compile(exp : Expression, kappa : String => Term) : Term =
-        compile(exp, exp, kappa)
-
-    /**
-     * Compile `exp`. The compiled code will be related to the `source` node. In many
-     * cases these will be the same, but where we desguar `source` will be the
-     * original node, whereas `exp` will be the desugared version.
-     */
-    def compile(source : Expression, exp : Expression, kappa : String => Term) : Term =
-        exp match {
-            case App(f, Vector()) =>
-                compile(exp, App(f, Vector(Uni())), kappa)
-
-            case App(f, Vector(a)) =>
-                val k = fresh("k")
-                val r = fresh("r")
-                compile(f, y =>
-                    compile(a, z =>
-                        letC(Bridge(source), k, r, kappa(r),
-                            appF(Bridge(source), y, k, z))))
-
-            case App(f, a +: as) =>
-                compile(exp, App(App(f, Vector(a)), as), kappa)
-
-            case Blk(be) =>
-                compileBlockExp(be, kappa)
-
-            case Booleans() =>
-                compile(exp, booleanPrims, kappa)
-
-            case Cat(r1, r2) =>
-                val r = fresh("r")
-                compile(r1, y =>
-                    compile(r2, z =>
-                        letV(Bridge(source), r, prmV(recConcatP(), Vector(y, z)),
-                            kappa(r))))
-
-            case Eql() =>
-                compile(exp, equalPrim, kappa)
-
-            case False() =>
-                compile(exp, Var(Field("False", Uni())), kappa)
-
-            case Fun(Arguments(Vector()), e) =>
-                compileFun(exp, "_", uniT, e, kappa)
-
-            case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
-                compileFun(exp, x, t, e, kappa)
-
-            case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
-                compileFun(exp, x, t, Fun(Arguments(as), e), kappa)
-
-            case Type() =>
-                compile(exp, Uni(), kappa)
-
-            case Idn(IdnUse(i)) =>
-                kappa(i)
-
-            case Ints() =>
-                compile(exp, intPrims, kappa)
-
-            case Mat(e, cs) =>
-                compileMatch(exp, e, cs, kappa)
-
-            case Num(n) =>
-                val i = fresh("i")
-                letV(Bridge(source), i, intV(n),
-                    kappa(i))
-
-            case Prm(p, args) =>
-                val r = fresh("r")
-                compilePrimArgs(args, cArgs => letV(Bridge(source), r, prmV(primitivesTable(p).prm, cArgs),
-                    kappa(r)))
-
-            case Rec(fields) =>
-                val r = fresh("r")
-                compileRec(fields, fvs => letV(Bridge(source), r, recV(fvs), kappa(r)))
-
-            case Sel(r, FieldUse(s)) =>
-                val f = fresh("f")
-                compile(r, z =>
-                    letV(Bridge(source), f, prmV(recSelectP(), Vector(z, s)),
-                        kappa(f)))
-
-            case Str(l) =>
-                val s = fresh("s")
-                letV(Bridge(source), s, strV(unescape(l.tail.init)),
-                    kappa(s))
-
-            case Strings() =>
-                compile(exp, stringPrims, kappa)
-
-            case True() =>
-                compile(exp, Var(Field("True", Uni())), kappa)
-
-            case Uni() =>
-                val u = fresh("u")
-                letV(Bridge(source), u, recV(Vector()),
-                    kappa(u))
-
-            case v @ Var(field) =>
-                val r = fresh("r")
-                compile(source, field.expression, z =>
-                    letV(Bridge(source), r, varV(field.identifier, z),
-                        kappa(r)))
-
-            case Vec(VecElems(e)) =>
-                val v = fresh("v")
-                compilePrimArgs(e, elems =>
-                    letV(Bridge(source), v, vecV(elems),
-                        kappa(v)))
-
-            case Vectors() =>
-                compile(exp, vectorPrims, kappa)
-
-            case _ =>
-                sys.error(s"compile: unexpected expression $exp")
-        }
-
-    object Type {
-        def unapply(e : Expression) : Boolean =
-            e match {
-                case BoolT() | CapT(_) | _ : FunT | _ : RecT | _ : VarT |
-                    _ : VecT | _ : VecNilT | PrimitiveType() =>
-                    true
+            exp match {
+                case Fun(Arguments(Vector()), e) =>
+                    compileHalt(e)
+                case Fun(Arguments(Vector(arg @ Argument(IdnDef(a), t, _))), e) =>
+                    compileTopArg(arg, a, t, e)
+                case Fun(Arguments((arg @ Argument(IdnDef(a), t, _)) +: as), e) =>
+                    compileTopArg(arg, a, t, Fun(Arguments(as), e))
                 case _ =>
-                    false
+                    compileHalt(exp)
             }
-    }
-
-    def compileFun(exp : Expression, x : String, t : Expression, e : Expression, kappa : String => Term) : Term = {
-        val f = fresh("f")
-        val j = fresh("k")
-        letV(Bridge(exp), f, funV(j, x, tailCompile(e, j)),
-            kappa(f))
-    }
-
-    def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
-        be match {
-            case BlkDef(ds, be2) =>
-                letF(
-                    Bridge(be),
-                    ds.defs.map(compileDef),
-                    compileBlockExp(be2, kappa)
-                )
-
-            case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
-                val j = fresh("k")
-                letC(Bridge(be), j, x, compileBlockExp(be2, kappa),
-                    tailCompile(e, j))
-
-            case Return(e) =>
-                compile(e, kappa)
         }
 
-    def compileDefBody(args : Vector[Argument], e : Expression, k : String) : Term =
-        if (args.isEmpty)
-            tailCompile(e, k)
-        else
-            tailCompile(Fun(Arguments(args), e), k)
+        /**
+         * Short-hand for compiling where the source expression and the expression
+         * being compiled are the same.
+         */
+        def compile(exp : Expression, kappa : String => Term) : Term =
+            compile(exp, exp, kappa)
 
-    def compileDef(fd : Def) : DefTerm = {
-        val k = fresh("k")
-        fd match {
-            case Def(IdnDef(f), Body(Arguments(Vector()), t, e)) =>
-                compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), uniT, None))), t, e)))
+        /* Unit is encoded as an empty record. */
+        val uniV = recV(Vector())
 
-            case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _, None) +: otherArgs), _, e)) =>
-                defTerm(Bridge(fd), f, k, x, compileDefBody(otherArgs, e, k))
+        /**
+         * Compile `exp`. The compiled code will be related to the `source` node. In many
+         * cases these will be the same, but where we desguar `source` will be the
+         * original node, whereas `exp` will be the desugared version.
+         */
+        def compile(source : Expression, exp : Expression, kappa : String => Term) : Term =
+            exp match {
+                case App(f, Vector()) =>
+                    compile(exp, App(f, Vector(Uni())), kappa)
 
-            case _ =>
-                sys.error(s"compileDef: unexpected definition $fd")
-        }
-    }
+                case App(f, Vector(a)) =>
+                    val k = fresh("k")
+                    val r = fresh("r")
+                    compile(f, y =>
+                        compile(a, z =>
+                            mkLetC(source, k, r, kappa(r),
+                                mkAppF(source, y, k, z))))
 
-    def compileMatch(exp : Expression, e : Expression, cs : Vector[Case], kappa : String => Term) : Term = {
-        val cks = cs.map(c => (c, fresh("k")))
-        val caseTerms = cks.map { case (c, k) => caseTerm(Bridge(c), c.identifier, k) }
-        compile(e, z =>
-            cks.foldLeft(casV(Bridge(exp), z, caseTerms)) {
-                case (t, (Case(_, IdnDef(xi), ei), ki)) =>
-                    letC(Bridge(ei), ki, xi, compile(ei, zi => kappa(zi)),
-                        t)
-            })
-    }
+                case App(f, a +: as) =>
+                    compile(exp, App(App(f, Vector(a)), as), kappa)
 
-    def compileRec(
-        fields : Vector[Field],
-        kappa : Vector[FieldValue] => Term
-    ) : Term =
-        fields match {
-            case Field(f, e) +: t =>
-                compile(e, z =>
-                    compileRec(t, fvs => kappa(fieldValue(f, z) +: fvs)))
+                case Blk(be) =>
+                    compileBlockExp(be, kappa)
 
-            case Vector() =>
-                kappa(Vector())
+                case Cat(r1, r2) =>
+                    val r = fresh("r")
+                    compile(r1, y =>
+                        compile(r2, z =>
+                            mkLetV(source, r, prmV(RecConcatP(), Vector(y, z)),
+                                kappa(r))))
 
-            case _ =>
-                sys.error(s"compileRec: unexpected fields $fields")
-        }
+                case Fun(Arguments(Vector()), e) =>
+                    compileFun(exp, "_", uniT, e, kappa)
 
-    def compilePrimArgs(
-        args : Vector[Expression],
-        kappa : Vector[String] => Term
-    ) : Term =
-        args match {
-            case e +: t =>
-                compile(e, argE =>
-                    compilePrimArgs(t, argT => kappa(argE +: argT)))
+                case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
+                    compileFun(exp, x, t, e, kappa)
 
-            case Vector() =>
-                kappa(Vector())
+                case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
+                    compileFun(exp, x, t, Fun(Arguments(as), e), kappa)
 
-            case _ =>
-                sys.error(s"compilePrimArgs: unexpected fields $args")
-        }
+                case Type() =>
+                    compile(exp, Uni(), kappa)
 
-    def tailCompile(exp : Expression, k : String) : Term =
-        tailCompile(exp, exp, k)
+                case Idn(IdnUse(i)) =>
+                    kappa(i)
 
-    def tailCompile(source : Expression, exp : Expression, k : String) : Term =
-        exp match {
-            case App(f, Vector()) =>
-                tailCompile(exp, App(f, Vector(Uni())), k)
+                case Mat(e, cs) =>
+                    compileMatch(exp, e, cs, kappa)
 
-            case App(f, Vector(a)) =>
-                compile(f, y =>
-                    compile(a, z =>
-                        appF(Bridge(source), y, k, z)))
+                case Num(n) =>
+                    val i = fresh("i")
+                    mkLetV(source, i, intV(n),
+                        kappa(i))
 
-            case App(f, a +: as) =>
-                tailCompile(exp, App(App(f, Vector(a)), as), k)
+                case Prm(p, args) =>
+                    val r = fresh("r")
+                    compilePrimArgs(
+                        args,
+                        cArgs => mkLetV(source, r, prmV(UserP(p), cArgs),
+                            kappa(r))
+                    )
 
-            case Blk(be) =>
-                tailCompileBlockExp(be, k)
+                case Rec(fields) =>
+                    val r = fresh("r")
+                    compileRec(fields, fvs => mkLetV(source, r, recV(fvs), kappa(r)))
 
-            case Booleans() =>
-                tailCompile(booleanPrims, k)
+                case Sel(r, FieldUse(s)) =>
+                    val f = fresh("f")
+                    compile(r, z =>
+                        mkLetV(source, f, prmV(RecSelectP(), Vector(z, s)),
+                            kappa(f)))
 
-            case Cat(r1, r2) =>
-                val r = fresh("r")
-                compile(r1, y =>
-                    compile(r2, z =>
-                        letV(Bridge(source), r, prmV(recConcatP(), Vector(y, z)),
-                            appC(Bridge(source), k, r))))
+                case Str(l) =>
+                    val s = fresh("s")
+                    mkLetV(source, s, strV(l.tail.init),
+                        kappa(s))
 
-            case Eql() =>
-                tailCompile(exp, equalPrim, k)
+                case Uni() =>
+                    val u = fresh("u")
+                    mkLetV(source, u, uniV,
+                        kappa(u))
 
-            case False() =>
-                tailCompile(exp, Var(Field("False", Uni())), k)
+                case v @ Var(field) =>
+                    val r = fresh("r")
+                    compile(source, field.expression, z =>
+                        mkLetV(source, r, varV(fldV(field.identifier, z)),
+                            kappa(r)))
 
-            case Fun(Arguments(Vector()), e) =>
-                tailCompileFun(exp, "_", uniT, e, k)
+                case Vec(VecElems(e)) =>
+                    val v = fresh("v")
+                    compilePrimArgs(e, elems =>
+                        mkLetV(source, v, vecV(elems),
+                            kappa(v)))
 
-            case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
-                tailCompileFun(exp, x, t, e, k)
+                case _ =>
+                    sys.error(s"compile: unexpected expression $exp")
+            }
 
-            case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
-                tailCompileFun(exp, x, t, Fun(Arguments(as), e), k)
-
-            case Fun(Arguments(a +: as), e) =>
-                tailCompile(exp, Fun(Arguments(Vector(a)), Fun(Arguments(as), e)), k)
-
-            case Type() =>
-                tailCompile(exp, Uni(), k)
-
-            case Idn(IdnUse(x)) =>
-                appC(Bridge(source), k, x)
-
-            case Ints() =>
-                tailCompile(exp, intPrims, k)
-
-            case Mat(e, cs) =>
-                tailCompileMatch(exp, e, cs, k)
-
-            case Num(n) =>
-                val i = fresh("i")
-                letV(Bridge(source), i, intV(n),
-                    appC(Bridge(source), k, i))
-
-            case Prm(p, args) =>
-                val r = fresh("r")
-                compilePrimArgs(args, cArgs =>
-                    letV(Bridge(source), r, prmV(primitivesTable(p).prm, cArgs),
-                        appC(Bridge(source), k, r)))
-
-            case Rec(fields) =>
-                val r = fresh("r")
-                compileRec(fields, fvs => letV(Bridge(source), r, recV(fvs), appC(Bridge(source), k, r)))
-
-            case Sel(r, FieldUse(s)) =>
-                val f = fresh("f")
-                compile(r, z =>
-                    letV(Bridge(source), f, prmV(recSelectP(), Vector(z, s)),
-                        appC(Bridge(source), k, f)))
-
-            case Str(l) =>
-                val s = fresh("s")
-                letV(Bridge(source), s, strV(unescape(l.tail.init)),
-                    appC(Bridge(source), k, s))
-
-            case Strings() =>
-                tailCompile(exp, stringPrims, k)
-
-            case True() =>
-                tailCompile(exp, Var(Field("True", Uni())), k)
-
-            case Uni() =>
-                val u = fresh("u")
-                letV(Bridge(source), u, recV(Vector()),
-                    appC(Bridge(source), k, u))
-
-            case Var(field) =>
-                val r = fresh("r")
-                compile(source, field.expression, z =>
-                    letV(Bridge(source), r, varV(field.identifier, z),
-                        appC(Bridge(source), k, r)))
-
-            case Vec(e) =>
-                val v = fresh("v")
-                compilePrimArgs(e.optExpressions, elems =>
-                    letV(Bridge(source), v, vecV(elems),
-                        appC(Bridge(source), k, v)))
-
-            case Vectors() =>
-                tailCompile(exp, vectorPrims, k)
-
-            case _ =>
-                sys.error(s"tailCompile: unexpected expression $exp")
+        object Type {
+            def unapply(e : Expression) : Boolean =
+                e match {
+                    case _ : FunT | _ : RecT | _ : VarT | _ : VecT | _ : VecNilT |
+                        PrimitiveType() =>
+                        true
+                    case _ =>
+                        false
+                }
         }
 
-    def tailCompileFun(exp : Expression, x : String, t : Expression, e : Expression, k : String) : Term = {
-        val f = fresh("f")
-        val j = fresh("k")
-        letV(Bridge(exp), f, funV(j, x, tailCompile(e, j)),
-            appC(Bridge(exp), k, f))
-    }
+        def compileFun(exp : Expression, x : String, t : Expression, e : Expression, kappa : String => Term) : Term = {
+            val f = fresh("f")
+            val j = fresh("k")
+            mkLetV(exp, f, funV(j, x, tailCompile(e, j)),
+                kappa(f))
+        }
 
-    def tailCompileBlockExp(be : BlockExp, k : String) : Term =
-        be match {
-            case BlkDef(ds, be2) =>
-                letF(
-                    Bridge(be),
-                    ds.defs.map(compileDef),
-                    tailCompileBlockExp(be2, k)
-                )
+        def compileBlockExp(be : BlockExp, kappa : String => Term) : Term =
+            be match {
+                case BlkDef(ds, be2) =>
+                    mkLetF(
+                        be,
+                        ds.defs.map(compileDef),
+                        compileBlockExp(be2, kappa)
+                    )
 
-            case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
-                val j = fresh("k")
-                letC(Bridge(be), j, x, tailCompileBlockExp(be2, k),
-                    tailCompile(e, j))
+                case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
+                    val j = fresh("k")
+                    mkLetC(be, j, x, compileBlockExp(be2, kappa),
+                        tailCompile(e, j))
 
-            case Return(e) =>
+                case Return(e) =>
+                    compile(e, kappa)
+            }
+
+        def compileDefBody(args : Vector[Argument], e : Expression, k : String) : Term =
+            if (args.isEmpty)
                 tailCompile(e, k)
+            else
+                tailCompile(Fun(Arguments(args), e), k)
+
+        def compileDef(fd : Def) : DefTerm = {
+            val k = fresh("k")
+            fd match {
+                case Def(IdnDef(f), Body(Arguments(Vector()), t, e)) =>
+                    compileDef(Def(IdnDef(f), Body(Arguments(Vector(Argument(IdnDef("_"), uniT, None))), t, e)))
+
+                case Def(IdnDef(f), Body(Arguments(Argument(IdnDef(x), _, None) +: otherArgs), _, e)) =>
+                    mkDefTerm(fd, f, k, x, compileDefBody(otherArgs, e, k))
+
+                case _ =>
+                    sys.error(s"compileDef: unexpected definition $fd")
+            }
         }
 
-    def tailCompileMatch(exp : Expression, e : Expression, cs : Vector[Case], k : String) : Term = {
-        val cks = cs.map(c => (c, fresh("k")))
-        val caseTerms = cks.map { case (c, k) => caseTerm(Bridge(c), c.identifier, k) }
-        compile(e, z =>
-            cks.foldLeft(casV(Bridge(exp), z, caseTerms)) {
-                case (t, (Case(vi, IdnDef(xi), ei), ki)) =>
-                    letC(Bridge(ei), ki, xi, tailCompile(ei, k),
-                        t)
-            })
+        def compileMatch(exp : Expression, e : Expression, cs : Vector[Case], kappa : String => Term) : Term = {
+            val cks = cs.map(c => (c, fresh("k")))
+            val caseTerms =
+                cks.map {
+                    case (c, k) =>
+                        mkCaseTerm(c, c.identifier, k)
+                }
+            compile(e, z =>
+                cks.foldLeft(mkCasV(exp, z, caseTerms)) {
+                    case (t, (Case(_, IdnDef(xi), ei), ki)) =>
+                        mkLetC(ei, ki, xi, compile(ei, zi => kappa(zi)),
+                            t)
+                })
+        }
+
+        def compileRec(
+            fields : Vector[Field],
+            kappa : Vector[FldV] => Term
+        ) : Term =
+            fields match {
+                case Field(f, e) +: t =>
+                    compile(e, z =>
+                        compileRec(t, fvs => kappa(fldV(f, z) +: fvs)))
+
+                case Vector() =>
+                    kappa(Vector())
+
+                case _ =>
+                    sys.error(s"compileRec: unexpected fields $fields")
+            }
+
+        def compilePrimArgs(
+            args : Vector[Expression],
+            kappa : Vector[String] => Term
+        ) : Term =
+            args match {
+                case e +: t =>
+                    compile(e, argE =>
+                        compilePrimArgs(t, argT => kappa(argE +: argT)))
+
+                case Vector() =>
+                    kappa(Vector())
+
+                case _ =>
+                    sys.error(s"compilePrimArgs: unexpected fields $args")
+            }
+
+        def tailCompile(exp : Expression, k : String) : Term =
+            tailCompile(exp, exp, k)
+
+        def tailCompile(source : Expression, exp : Expression, k : String) : Term =
+            exp match {
+                case App(f, Vector()) =>
+                    tailCompile(exp, App(f, Vector(Uni())), k)
+
+                case App(f, Vector(a)) =>
+                    compile(f, y =>
+                        compile(a, z =>
+                            mkAppF(source, y, k, z)))
+
+                case App(f, a +: as) =>
+                    tailCompile(exp, App(App(f, Vector(a)), as), k)
+
+                case Blk(be) =>
+                    tailCompileBlockExp(be, k)
+
+                case Cat(r1, r2) =>
+                    val r = fresh("r")
+                    compile(r1, y =>
+                        compile(r2, z =>
+                            mkLetV(source, r, prmV(RecConcatP(), Vector(y, z)),
+                                mkAppC(source, idnC(k), r))))
+
+                case Fun(Arguments(Vector()), e) =>
+                    tailCompileFun(exp, "_", uniT, e, k)
+
+                case Fun(Arguments(Vector(Argument(IdnDef(x), t, _))), e) =>
+                    tailCompileFun(exp, x, t, e, k)
+
+                case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
+                    tailCompileFun(exp, x, t, Fun(Arguments(as), e), k)
+
+                case Fun(Arguments(a +: as), e) =>
+                    tailCompile(exp, Fun(Arguments(Vector(a)), Fun(Arguments(as), e)), k)
+
+                case Type() =>
+                    tailCompile(exp, Uni(), k)
+
+                case Idn(IdnUse(x)) =>
+                    mkAppC(source, idnC(k), x)
+
+                case Mat(e, cs) =>
+                    tailCompileMatch(exp, e, cs, k)
+
+                case Num(n) =>
+                    val i = fresh("i")
+                    mkLetV(source, i, intV(n),
+                        mkAppC(source, idnC(k), i))
+
+                case Prm(p, args) =>
+                    val r = fresh("r")
+                    compilePrimArgs(args, cArgs =>
+                        mkLetV(source, r, prmV(UserP(p), cArgs),
+                            mkAppC(source, idnC(k), r)))
+
+                case Rec(fields) =>
+                    val r = fresh("r")
+                    compileRec(
+                        fields,
+                        fvs => mkLetV(source, r, recV(fvs),
+                            mkAppC(source, idnC(k), r))
+                    )
+
+                case Sel(r, FieldUse(s)) =>
+                    val f = fresh("f")
+                    compile(r, z =>
+                        mkLetV(source, f, prmV(RecSelectP(), Vector(z, s)),
+                            mkAppC(source, idnC(k), f)))
+
+                case Str(l) =>
+                    val s = fresh("s")
+                    mkLetV(source, s, strV(l.tail.init),
+                        mkAppC(source, idnC(k), s))
+
+                case Uni() =>
+                    val u = fresh("u")
+                    mkLetV(source, u, recV(Vector()),
+                        mkAppC(source, idnC(k), u))
+
+                case Var(field) =>
+                    val r = fresh("r")
+                    compile(source, field.expression, z =>
+                        mkLetV(source, r, varV(fldV(field.identifier, z)),
+                            mkAppC(source, idnC(k), r)))
+
+                case Vec(e) =>
+                    val v = fresh("v")
+                    compilePrimArgs(e.optExpressions, elems =>
+                        mkLetV(source, v, vecV(elems),
+                            mkAppC(source, idnC(k), v)))
+
+                case _ =>
+                    sys.error(s"tailCompile: unexpected expression $exp")
+
+            }
+
+        def tailCompileFun(exp : Expression, x : String, t : Expression, e : Expression, k : String) : Term = {
+            val f = fresh("f")
+            val j = fresh("k")
+            mkLetV(exp, f, funV(j, x, tailCompile(e, j)),
+                mkAppC(exp, idnC(k), f))
+        }
+
+        def tailCompileBlockExp(be : BlockExp, k : String) : Term =
+            be match {
+                case BlkDef(ds, be2) =>
+                    mkLetF(
+                        be,
+                        ds.defs.map(compileDef),
+                        tailCompileBlockExp(be2, k)
+                    )
+
+                case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
+                    val j = fresh("k")
+                    mkLetC(be, j, x, tailCompileBlockExp(be2, k),
+                        tailCompile(e, j))
+
+                case Return(e) =>
+                    tailCompile(e, k)
+            }
+
+        def tailCompileMatch(exp : Expression, e : Expression, cs : Vector[Case], k : String) : Term = {
+            val cks = cs.map(c => (c, fresh("k")))
+            val caseTerms =
+                cks.map {
+                    case (c, k) =>
+                        mkCaseTerm(c, c.identifier, k)
+                }
+            compile(e, z =>
+                cks.foldLeft(mkCasV(exp, z, caseTerms)) {
+                    case (t, (Case(vi, IdnDef(xi), ei), ki)) =>
+                        mkLetC(ei, ki, xi, tailCompile(ei, k),
+                            t)
+                })
+
+        }
     }
 
 }

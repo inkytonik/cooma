@@ -2,6 +2,7 @@ package org.bitbucket.inkytonik.cooma.test
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
 import org.bitbucket.inkytonik.cooma.{ReferenceDriver, SemanticAnalyser}
+import org.bitbucket.inkytonik.cooma.SymbolTable.preludeStaticEnv
 import org.bitbucket.inkytonik.kiama.relation.Tree
 import org.bitbucket.inkytonik.kiama.util.{StringSource, Tests}
 
@@ -24,7 +25,8 @@ trait SemanticTests extends Tests {
             driver.makeast(StringSource(expression), config) match {
                 case Left(ast) =>
                     val tree = new Tree[ASTNode, Program](ast)
-                    val analyser = new SemanticAnalyser(tree)
+                    val env = preludeStaticEnv(config)
+                    val analyser = new SemanticAnalyser(tree, env)
                     analyser.errors
                 case Right(messages) =>
                     messages

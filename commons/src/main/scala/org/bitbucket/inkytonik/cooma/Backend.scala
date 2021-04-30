@@ -10,73 +10,53 @@
 
 package org.bitbucket.inkytonik.cooma
 
-trait Backend {
+trait Backend extends Primitives {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
-    import org.bitbucket.inkytonik.kiama.relation.Bridge
+    import java.io.Writer
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
 
     type Term
-    def appC(source : Bridge[ASTNode], k : String, x : String) : Term
-    def appF(source : Bridge[ASTNode], f : String, k : String, x : String) : Term
-    def casV(source : Bridge[ASTNode], x : String, cs : Vector[CaseTerm]) : Term
-    def letC(source : Bridge[ASTNode], k : String, x : String, t : Term, body : Term) : Term
-    def letF(source : Bridge[ASTNode], ds : Vector[DefTerm], body : Term) : Term
-    def letV(source : Bridge[ASTNode], x : String, v : Value, body : Term) : Term
+    def appC(c : Cont, x : String) : Term
+    def appF(f : String, k : String, x : String) : Term
+    def casV(x : String, cs : Vector[CaseTerm]) : Term
+    def letC(k : String, x : String, t : Term, body : Term) : Term
+    def letF(ds : Vector[DefTerm], body : Term) : Term
+    def letV(x : String, v : Value, body : Term) : Term
+
+    type Cont
+    def haltC() : Cont
+    def idnC(k : String) : Cont
 
     type CaseTerm
-    def caseTerm(source : Bridge[ASTNode], c : String, k : String) : CaseTerm
+    def caseTerm(c : String, k : String) : CaseTerm
 
     type DefTerm
-    def defTerm(source : Bridge[ASTNode], f : String, k : String, x : String, body : Term) : DefTerm
+    def defTerm(f : String, k : String, x : String, body : Term) : DefTerm
 
     type Value
     def funV(k : String, x : String, body : Term) : Value
     def intV(i : BigInt) : Value
     def prmV(p : Primitive, xs : Vector[String]) : Value
-    def recV(fs : Vector[FieldValue]) : Value
+    def recV(fs : Vector[FldV]) : Value
     def strV(s : String) : Value
-    def varV(v : String, x : String) : Value
+    def varV(f : FldV) : Value
     def vecV(e : Vector[String]) : Value
 
-    type FieldValue
-    def fieldValue(f : String, x : String) : FieldValue
-
-    type Primitive
-    def argumentP(i : Int) : Primitive
-    def capabilityP(cap : String) : Primitive
-    def folderReaderReadP(root : String) : Primitive
-    def folderWriterWriteP(root : String) : Primitive
-    def httpClientP(method : String, url : String) : Primitive
-    def readerReadP(filename : String) : Primitive
-    def recConcatP() : Primitive
-    def recSelectP() : Primitive
-    def vecAppendP() : Primitive
-    def vecConcatP() : Primitive
-    def vecGetP() : Primitive
-    def vecLengthP() : Primitive
-    def vecPrependP() : Primitive
-    def vecPutP() : Primitive
-    def writerWriteP(filename : String) : Primitive
-
-    def equalP : Primitive
-    def intBinP(op : Primitives.IntPrimBinOp) : Primitive
-    def intRelP(op : Primitives.IntPrimRelOp) : Primitive
-    def stringP(op : Primitives.StrPrimOp) : Primitive
-
-    def showTerm(t : Term) : String
+    type FldV
+    def fldV(f : String, x : String) : FldV
 
     type ValueR
     def errR(msg : String) : ValueR
     def strR(str : String) : ValueR
     def varR(c : String, v : ValueR) : ValueR
     def intR(num : BigInt) : ValueR
-    def clsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) : ValueR
+    def clsR(f : String, x : String, env : Env, e : Term) : ValueR
     def recR(fields : Vector[FldR]) : ValueR
     def vecR(elems : Vector[ValueR]) : ValueR
 
-    val unitR : ValueR = recR(Vector())
-    val falseR : ValueR = varR("False", unitR)
-    val trueR : ValueR = varR("True", unitR)
+    val uniR : ValueR = recR(Vector())
+    val falseR : ValueR = varR("False", uniR)
+    val trueR : ValueR = varR("True", uniR)
 
     def isErrR(value : ValueR) : Option[String]
     def isStrR(value : ValueR) : Option[String]
@@ -91,6 +71,7 @@ trait Backend {
     def getFieldName(value : FldR) : String
     def getFieldValue(value : FldR) : ValueR
 
+    def showTerm(t : Term) : String
     def showRuntimeValue(v : OutputValueR) : String
 
     def backendName : String
@@ -100,6 +81,7 @@ trait Backend {
 
     def lookupR(rho : Env, x : String) : ValueR
 
+    def stdout : Writer
     def getConfig : Config
 
     /**

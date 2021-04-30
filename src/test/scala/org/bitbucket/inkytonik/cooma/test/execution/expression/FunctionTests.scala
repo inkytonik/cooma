@@ -129,7 +129,7 @@ class FunctionTests extends ExpressionTests {
             }
         }""",
         """{ b = true, i = 10, s = "hello", r = { read = <function> } }""",
-        "{ b : Boolean, i : Int, s : String, r : Reader }"
+        "{ b : Boolean, i : Int, s : String, r : { read : () String } }"
     )
 
     test(

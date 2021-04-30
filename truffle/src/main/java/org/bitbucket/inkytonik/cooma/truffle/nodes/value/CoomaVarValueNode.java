@@ -24,17 +24,15 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 @NodeInfo(shortName = "varV", description = "Variant value")
 public class CoomaVarValueNode extends CoomaValueNode {
 
-    private final String c;
-    private final String x;
+    private final CoomaFldV fldV;
 
-    public CoomaVarValueNode(String c, String x) {
-        this.c = c;
-        this.x = x;
+    public CoomaVarValueNode(CoomaFldV fldV) {
+        this.fldV = fldV;
     }
 
     @Override
     public RuntimeValue evaluate(VirtualFrame frame) {
-        return new VarRuntimeValue(c, obtainFromRho(x));
+        return new VarRuntimeValue(fldV.getF(), obtainFromRho(fldV.getX()));
     }
 
 }

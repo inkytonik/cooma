@@ -12,14 +12,21 @@ package org.bitbucket.inkytonik.cooma
 
 object Main {
 
+    import org.bitbucket.inkytonik.cooma.PreludeDriver
     import org.bitbucket.inkytonik.cooma.truffle.TruffleFrontend
     import org.rogach.scallop.exceptions.UnknownOption
 
     def main(args : Array[String]) : Unit = {
         val config = new Config(args.toIndexedSeq)
+        runMain(config)
+    }
+
+    def runMain(config : Config) : Unit =
         try {
             config.verify()
-            if (config.graalVM())
+            if (config.compilePrelude())
+                new PreludeDriver().run(config)
+            else if (config.graalVM())
                 new TruffleFrontend().interpret(config)
             else
                 new ReferenceFrontend().interpret(config)
@@ -27,5 +34,5 @@ object Main {
             case e : UnknownOption =>
                 println(s"cooma: ${e.getMessage()}, use --help for options")
         }
-    }
+
 }

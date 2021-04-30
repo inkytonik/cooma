@@ -1,0 +1,12 @@
+{
+    type Foo = Int
+    def add(l : Foo, r : Foo) Foo = prim IntAdd(l, r)
+    val sub = fun(l : Int, r : Int) prim IntSub(l, r)
+    val x = {
+        a = add(1, 2),
+        b = sub(2, 1),
+        c = "Hello",
+        d = <e = 3>
+    }
+    {}
+}

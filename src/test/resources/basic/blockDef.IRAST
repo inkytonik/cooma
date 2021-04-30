@@ -2,30 +2,31 @@ LetF(
   Vector(
     DefTerm(
       "f",
-      "k1",
+      "$k1",
       "x",
       AppC(
-        "k1",
+        IdnC(
+          "$k1"),
         "x")),
     DefTerm(
       "g",
-      "k2",
+      "$k2",
       "y",
       AppF(
         "f",
-        "k2",
+        "$k2",
         "y"))),
   LetV(
-    "i5",
+    "$i5",
     IntV(
       10),
     LetC(
-      "k3",
-      "r4",
+      "$k3",
+      "$r4",
       AppC(
-        "$halt",
-        "r4"),
+        HaltC(),
+        "$r4"),
       AppF(
         "g",
-        "k3",
-        "i5"))))
+        "$k3",
+        "$i5"))))

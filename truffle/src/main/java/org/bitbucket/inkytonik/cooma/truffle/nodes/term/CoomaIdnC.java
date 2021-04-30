@@ -8,16 +8,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.bitbucket.inkytonik.cooma.truffle.nodes.value;
+package org.bitbucket.inkytonik.cooma.truffle.nodes.term;
 
-import lombok.Value;
+public class CoomaIdnC extends CoomaCont {
 
-@Value
-public class FieldValue {
-    String f; String x;
+    /**
+     * Continuation name
+     */
+    private final String name;
 
-    public FieldValue(String f, String x) {
-        this.f = f;
-        this.x = x;
+    public CoomaIdnC(String name) {
+        this.name = name;
     }
+
+    String getName() {
+        return this.name;
+    }
+
 }

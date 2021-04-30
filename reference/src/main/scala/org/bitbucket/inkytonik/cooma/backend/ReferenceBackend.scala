@@ -9,9 +9,8 @@
  */
 
 package org.bitbucket.inkytonik.cooma.backend
-import java.io.StringWriter
 
-import org.bitbucket.inkytonik.cooma.{Backend, Config, Driver, Primitives}
+import org.bitbucket.inkytonik.cooma.{Backend, Config, Driver}
 import org.bitbucket.inkytonik.kiama.util.Source
 
 class ReferenceBackend(
@@ -20,69 +19,58 @@ class ReferenceBackend(
     config : Config
 ) extends Interpreter(config) with Backend {
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
-    import org.bitbucket.inkytonik.cooma.Primitives._
-    import org.bitbucket.inkytonik.cooma.Util.escape
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width}
-    import org.bitbucket.inkytonik.kiama.relation.Bridge
+    import java.io.{StringWriter, Writer}
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter._
+    // import scala.collection.mutable
 
     override def backendName : String = "Reference"
 
-    type Primitive = org.bitbucket.inkytonik.cooma.Primitives.Primitive[ReferenceBackend]
-
-    sealed abstract class Value
-    case class FunV(k : String, x : String, body : Term) extends Value
-    case class IntV(i : BigInt) extends Value
-    case class PrmV(p : Primitive, xs : Vector[String]) extends Value
-    case class RecV(fs : Vector[FieldValue]) extends Value
-    case class StrV(s : String) extends Value
-    case class VarV(v : String, x : String) extends Value
-    case class VecV(es : Vector[String]) extends Value
-
-    case class FieldValue(f : String, x : String)
-
-    sealed abstract class Term {
-        def source : Bridge[ASTNode]
-    }
-    case class AppC(source : Bridge[ASTNode], k : String, x : String) extends Term
-    case class AppF(source : Bridge[ASTNode], f : String, k : String, x : String) extends Term
-    case class CasV(source : Bridge[ASTNode], x : String, ks : Vector[CaseTerm]) extends Term
-    case class LetC(source : Bridge[ASTNode], k : String, x : String, t : Term, body : Term) extends Term
-    case class LetF(source : Bridge[ASTNode], ds : Vector[DefTerm], body : Term) extends Term
-    case class LetV(source : Bridge[ASTNode], x : String, v : Value, body : Term) extends Term
-
-    case class CaseTerm(source : Bridge[ASTNode], c : String, k : String)
-    case class DefTerm(source : Bridge[ASTNode], f : String, k : String, x : String, body : Term)
+    type Term = CoomaParserSyntax.Term
+    type Cont = CoomaParserSyntax.Cont
+    type CaseTerm = CoomaParserSyntax.CaseTerm
+    type DefTerm = CoomaParserSyntax.DefTerm
+    type Value = CoomaParserSyntax.Value
+    type FldV = CoomaParserSyntax.FldV
 
     override type OutputValueR = ValueR
 
     // Terms
 
-    def appC(source : Bridge[ASTNode], k : String, x : String) : Term =
-        AppC(source, k, x)
+    def appC(k : Cont, x : String) : Term =
+        AppC(k, x)
 
-    def appF(source : Bridge[ASTNode], f : String, k : String, x : String) : Term =
-        AppF(source, f, k, x)
+    def appF(f : String, k : String, x : String) : Term =
+        AppF(f, k, x)
 
-    def casV(source : Bridge[ASTNode], x : String, cs : Vector[CaseTerm]) : Term =
-        CasV(source, x, cs)
+    def casV(x : String, cs : Vector[CaseTerm]) : Term =
+        CasV(x, cs)
 
-    def letC(source : Bridge[ASTNode], k : String, x : String, t : Term, body : Term) : Term =
-        LetC(source, k, x, t, body)
+    def letC(k : String, x : String, t : Term, body : Term) : Term =
+        LetC(k, x, t, body)
 
-    def letF(source : Bridge[ASTNode], ds : Vector[DefTerm], body : Term) : Term =
-        LetF(source, ds, body)
+    def letF(ds : Vector[DefTerm], body : Term) : Term =
+        LetF(ds, body)
+
+    // Continuations
+
+    def haltC() : Cont =
+        HaltC()
+
+    def idnC(k : String) : Cont =
+        IdnC(k)
 
     // Values
 
-    def letV(source : Bridge[ASTNode], x : String, v : Value, body : Term) : Term =
-        LetV(source, x, v, body)
+    def letV(x : String, v : Value, body : Term) : Term =
+        LetV(x, v, body)
 
-    def caseTerm(source : Bridge[ASTNode], c : String, k : String) : CaseTerm =
-        CaseTerm(source, c, k)
+    def caseTerm(c : String, k : String) : CaseTerm =
+        CaseTerm(c, k)
 
-    def defTerm(source : Bridge[ASTNode], f : String, k : String, x : String, body : Term) : DefTerm =
-        DefTerm(source, f, k, x, body)
+    def defTerm(f : String, k : String, x : String, body : Term) : DefTerm =
+        DefTerm(f, k, x, body)
 
     def funV(k : String, x : String, body : Term) : Value =
         FunV(k, x, body)
@@ -93,83 +81,25 @@ class ReferenceBackend(
     def prmV(p : Primitive, xs : Vector[String]) : Value =
         PrmV(p, xs)
 
-    def recV(fs : Vector[FieldValue]) : Value =
+    def recV(fs : Vector[FldV]) : Value =
         RecV(fs)
 
     def strV(s : String) : Value =
         StrV(s)
 
-    def varV(v : String, x : String) : Value =
-        VarV(v, x)
+    def varV(field : FldV) : Value =
+        VarV(field)
 
     def vecV(es : Vector[String]) : Value =
         VecV(es)
 
-    def fieldValue(f : String, x : String) : FieldValue =
-        FieldValue(f, x)
+    def fldV(f : String, x : String) : FldV =
+        FldV(f, x)
 
-    // Primitives
-
-    def argumentP(i : Int) : Primitive =
-        ArgumentP(i)
-
-    def capabilityP(cap : String) : Primitive =
-        CapabilityP(cap)
-
-    def folderReaderReadP(root : String) : Primitive =
-        FolderReaderReadP(root)
-
-    def folderWriterWriteP(root : String) : Primitive =
-        FolderWriterWriteP(root)
-
-    def httpClientP(method : String, url : String) : Primitive =
-        HttpClientP(method, url)
-
-    def writerWriteP(filename : String) : Primitive = {
-        val stdout = new StringWriter() {
+    def stdout : Writer =
+        new StringWriter() {
             override def write(s : String) : Unit = getConfig.output().emit(s)
         }
-        WriterWriteP(filename, stdout)
-    }
-
-    def readerReadP(filename : String) : Primitive =
-        ReaderReadP(filename)
-
-    def recConcatP() : Primitive =
-        RecConcatP()
-
-    def recSelectP() : Primitive =
-        RecSelectP()
-
-    def equalP : Primitive =
-        EqualP()
-
-    def intBinP(op : Primitives.IntPrimBinOp) : Primitive =
-        Primitives.IntBinOp(op)
-
-    def intRelP(op : Primitives.IntPrimRelOp) : Primitive =
-        Primitives.IntRelOp(op)
-
-    def stringP(op : Primitives.StrPrimOp) : Primitive =
-        Primitives.StringPrimitive(op)
-
-    def vecAppendP() : Primitive =
-        VecAppendP()
-
-    def vecConcatP() : Primitive =
-        VecConcatP()
-
-    def vecGetP() : Primitive =
-        VecGetP()
-
-    def vecLengthP() : Primitive =
-        VecLengthP()
-
-    def vecPrependP() : Primitive =
-        VecPrependP()
-
-    def vecPutP() : Primitive =
-        VecPutP()
 
     // Runtime values
 
@@ -180,13 +110,13 @@ class ReferenceBackend(
         StrR(str)
 
     def varR(c : String, v : ValueR) : ValueR =
-        VarR(c, v)
+        VarR(FldR(c, v))
 
     def intR(num : BigInt) : ValueR =
         IntR(num)
 
-    def clsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) : ValueR =
-        ClsR(source, env, f, x, e)
+    def clsR(f : String, x : String, env : Env, e : Term) : ValueR =
+        ClsR(f, x, env, e)
 
     def recR(fields : Vector[FldR]) : ValueR =
         RecR(fields)
@@ -223,8 +153,8 @@ class ReferenceBackend(
 
     def isVarR(value : ValueR) : Option[(String, ValueR)] =
         value match {
-            case VarR(c, v) => Some((c, v))
-            case _          => None
+            case VarR(FldR(c, v)) => Some((c, v))
+            case _                => None
         }
 
     def isVecR(value : ValueR) : Option[Vector[ValueR]] =
@@ -245,73 +175,8 @@ class ReferenceBackend(
     def getFieldValue(value : FldR) : ValueR =
         value.x
 
-    /*
-     * Custom IR pretty-printer that escapes string terms.
-     */
-
     def showTerm(t : Term) : String =
-        formatTerm(t, 5).layout
-
-    def formatTerm(t : Term, w : Width = defaultWidth) : Document =
-        pretty(group(toDocTerm(t)), w)
-
-    def toDocTerm(t : Term) : Doc =
-        link(
-            t.source.cross,
-            t match {
-                case AppC(_, k, x) =>
-                    k <+> x
-                case AppF(_, f, k, x) =>
-                    f <+> k <+> x
-                case CasV(_, x, ks) =>
-                    "case" <+> value(x) <+> ssep(ks.map(toDocCaseTerm), space)
-                case LetC(_, k, x, t, body) =>
-                    "letc" <+> value(k) <+> value(x) <+> "=" <+> align(toDocTerm(t)) <@>
-                        toDocTerm(body)
-                case v @ LetF(_, ds, body) =>
-                    "letf" <> nest(ssep(ds.map(toDocDefTerm), emptyDoc)) <@>
-                        toDocTerm(body)
-                case LetV(_, x, v, body) =>
-                    "letv" <+> value(x) <+> "=" <+> align(toDocValue(v)) <@>
-                        toDocTerm(body)
-            }
-        )
-
-    def toDocCaseTerm(caseTerm : CaseTerm) : Doc =
-        link(
-            caseTerm.source.cross,
-            '(' <> value(caseTerm.c) <+> value(caseTerm.k) <> ')'
-        )
-
-    def toDocDefTerm(defTerm : DefTerm) : Doc =
-        link(
-            defTerm.source.cross,
-            line <> value(defTerm.f) <+> value(defTerm.k) <+> value(defTerm.x) <+>
-                "=" <+> align(toDocTerm(defTerm.body))
-        )
-
-    def toDocValue(v : Value) : Doc =
-        v match {
-            case FunV(k, x, t) =>
-                "fun" <+> k <+> x <+> "=" <+> align(toDocTerm(t))
-            case IntV(i) =>
-                value(i)
-            case PrmV(p, xs) =>
-                p.show <> hcat(xs.map(x => space <> x))
-            case RecV(Vector()) =>
-                "{}"
-            case RecV(fs) =>
-                "{" <+> ssep(fs.map(toDocFieldValue), "," <> space) <+> "}"
-            case StrV(v1) =>
-                "\"" <> value(escape(v1)) <> "\""
-            case VarV(v1, v2) =>
-                "<" <+> value(v1) <+> "=" <+> value(v2) <+> ">"
-            case VecV(es) =>
-                "[" <> ssep(es.map(text), ",") <> "]"
-        }
-
-    def toDocFieldValue(field : FieldValue) : Doc =
-        value(field.f) <+> "=" <+> value(field.x)
+        layout(group(toDoc(t)), 5)
 
     def getConfig : Config = config
 

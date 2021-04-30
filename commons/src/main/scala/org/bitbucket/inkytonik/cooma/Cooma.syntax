@@ -13,34 +13,25 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Arguments ")" Expression                       {Fun, right, 4}
-  | '(' ArgumentTypes ")" Expression                         {FunT, right, 4}
-  | Expression sp "match" '{' nest(Case+) \n '}'             {Mat, left, 3}
-  | Expression sp "&" Expression                             {Cat, left, 2}
-  | Expression '(' Expression ** "," ')'                     {App, left, 1}
-  | Expression '.' FieldUse                                  {Sel, left, 1}
-  | '{' '}'                                                  {Uni}
-  | '{' nestnl(BlockExp) \n '}'                              {Blk}
-  | '{' nest(Field ++ ',') \n '}'                            {Rec}
-  | '{' nest(FieldType ++ ',') \n '}'                        {RecT}
-  | '<' nest(Field) \n '>'                                   {Var}
-  | '<' nest(FieldType ++ ',') \n '>'                        {VarT}
-  | 'false'                                                  {False}
-  | 'true'                                                   {True}
-  | 'Boolean'                                                {BoolT}
-  | 'Booleans'                                               {Booleans}
-  | IntLit                                                   {Num, 1: BigInt.apply : BigInt}
-  | 'Ints'                                                   {Ints}
-  | CapName                                                  {CapT}
-  | StringLit                                                {Str}
-  | 'Strings'                                                {Strings}
-  | '[' VecElems ']'                                         {Vec}
-  | 'Vector' '(' ')'                                         {VecNilT}
-  | 'Vector' '(' Expression ')'                              {VecT}
-  | 'Vectors'                                                {Vectors}
-  | 'equal'                                                  {Eql}
-  | "prim" Identifier '(' Expression ** "," ')'              {Prm}
-  | IdnUse                                                   {Idn}.
+    "fun" '(' Arguments ")" Expression                 {Fun, right, 4}
+  | '(' ArgumentTypes ")" Expression                   {FunT, right, 4}
+  | Expression sp "match" '{' nest(Case+) \n '}'       {Mat, left, 3}
+  | Expression sp "&" Expression                       {Cat, left, 2}
+  | Expression '(' Expression ** "," ')'               {App, left, 1}
+  | Expression '.' FieldUse                            {Sel, left, 1}
+  | '{' '}'                                            {Uni}
+  | '{' nestnl(BlockExp) \n '}'                        {Blk}
+  | '{' nest(Field ++ ',') \n '}'                      {Rec}
+  | '{' nest(FieldType ++ ',') \n '}'                  {RecT}
+  | '<' nest(Field) \n '>'                             {Var}
+  | '<' nest(FieldType ++ ',') \n '>'                  {VarT}
+  | IntLit                                             {Num, 1: BigInt.apply : BigInt}
+  | StringLit                                          {Str}
+  | '[' VecElems ']'                                   {Vec}
+  | 'Vector' '(' ')'                                   {VecNilT}
+  | 'Vector' '(' Expression ')'                        {VecT}
+  | "prim" UserPrimitive '(' Expression ** "," ')'     {Prm}
+  | IdnUse                                             {Idn}.
 
 Arguments =
   Argument ** ",".
@@ -53,16 +44,6 @@ ArgumentTypes =
 
 ArgumentType =
   (IdnDef sp ":")? Expression.
-
-CapName =
-    'FolderReader'  {FolderReaderT}
-  | 'FolderWriter'  {FolderWriterT}
-  | 'HttpDelete'    {HttpDeleteT}
-  | 'HttpGet'       {HttpGetT}
-  | 'HttpPost'      {HttpPostT}
-  | 'HttpPut'       {HttpPutT}
-  | 'Reader'        {ReaderT}
-  | 'Writer'        {WriterT}.
 
 Case =
   \n "case" Identifier '(' IdnDef ")" '=>' nestnl(Expression).
@@ -85,10 +66,13 @@ Def =
   "def" IdnDef sp Body \n.
 
 Body =
-  '(' Arguments ")" Expression sp '=' nestnl (Expression).
+  '(' Arguments ")" Expression sp '=' nestnl(Expression).
 
 Let =
-  LetKind IdnDef (":" Expression)? sp "=" Expression \n.
+  LetKind IdnDef LetType? sp "=" Expression \n.
+
+LetType =
+  sp ":" Expression.
 
 LetKind =
     "type" {Type}
@@ -118,7 +102,10 @@ Digit : String =
   [0-9].
 
 StringLit : Token =
-  '"' StringChar* '"'.
+  '"' StringChars '"'.
+
+StringChars : String =
+  StringChar*.
 
 StringChar : String =
   '\\' ([btnfr] / '\\' / '"') /
@@ -127,10 +114,92 @@ StringChar : String =
 OctDigit : String =
   [0-7].
 
-// Constructs used by REPL parsing
-
 Whitespace : Void =
   Spacing EOF.
+
+// Reference backend constructs
+
+Term =
+    "%case" Identifier sp (CaseTerm sp)*                                 {CasV}
+  | "%letc" Identifier sp Identifier sp '=' nestnl(Term) \n "%in" Term   {LetC}
+  | '%letf' nest(DefTerm+) \n "%in" Term                                 {LetF}
+  | "%letv" Identifier sp '=' nest(Value) \n "%in" Term                  {LetV}
+  | Identifier sp Identifier sp Identifier                               {AppF}
+  | Cont sp Identifier                                                   {AppC}.
+
+Cont =
+    Identifier   {IdnC}
+  | '%halt'      {HaltC}.
+
+CaseTerm =
+  '(' Identifier sp Identifier ')'.
+
+DefTerm =
+  \n Identifier sp Identifier sp Identifier sp '=' nestnl(Term).
+
+Value {line} =
+    "%fun" Identifier sp Identifier sp '=' nestnl(Term)   {FunV}
+  | IntLit                                                {IntV, 1: BigInt.apply : BigInt}
+  | "%prim" Primitive (sp Identifier)*                    {PrmV}
+  | '{' nest(FldV*) \n '}'                                {RecV}
+  | '"' StringChars '"'                                   {StrV}
+  | '<' nest(FldV) \n '>'                                 {VarV}
+  | '[' (Identifier ** ",") ']'                           {VecV}.
+
+FldV =
+  \n Identifier sp "=" Identifier.
+
+Primitive =
+    "Argument" IntLit                      {ArgumentP, 1: Integer.parseInt : Int}
+  | "Capability" Identifier                {CapabilityP}
+  | "FolderReaderRead" Filename            {FolderReaderReadP}
+  | "FolderWriterWrite" Filename           {FolderWriterWriteP}
+  | "HttpClient" Identifier sp StringLit   {HttpClientP}
+  | "ReaderRead" Filename                  {ReaderReadP}
+  | 'RecConcat'                            {RecConcatP}
+  | 'RecSelect'                            {RecSelectP}
+  | "WriterWrite" Filename                 {WriterWriteP}
+  | UserPrimitive                          {UserP}.
+
+UserPrimitive =
+    'Equal'       {EqualP}
+  | 'IntAbs'      {IntAbsP}
+  | 'IntAdd'      {IntAddP}
+  | 'IntDiv'      {IntDivP}
+  | 'IntGte'      {IntGteP}
+  | 'IntGt'       {IntGtP}
+  | 'IntLte'      {IntLteP}
+  | 'IntLt'       {IntLtP}
+  | 'IntMul'      {IntMulP}
+  | 'IntPow'      {IntPowP}
+  | 'IntSub'      {IntSubP}
+  | 'StrConcat'   {StrConcatP}
+  | 'StrLength'   {StrLengthP}
+  | 'StrSubstr'   {StrSubstrP}
+  | 'VecAppend'   {VecAppendP}
+  | 'VecConcat'   {VecConcatP}
+  | 'VecGet'      {VecGetP}
+  | 'VecLength'   {VecLengthP}
+  | 'VecPrepend'  {VecPrependP}
+  | 'VecPut'      {VecPutP}.
+
+Filename : Token =
+  _+.
+
+// Prelude files
+
+StaticPrelude =
+  Spacing StaticPreludeEntry* EOF.
+
+StaticPreludeEntry =
+    Identifier sp ':' nestnl(Expression) sp '=' nestnl(Expression) \n
+      {StaticLetEntry}
+  | Identifier sp ':' nestnl(Expression) \n {StaticTypedEntry}.
+
+DynamicPrelude =
+  Spacing Term EOF.
+
+// Constructs used by REPL parsing
 
 REPLInput =
   Spacing REPLEntry EOF.

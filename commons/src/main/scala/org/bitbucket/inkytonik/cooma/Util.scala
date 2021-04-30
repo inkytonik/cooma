@@ -20,7 +20,7 @@ object Util {
 
     def fresh(prefix : String) : String = {
         freshCount = freshCount + 1
-        s"$prefix$freshCount"
+        s"$$$prefix$freshCount"
     }
 
     def unescape(s : String) : String =

@@ -65,7 +65,7 @@ Specification and reference implementation is under way.
 ### Running interactively (REPL mode)
 
 ```ml
-root 0.1.0 2.12.8> run
+root 0.1.0 2.13.4> run
 [info] ... sbt messages ...
 roor 0.1.0 REPL - Reference backend
 
@@ -121,7 +121,7 @@ res5 : Int = 1
 
 ### Running on files (compiler mode)
 
-E.g., for the program `reference/src/test/resources/basic/multiArgCall.cooma` which is a simple multiple argument function call:
+E.g., for the program `src/test/resources/basic/multiArgCall.cooma` which is a simple multiple argument function call:
 
 ```ml
 {fun (x : Int, y : String) x} (10, "hello")
@@ -130,7 +130,7 @@ E.g., for the program `reference/src/test/resources/basic/multiArgCall.cooma` wh
 we get the following using the `-r` option to print the program result:
 
 ```ml
-cooma 0.1.0 2.12.8> run -r reference/src/test/resources/basic/multiArgCall.cooma`
+cooma 0.1.0 2.13.4> run -r src/test/resources/basic/multiArgCall.cooma`
 [info] ... sbt messages ...
 10
 ```
@@ -139,15 +139,23 @@ Use `run --help` to see all of the options for printing the source AST, IR and I
 E.g., use `-i` to print the IR AST:
 
 ```ml
-cooma 0.1.0 2.12.8> run -i -r reference/src/test/resources/basic/multiArgCall.cooma
+cooma 0.1.0 2.13.4> run -i -r src/test/resources/basic/multiArgCall.cooma
 [info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r reference/src/test/resources/basic/multiArgCall.cooma
-letv f5 = fun k6 x = letv f7 = fun j8 y = j8 x
-                     k6 f7
-letv x9 = 10
-letc k3 x4 = letv x10 = "hello"
-             letc k1 x2 = $halt x2
-             x4 k1 x10
-f5 k3 x9
+%letv $f5 =
+  %fun $k6 x =
+    %letv $f7 =
+      %fun $k8 y =
+        $k8 x
+    %in $k6 $f7
+%in %letv $i9 =
+  10
+%in %letc $k3 $r4 =
+  %letv $s10 =
+    "hello"
+  %in %letc $k1 $r2 =
+    %halt $r2
+  %in $r4 $k1 $s10
+%in $f5 $k3 $i9
 10
 ```
 
@@ -168,7 +176,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     y
 }
 
-> run -r reference/src/test/resources/basic/blockVal.cooma
+> run -r src/test/resources/basic/blockVal.cooma
 20
 ```
 
@@ -179,7 +187,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     g(10)
 }
 
-> run -r reference/src/test/resources/basic/blockDef.cooma
+> run -r src/test/resources/basic/blockDef.cooma
 10
 ```
 
@@ -188,7 +196,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ```ml
 {fun (r : {x : Int, y : Int, z : String}) r.x} ({x = 20, y = 10, z = "Hi"})
 
-> run -r reference/src/test/resources/basic/recordArg.cooma
+> run -r src/test/resources/basic/recordArg.cooma
 20
 ```
 
@@ -201,7 +209,7 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
     {r & s}.x
 }
 
-> run -r reference/src/test/resources/basic/recordConcat.cooma
+> run -r src/test/resources/basic/recordConcat.cooma
 10
 ```
 
@@ -210,12 +218,12 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 ```ml
 fun (s : String) s
 
-> run -r reference/src/test/resources/capability/stringCmdArg.cooma hello
+> run -r src/test/resources/capability/stringCmdArg.cooma hello
 "hello"
 
 fun (s : String, t : String) t
 
-> run -r reference/src/test/resources/capability/multiStringCmdArg.cooma hello there
+> run -r src/test/resources/capability/multiStringCmdArg.cooma hello there
 "there"
 ```
 
@@ -228,7 +236,7 @@ E.g., a Writer capability allows the program to write to the named file or devic
 ```ml
 fun (w : Writer) w.write("Hello world!\n")
 
-> run -r reference/src/test/resources/capability/writerCmdArg.cooma /dev/tty
+> run -r src/test/resources/capability/writerCmdArg.cooma /dev/tty
 Hello world!
 {}
 ```
@@ -238,7 +246,7 @@ Hello world!
 If the specified file name is not writeable, the runtime system causes the execution to fail.
 
 ```ml
-> run reference/src/test/resources/capability/writerCmdArg.cooma /does/not/exist
+> run src/test/resources/capability/writerCmdArg.cooma /does/not/exist
 cooma: Writer capability unavailable: can't write /does/not/exist
 ```
 
@@ -247,7 +255,7 @@ cooma: Writer capability unavailable: can't write /does/not/exist
 ```ml
 fun (w : Writer, r : Reader) w.write(r.read())
 
-> run -r reference/src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty reference/src/test/resources/basic/multiArgCall.cooma
+> run -r src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty src/test/resources/basic/multiArgCall.cooma
 (fun (x : Int, y : String) x) (10, "hello")
 {}
 ```
@@ -256,7 +264,7 @@ A Reader capability is only provided if the designated file can be read.
 
 ```ml
 
-> run reference/src/test/resources/capability/consoleReaderCmdArg.cooma /dev/tty /does/not/exist
+> run src/test/resources/capability/readerCmdArg.cooma /does/not/exist
 cooma: Reader capability unavailable: can't read /does/not/exist
 ```
 

@@ -261,7 +261,7 @@ class VectorTests extends ExpressionTests {
     testError(
         "vector with internal error",
         "[prim IntAdd(1,1), prim IntDiv(1, 0)]",
-        "cooma: Error executing integer div: BigInteger divide by zero"
+        "cooma: IntDiv: division by zero"
     )
 
     testError(

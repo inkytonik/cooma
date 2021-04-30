@@ -1,23 +1,25 @@
 LetC(
-  "k1",
+  "$k1",
   "x",
   LetC(
-    "k2",
+    "$k2",
     "y",
     AppC(
-      "$halt",
+      HaltC(),
       "y"),
     LetV(
-      "i3",
+      "$i3",
       IntV(
         20),
       AppC(
-        "k2",
-        "i3"))),
+        IdnC(
+          "$k2"),
+        "$i3"))),
   LetV(
-    "i4",
+    "$i4",
     IntV(
       10),
     AppC(
-      "k1",
-      "i4")))
+      IdnC(
+        "$k1"),
+      "$i4")))

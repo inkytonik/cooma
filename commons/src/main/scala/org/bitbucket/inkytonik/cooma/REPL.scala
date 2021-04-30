@@ -16,7 +16,7 @@ trait REPL extends REPLBase[Config] {
 
     self : Compiler with Backend =>
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.{any, layout, show}
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout, show}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.SymbolTable._
     import org.bitbucket.inkytonik.kiama.relation.Tree
@@ -51,16 +51,7 @@ trait REPL extends REPLBase[Config] {
      * Start the REPL
      */
     override def driver(args : Seq[String]) : Unit = {
-        initialise()
         super.driver(args)
-    }
-
-    /**
-     * Initialise REPL state.
-     */
-    def initialise() : Unit = {
-        currentStaticEnv = rootenv()
-        nResults = 0
     }
 
     def help(config : Config) : Unit = {
@@ -85,6 +76,16 @@ trait REPL extends REPLBase[Config] {
             line = console.readLine("")
         }
         buf.mkString
+    }
+
+    def initialise(config : Config) : Unit = {
+        currentStaticEnv = preludeStaticEnv(config)
+        nResults = 0
+    }
+
+    override def processlines(config : Config) : Unit = {
+        initialise(config)
+        super.processlines(config)
     }
 
     /**
@@ -117,8 +118,8 @@ trait REPL extends REPLBase[Config] {
                 checkInput(input, config) match {
                     case Left(messages) =>
                         messaging.report(source, messages, config.output())
-                    case Right((input, optTypeValue, aliasedType)) =>
-                        processInput(input, optTypeValue, aliasedType, config)
+                    case Right((input, optTypeValue, optAliasedType)) =>
+                        processInput(input, optTypeValue, optAliasedType, config)
                 }
             } else
                 config.output().emitln(p.formatParseError(pr.parseError, false))
@@ -126,39 +127,28 @@ trait REPL extends REPLBase[Config] {
     }
 
     def defineLet(i : String, optT : Option[Expression], e : Expression) : REPLLet = {
-        val v = Let(Val(), IdnDef(i), optT, e)
+        val v = Let(Val(), IdnDef(i), optT.map(LetType), e)
         currentStaticEnv = define(enter(currentStaticEnv), i, LetEntity(v))
         REPLLet(v)
-    }
-
-    object AlreadyBoundIdn {
-        def unapply(e : Expression) : Boolean =
-            e match {
-                case BoolT() | Booleans() | CapT(_) | False() | Idn(IdnUse(_)) | Ints() |
-                    Strings() | True() =>
-                    true
-                case _ =>
-                    false
-            }
     }
 
     def checkInput(
         input : REPLInput,
         config : Config
-    ) : Either[Messages, (REPLInput, Option[Expression], Expression)] = {
+    ) : Either[Messages, (REPLInput, Option[Expression], Option[Expression])] = {
         if (config.coomaASTPrint())
             config.output().emitln(layout(any(input), 5))
         val tree = new Tree[ASTNode, REPLInput](input)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
         (analyser.errors, analyser.replTypeValue(input),
             analyser.replType(input), analyser.aliasedReplType(input)) match {
-                case (Vector(), optTypeValue, replType, Some(aliasedInputType)) =>
+                case (Vector(), optTypeValue, replType, optAliasedReplType) =>
                     val input2 =
                         input match {
                             case REPLDef(Def(IdnDef(i), Body(as, t, e))) =>
                                 defineLet(i, replType, Fun(as, e))
 
-                            case REPLExp(AlreadyBoundIdn()) =>
+                            case REPLExp(Idn(_)) =>
                                 input
 
                             case REPLExp(e) =>
@@ -169,13 +159,14 @@ trait REPL extends REPLBase[Config] {
                             case REPLLet(Let(_, IdnDef(i), None, e)) =>
                                 defineLet(i, replType, e)
 
-                            case REPLLet(Let(_, IdnDef(i), Some(t), e)) =>
+                            case REPLLet(Let(_, IdnDef(i), Some(LetType(t)), e)) =>
                                 defineLet(i, analyser.unalias(e, t), e)
                         }
-                    Right((input2, optTypeValue, aliasedInputType))
+                    Right((input2, optTypeValue, optAliasedReplType))
 
-                case (Vector(), _, _, None) =>
-                    sys.error(s"checkInput: couldn't find aliased REPL type for $input")
+                // case (Vector(), optTypeValue, replType, None) =>
+                //     // sys.error(s"checkInput: couldn't find aliased REPL type for $input")
+                //     Right((input, optTypeValue, ))
 
                 case (messages, _, _, _) =>
                     Left(messages)
@@ -185,14 +176,14 @@ trait REPL extends REPLBase[Config] {
     /**
      * Embed an input entry for the REPL.
      */
-    def processInput(input : REPLInput, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) =
+    def processInput(input : REPLInput, optTypeValue : Option[Expression], optAliasedType : Option[Expression], config : Config) =
         input match {
             case REPLDef(fd @ Def(IdnDef(i), _)) =>
-                processDef(i, fd, optTypeValue, aliasedType, config)
-            case REPLExp(e @ AlreadyBoundIdn()) =>
-                processIdn(show(input), e, optTypeValue, aliasedType, config)
+                processDef(i, fd, optTypeValue, optAliasedType, config)
+            case REPLExp(e : Idn) =>
+                processIdn(show(input), e, optTypeValue, optAliasedType, config)
             case REPLLet(vd @ Let(_, IdnDef(i), _, e)) =>
-                processLet(i, vd, optTypeValue, aliasedType, config)
+                processLet(i, vd, optTypeValue, optAliasedType, config)
             case _ =>
                 sys.error(s"$input not supported for the moment")
         }
@@ -200,25 +191,25 @@ trait REPL extends REPLBase[Config] {
     /**
      * Process a user-entered value binding.
      */
-    def processLet(i : String, ld : Let, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
+    def processLet(i : String, ld : Let, optTypeValue : Option[Expression], optAliasedType : Option[Expression], config : Config) : Unit = {
         val program = Program(Blk(BlkLet(ld, Return(Idn(IdnUse(i))))))
-        process(program, i, optTypeValue, aliasedType, config)
+        process(program, i, optTypeValue, optAliasedType, config)
     }
 
     /**
      * Process a user-entered function definition binding.
      */
-    def processDef(i : String, fd : Def, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
+    def processDef(i : String, fd : Def, optTypeValue : Option[Expression], optAliasedType : Option[Expression], config : Config) : Unit = {
         val program = Program(Blk(BlkDef(Defs(Vector(fd)), Return(Idn(IdnUse(i))))))
-        process(program, i, optTypeValue, aliasedType, config)
+        process(program, i, optTypeValue, optAliasedType, config)
     }
 
     /**
      * Process a user-entered identifier expression.
      */
-    def processIdn(i : String, e : Expression, optTypeValue : Option[Expression], aliasedType : Expression, config : Config) : Unit = {
+    def processIdn(i : String, e : Expression, optTypeValue : Option[Expression], optAliasedType : Option[Expression], config : Config) : Unit = {
         val program = Program(e)
-        process(program, i, optTypeValue, aliasedType, config)
+        process(program, i, optTypeValue, optAliasedType, config)
     }
 
     /**
@@ -228,7 +219,7 @@ trait REPL extends REPLBase[Config] {
         program : Program,
         i : String,
         optTypeValue : Option[Expression],
-        alaisedType : Expression,
+        optAliasedType : Option[Expression],
         config : Config
     ) : Unit
 
@@ -239,14 +230,16 @@ trait REPL extends REPLBase[Config] {
     def execute(
         i : String,
         optTypeValue : Option[Expression],
-        aliasedType : Expression,
+        optAliasedType : Option[Expression],
         config : Config,
         eval : => Unit
     ) =
-        if (aliasedType == typT)
-            output(i, optTypeValue, aliasedType, None, config)
-        else
-            eval
+        optAliasedType match {
+            case Some(`typT`) =>
+                output(i, optTypeValue, optAliasedType, None, config)
+            case _ =>
+                eval
+        }
 
     /**
      * Output in the REPL with name, type and optional result.
@@ -254,13 +247,13 @@ trait REPL extends REPLBase[Config] {
     def output(
         i : String,
         optTypeValue : Option[Expression],
-        aliasedType : Expression,
+        optAliasedType : Option[Expression],
         optResult : Option[OutputValueR],
         config : Config
     ) : Unit = {
         val value =
-            aliasedType match {
-                case `typT` =>
+            optAliasedType match {
+                case Some(`typT`) =>
                     optTypeValue match {
                         case Some(typeValue) =>
                             s" = ${show(typeValue)}"
@@ -275,7 +268,8 @@ trait REPL extends REPLBase[Config] {
                             ""
                     }
             }
-        config.output().emitln(s"$i : ${show(aliasedType)}$value")
+        val tipe = optAliasedType.map(t => s" : ${show(t)}").getOrElse("")
+        config.output().emitln(s"$i$tipe$value")
     }
 
     /**

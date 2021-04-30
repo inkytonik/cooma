@@ -12,55 +12,64 @@ package org.bitbucket.inkytonik.cooma.truffle
 
 import org.bitbucket.inkytonik.cooma.{Backend, Config}
 
-class TruffleBackend(config : Config) extends Backend {
+class TruffleBackend(
+    config : Config
+) extends Backend {
 
-    import java.io.PrintWriter
+    import java.io.{PrintWriter, Writer}
     import java.math.BigInteger
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Primitive
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.ASTNode
-    import org.bitbucket.inkytonik.cooma.Primitives._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho
     import org.bitbucket.inkytonik.cooma.truffle.nodes.term._
     import org.bitbucket.inkytonik.cooma.truffle.nodes.value._
     import org.bitbucket.inkytonik.cooma.truffle.runtime._
-    import org.bitbucket.inkytonik.kiama.relation.Bridge
 
     import scala.math.BigInt
 
     override def backendName : String = "Graal VM"
 
     // Terms
+
     override type Term = CoomaTermNode
 
     override type Value = CoomaValueNode
 
-    def appC(source : Bridge[ASTNode], k : String, x : String) : CoomaTermNode =
+    def appC(k : Cont, x : String) : CoomaTermNode =
         CoomaAppCTermNodeGen.create(k, x)
 
-    def appF(source : Bridge[ASTNode], f : String, k : String, x : String) : CoomaTermNode =
+    def appF(f : String, k : String, x : String) : CoomaTermNode =
         CoomaAppFTermNodeGen.create(f, k, x)
 
     type CaseTerm = CoomaCaseTerm
 
-    def casV(source : Bridge[ASTNode], x : String, cs : Vector[CaseTerm]) : CoomaTermNode =
+    def casV(x : String, cs : Vector[CaseTerm]) : CoomaTermNode =
         new CoomaCasVTermNode(x, cs.toArray)
 
-    def letC(source : Bridge[ASTNode], k : String, x : String, t : Term, body : Term) : CoomaTermNode =
+    def letC(k : String, x : String, t : Term, body : Term) : CoomaTermNode =
         new CoomaLetCTermNode(k, x, t, body)
 
     type DefTerm = CoomaDefTerm
 
-    def letF(source : Bridge[ASTNode], ds : Vector[DefTerm], body : Term) : CoomaTermNode =
+    def letF(ds : Vector[DefTerm], body : Term) : CoomaTermNode =
         new CoomaLetFTermNode(ds.toArray, body)
 
-    def letV(source : Bridge[ASTNode], x : String, v : Value, body : Term) : Term =
+    def letV(x : String, v : Value, body : Term) : Term =
         new CoomaLetVTermNode(x, v, body)
 
-    def caseTerm(source : Bridge[ASTNode], c : String, k : String) : CaseTerm =
+    def caseTerm(c : String, k : String) : CaseTerm =
         new CoomaCaseTerm(c, k)
 
-    def defTerm(source : Bridge[ASTNode], f : String, k : String, x : String, body : Term) : DefTerm =
+    def defTerm(f : String, k : String, x : String, body : Term) : DefTerm =
         new CoomaDefTerm(f, k, x, body)
+
+    type Cont = CoomaCont
+
+    def haltC() : Cont =
+        new CoomaHaltC()
+
+    def idnC(k : String) : Cont =
+        new CoomaIdnC(k)
 
     // Values
 
@@ -73,90 +82,28 @@ class TruffleBackend(config : Config) extends Backend {
     def prmV(p : Primitive, xs : Vector[String]) : Value =
         new CoomaPrimitiveValue(this, p, xs.toArray)
 
-    def recV(fs : Vector[FieldValue]) : Value =
+    def recV(fs : Vector[CoomaFldV]) : Value =
         new CoomaRecValueNode(fs.toArray)
 
     def strV(s : String) : Value =
         new CoomaStringValueNode(s)
 
-    def varV(c : String, x : String) : Value =
-        new CoomaVarValueNode(c, x)
+    def varV(f : FldV) : Value =
+        new CoomaVarValueNode(f)
 
     def vecV(es : Vector[String]) : Value =
         new CoomaVecValueNode(es)
 
-    override type FieldValue = org.bitbucket.inkytonik.cooma.truffle.nodes.value.FieldValue
+    type FldV = CoomaFldV
 
-    def fieldValue(f : String, x : String) : FieldValue =
-        new FieldValue(f, x)
+    def fldV(f : String, x : String) : FldV =
+        new CoomaFldV(f, x)
 
-    /**
-     * Custom IR pretty-printer that escapes string terms.
-     *
-     * @param t
-     * @return
-     */
+    def stdout : Writer =
+        new PrintWriter(System.out)
+
     def showTerm(t : Term) : String =
         t.toString
-
-    type Primitive = org.bitbucket.inkytonik.cooma.Primitives.Primitive[TruffleBackend]
-
-    def argumentP(i : Int) : Primitive =
-        ArgumentP(i)
-
-    def capabilityP(cap : String) : Primitive =
-        CapabilityP(cap)
-
-    def httpClientP(method : String, url : String) : Primitive =
-        HttpClientP(method, url)
-
-    def writerWriteP(filename : String) : Primitive =
-        WriterWriteP(filename, new PrintWriter(System.out))
-
-    def readerReadP(filename : String) : Primitive =
-        ReaderReadP(filename)
-
-    def folderReaderReadP(root : String) : Primitive =
-        FolderReaderReadP(root)
-
-    def folderWriterWriteP(root : String) : Primitive =
-        FolderWriterWriteP(root)
-
-    def recConcatP() : Primitive =
-        RecConcatP()
-
-    def recSelectP() : Primitive =
-        RecSelectP()
-
-    def equalP : Primitive =
-        EqualP()
-
-    def intBinP(op : IntPrimBinOp) : Primitive =
-        IntBinOp(op)
-
-    def intRelP(op : IntPrimRelOp) : Primitive =
-        IntRelOp(op)
-
-    def stringP(op : StrPrimOp) : Primitive =
-        StringPrimitive(op)
-
-    def vecAppendP() : Primitive =
-        VecAppendP()
-
-    def vecConcatP() : Primitive =
-        VecConcatP()
-
-    def vecGetP() : Primitive =
-        VecGetP()
-
-    def vecLengthP() : Primitive =
-        VecLengthP()
-
-    def vecPrependP() : Primitive =
-        VecPrependP()
-
-    def vecPutP() : Primitive =
-        VecPutP()
 
     // Runtime Values
 
@@ -177,7 +124,7 @@ class TruffleBackend(config : Config) extends Backend {
     def varR(c : String, v : ValueR) : ValueR =
         new VarRuntimeValue(c, v)
 
-    def clsR(source : Bridge[ASTNode], env : Env, f : String, x : String, e : Term) : ValueR =
+    def clsR(f : String, x : String, env : Env, e : Term) : ValueR =
         new FunctionClosure(env, f, x, e)
 
     def recR(fields : Vector[FldR]) : ValueR =
@@ -240,10 +187,13 @@ class TruffleBackend(config : Config) extends Backend {
     def getFieldValue(value : FldR) : ValueR =
         value.getV
 
-    override def emptyEnv : Rho = new Rho
+    def emptyEnv : Env = new Rho
 
-    override def lookupR(rho : Rho, x : String) : RuntimeValue = rho.get(x)
+    def defineVar(rho : Env, i : String, value : ValueR) : Env =
+        rho.extend(i, value)
 
-    override def getConfig : Config = config
+    def lookupR(rho : Env, x : String) : RuntimeValue = rho.get(x)
+
+    def getConfig : Config = config
 
 }

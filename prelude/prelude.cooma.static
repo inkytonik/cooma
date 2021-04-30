@@ -1,0 +1,154 @@
+Boolean : 
+  Type =
+  <
+    False : Unit,
+    True : Unit
+  >
+
+false : 
+  <
+    False : Unit,
+    True : Unit
+  >
+
+true : 
+  <
+    False : Unit,
+    True : Unit
+  >
+
+Booleans : 
+  {
+    and : (l : <
+      False : Unit,
+      True : Unit
+    >, r : <
+      False : Unit,
+      True : Unit
+    >) <
+      False : Unit,
+      True : Unit
+    >,
+    not : (b : <
+      False : Unit,
+      True : Unit
+    >) <
+      False : Unit,
+      True : Unit
+    >,
+    or : (l : <
+      False : Unit,
+      True : Unit
+    >, r : <
+      False : Unit,
+      True : Unit
+    >) <
+      False : Unit,
+      True : Unit
+    >
+  }
+
+equal : 
+  (t : Type, l : t, r : t) <
+    False : Unit,
+    True : Unit
+  >
+
+Ints : 
+  {
+    abs : (i : Int) Int,
+    add : (l : Int, r : Int) Int,
+    div : (l : Int, r : Int) Int,
+    mul : (l : Int, r : Int) Int,
+    pow : (l : Int, r : Int) Int,
+    sub : (l : Int, r : Int) Int,
+    lt : (l : Int, r : Int) <
+      False : Unit,
+      True : Unit
+    >,
+    lte : (l : Int, r : Int) <
+      False : Unit,
+      True : Unit
+    >,
+    gt : (l : Int, r : Int) <
+      False : Unit,
+      True : Unit
+    >,
+    gte : (l : Int, r : Int) <
+      False : Unit,
+      True : Unit
+    >
+  }
+
+Strings : 
+  {
+    concat : (l : String, r : String) String,
+    length : (s : String) Int,
+    substr : (s : String, i : Int) String
+  }
+
+Vectors : 
+  {
+    append : (t : Type, v : Vector(t), e : t) Vector(t),
+    concat : (t : Type, l : Vector(t), r : Vector(t)) Vector(t),
+    get : (t : Type, v : Vector(t), i : Int) t,
+    length : (t : Type, v : Vector(t)) Int,
+    prepend : (t : Type, v : Vector(t), e : t) Vector(t),
+    put : (t : Type, v : Vector(t), i : Int, e : t) Vector(t)
+  }
+
+FolderReader : 
+  Type =
+  {
+    read : (suffix : String) String
+  }
+
+FolderWriter : 
+  Type =
+  {
+    write : (suffix : String, s : String) Unit
+  }
+
+HttpReturn : 
+  Type =
+  {
+    code : Int,
+    body : String
+  }
+
+HttpDelete : 
+  Type =
+  {
+    delete : (suffix : String) HttpReturn
+  }
+
+HttpGet : 
+  Type =
+  {
+    get : (suffix : String) HttpReturn
+  }
+
+HttpPost : 
+  Type =
+  {
+    post : (suffix : String) HttpReturn
+  }
+
+HttpPut : 
+  Type =
+  {
+    put : (suffix : String) HttpReturn
+  }
+
+Reader : 
+  Type =
+  {
+    read : () String
+  }
+
+Writer : 
+  Type =
+  {
+    write : (s : String) Unit
+  }
+

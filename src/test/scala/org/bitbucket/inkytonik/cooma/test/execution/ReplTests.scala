@@ -58,7 +58,7 @@ class ReplTests extends ExecutionTests {
                         fun (x : Reader) x.read()
                         res0({read = fun () "hello"})
                     """,
-        "res0 : (x : Reader) String = <function>\nres1 : String = \"hello\""
+        "res0 : (x : { read : () String }) String = <function>\nres1 : String = \"hello\""
     )
 
     test(
@@ -227,9 +227,45 @@ class ReplTests extends ExecutionTests {
     )
 
     test(
-        "built-in Boolean type",
+        "prelude Boolean type",
         "Boolean",
         "Boolean : Type = < False : Unit, True : Unit >"
+    )
+
+    test(
+        "user-defined type alias for built-in type (direct, inferred type)",
+        "type Foo = Int",
+        "Foo : Type = Int"
+    )
+
+    test(
+        "user-defined type alias for built-in type (direct, given type)",
+        "type Foo : Type = Int",
+        "Foo : Type = Int"
+    )
+
+    test(
+        "user-defined type alias for built-in type (block)",
+        "{ type Foo = Int Foo }",
+        "res0 : Type = { type Foo = Int Foo }"
+    )
+
+    test(
+        "user-defined type alias for structured type (direct, inferred type)",
+        "type Foo = { foo : Int}",
+        "Foo : Type = { foo : Int }"
+    )
+
+    test(
+        "user-defined type alias for structured type (direct, given type)",
+        "type Foo : Type = { foo : Int}",
+        "Foo : Type = { foo : Int }"
+    )
+
+    test(
+        "user-defined type alias for structured type (block)",
+        "{ type Foo = { foo : Int} Foo }",
+        "res0 : Type = { type Foo = { foo : Int } Foo }"
     )
 
 }

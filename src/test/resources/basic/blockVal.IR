@@ -1,5 +1,9 @@
-letc k1 x = letc k2 y = $halt y
-            letv i3 = 20
-            k2 i3
-letv i4 = 10
-k1 i4
+%letc $k1 x =
+  %letc $k2 y =
+    %halt y
+  %in %letv $i3 =
+    20
+  %in $k2 $i3
+%in %letv $i4 =
+  10
+%in $k1 $i4

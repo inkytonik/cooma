@@ -1,0 +1,100 @@
+{
+  // Booleans
+
+  type Boolean = <False : Unit, True : Unit>
+
+  val false : Boolean = <False = {}>
+  val true : Boolean = <True = {}>
+
+  val Booleans = {
+    and = fun (l : Boolean, r : Boolean)
+            l match {
+              case False(_) => false
+              case True(_) => r
+            },
+    not = fun (b : Boolean)
+            b match {
+              case False(_) => true
+              case True(_) => false
+            },
+    or = fun (l : Boolean, r : Boolean)
+           l match {
+             case False(_) => r
+             case True(_) => true
+           }
+  }
+
+  def equal(t : Type, l : t, r : t) Boolean =
+    prim Equal(t, l, r)
+
+  // Operations on pre-defined types
+
+  val Ints = {
+    abs = fun (i : Int) prim IntAbs(i),
+    add = fun (l : Int, r : Int) prim IntAdd(l, r),
+    div = fun (l : Int, r : Int) prim IntDiv(l, r),
+    mul = fun (l : Int, r : Int) prim IntMul(l, r),
+    pow = fun (l : Int, r : Int) prim IntPow(l, r),
+    sub = fun (l : Int, r : Int) prim IntSub(l, r),
+    lt = fun (l : Int, r : Int) prim IntLt(l, r),
+    lte = fun (l : Int, r : Int) prim IntLte(l, r),
+    gt = fun (l : Int, r : Int) prim IntGt(l, r),
+    gte = fun (l : Int, r : Int) prim IntGte(l, r)
+  }
+
+  val Strings = {
+    concat = fun (l : String, r : String) prim StrConcat(l, r),
+    length = fun (s : String) prim StrLength(s),
+    substr = fun (s : String, i : Int) prim StrSubstr(s, i)
+  }
+
+  val Vectors = {
+    append = fun (t : Type, v : Vector(t), e : t) prim VecAppend(t, v, e),
+    concat = fun (t : Type, l : Vector(t), r : Vector(t)) prim VecConcat(t, l, r),
+    get = fun (t : Type, v : Vector(t), i : Int) prim VecGet(t, v, i),
+    length = fun (t : Type, v : Vector(t)) prim VecLength(t, v),
+    prepend = fun (t : Type, v : Vector(t), e : t) prim VecPrepend(t, v, e),
+    put = fun (t : Type, v : Vector(t), i : Int, e : t) prim VecPut(t, v, i, e)
+  }
+
+  // Capability types
+
+  type FolderReader = {
+    read : (suffix : String) String
+  }
+
+  type FolderWriter = {
+    write : (suffix : String, s : String) Unit
+  }
+
+  type HttpReturn = {
+    code : Int,
+    body : String
+  }
+
+  type HttpDelete = {
+    delete : (suffix : String) HttpReturn
+  }
+
+  type HttpGet = {
+    get : (suffix : String) HttpReturn
+  }
+
+  type HttpPost = {
+    post : (suffix : String) HttpReturn
+  }
+
+  type HttpPut = {
+    put : (suffix : String) HttpReturn
+  }
+
+  type Reader = {
+    read : () String
+  }
+
+  type Writer = {
+    write : (s : String) Unit
+  }
+
+  {}
+}

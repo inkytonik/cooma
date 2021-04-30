@@ -25,6 +25,7 @@ sealed abstract class CoomaEntity extends Entity with Product
 object SymbolTable extends Environments[CoomaEntity] {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.kiama.util.{FileSource, Messaging, Positions}
 
     /**
      * A MiniJava entity that represents a legally resolved entity.
@@ -54,6 +55,16 @@ object SymbolTable extends Environments[CoomaEntity] {
             }
     }
 
+    case class PredefFunctionEntity(name : String, tipe : Expression) extends CoomaOkEntity {
+        val decl = null
+        val desc = "predef def"
+    }
+
+    case class PredefLetEntity(name : String, tipe : Expression, value : Expression) extends CoomaOkEntity {
+        val decl = null
+        val desc = "predef let"
+    }
+
     /**
      * An entity represented by names for whom we have seen more than one
      * declaration so we are unsure what is being represented.
@@ -70,7 +81,7 @@ object SymbolTable extends Environments[CoomaEntity] {
         override val isError = true
     }
 
-    // Short-hands for primitive types
+    // Short-hands for types and stadnard type checks
 
     val intT : Expression = Idn(IdnUse("Int"))
     val strT : Expression = Idn(IdnUse("String"))
@@ -78,7 +89,7 @@ object SymbolTable extends Environments[CoomaEntity] {
     val uniT : Expression = Idn(IdnUse("Unit"))
 
     def isPrimitiveTypeName(s : String) : Boolean =
-        (s == "Int") | (s == "String") | (s == "Type") | (s == "Unit")
+        (s == "Int") || (s == "String") || (s == "Type") || (s == "Unit")
 
     object PrimitiveType {
         def unapply(e : Expression) : Boolean =
@@ -96,41 +107,17 @@ object SymbolTable extends Environments[CoomaEntity] {
     }
 
     val boolT : Expression =
-        VarT(Vector(FieldType("False", uniT), FieldType("True", uniT)))
+        Idn(IdnUse("Boolean"))
 
-    private def httpT(method : String) : Expression =
-        RecT(Vector(FieldType(method, FunT(
-            ArgumentTypes(Vector(ArgumentType(Some(IdnDef("suffix")), strT))),
-            RecT(Vector(
-                FieldType("code", intT),
-                FieldType("body", strT)
-            ))
-        ))))
+    def isCapabilityTypeName(s : String) : Boolean =
+        (s == "FolderReader") || (s == "FolderWriter") || (s == "Reader") ||
+            (s == "Writer") || isHttpMethodName(s)
 
-    val httpDeleteT : Expression = httpT("delete")
-    val httpGetT : Expression = httpT("get")
-    val httpPostT : Expression = httpT("post")
-    val httpPutT : Expression = httpT("put")
+    def isHttpMethodName(s : String) : Boolean =
+        (s == "HttpDelete") || (s == "HttpGet") || (s == "HttpPost") ||
+            (s == "HttpPut")
 
-    val readerT : Expression =
-        RecT(Vector(
-            FieldType("read", FunT(ArgumentTypes(Vector()), strT))
-        ))
-
-    val writerT : Expression =
-        RecT(Vector(
-            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("s")), strT))), uniT))
-        ))
-
-    val folderReaderT : Expression =
-        RecT(Vector(
-            FieldType("read", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("suffix")), strT))), strT))
-        ))
-
-    val folderWriterT : Expression =
-        RecT(Vector(
-            FieldType("write", FunT(ArgumentTypes(Vector(ArgumentType(Some(IdnDef("suffix")), strT), ArgumentType(Some(IdnDef("text")), strT))), uniT))
-        ))
+    // Primitive types
 
     def mkPrimType(args : Vector[Expression], retType : Expression) : FunT =
         FunT(ArgumentTypes(args.map { case e => ArgumentType(None, e) }), retType)
@@ -147,27 +134,70 @@ object SymbolTable extends Environments[CoomaEntity] {
     def mkIntBinPrimType(retType : Expression) : FunT =
         mkPrimType(Vector(intT, intT), retType)
 
-    val primitivesTypesTable = Map(
-        "Equal" -> mkPrimTypeWithArgNames(Vector(("t", typT), ("l", Idn(IdnUse("t"))), ("l", Idn(IdnUse("t")))), boolT),
-        "IntAbs" -> mkIntUnPrimType(intT),
-        "IntAdd" -> mkIntBinPrimType(intT),
-        "IntSub" -> mkIntBinPrimType(intT),
-        "IntMul" -> mkIntBinPrimType(intT),
-        "IntDiv" -> mkIntBinPrimType(intT),
-        "IntPow" -> mkIntBinPrimType(intT),
-        "IntGt" -> mkIntBinPrimType(boolT),
-        "IntGte" -> mkIntBinPrimType(boolT),
-        "IntLt" -> mkIntBinPrimType(boolT),
-        "IntLte" -> mkIntBinPrimType(boolT),
-        "StrConcat" -> mkPrimType(Vector(strT, strT), strT),
-        "StrLength" -> mkPrimType(Vector(strT), intT),
-        "StrSubstr" -> mkPrimType(Vector(strT, intT), strT),
-        "VecAppend" -> mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t")))),
-        "VecConcat" -> mkVectorPrimTypeWithArgNames(Vector(("vr", VecT(Idn(IdnUse("t"))))), VecT(Idn(IdnUse("t")))),
-        "VecGet" -> mkVectorPrimTypeWithArgNames(Vector(("i", intT)), Idn(IdnUse("t"))),
-        "VecLength" -> mkVectorPrimTypeWithArgNames(Vector(), intT),
-        "VecPrepend" -> mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t")))),
-        "VecPut" -> mkVectorPrimTypeWithArgNames(Vector(("i", intT), ("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t"))))
-    )
+    def userPrimitiveType(p : UserPrimitive) : FunT =
+        p match {
+            case EqualP() =>
+                mkPrimTypeWithArgNames(
+                    Vector(
+                        ("t", typT),
+                        ("l", Idn(IdnUse("t"))),
+                        ("l", Idn(IdnUse("t")))
+                    ),
+                    boolT
+                )
+            case IntAbsP() =>
+                mkPrimType(Vector(intT), intT)
+            case IntAddP() | IntDivP() | IntMulP() | IntPowP() | IntSubP() =>
+                mkPrimType(Vector(intT, intT), intT)
+            case IntGtP() | IntGteP() | IntLtP() | IntLteP() =>
+                mkPrimType(Vector(intT, intT), boolT)
+            case StrConcatP() =>
+                mkPrimType(Vector(strT, strT), strT)
+            case StrLengthP() =>
+                mkPrimType(Vector(strT), intT)
+            case StrSubstrP() =>
+                mkPrimType(Vector(strT, intT), strT)
+            case VecAppendP() =>
+                mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t"))))
+            case VecConcatP() =>
+                mkVectorPrimTypeWithArgNames(Vector(("vr", VecT(Idn(IdnUse("t"))))), VecT(Idn(IdnUse("t"))))
+            case VecGetP() =>
+                mkVectorPrimTypeWithArgNames(Vector(("i", intT)), Idn(IdnUse("t")))
+            case VecLengthP() =>
+                mkVectorPrimTypeWithArgNames(Vector(), intT)
+            case VecPrependP() =>
+                mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t"))))
+            case VecPutP() =>
+                mkVectorPrimTypeWithArgNames(Vector(("i", intT), ("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t"))))
+        }
+
+    // Prelude
+
+    def preludeStaticEnv(config : Config) : Environment =
+        if (config.noPrelude() || config.compilePrelude())
+            rootenv()
+        else {
+            val staticPreludePath = s"${config.preludePath()}.static"
+            val source = FileSource(staticPreludePath)
+            val positions = new Positions()
+            val p = new CoomaParser(source, positions)
+            val pr = p.pStaticPrelude(0)
+            if (pr.hasValue) {
+                val prelude = p.value(pr).asInstanceOf[StaticPrelude]
+                val entries = prelude.optStaticPreludeEntrys
+                entries.foldLeft(rootenv()) {
+                    case (env, StaticTypedEntry(id, tipe)) =>
+                        define(env, id, PredefFunctionEntity(id, tipe))
+                    case (env, StaticLetEntry(id, tipe, exp)) =>
+                        define(env, id, PredefLetEntity(id, tipe, exp))
+                }
+            } else {
+                val messaging = new Messaging(positions)
+                config.output().emitln(s"cooma: can't read static prelude '$staticPreludePath'")
+                val message = p.errorToMessage(pr.parseError)
+                messaging.report(source, Vector(message), config.output())
+                sys.exit(1)
+            }
+        }
 
 }

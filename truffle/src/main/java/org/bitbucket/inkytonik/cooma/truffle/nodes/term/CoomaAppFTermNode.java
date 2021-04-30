@@ -36,29 +36,14 @@ public abstract class CoomaAppFTermNode extends CoomaTermNode {
      */
     private final String x;
 
-
     public CoomaAppFTermNode(String identifier, String k, String x) {
         this.f = identifier;
         this.k = k;
         this.x = x;
     }
 
-    @Specialization(guards = "isHalt()")
-    Object executeHalt(VirtualFrame frame) {
-        FunctionClosureHolder value = (FunctionClosureHolder) obtainFromRho(f);
-        FunctionClosure closure = value.get(f);
-        Rho p1 = closure.getRho()
-                .extend(closure.getK(),
-                        new ContinuationClosure(obtainRho(),
-                                this.x, CoomaAppCTermNodeGen.create(CoomaConstants.HALT, this.x)))
-                .extend(closure.getX(), obtainFromRho(this.x));
-        replaceRho(p1);
-        return closure.getZ().executeGeneric(frame);
-    }
-
     @Specialization
     Object execute(VirtualFrame frame) {
-
         RuntimeValue value = obtainFromRho(f);
         if (value instanceof FunctionClosureHolder) {
             FunctionClosure closure = ((FunctionClosureHolder) value).get(f);
@@ -78,7 +63,4 @@ public abstract class CoomaAppFTermNode extends CoomaTermNode {
         }
     }
 
-    boolean isHalt() {
-        return CoomaConstants.HALT.equals(this.k);
-    }
 }

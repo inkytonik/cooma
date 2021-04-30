@@ -24,10 +24,9 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 /**
  * The root of all CoomaIR execution trees.
  * It is a Truffle requirement that the tree root extends the class {@link RootNode}.
- *
  */
 
-@NodeInfo(language = "cooma", description = "The root Node of every coomaIR AST")
+@NodeInfo(language = "cooma", description = "The root Node of every cooma IR AST")
 public class CoomaRootNode extends RootNode {
 
     @Child private CoomaTermNode termNode;
@@ -51,4 +50,5 @@ public class CoomaRootNode extends RootNode {
     public Object execute(VirtualFrame frame) {
         return termNode.executeGeneric(frame);
     }
+
 }

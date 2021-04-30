@@ -3,16 +3,15 @@ package org.bitbucket.inkytonik.cooma.test
 import java.io.{ByteArrayOutputStream, PrintStream}
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
-import org.bitbucket.inkytonik.cooma.truffle.{TruffleBackend, TruffleDriver, TruffleFrontend, TruffleREPL}
-import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, Driver, Frontend, REPL, ReferenceDriver, ReferenceFrontend, ReferenceREPL}
-import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole, StringSource, TestCompilerWithConfig}
+import org.bitbucket.inkytonik.cooma.truffle.{TruffleDriver, TruffleFrontend}
+import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, Frontend, Main, REPL, REPLDriver, ReferenceDriver, ReferenceFrontend}
+import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole, TestCompilerWithConfig}
 import org.rogach.scallop.throwError
 import org.scalactic.source.Position
 
 import scala.util.{Failure, Success, Try}
 
-trait ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program, Config] {
+trait ExecutionTests extends REPLDriver with TestCompilerWithConfig[ASTNode, Program, Config] {
 
     case class BackendConfig(name : String, frontend : Frontend, options : Seq[String])
 
@@ -52,6 +51,11 @@ trait ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         runTest(bc.frontend.interpret, allArgs)
     }
 
+    def runMain(program : String, options : Seq[String], args : Seq[String])(implicit bc : BackendConfig) : String = {
+        val allArgs = Seq("--Koutput", "string") ++ bc.options ++ options ++ (program +: args)
+        runTest(Main.runMain, allArgs)
+    }
+
     def runREPLTest(cmd : String, input : String, options : Seq[String])(implicit bc : BackendConfig) : String = {
         val allArgs = Seq("--Koutput", "string") ++ bc.options ++ options
         val config = createConfig(allArgs)
@@ -74,7 +78,7 @@ trait ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         val result2 = runString(name, code, Seq("-r"))
         result2 shouldBe s"$answer\n"
         val result3 = runREPLOnLine(code, Seq())
-        result3 shouldBe s"""res0 : $tipe = $answer\n"""
+        result3 shouldBe s"""res0$tipe = $answer\n"""
     }
 
     def runBadPrimTest(name : String, args : String, error : String)(implicit bc : BackendConfig) : Unit = {
@@ -97,23 +101,22 @@ trait ExecutionTests extends Driver with TestCompilerWithConfig[ASTNode, Program
         config
     }
 
+    def createDriver(config : Config) : REPLDriver =
+        if (config.graalVM())
+            new TruffleDriver
+        else
+            new ReferenceDriver
+
     override def createREPL(config : Config) : REPL with Compiler with Backend = {
-        val repl =
-            if (config.graalVM())
-                new TruffleBackend(config) with TruffleREPL with Compiler
-            else {
-                val source = StringSource("")
-                new ReferenceBackend(this, source, config) with ReferenceREPL with Compiler
-            }
-        repl.initialise()
+        val driver = createDriver(config)
+        val repl = driver.createREPL(config)
+        repl.initialise(config)
         repl
     }
 
     override def process(source : Source, prog : Program, config : Config) : Unit = {
-        val frontend =
-            if (config.graalVM()) new TruffleDriver
-            else new ReferenceDriver
-        frontend.process(source, prog, config)
+        val driver = createDriver(config)
+        driver.process(source, prog, config)
     }
 
     override def testdriver(config : Config) : Unit = {

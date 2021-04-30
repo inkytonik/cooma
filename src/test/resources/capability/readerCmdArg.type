@@ -1,1 +1,1 @@
-(r : Reader) String
+(r : { read : () String }) String

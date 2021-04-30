@@ -17,32 +17,31 @@ trait TruffleREPL extends REPL {
     self : Compiler with TruffleBackend =>
 
     import org.bitbucket.inkytonik.cooma.Config
-    import org.bitbucket.inkytonik.cooma.CoomaParserPrettyPrinter.format
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter.format
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
     import org.graalvm.polyglot.Context
 
     var currentDynamicEnv : Context = _
 
-    override def initialise() : Unit = {
-        super.initialise()
+    override def initialise(config : Config) : Unit = {
         currentDynamicEnv = Context.newBuilder(CoomaConstants.ID).build()
+        super.initialise(config)
     }
 
     def process(
         program : Program,
         i : String,
         optTypeValue : Option[Expression],
-        aliasedType : Expression,
+        optAliasedType : Option[Expression],
         config : Config
     ) : Unit = {
-        execute(i, optTypeValue, aliasedType, config, {
+        execute(i, optTypeValue, optAliasedType, config, {
             val line = format(program).layout
-            val result = currentDynamicEnv.eval(CoomaConstants.ID, line)
-            if (CoomaLanguage.Type.Error.value.equals(result.getMetaObject.toString)) {
-                errorOutput(Some(result), config)
-            } else {
-                output(i, optTypeValue, aliasedType, Some(result), config)
-            }
+            val value = currentDynamicEnv.eval(CoomaConstants.ID, line)
+            if (CoomaLanguage.Type.Error.value.equals(value.getMetaObject.toString))
+                errorOutput(Some(value), config)
+            else
+                output(i, optTypeValue, optAliasedType, Some(value), config)
         })
     }
 
