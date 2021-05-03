@@ -11,7 +11,6 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-import org.bitbucket.inkytonik.cooma.Primitives.CoomaException
 
 object Primitives {
 
@@ -50,11 +49,15 @@ object Primitives {
     ) extends Throwable
 
     object CoomaExceptionType extends Enumeration {
-
-        val Primitive = Value
-        val Capability = Value
-
+        val Cap = Value("CapabilityException")
+        val Prim = Value("PrimitiveException")
     }
+
+    def errCap(capability: String, message: String): Nothing =
+        throw CoomaException(CoomaExceptionType.Cap, capability, message)
+
+    def errPrim(primitive: String, message: String): Nothing =
+        throw CoomaException(CoomaExceptionType.Prim, primitive, message)
 
 }
 
@@ -67,7 +70,7 @@ trait Primitives {
 
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
-    import org.bitbucket.inkytonik.cooma.Primitives.{CoomaExceptionType => Cet}
+    import org.bitbucket.inkytonik.cooma.Primitives.{errCap, errPrim}
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh, unescape}
     import scalaj.http.Http
 
@@ -77,7 +80,7 @@ trait Primitives {
         if (xs.length == nArgs)
             run(p, rho, xs, args)
         else
-            throw CoomaException(Cet.Primitive, show(p), s"expected $nArgs arg(s), got $xs")
+            errPrim(show(p), s"expected $nArgs arg(s), got $xs")
     }
 
     def numArgs(p : Primitive) : Int =
@@ -110,7 +113,7 @@ trait Primitives {
             case Some(v) =>
                 v
             case _ =>
-                throw CoomaException(Cet.Primitive, show, s"can't find string operand $x")
+                errPrim(show, s"can't find string operand $x")
         }
 
     def getIntParam(show : String, rho : Env, x : String) : BigInt =
@@ -118,7 +121,7 @@ trait Primitives {
             case Some(v) =>
                 v
             case _ =>
-                throw CoomaException(Cet.Primitive, show, s"can't find integer operand $x")
+                errPrim(show, s"can't find integer operand $x")
         }
 
     def run(p : Primitive, rho : Env, xs : Seq[String], args : Seq[String]) : ValueR =
@@ -197,8 +200,7 @@ trait Primitives {
 
     def argument(i : Int, args : Seq[String]) : ValueR =
         if ((i < 0) || (i >= args.length))
-            throw CoomaException(Cet.Primitive, "Argument",
-                s"command-line argument $i does not exist (arg count = ${args.length})")
+            errPrim("Argument", s"command-line argument $i does not exist (arg count = ${args.length})")
         else
             strR(args(i))
 
@@ -235,7 +237,7 @@ trait Primitives {
         val value = lookupR(rho, x)
         val argument = isStrR(value) match {
             case Some(s) => s
-            case None    => throw CoomaException(Cet.Capability, cap, s"got non-String argument $value")
+            case None    => errCap(cap, s"got non-String argument $value")
         }
 
         cap match {
@@ -275,7 +277,7 @@ trait Primitives {
                                             case Some(rfld) =>
                                                 equalValues(getFieldValue(lfld), getFieldValue(rfld))
                                             case None =>
-                                                throw CoomaException(Cet.Primitive, "equal", s"can't find field $f in $rfs")
+                                                errPrim("equal", s"can't find field $f in $rfs")
                                         }
                                     })
                                 case _ =>
@@ -306,9 +308,9 @@ trait Primitives {
         val filename =
             isStrR(suffix)
                 .map(suffix => s"$root/$suffix")
-                .getOrElse(throw CoomaException(Cet.Capability, primName, s"expected String, got $suffix"))
+                .getOrElse(errCap(primName, s"expected String, got $suffix"))
         if (Paths.get(filename).normalize.startsWith(Paths.get(root).normalize)) new File(filename)
-        else throw CoomaException(Cet.Capability, primName, s"$filename is not a descendant of $root")
+        else errCap(primName, s"$filename is not a descendant of $root")
     }
 
     def folderReaderRead(rho : Env, root : String, suffixIdn : String) : ValueR = {
@@ -318,7 +320,7 @@ trait Primitives {
             strR(readReaderContents(in))
         } catch {
             case e : IOException =>
-                throw CoomaException(Cet.Capability, "FolderReaderRead", e.getMessage)
+                errCap("FolderReaderRead", e.getMessage)
         }
     }
 
@@ -326,14 +328,14 @@ trait Primitives {
         val file = folderFile("FolderWriterWrite", rho, root, suffixIdn)
         val text = {
             val text = lookupR(rho, x)
-            isStrR(text).getOrElse(throw CoomaException(Cet.Capability, "FolderWriterWrite", s"can't write $text"))
+            isStrR(text).getOrElse(errCap("FolderWriterWrite", s"can't write $text"))
         }
         val out = new BufferedWriter(new FileWriter(file))
         try {
             out.write(text)
         } catch {
             case e : IOException =>
-                throw CoomaException(Cet.Capability, "FolderWriterWrite", e.getMessage)
+                errCap("FolderWriterWrite", e.getMessage)
         } finally {
             out.close()
         }
@@ -352,7 +354,7 @@ trait Primitives {
                     fldR("body", strR(body))
                 ))
             case None =>
-                throw CoomaException(Cet.Capability, "HttpClient", s"can't find string operand $x")
+                errCap("HttpClient", s"can't find string operand $x")
         }
 
     def intBinPrim(show : String, rho : Env, l : String, r : String, op : (BigInt, BigInt) => BigInt) : ValueR = {
@@ -364,7 +366,7 @@ trait Primitives {
     def intDiv(rho : Env, l : String, r : String) : ValueR = {
         val ri = getIntParam("intDiv", rho, r)
         if (ri == 0)
-            throw CoomaException(Cet.Primitive, "IntDiv", s"division by zero")
+            errPrim("IntDiv", s"division by zero")
         else {
             val li = getIntParam("intDiv", rho, l)
             intR(li / ri)
@@ -374,7 +376,7 @@ trait Primitives {
     def intPow(rho : Env, l : String, r : String) : ValueR = {
         val ri = getIntParam("intPow", rho, r)
         if (ri < 0)
-            throw CoomaException(Cet.Primitive, "IntPow", s"illegal negative power $ri given")
+            errPrim("IntPow", s"illegal negative power $ri given")
         else {
             val li = getIntParam("intPow", rho, l)
             intR(li.pow(ri.toInt))
@@ -394,7 +396,7 @@ trait Primitives {
 
     def readerRead(filename : String) : ValueR = {
         if (CoomaConstants.CONSOLEIO != filename && !PrimitiveUtils.isFileReadable(filename))
-            throw CoomaException(Cet.Capability, "ReaderRead", s"can't read $filename")
+            errCap("ReaderRead", s"can't read $filename")
         lazy val in : BufferedReader =
             new BufferedReader(
                 filename match {
@@ -407,7 +409,7 @@ trait Primitives {
             strR(escape(s))
         } catch {
             case e : IOException =>
-                throw CoomaException(Cet.Capability, "ReaderRead", e.getMessage)
+                errCap("ReaderRead", e.getMessage)
         }
     }
 
@@ -419,7 +421,7 @@ trait Primitives {
                 case Some(fields) =>
                     fields
                 case None =>
-                    throw CoomaException(Cet.Primitive, "recConcat", s"$side argument $r of record concatenation is non-record")
+                    errPrim("recConcat", s"$side argument $r of record concatenation is non-record")
             }
         recR(aux(vl, "first") ++ aux(vr, "second"))
     }
@@ -434,9 +436,9 @@ trait Primitives {
                 } match {
                     case Some(v) => v
                     case None =>
-                        throw CoomaException(Cet.Primitive, "recSelect", s"can't find field $f in $fields")
+                        errPrim("recSelect", s"can't find field $f in $fields")
                 }
-            case None => throw CoomaException(Cet.Primitive, "recSelect", s"$r is non-record $value, looking for field $f")
+            case None => errPrim("recSelect", s"$r is non-record $value, looking for field $f")
         }
     }
 
@@ -456,7 +458,7 @@ trait Primitives {
         val usx = unescape(sx)
         val ii = getIntParam("strSubstr", rho, i)
         if ((ii < 0) || (ii > usx.length))
-            throw CoomaException(Cet.Primitive, "strSubstr", s"""index $ii out of range for string "$sx"""")
+            errPrim("strSubstr", s"""index $ii out of range for string "$sx"""")
         else
             strR(escape(usx.substring(ii.toInt)))
     }
@@ -466,7 +468,7 @@ trait Primitives {
             case Some(value) =>
                 value
             case None =>
-                throw CoomaException(Cet.Primitive, "lookupVector", s"$name is ${lookupR(rho, name)}, expected Vector value")
+                errPrim("lookupVector", s"$name is ${lookupR(rho, name)}, expected Vector value")
         }
 
     def vecAppend(rho : Env, v : String, x : String) : ValueR = {
@@ -485,9 +487,9 @@ trait Primitives {
                 if (elems.indices contains index)
                     elems(index)
                 else
-                    throw CoomaException(Cet.Primitive, "vecGet", s"vector index out of bounds - size: ${elems.size}, index: $index")
+                    errPrim("vecGet", s"vector index out of bounds - size: ${elems.size}, index: $index")
             case _ =>
-                throw CoomaException(Cet.Primitive, "vecGet", s"can't find integer (index) operand $i")
+                errPrim("vecGet", s"can't find integer (index) operand $i")
         }
 
     def vecLength(rho : Env, v : String) : ValueR =
@@ -505,15 +507,15 @@ trait Primitives {
                 if (elems.indices contains idx)
                     vecR(elems.updated(idx.intValue, lookupR(rho, x)))
                 else
-                    throw CoomaException(Cet.Primitive, "vecPut", s"vector index out of bounds - size: ${elems.size}, index: $idx")
+                    errPrim("vecPut", s"vector index out of bounds - size: ${elems.size}, index: $idx")
             case None =>
-                throw CoomaException(Cet.Primitive, "vecPut", s"can't find index operand $i")
+                errPrim("vecPut", s"can't find index operand $i")
         }
     }
 
     def writerWrite(filename : String, rho : Env, x : String) : ValueR = {
         if (CoomaConstants.CONSOLEIO != filename && !PrimitiveUtils.isFileWritable(filename))
-            throw CoomaException(Cet.Capability, "WriterWrite", s"can't write $filename")
+            errCap("WriterWrite", s"can't write $filename")
         val value = lookupR(rho, x)
         val s = isIntR(value) match {
             case Some(i) =>
@@ -523,7 +525,7 @@ trait Primitives {
                     case Some(s) =>
                         unescape(s)
                     case None =>
-                        throw CoomaException(Cet.Primitive, "writerWrite", s"can't write $value")
+                        errPrim("writerWrite", s"can't write $value")
                 }
         }
         val out : Writer =
@@ -537,7 +539,7 @@ trait Primitives {
             out.write(s)
         } catch {
             case e : IOException =>
-                throw CoomaException(Cet.Primitive, "writerWrite", e.getMessage)
+                errPrim("writerWrite", e.getMessage)
         } finally {
             out.close()
         }
