@@ -42,23 +42,6 @@ object Primitives {
     def primFunName(prim : UserPrimitive) : String =
         primName(prim).drop(3).toLowerCase()
 
-    case class CoomaException(
-        exceptionType : CoomaExceptionType.Value,
-        prefix : String,
-        message : String
-    ) extends Throwable
-
-    object CoomaExceptionType extends Enumeration {
-        val Cap = Value("CapabilityException")
-        val Prim = Value("PrimitiveException")
-    }
-
-    def errCap(capability: String, message: String): Nothing =
-        throw CoomaException(CoomaExceptionType.Cap, capability, message)
-
-    def errPrim(primitive: String, message: String): Nothing =
-        throw CoomaException(CoomaExceptionType.Prim, primitive, message)
-
 }
 
 trait Primitives {
@@ -68,9 +51,9 @@ trait Primitives {
     import java.io._
     import java.nio.file.Paths
 
+    import org.bitbucket.inkytonik.cooma.CoomaException._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
-    import org.bitbucket.inkytonik.cooma.Primitives.{errCap, errPrim}
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh, unescape}
     import scalaj.http.Http
 

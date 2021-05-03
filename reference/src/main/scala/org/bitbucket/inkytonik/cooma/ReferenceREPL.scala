@@ -10,7 +10,10 @@
 
 package org.bitbucket.inkytonik.cooma
 
+import org.bitbucket.inkytonik.cooma.CoomaException.getUnhandledMessage
 import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
+
+import scala.util.{Failure, Success, Try}
 
 trait ReferenceREPL extends REPL {
 
@@ -42,14 +45,14 @@ trait ReferenceREPL extends REPL {
 
         execute(i, optTypeValue, optAliasedType, config, {
             val args = config.filenames()
-            val result = interpret(term, currentDynamicEnv, args, config)
-            val value = result.value
-            isErrR(value) match {
-                case Some(_) =>
-                    errorOutput(Some(value), config)
-                case None =>
+            Try(interpret(term, currentDynamicEnv, args, config)) match {
+                case Success(Result(_, value)) =>
                     currentDynamicEnv = ConsVE(i, value, currentDynamicEnv)
                     output(i, optTypeValue, optAliasedType, Some(value), config)
+                case Failure(CoomaException(exceptionType, prefix, message)) =>
+                    config.output().emitln(s"$exceptionType: $prefix: $message")
+                case Failure(e) =>
+                    config.output().emitln(getUnhandledMessage(e))
             }
         })
     }

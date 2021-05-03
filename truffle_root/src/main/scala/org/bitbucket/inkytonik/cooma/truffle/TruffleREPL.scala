@@ -38,10 +38,7 @@ trait TruffleREPL extends REPL {
         execute(i, optTypeValue, optAliasedType, config, {
             val line = format(program).layout
             val value = currentDynamicEnv.eval(CoomaConstants.ID, line)
-            if (CoomaLanguage.Type.Error.value.equals(value.getMetaObject.toString))
-                errorOutput(Some(value), config)
-            else
-                output(i, optTypeValue, optAliasedType, Some(value), config)
+            output(i, optTypeValue, optAliasedType, Some(value), config)
         })
     }
 

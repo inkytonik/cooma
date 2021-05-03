@@ -103,9 +103,6 @@ class ReferenceBackend(
 
     // Runtime values
 
-    def errR(msg : String) : ValueR =
-        ErrR(msg)
-
     def strR(str : String) : ValueR =
         StrR(str)
 
@@ -126,12 +123,6 @@ class ReferenceBackend(
 
     def fldR(x : String, v : ValueR) : FldR =
         FldR(x, v)
-
-    def isErrR(value : ValueR) : Option[String] =
-        value match {
-            case ErrR(s) => Some(s)
-            case _       => None
-        }
 
     def isStrR(value : ValueR) : Option[String] =
         value match {
