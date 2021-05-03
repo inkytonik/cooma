@@ -6,7 +6,12 @@ case class CoomaException(
     exceptionType : CoomaExceptionType,
     prefix : String,
     message : String
-) extends Throwable
+) extends Throwable {
+
+    override def toString : String =
+        s"$exceptionType: $prefix: $message"
+
+}
 
 object CoomaException {
 

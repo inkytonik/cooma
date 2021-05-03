@@ -15,13 +15,14 @@ class Interpreter(config : Config) {
 
     self : ReferenceBackend =>
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.CoomaException._
+    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter._
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, emptyDocument, Width}
+    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width, emptyDocument}
     import org.bitbucket.inkytonik.kiama.util.{FileSource, Messaging, Positions}
+
     import scala.annotation.tailrec
-    import scala.util.{Success, Try, Failure}
+    import scala.util.Try
 
     case class Result(rho : Env, value : ValueR)
 
@@ -44,28 +45,23 @@ class Interpreter(config : Config) {
     case class NilE() extends Env
 
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
-        if (config.server())
-            if (driver.settingBool("showTrace"))
-                driver.publishProduct(source, "trace", "IR")
+        if (config.server() && driver.settingBool("showTrace"))
+            driver.publishProduct(source, "trace", "IR")
         val env = preludeDynamicEnv(config)
-        Try(interpret(term, env, args, config)) match {
-            case Success(Result(_, result)) =>
+        interpret(term, env, args, config) match {
+            case Right(Result(_, result)) =>
                 if (config.resultPrint())
                     config.output().emitln(showRuntimeValue(result))
-                if (config.server())
-                    if (driver.settingBool("showResult"))
-                        driver.publishProduct(source, "result", "cooma", formatRuntimeValue(result, 5))
-            case Failure(CoomaException(exceptionType, prefix, message)) =>
-                val msg = s"$exceptionType: $prefix: $message"
+                if (config.server() && driver.settingBool("showResult"))
+                    driver.publishProduct(source, "result", "cooma", formatRuntimeValue(result, 5))
+            case Left(msg) =>
                 config.output().emitln(msg)
                 if (config.server() && driver.settingBool("showResult"))
                     driver.publishProduct(source, "result", "cooma", pretty(value(msg)))
-            case Failure(e) =>
-                config.output().emitln(getUnhandledMessage(e))
         }
     }
 
-    def interpret(term : Term, rho : Env, args : Seq[String], config : Config) : Result = {
+    def interpret(term : Term, rho : Env, args : Seq[String], config : Config) : Either[String, Result] = {
 
         @tailrec
         def interpretAux(rho : Env, term : Term) : Result = {
@@ -179,7 +175,10 @@ class Interpreter(config : Config) {
                     VecR(elems.map(s => lookupR(rho, s)))
             }
 
-        interpretAux(rho, term)
+        Try(interpretAux(rho, term)).toEither.left.map {
+            case e : CoomaException => e.toString
+            case e                  => getUnhandledMessage(e)
+        }
     }
 
     @tailrec
@@ -242,8 +241,9 @@ class Interpreter(config : Config) {
             val prelude = p.value(pr).asInstanceOf[DynamicPrelude]
             val preludeConfig = new Config(Seq("-Q", filename))
             preludeConfig.verify()
-            val result = interpret(prelude.term, emptyEnv, Seq(), preludeConfig)
-            result.rho
+            interpret(prelude.term, emptyEnv, Seq(), preludeConfig)
+                .left.map(msg => sys.error(s"Error in prelude: $msg"))
+                .merge.rho
         } else {
             config.output().emitln(s"cooma: can't parse dynamic prelude '$filename'")
             val message = p.errorToMessage(pr.parseError)
