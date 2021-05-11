@@ -15,7 +15,7 @@ class CommandLineTests extends ExecutionTests {
         }
         super.test(s"run: $name ($filename): no args") { implicit bc =>
             val result = runFile(filename, Seq(), Seq())
-            result shouldBe s"cooma: command-line argument $usedArg does not exist (arg count = 0)\n"
+            result shouldBe s"PrimitiveException: Argument: command-line argument $usedArg does not exist (arg count = 0)\n"
         }
     }
 
