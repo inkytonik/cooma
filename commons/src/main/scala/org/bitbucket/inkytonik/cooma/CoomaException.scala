@@ -1,36 +1,28 @@
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.CoomaException.CoomaExceptionType
-
-case class CoomaException(
-    exceptionType : CoomaExceptionType,
-    prefix : String,
-    message : String
-) extends Throwable {
+case class CoomaException(message : String) extends RuntimeException(message) {
 
     override def toString : String =
-        s"$exceptionType: $prefix: $message"
+        message
 
 }
 
 object CoomaException {
 
-    type CoomaExceptionType = CoomaExceptionType.Value
-
-    object CoomaExceptionType extends Enumeration {
-        val Cap = Value("CapabilityException")
-        val Interp = Value("InterpreterException")
-        val Prim = Value("PrimitiveException")
-    }
-
     def errCap(capability : String, message : String) : Nothing =
-        throw CoomaException(CoomaExceptionType.Cap, capability, message)
+        throw CoomaException(s"CapabilityException: $capability: $message")
 
     def errInterp(function : String, message : String) : Nothing =
-        throw CoomaException(CoomaExceptionType.Interp, function, message)
+        throw CoomaException(s"InterpreterException: $function: $message")
 
     def errPrim(primitive : String, message : String) : Nothing =
-        throw CoomaException(CoomaExceptionType.Prim, primitive, message)
+        throw CoomaException(s"PrimitiveException: $primitive: $message")
+
+    def errPrelude(sub : CoomaException) : Nothing =
+        throw CoomaException(s"Error in prelude: ${sub.message}")
+
+    def errPrelude(sub : String) : Nothing =
+        throw CoomaException(s"Error in prelude: $sub")
 
     def getUnhandledMessage(e : Throwable) : String =
         s"""An error occurred. This is a bug in Cooma. Please create an issue at <https://github.com/inkytonik/cooma/issues> and include the message and stack trace below.

@@ -47,9 +47,8 @@ class Interpreter(config : Config) {
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
         if (config.server() && driver.settingBool("showTrace"))
             driver.publishProduct(source, "trace", "IR")
-        val env = preludeDynamicEnv(config)
-        interpret(term, env, args, config) match {
-            case Right(Result(_, result)) =>
+        preludeDynamicEnv(config).flatMap(interpret(term, _, args, config).map(_.value)) match {
+            case Right(result) =>
                 if (config.resultPrint())
                     config.output().emitln(showRuntimeValue(result))
                 if (config.server() && driver.settingBool("showResult"))
@@ -226,11 +225,14 @@ class Interpreter(config : Config) {
                 errInterp("lookupC", s"can't find $x")
         }
 
-    def preludeDynamicEnv(config : Config) : Env =
+    def preludeDynamicEnv(config : Config) : Either[String, Env] =
         if (config.noPrelude() || config.compilePrelude())
-            emptyEnv
+            Right(emptyEnv)
         else
-            readDynamicPrelude(s"${config.preludePath()}.dynamic", config)
+            Try(readDynamicPrelude(s"${config.preludePath()}.dynamic", config)).toEither.left.map {
+                case e : CoomaException => e.message
+                case e                  => getUnhandledMessage(e)
+            }
 
     def readDynamicPrelude(filename : String, config : Config) : Env = {
         val source = FileSource(filename)
@@ -242,7 +244,7 @@ class Interpreter(config : Config) {
             val preludeConfig = new Config(Seq("-Q", filename))
             preludeConfig.verify()
             interpret(prelude.term, emptyEnv, Seq(), preludeConfig)
-                .left.map(msg => sys.error(s"Error in prelude: $msg"))
+                .left.map(errPrelude)
                 .merge.rho
         } else {
             config.output().emitln(s"cooma: can't parse dynamic prelude '$filename'")

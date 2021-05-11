@@ -18,6 +18,7 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
+import org.bitbucket.inkytonik.cooma.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.CoomaConstants;
@@ -164,6 +165,9 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 		catch (ParseException e) {
 			output(config, "cooma: xtc parse exception reading dynamic prelude '" + filename + "'");
 			output(config, e.getMessage());
+		}
+		catch (CoomaException e) {
+			CoomaException.errPrelude(e);
 		}
 		return new Rho();
     }

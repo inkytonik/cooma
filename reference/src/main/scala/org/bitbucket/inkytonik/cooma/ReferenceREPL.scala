@@ -22,7 +22,11 @@ trait ReferenceREPL extends REPL {
     var currentDynamicEnv : Env = _
 
     override def initialise(config : Config) : Unit = {
-        currentDynamicEnv = preludeDynamicEnv(config)
+        currentDynamicEnv =
+            preludeDynamicEnv(config).left.map { msg =>
+                config.output().emitln(msg)
+                sys.exit(-1)
+            }.merge
         super.initialise(config)
     }
 
