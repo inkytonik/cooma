@@ -115,9 +115,6 @@ class TruffleBackend(
     def showRuntimeValue(v : OutputValueR) : String =
         v.toString()
 
-    def errR(msg : String) : ValueR =
-        new ErrorRuntimeValue(msg)
-
     def strR(str : String) : ValueR =
         new StringRuntimeValue(str)
 
@@ -138,12 +135,6 @@ class TruffleBackend(
 
     def intR(num : BigInt) : ValueR =
         new IntRuntimeValue(new BigInteger(num.toByteArray))
-
-    def isErrR(value : RuntimeValue) : Option[String] =
-        value match {
-            case error : ErrorRuntimeValue => Some(error.getMessage)
-            case _                         => None
-        }
 
     def isStrR(value : RuntimeValue) : Option[String] =
         value match {
