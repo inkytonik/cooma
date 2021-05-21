@@ -32,7 +32,7 @@ class CommandLineTests extends ExecutionTests {
         "src/test/resources/capability/multiStringCmdArg.cooma",
         "\"there\"",
         Seq("hello", "there"),
-        1
+        0
     )
 
 }

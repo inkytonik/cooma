@@ -270,7 +270,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = [1,2,3]
             Vectors.get(Int, x, 4)
         }""",
-        "PrimitiveException: vecGet: vector index out of bounds - size: 3, index: 4"
+        "PrimitiveException: VecGet: vector index out of bounds - size: 3, index: 4"
     )
 
     testError(
@@ -279,7 +279,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = [1,2,3]
             Vectors.get(Int, x, -1)
         }""",
-        "PrimitiveException: vecGet: vector index out of bounds - size: 3, index: -1"
+        "PrimitiveException: VecGet: vector index out of bounds - size: 3, index: -1"
     )
 
     testError(
@@ -288,7 +288,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = []
             Vectors.get(Int, x, 0)
         }""",
-        "PrimitiveException: vecGet: vector index out of bounds - size: 0, index: 0"
+        "PrimitiveException: VecGet: vector index out of bounds - size: 0, index: 0"
     )
 
     testError(
@@ -297,7 +297,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = []
             Vectors.put(Int, x, 0, 5)
         }""",
-        "PrimitiveException: vecPut: vector index out of bounds - size: 0, index: 0"
+        "PrimitiveException: VecPut: vector index out of bounds - size: 0, index: 0"
     )
 
     testError(
@@ -306,7 +306,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = [1]
             Vectors.put(Int, x, 1, 5)
         }""",
-        "PrimitiveException: vecPut: vector index out of bounds - size: 1, index: 1"
+        "PrimitiveException: VecPut: vector index out of bounds - size: 1, index: 1"
     )
 
     testError(
@@ -315,7 +315,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = [1]
             Vectors.put(Int, x, -1, 5)
         }""",
-        "PrimitiveException: vecPut: vector index out of bounds - size: 1, index: -1"
+        "PrimitiveException: VecPut: vector index out of bounds - size: 1, index: -1"
     )
 
 }

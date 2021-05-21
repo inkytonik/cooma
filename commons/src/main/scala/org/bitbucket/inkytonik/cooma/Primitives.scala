@@ -260,7 +260,7 @@ trait Primitives {
                                             case Some(rfld) =>
                                                 equalValues(getFieldValue(lfld), getFieldValue(rfld))
                                             case None =>
-                                                errPrim("equal", s"can't find field $f in $rfs")
+                                                errPrim("Equal", s"can't find field $f in $rfs")
                                         }
                                     })
                                 case _ =>
@@ -404,7 +404,7 @@ trait Primitives {
                 case Some(fields) =>
                     fields
                 case None =>
-                    errPrim("recConcat", s"$side argument $r of record concatenation is non-record")
+                    errPrim("RecConcat", s"$side argument $r of record concatenation is non-record")
             }
         recR(aux(vl, "first") ++ aux(vr, "second"))
     }
@@ -419,20 +419,20 @@ trait Primitives {
                 } match {
                     case Some(v) => v
                     case None =>
-                        errPrim("recSelect", s"can't find field $f in $fields")
+                        errPrim("RecSelect", s"can't find field $f in $fields")
                 }
-            case None => errPrim("recSelect", s"$r is non-record $value, looking for field $f")
+            case None => errPrim("RecSelect", s"$r is non-record $value, looking for field $f")
         }
     }
 
     def strConcat(rho : Env, x : String, y : String) : ValueR = {
-        val sx = getStrParam("strConcat", rho, x)
-        val sy = getStrParam("strConcat", rho, y)
+        val sx = getStrParam("StrConcat", rho, x)
+        val sy = getStrParam("StrConcat", rho, y)
         strR(escape(unescape(sx) + unescape(sy)))
     }
 
     def strLength(rho : Env, x : String) : ValueR = {
-        val sx = getStrParam("strLength", rho, x)
+        val sx = getStrParam("StrLength", rho, x)
         intR(unescape(sx).length)
     }
 
@@ -441,7 +441,7 @@ trait Primitives {
         val usx = unescape(sx)
         val ii = getIntParam("strSubstr", rho, i)
         if ((ii < 0) || (ii > usx.length))
-            errPrim("strSubstr", s"""index $ii out of range for string "$sx"""")
+            errPrim("StrSubstr", s"""index $ii out of range for string "$sx"""")
         else
             strR(escape(usx.substring(ii.toInt)))
     }
@@ -451,7 +451,7 @@ trait Primitives {
             case Some(value) =>
                 value
             case None =>
-                errPrim("lookupVector", s"$name is ${lookupR(rho, name)}, expected Vector value")
+                errPrim("LookupVector", s"$name is ${lookupR(rho, name)}, expected Vector value")
         }
 
     def vecAppend(rho : Env, v : String, x : String) : ValueR = {
@@ -470,9 +470,9 @@ trait Primitives {
                 if (elems.indices contains index)
                     elems(index)
                 else
-                    errPrim("vecGet", s"vector index out of bounds - size: ${elems.size}, index: $index")
+                    errPrim("VecGet", s"vector index out of bounds - size: ${elems.size}, index: $index")
             case _ =>
-                errPrim("vecGet", s"can't find integer (index) operand $i")
+                errPrim("VecGet", s"can't find integer (index) operand $i")
         }
 
     def vecLength(rho : Env, v : String) : ValueR =
@@ -490,9 +490,9 @@ trait Primitives {
                 if (elems.indices contains idx)
                     vecR(elems.updated(idx.intValue, lookupR(rho, x)))
                 else
-                    errPrim("vecPut", s"vector index out of bounds - size: ${elems.size}, index: $idx")
+                    errPrim("VecPut", s"vector index out of bounds - size: ${elems.size}, index: $idx")
             case None =>
-                errPrim("vecPut", s"can't find index operand $i")
+                errPrim("VecPut", s"can't find index operand $i")
         }
     }
 
@@ -508,7 +508,7 @@ trait Primitives {
                     case Some(s) =>
                         unescape(s)
                     case None =>
-                        errPrim("writerWrite", s"can't write $value")
+                        errPrim("WriterWrite", s"can't write $value")
                 }
         }
         val out : Writer =
@@ -522,7 +522,7 @@ trait Primitives {
             out.write(s)
         } catch {
             case e : IOException =>
-                errPrim("writerWrite", e.getMessage)
+                errPrim("WriterWrite", e.getMessage)
         } finally {
             out.close()
         }

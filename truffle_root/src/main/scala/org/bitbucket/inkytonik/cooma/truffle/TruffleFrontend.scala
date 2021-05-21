@@ -45,7 +45,7 @@ class TruffleFrontend(in : InputStream = System.in, out : PrintStream = System.o
             val result = context.eval(CoomaConstants.ID, program)
             printAndClose(config, context, result)
         }.toEither.left.foreach {
-            case e : PolyglotException if e.isGuestException => config.output().emitln(e.getMessage)
+            case e : PolyglotException if e.isGuestException => config.output().emitln(e.getMessage.trim)
             case e => config.output().emitln(getUnhandledMessage(e))
         }
 

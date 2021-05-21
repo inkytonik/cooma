@@ -10,15 +10,19 @@
 
 package org.bitbucket.inkytonik.cooma.truffle
 
+import org.bitbucket.inkytonik.cooma.CoomaException.getUnhandledMessage
 import org.bitbucket.inkytonik.cooma._
+import org.graalvm.polyglot.PolyglotException
+
+import scala.util.Try
 
 trait TruffleREPL extends REPL {
 
     self : Compiler with TruffleBackend =>
 
     import org.bitbucket.inkytonik.cooma.Config
-    import org.bitbucket.inkytonik.cooma.PrettyPrinter.format
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter.format
     import org.graalvm.polyglot.Context
 
     var currentDynamicEnv : Context = _
@@ -37,8 +41,14 @@ trait TruffleREPL extends REPL {
     ) : Unit = {
         execute(i, optTypeValue, optAliasedType, config, {
             val line = format(program).layout
-            val value = currentDynamicEnv.eval(CoomaConstants.ID, line)
-            output(i, optTypeValue, optAliasedType, Some(value), config)
+            Try(currentDynamicEnv.eval(CoomaConstants.ID, line)).toEither match {
+                case Right(value) =>
+                    output(i, optTypeValue, optAliasedType, Some(value), config)
+                case Left(e : PolyglotException) if e.isGuestException =>
+                    config.output().emitln(e.getMessage)
+                case Left(e) =>
+                    config.output().emitln(getUnhandledMessage(e))
+            }
         })
     }
 

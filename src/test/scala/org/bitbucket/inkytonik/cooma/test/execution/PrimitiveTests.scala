@@ -5,10 +5,11 @@ import org.bitbucket.inkytonik.cooma.Primitives.primName
 import org.bitbucket.inkytonik.cooma.Util
 import org.bitbucket.inkytonik.cooma.test.ExecutionTests
 import org.scalacheck.Gen
+import org.scalatest.TryValues
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import wolfendale.scalacheck.regexp.RegexpGen
 
-class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks {
+class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks with TryValues {
 
     // Primitive properties
 
@@ -46,7 +47,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                 val name = s"prim $primName"
                 val code = s"prim $primName($l, 0)"
                 val result1 = runString(name, code, Seq())
-                result1 shouldBe "cooma: IntDiv: division by zero\n"
+                result1 shouldBe "PrimitiveException: IntDiv: division by zero\n"
             }
         }
     }
@@ -69,7 +70,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
             forAll { l : BigInt =>
                 forAll(Gen.choose(-30, -1)) { r : Int =>
                     whenever(r < 0) {
-                        runBadPrimTest(s"prim $primName", s"$l, $r", s"cooma: IntPow: illegal negative power $r given")
+                        runBadPrimTest(s"prim $primName", s"$l, $r", s"PrimitiveException: IntPow: illegal negative power $r given")
                     }
                 }
             }
@@ -167,7 +168,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                     forAll(notIndexesOf(s)) { i : Int =>
                         whenever((i < 0) || (i > s.length)) {
                             runBadPrimTest(s"prim $primName", s""""$l", $i""",
-                                s"""cooma: StrSubstr: index $i out of range for string "$l"""")
+                                s"""PrimitiveException: StrSubstr: index $i out of range for string "$l"""")
                         }
                     }
                 }
@@ -254,7 +255,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                         whenever((i < 0) || (i >= v.length)) {
                             val arg2 = vecToLiteral(v)
                             runBadPrimTest(s"prim $primName", s"Int, $arg2, $i",
-                                s"cooma: vector index out of bounds - size: ${v.length}, index: $i")
+                                s"PrimitiveException: $primName: vector index out of bounds - size: ${v.length}, index: $i")
                         }
                     }
                 }
@@ -288,7 +289,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                             forAll { (e : Int) =>
                                 val arg2 = vecToLiteral(v)
                                 runBadPrimTest(s"prim $primName", s"Int, $arg2, $i, $e",
-                                    s"cooma: vector index out of bounds - size: ${v.length}, index: $i")
+                                    s"PrimitiveException: $primName: vector index out of bounds - size: ${v.length}, index: $i")
                             }
                         }
                     }
