@@ -1,11 +1,11 @@
 {
-    // predef: val Reader = {read : () String}
-    type Reader2 = {read1 : () String, read2 : () String}
+    // predef: val Reader = {read : () <Left : String, Right : String>}
+    type Reader2 = {read1 : () <Left : String, Right : String>, read2 : () <Left : String, Right : String>}
     type Chooser = {choose : (Boolean) Reader}
 
     def alice () Reader2 = {
-        read1 = fun () "read1",
-        read2 = fun () "read2"
+        read1 = fun () <Right = "read1">,
+        read2 = fun () <Right = "read2">
     }
 
     def trusted () Chooser = {
@@ -20,8 +20,12 @@
         }
     }
 
-    def bob () String =
-        trusted().choose(false).read()
+    def bob () String = {
+        trusted().choose(false).read() match {
+            case Left(s) => s
+            case Right(s) => s
+        }
+    }
 
     bob()
 }

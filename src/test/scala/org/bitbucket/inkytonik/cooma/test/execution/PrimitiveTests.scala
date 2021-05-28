@@ -11,6 +11,10 @@ import wolfendale.scalacheck.regexp.RegexpGen
 
 class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks with TryValues {
 
+    def toCoomaString(b : Boolean) =
+        if (b) "< True = {} >"
+        else "< False = {} >"
+
     // Primitive properties
 
     def testInt1Prim(op : UserPrimitive, f : BigInt => BigInt) : Unit =
@@ -23,7 +27,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
 
     def testIntRelPrim(op : UserPrimitive, f : (BigInt, BigInt) => Boolean) : Unit =
         super.test(s"run: prim ${primName(op)}")(implicit bc =>
-            forAll((l : BigInt, r : BigInt) => runPrimTest(s"prim ${primName(op)}", s"$l, $r", " : < False : Unit, True : Unit >", f(l, r).toString)))
+            forAll((l : BigInt, r : BigInt) => runPrimTest(s"prim ${primName(op)}", s"$l, $r", " : < False : Unit, True : Unit >", toCoomaString(f(l, r)))))
 
     testInt1Prim(IntAbsP(), _.abs)
     testInt2Prim(IntAddP(), _ + _)
@@ -87,7 +91,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
 
         test(s"run: Int prim $primName") { implicit bc =>
             forAll { (l : BigInt, r : BigInt) =>
-                runPrimTest(s"prim $primName", s"Int, $l, $r", " : < False : Unit, True : Unit >", (l == r).toString)
+                runPrimTest(s"prim $primName", s"Int, $l, $r", " : < False : Unit, True : Unit >", toCoomaString(l == r))
             }
         }
     }
@@ -117,7 +121,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
         test(s"run: String prim $primName") { implicit bc =>
             forAll(stringLit, stringLit) { (l : String, r : String) =>
                 whenever(isStringLit(l) && isStringLit(r)) {
-                    runPrimTest(s"prim $primName", s"""String, "$l", "$r"""", " : < False : Unit, True : Unit >", func(l, r).toString)
+                    runPrimTest(s"prim $primName", s"""String, "$l", "$r"""", " : < False : Unit, True : Unit >", toCoomaString(func(l, r)))
                 }
             }
         }

@@ -60,11 +60,11 @@
   // Capability types
 
   type FolderReader = {
-    read : (suffix : String) String
+    read : (suffix : String) <Left : String, Right : String>
   }
 
   type FolderWriter = {
-    write : (suffix : String, s : String) Unit
+    write : (suffix : String, s : String) <Left : String, Right : Unit>
   }
 
   type HttpReturn = {
@@ -73,27 +73,27 @@
   }
 
   type HttpDelete = {
-    delete : (suffix : String) HttpReturn
+    delete : (suffix : String) <Left : String, Right : HttpReturn>
   }
 
   type HttpGet = {
-    get : (suffix : String) HttpReturn
+    get : (suffix : String) <Left : String, Right : HttpReturn>
   }
 
   type HttpPost = {
-    post : (suffix : String) HttpReturn
+    post : (suffix : String) <Left : String, Right : HttpReturn>
   }
 
   type HttpPut = {
-    put : (suffix : String) HttpReturn
+    put : (suffix : String) <Left : String, Right : HttpReturn>
   }
 
   type Reader = {
-    read : () String
+    read : () <Left : String, Right : String>
   }
 
   type Writer = {
-    write : (s : String) Unit
+    write : (s : String) <Left : String, Right : Unit>
   }
 
   // Useful type constructors

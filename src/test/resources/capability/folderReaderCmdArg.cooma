@@ -1,5 +1,11 @@
 fun (reader: FolderReader) {
-    val a = reader.read("a.txt")
-    val b = reader.read("sub/b.txt")
+    val a = reader.read("a.txt") match {
+        case Left(s) => s
+        case Right(s) => s
+    }
+    val b = reader.read("sub/b.txt") match {
+        case Left(s) => s
+        case Right(s) => s
+    }
     Strings.concat(a, b)
 }

@@ -49,16 +49,25 @@ class ReplTests extends ExecutionTests {
                         fun (x : Boolean) x
                         res0(true)
                     """,
-        "res0 : (x : < False : Unit, True : Unit >) < False : Unit, True : Unit > = <function>\nres1 : < False : Unit, True : Unit > = true"
+        "res0 : (x : < False : Unit, True : Unit >) < False : Unit, True : Unit > = <function>\nres1 : < False : Unit, True : Unit > = < True = {} >"
     )
 
     test(
         "single evaluation (function using type alias that needs to be expanded)",
         """
                         fun (x : Reader) x.read()
-                        res0({read = fun () "hello"})
+                        res0({read = fun () <Right = "hello">})
                     """,
-        "res0 : (x : { read : () String }) String = <function>\nres1 : String = \"hello\""
+        """|res0 : (x : {
+           |  read : () <
+           |    Left : String,
+           |    Right : String
+           |  >
+           |}) <
+           |  Left : String,
+           |  Right : String
+           |> = <function>
+           |res1 : < Left : String, Right : String > = < Right = "hello" >""".stripMargin
     )
 
     test(
@@ -257,7 +266,7 @@ class ReplTests extends ExecutionTests {
            val b : MyBool = true
            b
         """,
-        "MyBool : Type = < False : Unit, True : Unit >\nb : MyBool = true\nb : < False : Unit, True : Unit > = true"
+        "MyBool : Type = < False : Unit, True : Unit >\nb : MyBool = < True = {} >\nb : < False : Unit, True : Unit > = < True = {} >"
     )
 
     test(
@@ -282,7 +291,7 @@ class ReplTests extends ExecutionTests {
     test(
         "user-defined type alias for prelude type (block)",
         "{ type MyBool = Boolean val b : MyBool = true b }",
-        "res0 : < False : Unit, True : Unit > = true"
+        "res0 : < False : Unit, True : Unit > = < True = {} >"
     )
 
     test(
