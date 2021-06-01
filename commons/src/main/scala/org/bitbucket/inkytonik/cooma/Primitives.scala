@@ -50,7 +50,8 @@ trait Primitives {
 
     import java.io._
     import java.nio.file.Paths
-    import org.bitbucket.inkytonik.cooma.exceptions.CapabilityException
+
+    import org.bitbucket.inkytonik.cooma.CoomaException._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh, unescape}
@@ -62,7 +63,7 @@ trait Primitives {
         if (xs.length == nArgs)
             run(p, rho, xs, args)
         else
-            sys.error(s"${show(p)}: expected $nArgs arg(s), got $xs")
+            errPrim(show(p), s"expected $nArgs arg(s), got $xs")
     }
 
     def numArgs(p : Primitive) : Int =
@@ -95,7 +96,7 @@ trait Primitives {
             case Some(v) =>
                 v
             case _ =>
-                sys.error(s"$show: can't find string operand $x")
+                errPrim(show, s"can't find string operand $x")
         }
 
     def getIntParam(show : String, rho : Env, x : String) : BigInt =
@@ -103,18 +104,10 @@ trait Primitives {
             case Some(v) =>
                 v
             case _ =>
-                sys.error(s"$show: can't find integer operand $x")
+                errPrim(show, s"can't find integer operand $x")
         }
 
     def run(p : Primitive, rho : Env, xs : Seq[String], args : Seq[String]) : ValueR =
-        try {
-            handle(p, rho, xs, args)
-        } catch {
-            case capE : CapabilityException =>
-                errR(capE.getMessage)
-        }
-
-    def handle(p : Primitive, rho : Env, xs : Seq[String], args : Seq[String]) : ValueR =
         p match {
             case ArgumentP(i) =>
                 argument(i, args)
@@ -190,7 +183,7 @@ trait Primitives {
 
     def argument(i : Int, args : Seq[String]) : ValueR =
         if ((i < 0) || (i >= args.length))
-            errR(s"command-line argument $i does not exist (arg count = ${args.length})")
+            errPrim("Argument", s"command-line argument $i does not exist (arg count = ${args.length})")
         else
             strR(args(i))
 
@@ -227,12 +220,7 @@ trait Primitives {
         val value = lookupR(rho, x)
         val argument = isStrR(value) match {
             case Some(s) => s
-            case None => isErrR(value) match {
-                case Some(_) =>
-                    return value
-                case None =>
-                    sys.error(s"capability $cap: got non-String argument $value")
-            }
+            case None    => errCap(cap, s"got non-String argument $value")
         }
 
         cap match {
@@ -272,13 +260,13 @@ trait Primitives {
                                             case Some(rfld) =>
                                                 equalValues(getFieldValue(lfld), getFieldValue(rfld))
                                             case None =>
-                                                sys.error(s"equal: can't find field $f in $rfs")
+                                                errPrim("Equal", s"can't find field $f in $rfs")
                                         }
                                     })
                                 case _ =>
                                     (isVarR(lvalue), isVarR(rvalue)) match {
                                         case (Some((lc, lv)), Some((rc, rv))) =>
-                                            (lc == rc) && (equalValues(lv, rv))
+                                            (lc == rc) && equalValues(lv, rv)
                                         case _ =>
                                             (isVecR(lvalue), isVecR(rvalue)) match {
                                                 case (Some(lv), Some(rv)) =>
@@ -298,50 +286,44 @@ trait Primitives {
             falseR
     }
 
-    def folderFile(primName : String, rho : Env,
-        root : String, suffixIdn : String) : Either[ValueR, File] = {
+    def folderFile(primName : String, rho : Env, root : String, suffixIdn : String) : File = {
         val suffix = lookupR(rho, suffixIdn)
         val filename =
             isStrR(suffix)
                 .map(suffix => s"$root/$suffix")
-                .getOrElse(sys.error(s"folderOp: expected String, got $suffix"))
-        if (Paths.get(filename).normalize.startsWith(Paths.get(root).normalize))
-            Right(new File(filename))
-        else
-            Left(errR(s"$primName $root: $filename is not a descendant of $root"))
+                .getOrElse(errCap(primName, s"expected String, got $suffix"))
+        if (Paths.get(filename).normalize.startsWith(Paths.get(root).normalize)) new File(filename)
+        else errCap(primName, s"$filename is not a descendant of $root")
     }
 
-    def folderReaderRead(rho : Env, root : String, suffixIdn : String) : ValueR =
-        folderFile("FolderReaderRead", rho, root, suffixIdn) match {
-            case Left(v) =>
-                v
-            case Right(file) =>
-                val in = new BufferedReader(new FileReader(file))
-                try {
-                    strR(readReaderContents(in))
-                } catch {
-                    case e : IOException =>
-                        sys.error(e.getMessage)
-                }
+    def folderReaderRead(rho : Env, root : String, suffixIdn : String) : ValueR = {
+        val file = folderFile("FolderReaderRead", rho, root, suffixIdn)
+        val in = new BufferedReader(new FileReader(file))
+        try {
+            strR(readReaderContents(in))
+        } catch {
+            case e : IOException =>
+                errCap("FolderReaderRead", e.getMessage)
         }
+    }
 
-    def folderWriterWrite(rho : Env, root : String, suffixIdn : String, x : String) : ValueR =
-        folderFile("FolderWriterWrite", rho, root, suffixIdn) match {
-            case Left(v) =>
-                v
-            case Right(file) =>
-                val text = {
-                    val text = lookupR(rho, x)
-                    isStrR(text).getOrElse(sys.error(s"folderWriterWrite: can't write $text"))
-                }
-                val out = new BufferedWriter(new FileWriter(file))
-                try {
-                    out.write(text)
-                } finally {
-                    out.close()
-                }
-                recR(Vector())
+    def folderWriterWrite(rho : Env, root : String, suffixIdn : String, x : String) : ValueR = {
+        val file = folderFile("FolderWriterWrite", rho, root, suffixIdn)
+        val text = {
+            val text = lookupR(rho, x)
+            isStrR(text).getOrElse(errCap("FolderWriterWrite", s"can't write $text"))
         }
+        val out = new BufferedWriter(new FileWriter(file))
+        try {
+            out.write(text)
+        } catch {
+            case e : IOException =>
+                errCap("FolderWriterWrite", e.getMessage)
+        } finally {
+            out.close()
+        }
+        recR(Vector())
+    }
 
     def httpClient(rho : Env, methodName : String, url : String, x : String) : ValueR =
         isStrR(lookupR(rho, x)) match {
@@ -355,7 +337,7 @@ trait Primitives {
                     fldR("body", strR(body))
                 ))
             case None =>
-                sys.error(s"httpClient: can't find string operand $x")
+                errCap("HttpClient", s"can't find string operand $x")
         }
 
     def intBinPrim(show : String, rho : Env, l : String, r : String, op : (BigInt, BigInt) => BigInt) : ValueR = {
@@ -367,7 +349,7 @@ trait Primitives {
     def intDiv(rho : Env, l : String, r : String) : ValueR = {
         val ri = getIntParam("intDiv", rho, r)
         if (ri == 0)
-            errR(s"IntDiv: division by zero")
+            errPrim("IntDiv", s"division by zero")
         else {
             val li = getIntParam("intDiv", rho, l)
             intR(li / ri)
@@ -377,7 +359,7 @@ trait Primitives {
     def intPow(rho : Env, l : String, r : String) : ValueR = {
         val ri = getIntParam("intPow", rho, r)
         if (ri < 0)
-            errR(s"IntPow: illegal negative power $ri given")
+            errPrim("IntPow", s"illegal negative power $ri given")
         else {
             val li = getIntParam("intPow", rho, l)
             intR(li.pow(ri.toInt))
@@ -397,7 +379,7 @@ trait Primitives {
 
     def readerRead(filename : String) : ValueR = {
         if (CoomaConstants.CONSOLEIO != filename && !PrimitiveUtils.isFileReadable(filename))
-            throw new CapabilityException(s"Reader capability unavailable: can't read $filename")
+            errCap("ReaderRead", s"can't read $filename")
         lazy val in : BufferedReader =
             new BufferedReader(
                 filename match {
@@ -410,25 +392,21 @@ trait Primitives {
             strR(escape(s))
         } catch {
             case e : IOException =>
-                sys.error(e.getMessage)
+                errCap("ReaderRead", e.getMessage)
         }
     }
 
     def recConcat(rho : Env, l : String, r : String) : ValueR = {
         val vl = lookupR(rho, l)
         val vr = lookupR(rho, r)
-        def aux(v : ValueR, side : String) : Either[String, Vector[FldR]] =
-            (isRecR(v), isErrR(v)) match {
-                case (Some(fields), _) => Right(fields)
-                case (_, Some(error))  => Left(error)
-                case _                 => sys.error(s"recConcat: $side argument $r of record concatenation is non-record")
+        def aux(v : ValueR, side : String) : Vector[FldR] =
+            isRecR(v) match {
+                case Some(fields) =>
+                    fields
+                case None =>
+                    errPrim("RecConcat", s"$side argument $r of record concatenation is non-record")
             }
-        (aux(vl, "first"), aux(vr, "second")) match {
-            case (Right(lFields), Right(rFields)) =>
-                recR(lFields ++ rFields)
-            case (l, r) =>
-                errR(Seq(l, r).flatMap(_.swap.toOption).mkString(", "))
-        }
+        recR(aux(vl, "first") ++ aux(vr, "second"))
     }
 
     def recSelect(rho : Env, r : String, f : String) : ValueR = {
@@ -440,24 +418,21 @@ trait Primitives {
                         getFieldValue(fld)
                 } match {
                     case Some(v) => v
-                    case None    => sys.error(s"recSelect: can't find field $f in $fields")
+                    case None =>
+                        errPrim("RecSelect", s"can't find field $f in $fields")
                 }
-            case None =>
-                isErrR(value) match {
-                    case Some(_) => value
-                    case None    => sys.error(s"recSelect: $r is non-record $value, looking for field $f")
-                }
+            case None => errPrim("RecSelect", s"$r is non-record $value, looking for field $f")
         }
     }
 
     def strConcat(rho : Env, x : String, y : String) : ValueR = {
-        val sx = getStrParam("strConcat", rho, x)
-        val sy = getStrParam("strConcat", rho, y)
+        val sx = getStrParam("StrConcat", rho, x)
+        val sy = getStrParam("StrConcat", rho, y)
         strR(escape(unescape(sx) + unescape(sy)))
     }
 
     def strLength(rho : Env, x : String) : ValueR = {
-        val sx = getStrParam("strLength", rho, x)
+        val sx = getStrParam("StrLength", rho, x)
         intR(unescape(sx).length)
     }
 
@@ -466,7 +441,7 @@ trait Primitives {
         val usx = unescape(sx)
         val ii = getIntParam("strSubstr", rho, i)
         if ((ii < 0) || (ii > usx.length))
-            errR(s"""StrSubstr: index $ii out of range for string "$sx"""")
+            errPrim("StrSubstr", s"""index $ii out of range for string "$sx"""")
         else
             strR(escape(usx.substring(ii.toInt)))
     }
@@ -476,7 +451,7 @@ trait Primitives {
             case Some(value) =>
                 value
             case None =>
-                sys.error(s"lookupVector: $name is ${lookupR(rho, name)}, expected Vector value")
+                errPrim("LookupVector", s"$name is ${lookupR(rho, name)}, expected Vector value")
         }
 
     def vecAppend(rho : Env, v : String, x : String) : ValueR = {
@@ -495,9 +470,9 @@ trait Primitives {
                 if (elems.indices contains index)
                     elems(index)
                 else
-                    errR(s"vector index out of bounds - size: ${elems.size}, index: $index")
+                    errPrim("VecGet", s"vector index out of bounds - size: ${elems.size}, index: $index")
             case _ =>
-                sys.error(s"vecGet: can't find integer (index) operand $i")
+                errPrim("VecGet", s"can't find integer (index) operand $i")
         }
 
     def vecLength(rho : Env, v : String) : ValueR =
@@ -515,44 +490,43 @@ trait Primitives {
                 if (elems.indices contains idx)
                     vecR(elems.updated(idx.intValue, lookupR(rho, x)))
                 else
-                    errR(s"vector index out of bounds - size: ${elems.size}, index: $idx")
+                    errPrim("VecPut", s"vector index out of bounds - size: ${elems.size}, index: $idx")
             case None =>
-                sys.error(s"vecPut: can't find index operand $i")
+                errPrim("VecPut", s"can't find index operand $i")
         }
     }
 
     def writerWrite(filename : String, rho : Env, x : String) : ValueR = {
         if (CoomaConstants.CONSOLEIO != filename && !PrimitiveUtils.isFileWritable(filename))
-            throw new CapabilityException(s"Writer capability unavailable: can't write $filename")
+            errCap("WriterWrite", s"can't write $filename")
         val value = lookupR(rho, x)
-        if (isErrR(value).isDefined)
-            value
-        else {
-            val s = isIntR(value) match {
-                case Some(i) =>
-                    i.toString
-                case None =>
-                    isStrR(value) match {
-                        case Some(s) =>
-                            unescape(s)
-                        case None =>
-                            sys.error(s"writerWrite: can't write $value")
-                    }
-            }
-            val out : Writer =
-                filename match {
-                    case CoomaConstants.CONSOLEIO =>
-                        stdout
-                    case _ =>
-                        new BufferedWriter(new FileWriter(filename))
+        val s = isIntR(value) match {
+            case Some(i) =>
+                i.toString
+            case None =>
+                isStrR(value) match {
+                    case Some(s) =>
+                        unescape(s)
+                    case None =>
+                        errPrim("WriterWrite", s"can't write $value")
                 }
-            try {
-                out.write(s)
-            } finally {
-                out.close()
-            }
-            recR(Vector())
         }
+        val out : Writer =
+            filename match {
+                case CoomaConstants.CONSOLEIO =>
+                    stdout
+                case _ =>
+                    new BufferedWriter(new FileWriter(filename))
+            }
+        try {
+            out.write(s)
+        } catch {
+            case e : IOException =>
+                errPrim("WriterWrite", e.getMessage)
+        } finally {
+            out.close()
+        }
+        recR(Vector())
     }
 
 }

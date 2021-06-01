@@ -59,13 +59,13 @@ class FileIoTests extends ExecutionTests {
         test(s"run: $name: non-existent writer") { implicit bc =>
             val writer = "notThere.txt"
             val result = runFile(filename, Seq(), Seq(writer))
-            result shouldBe s"cooma: Writer capability unavailable: can't write $writer\n"
+            result shouldBe s"CapabilityException: WriterWrite: can't write $writer\n"
             Files.exists(Paths.get(writer)) shouldBe false
         }
 
         test(s"run: $name: no args") { implicit bc =>
             val result = runFile(filename, Seq(), Seq())
-            result shouldBe s"cooma: command-line argument 0 does not exist (arg count = 0)\n"
+            result shouldBe s"PrimitiveException: Argument: command-line argument 0 does not exist (arg count = 0)\n"
         }
 
         test(s"run: $name: standard out") { implicit bc =>
@@ -122,7 +122,7 @@ class FileIoTests extends ExecutionTests {
 
         test(s"run: $name") { implicit bc =>
             val result = runFile(sourceFilename, Seq(), Seq(root.toString))
-            result shouldBe "cooma: FolderReaderRead ./src/main/resources/tmp/sub: ./src/main/resources/tmp/sub/../a.txt is not a descendant of ./src/main/resources/tmp/sub\n"
+            result shouldBe "CapabilityException: FolderReaderRead: ./src/main/resources/tmp/sub/../a.txt is not a descendant of ./src/main/resources/tmp/sub\n"
         }
     }
 
@@ -160,7 +160,7 @@ class FileIoTests extends ExecutionTests {
             createFile(reader, "")
             val writer = "notThere.txt"
             val result = runFile(filename, Seq(), Seq(writer, reader))
-            result shouldBe s"cooma: Writer capability unavailable: can't write $writer\n"
+            result shouldBe s"CapabilityException: WriterWrite: can't write $writer\n"
             Files.exists(Paths.get(writer)) shouldBe false
             deleteFile(writer)
         }
@@ -169,20 +169,20 @@ class FileIoTests extends ExecutionTests {
             createFile(writer, "")
             val reader = "notThere.txt"
             val result = runFile(filename, Seq(), Seq(writer, reader))
-            result shouldBe s"cooma: Reader capability unavailable: can't read $reader\n"
+            result shouldBe s"CapabilityException: ReaderRead: can't read $reader\n"
             Files.exists(Paths.get(reader)) shouldBe false
             deleteFile(writer)
         }
 
         test(s"run: $name: no args") { implicit bc =>
             val result = runFile(filename, Seq(), Seq())
-            result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 0)\n"
+            result shouldBe s"PrimitiveException: Argument: command-line argument 0 does not exist (arg count = 0)\n"
         }
 
         test(s"run: $name: one arg") { implicit bc =>
             createFile(writer, "")
             val result = runFile(filename, Seq(), Seq(writer))
-            result shouldBe s"cooma: command-line argument 1 does not exist (arg count = 1)\n"
+            result shouldBe s"PrimitiveException: Argument: command-line argument 1 does not exist (arg count = 1)\n"
             deleteFile(writer)
         }
     }

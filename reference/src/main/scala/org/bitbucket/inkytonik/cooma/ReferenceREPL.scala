@@ -22,7 +22,11 @@ trait ReferenceREPL extends REPL {
     var currentDynamicEnv : Env = _
 
     override def initialise(config : Config) : Unit = {
-        currentDynamicEnv = preludeDynamicEnv(config)
+        currentDynamicEnv =
+            preludeDynamicEnv(config).left.map { msg =>
+                config.output().emitln(msg)
+                sys.exit(-1)
+            }.merge
         super.initialise(config)
     }
 
@@ -42,14 +46,12 @@ trait ReferenceREPL extends REPL {
 
         execute(i, optTypeValue, optAliasedType, config, {
             val args = config.filenames()
-            val result = interpret(term, currentDynamicEnv, args, config)
-            val value = result.value
-            isErrR(value) match {
-                case Some(_) =>
-                    errorOutput(Some(value), config)
-                case None =>
+            interpret(term, currentDynamicEnv, args, config) match {
+                case Right(Result(_, value)) =>
                     currentDynamicEnv = ConsVE(i, value, currentDynamicEnv)
                     output(i, optTypeValue, optAliasedType, Some(value), config)
+                case Left(msg) =>
+                    config.output().emitln(msg)
             }
         })
     }

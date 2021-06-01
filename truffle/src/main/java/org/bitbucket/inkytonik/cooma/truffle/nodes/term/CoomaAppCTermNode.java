@@ -13,7 +13,7 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.term;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
-import org.bitbucket.inkytonik.cooma.truffle.exceptions.CoomaException;
+import org.bitbucket.inkytonik.cooma.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
@@ -51,10 +51,10 @@ public abstract class CoomaAppCTermNode extends CoomaTermNode {
                 replaceRho(p1);
                 return closure.getZ().executeGeneric(frame);
             } else {
-                throw new CoomaException(String.format("interpret AppC non-continuation closure: %s is %s", k, value.print()), this);
+                return CoomaException.errInterp("AppC", String.format("non-continuation closure: %s is %s", k, value.print()));
             }
         } else {
-                throw new CoomaException(String.format("interpret AppC unknown continuation kind: %s", this.cont), this);
+            return CoomaException.errInterp("AppC", String.format("unknown continuation kind: %s", this.cont));
         }
     }
 

@@ -261,7 +261,7 @@ class VectorTests extends ExpressionTests {
     testError(
         "vector with internal error",
         "[prim IntAdd(1,1), prim IntDiv(1, 0)]",
-        "cooma: IntDiv: division by zero"
+        "PrimitiveException: IntDiv: division by zero"
     )
 
     testError(
@@ -270,7 +270,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = [1,2,3]
             Vectors.get(Int, x, 4)
         }""",
-        "cooma: vector index out of bounds - size: 3, index: 4"
+        "PrimitiveException: VecGet: vector index out of bounds - size: 3, index: 4"
     )
 
     testError(
@@ -279,7 +279,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = [1,2,3]
             Vectors.get(Int, x, -1)
         }""",
-        "cooma: vector index out of bounds - size: 3, index: -1"
+        "PrimitiveException: VecGet: vector index out of bounds - size: 3, index: -1"
     )
 
     testError(
@@ -288,7 +288,7 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = []
             Vectors.get(Int, x, 0)
         }""",
-        "cooma: vector index out of bounds - size: 0, index: 0"
+        "PrimitiveException: VecGet: vector index out of bounds - size: 0, index: 0"
     )
 
     testError(
@@ -297,25 +297,25 @@ class VectorTests extends ExpressionTests {
             val x : Vector(Int) = []
             Vectors.put(Int, x, 0, 5)
         }""",
-        "cooma: vector index out of bounds - size: 0, index: 0"
+        "PrimitiveException: VecPut: vector index out of bounds - size: 0, index: 0"
     )
 
     testError(
-        "Vector operations - put on vector, index out ouf bounds ",
+        "Vector operations - put on vector, index out of bounds ",
         """{
             val x : Vector(Int) = [1]
             Vectors.put(Int, x, 1, 5)
         }""",
-        "cooma: vector index out of bounds - size: 1, index: 1"
+        "PrimitiveException: VecPut: vector index out of bounds - size: 1, index: 1"
     )
 
     testError(
-        "Vector operations - put on vector, index out ouf bounds (negative) ",
+        "Vector operations - put on vector, index out of bounds (negative) ",
         """{
             val x : Vector(Int) = [1]
             Vectors.put(Int, x, -1, 5)
         }""",
-        "cooma: vector index out of bounds - size: 1, index: -1"
+        "PrimitiveException: VecPut: vector index out of bounds - size: 1, index: -1"
     )
 
 }

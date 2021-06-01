@@ -1,1 +1,1 @@
-cooma: IntDiv: division by zero
+Error in prelude: PrimitiveException: IntDiv: division by zero

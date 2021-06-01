@@ -12,12 +12,16 @@ package org.bitbucket.inkytonik.cooma.truffle
 
 import java.io.{InputStream, PrintStream}
 
+import org.bitbucket.inkytonik.cooma.CoomaException._
 import org.bitbucket.inkytonik.cooma.{CoomaConstants, Frontend}
+import org.graalvm.polyglot.PolyglotException
+
+import scala.util.Try
 
 class TruffleFrontend(in : InputStream = System.in, out : PrintStream = System.out) extends Frontend {
 
     import org.bitbucket.inkytonik.cooma.Config
-    import org.graalvm.polyglot.{Context, PolyglotException, Value}
+    import org.graalvm.polyglot.{Context, Value}
 
     /**
      * Main entry point, where a cooma file is provided to run in the config.
@@ -35,21 +39,18 @@ class TruffleFrontend(in : InputStream = System.in, out : PrintStream = System.o
     override def interpret(programName : String, program : String, config : Config) : Unit =
         interpret(program, config)
 
-    private def interpret(program : String, config : Config) : Unit = {
-        try {
+    private def interpret(program : String, config : Config) : Unit =
+        Try {
             val context = createContext(config)
             val result = context.eval(CoomaConstants.ID, program)
             printAndClose(config, context, result)
-        } catch {
-            case e : PolyglotException =>
-                config.output().emit(e.getMessage)
+        }.toEither.left.foreach {
+            case e : PolyglotException if e.isGuestException => config.output().emitln(e.getMessage.trim)
+            case e => config.output().emitln(getUnhandledMessage(e))
         }
-    }
 
     private def printAndClose(config : Config, context : Context, result : Value) = {
-        if (CoomaLanguage.Type.Error.value.equals(result.getMetaObject.toString))
-            config.output().emitln(result)
-        else if (config.resultPrint())
+        if (config.resultPrint())
             config.output().emitln(result)
         context.close()
     }

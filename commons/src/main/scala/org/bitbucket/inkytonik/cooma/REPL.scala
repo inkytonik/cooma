@@ -273,16 +273,6 @@ trait REPL extends REPLBase[Config] {
     }
 
     /**
-     * Output in the REPL for error messages
-     */
-    def errorOutput(optResult : Option[OutputValueR], config : Config) = {
-        config.output().emitln(optResult match {
-            case Some(result) => showRuntimeValue(result)
-            case None         => ""
-        })
-    }
-
-    /**
      * Extractor for commands, splits the line into separate words.
      */
     object Command {

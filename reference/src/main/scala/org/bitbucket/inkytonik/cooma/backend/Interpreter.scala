@@ -15,17 +15,19 @@ class Interpreter(config : Config) {
 
     self : ReferenceBackend =>
 
+    import org.bitbucket.inkytonik.cooma.CoomaException._
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter._
-    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, emptyDocument, Width}
+    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, Width, emptyDocument}
     import org.bitbucket.inkytonik.kiama.util.{FileSource, Messaging, Positions}
+
     import scala.annotation.tailrec
+    import scala.util.Try
 
     case class Result(rho : Env, value : ValueR)
 
     sealed abstract class ValueR
     case class ClsR(f : String, x : String, env : Env, e : Term) extends ValueR
-    case class ErrR(msg : String) extends ValueR
     case class IntR(num : BigInt) extends ValueR
     case class RecR(fields : Vector[FldR]) extends ValueR
     case class StrR(str : String) extends ValueR
@@ -43,27 +45,22 @@ class Interpreter(config : Config) {
     case class NilE() extends Env
 
     def interpret(term : Term, args : Seq[String], config : Config) : Unit = {
-        if (config.server())
-            if (driver.settingBool("showTrace"))
-                driver.publishProduct(source, "trace", "IR")
-        val env = preludeDynamicEnv(config)
-        val result = interpret(term, env, args, config)
-        result.value match {
-            case ErrR(msg) =>
-                config.output().emitln(showRuntimeValue(result.value))
-                if (config.server())
-                    if (driver.settingBool("showResult"))
-                        driver.publishProduct(source, "result", "cooma", pretty(value(msg)))
-            case result =>
+        if (config.server() && driver.settingBool("showTrace"))
+            driver.publishProduct(source, "trace", "IR")
+        preludeDynamicEnv(config).flatMap(interpret(term, _, args, config).map(_.value)) match {
+            case Right(result) =>
                 if (config.resultPrint())
                     config.output().emitln(showRuntimeValue(result))
-                if (config.server())
-                    if (driver.settingBool("showResult"))
-                        driver.publishProduct(source, "result", "cooma", formatRuntimeValue(result, 5))
+                if (config.server() && driver.settingBool("showResult"))
+                    driver.publishProduct(source, "result", "cooma", formatRuntimeValue(result, 5))
+            case Left(msg) =>
+                config.output().emitln(msg)
+                if (config.server() && driver.settingBool("showResult"))
+                    driver.publishProduct(source, "result", "cooma", pretty(value(msg)))
         }
     }
 
-    def interpret(term : Term, rho : Env, args : Seq[String], config : Config) : Result = {
+    def interpret(term : Term, rho : Env, args : Seq[String], config : Config) : Either[String, Result] = {
 
         @tailrec
         def interpretAux(rho : Env, term : Term) : Result = {
@@ -89,7 +86,7 @@ class Interpreter(config : Config) {
                             interpretAux(ConsVE(y, lookupR(rho, x), rho2), t)
 
                         case v =>
-                            sys.error(s"interpret AppC: $k is $v")
+                            errInterp("AppC", s"$k is $v")
                     }
 
                 case AppF(f, k, x) =>
@@ -104,11 +101,8 @@ class Interpreter(config : Config) {
                                 t
                             )
 
-                        case error @ ErrR(_) =>
-                            Result(rho, error)
-
                         case v =>
-                            sys.error(s"interpret AppF: $f is $v")
+                            errInterp("AppF", s"$f is $v")
                     }
 
                 case CasV(x, cs) =>
@@ -127,18 +121,15 @@ class Interpreter(config : Config) {
                                             interpretAux(rho3, t)
 
                                         case v =>
-                                            sys.error(s"interpret CasV: $k is $v")
+                                            errInterp("CasV", s"$k is $v")
                                     }
 
                                 case None =>
-                                    sys.error(s"interpret CasV: can't find case for variant $c1")
+                                    errInterp("CasV", s"can't find case for variant $c1")
                             }
 
-                        case error @ ErrR(_) =>
-                            Result(rho, error)
-
                         case v =>
-                            sys.error(s"interpret CasV: $x is $v")
+                            errInterp("CasV", s"$x is $v")
                     }
 
                 case LetC(k, x, t1, t2) =>
@@ -180,13 +171,13 @@ class Interpreter(config : Config) {
                     VarR(FldR(c, lookupR(rho, v)))
 
                 case VecV(elems) =>
-                    val results = elems.map(s => lookupR(rho, s))
-                    results.collectFirst {
-                        case e : ErrR => e
-                    }.getOrElse(VecR(results))
+                    VecR(elems.map(s => lookupR(rho, s)))
             }
 
-        interpretAux(rho, term)
+        Try(interpretAux(rho, term)).toEither.left.map {
+            case e : CoomaException => e.toString
+            case e                  => getUnhandledMessage(e)
+        }
     }
 
     @tailrec
@@ -213,7 +204,7 @@ class Interpreter(config : Config) {
                 lookupR(rho2, x)
 
             case NilE() =>
-                sys.error(s"lookupR: can't find value $x")
+                errInterp("lookupR", s"can't find value $x")
         }
 
     def lookupC(rho : Env, x : String) : ClsC =
@@ -231,14 +222,17 @@ class Interpreter(config : Config) {
                 lookupC(rho2, x)
 
             case NilE() =>
-                sys.error(s"lookupC: can't find $x")
+                errInterp("lookupC", s"can't find $x")
         }
 
-    def preludeDynamicEnv(config : Config) : Env =
+    def preludeDynamicEnv(config : Config) : Either[String, Env] =
         if (config.noPrelude() || config.compilePrelude())
-            emptyEnv
+            Right(emptyEnv)
         else
-            readDynamicPrelude(s"${config.preludePath()}.dynamic", config)
+            Try(readDynamicPrelude(s"${config.preludePath()}.dynamic", config)).toEither.left.map {
+                case e : CoomaException => e.message
+                case e                  => getUnhandledMessage(e)
+            }
 
     def readDynamicPrelude(filename : String, config : Config) : Env = {
         val source = FileSource(filename)
@@ -249,8 +243,9 @@ class Interpreter(config : Config) {
             val prelude = p.value(pr).asInstanceOf[DynamicPrelude]
             val preludeConfig = new Config(Seq("-Q", filename))
             preludeConfig.verify()
-            val result = interpret(prelude.term, emptyEnv, Seq(), preludeConfig)
-            result.rho
+            interpret(prelude.term, emptyEnv, Seq(), preludeConfig)
+                .left.map(errPrelude)
+                .merge.rho
         } else {
             config.output().emitln(s"cooma: can't parse dynamic prelude '$filename'")
             val message = p.errorToMessage(pr.parseError)
@@ -282,8 +277,6 @@ class Interpreter(config : Config) {
         v match {
             case ClsR(v1, v2, v3, v4) =>
                 "<function>"
-            case ErrR(msg) =>
-                s"cooma: $msg"
             case IntR(i) =>
                 value(i)
             case RecR(Vector()) =>

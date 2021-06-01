@@ -18,8 +18,8 @@ import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
+import org.bitbucket.inkytonik.cooma.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
-import org.bitbucket.inkytonik.cooma.Backend;
 import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.CoomaConstants;
 import org.bitbucket.inkytonik.cooma.Util;
@@ -166,6 +166,9 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 			output(config, "cooma: xtc parse exception reading dynamic prelude '" + filename + "'");
 			output(config, e.getMessage());
 		}
+		catch (CoomaException e) {
+			CoomaException.errPrelude(e);
+		}
 		return new Rho();
     }
 
@@ -207,8 +210,6 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 			return Type.Int.value;
 		} else if (value instanceof StringRuntimeValue) {
 			return Type.String.value;
-		} else if (value instanceof ErrorRuntimeValue) {
-			return Type.Error.value;
 		} else if (value instanceof ContinuationClosure) {
 			return Type.Closure.value;
 		} else if (value instanceof RecRuntimeValue) {
@@ -227,7 +228,6 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 	public enum Type {
 		Int("Number"),
 		String("String"),
-		Error("Error"),
 		Record("Record"),
 		Closure("Closure");
 

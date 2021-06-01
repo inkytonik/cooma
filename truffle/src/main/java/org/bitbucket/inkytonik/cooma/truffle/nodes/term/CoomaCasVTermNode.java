@@ -12,7 +12,7 @@ package org.bitbucket.inkytonik.cooma.truffle.nodes.term;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
-import org.bitbucket.inkytonik.cooma.truffle.exceptions.CoomaException;
+import org.bitbucket.inkytonik.cooma.CoomaException;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.environment.Rho;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.value.CoomaCaseTerm;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.ContinuationClosure;
@@ -47,13 +47,13 @@ public class CoomaCasVTermNode extends CoomaTermNode {
                         replaceRho(p1);
                         return closure.getZ().executeGeneric(frame);
                     } else {
-                        throw new CoomaException(String.format("interpret CasV: %s is %s", k, cont.print()), this);
+                        return CoomaException.errInterp("CasV", String.format("%s is %s", k, cont.print()));
                     }
                 }
             }
-            throw new CoomaException(String.format("interpret CasV: can't find case for variant %s", c1), this);
+            return CoomaException.errInterp("CasV", String.format("can't find case for variant %s", c1));
         } else {
-            throw new CoomaException(String.format("interpret CasV: %s is %s", x, value.print()), this);
+            return CoomaException.errInterp("CasV", String.format("CasV: %s is %s", x, value.print()));
         }
     }
 }

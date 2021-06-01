@@ -14,13 +14,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.bitbucket.inkytonik.cooma.truffle.runtime.ErrorRuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.VecRuntimeValue;
-import scala.Option;
+import scala.collection.Iterator;
 import scala.collection.immutable.Vector;
 import scala.collection.immutable.VectorBuilder;
-import scala.collection.Iterator;
 
 @Getter
 @RequiredArgsConstructor
@@ -35,8 +33,6 @@ public class CoomaVecValueNode extends CoomaValueNode {
 		Iterator<String> iter = vector.iterator();
 		while (iter.hasNext()) {
 			RuntimeValue value = obtainFromRho(iter.next());
-			if (value instanceof ErrorRuntimeValue)
-				return value;
 			values.addOne(value);
 		}
 		return new VecRuntimeValue(values.result());

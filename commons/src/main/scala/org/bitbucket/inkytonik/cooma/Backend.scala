@@ -46,7 +46,6 @@ trait Backend extends Primitives {
     def fldV(f : String, x : String) : FldV
 
     type ValueR
-    def errR(msg : String) : ValueR
     def strR(str : String) : ValueR
     def varR(c : String, v : ValueR) : ValueR
     def intR(num : BigInt) : ValueR
@@ -58,7 +57,6 @@ trait Backend extends Primitives {
     val falseR : ValueR = varR("False", uniR)
     val trueR : ValueR = varR("True", uniR)
 
-    def isErrR(value : ValueR) : Option[String]
     def isStrR(value : ValueR) : Option[String]
     def isIntR(value : ValueR) : Option[BigInt]
     def isRecR(value : ValueR) : Option[Vector[FldR]]
