@@ -406,6 +406,7 @@ class SemanticAnalyser(
     lazy val tipe : Expression => Option[Expression] =
         attr {
             case n : App =>
+                appResType(n)
 
             case Blk(b) =>
                 blockTipe(b)
@@ -525,20 +526,38 @@ class SemanticAnalyser(
         rewrite(everywhere(substArgType))(a)
     }
 
-    def appType(f : Expression, ts : Vector[ArgumentType], t : Expression, as : Vector[Expression]) : Option[Expression] =
+    def appArgTypes(app : App) : Option[Vector[ArgumentType]] =
+        appType(app)._1
+
+    def appResType(app : App) : Option[Expression] =
+        appType(app)._2
+
+    val appType : App => (Option[Vector[ArgumentType]], Option[Expression]) =
+        attr {
+            case App(f, as) =>
+                tipe(f) match {
+                    case Some(FunT(ArgumentTypes(ts), t)) =>
+                        appType(f, ts, Vector(), t, as)
+                    case _ =>
+                        (None, None)
+                }
+        }
+
+    def appType(f : Expression, ts : Vector[ArgumentType], newts : Vector[ArgumentType], t : Expression,
+        as : Vector[Expression]) : (Option[Vector[ArgumentType]], Option[Expression]) =
         if (as.isEmpty)
             if (ts.isEmpty)
-                unalias(f, t)
+                (Some(newts), unalias(f, t))
             else
-                unaliasFunT(f, ts, t)
+                (Some(newts), unaliasFunT(f, ts, t))
         else if (ts.isEmpty)
-            None
+            (None, None)
         else
             ts.head match {
                 case ArgumentType(Some(IdnDef(x)), `typT`) =>
-                    appType(f, substArgTypes(x, as.head, ts.tail), substArgTypes(x, as.head, t), as.tail)
+                    appType(f, substArgTypes(x, as.head, ts.tail), newts :+ ts.head, substArgTypes(x, as.head, t), as.tail)
                 case _ =>
-                    appType(f, ts.tail, t, as.tail)
+                    appType(f, ts.tail, newts :+ ts.head, t, as.tail)
             }
 
     def makeRow(fields : Vector[Field]) : Option[Vector[FieldType]] = {
@@ -727,11 +746,11 @@ class SemanticAnalyser(
 
     lazy val expectedType : Expression => Option[Expression] =
         attr {
-            case tree.parent.pair(a, App(e, _)) if a ne e =>
+            case tree.parent.pair(a, app @ App(e, _)) if a ne e =>
                 val argnum = tree.index(a) - 1
-                tipe(e) match {
-                    case Some(FunT(ArgumentTypes(ts), _)) if ts.length > argnum =>
-                        unalias(a, ts(argnum).expression)
+                appArgTypes(app) match {
+                    case Some(ts) if ts.length >= argnum =>
+                        Some(ts(argnum).expression)
                     case _ =>
                         None
                 }
@@ -770,14 +789,11 @@ class SemanticAnalyser(
                     unalias(t, t)
 
             case tree.parent.pair(a : Expression, Prm(p, as)) =>
-                val argnum = tree.index(a)
+                val argnum = tree.index(a) - 1
                 userPrimitiveType(p) match {
-                    case FunT(ArgumentTypes(ts), _) if ts.length >= argnum =>
-                        if (as.length == ts.length)
-                            unalias(a, ts(argnum - 1).expression)
-                        else
-                            None
-                    case FunT(ArgumentTypes(ts), _) =>
+                    case FunT(ArgumentTypes(ts), _) if (as.length == ts.length) && (ts.length >= argnum) =>
+                        unalias(a, ts(argnum).expression)
+                    case _ =>
                         None
                 }
 
