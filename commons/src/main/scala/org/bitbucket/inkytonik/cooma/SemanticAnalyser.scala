@@ -78,7 +78,7 @@ class SemanticAnalyser(
     def checkExpressionType(e : Expression) : Messages =
         (tipe(e), expectedType(e)) match {
             case (Some(t), Some(u)) if !subtype(t, u) =>
-                error(e, s"expected ${show(alias(u))}, got ${show(e)} of type ${show(alias(t))}")
+                error(e, s"expected ${show(u)}, got ${show(e)} of type ${show(t)}")
             case (a, b) =>
                 noMessages
         }
@@ -98,7 +98,7 @@ class SemanticAnalyser(
                 else
                     noMessages
             case Some(t) =>
-                error(f, s"application of non-function type ${show(alias(t))}")
+                error(f, s"application of non-function type ${show(t)}")
             case None =>
                 noMessages
         }
@@ -132,7 +132,7 @@ class SemanticAnalyser(
             case Some(t @ VarT(fieldTypes)) =>
                 fieldTypes.find(f => f.identifier == c.identifier) match {
                     case None =>
-                        error(c, s"variant ${c.identifier} not present in matched type ${show(alias(t))}")
+                        error(c, s"variant ${c.identifier} not present in matched type ${show(t)}")
                     case _ =>
                         noMessages
                 }
@@ -159,7 +159,7 @@ class SemanticAnalyser(
                 checkOverlapping(rl, rr)
             case (Some(RecT(_)), Some(t)) =>
                 // term-level concatenation, invalid right operand
-                error(r, s"expected record, got ${show(alias(t))}")
+                error(r, s"expected record, got ${show(t)}")
             case (Some(`typT`), Some(`typT`)) =>
                 // type-level concatenation
                 (unalias(e, l), unalias(e, r)) match {
@@ -168,15 +168,15 @@ class SemanticAnalyser(
                     case (Some(RecT(rl)), Some(RecT(rr))) =>
                         checkOverlapping(rl, rr)
                     case (Some(RecT(_)), Some(t)) =>
-                        error(r, s"expected record type, got ${show(alias(t))}")
+                        error(r, s"expected record type, got ${show(t)}")
                     case (Some(t), _) =>
-                        error(l, s"expected record type, got ${show(alias(t))}")
+                        error(l, s"expected record type, got ${show(t)}")
                 }
             case (Some(`typT`), Some(t)) =>
                 // type-level concatenation, invalid right operand
-                error(r, s"expected record type, got ${show(alias(t))}")
+                error(r, s"expected record type, got ${show(t)}")
             case (Some(t), _) =>
-                error(l, s"expected record or record type, got ${show(alias(t))}")
+                error(l, s"expected record or record type, got ${show(t)}")
         }
     }
 
@@ -187,9 +187,9 @@ class SemanticAnalyser(
                 if (fields.map(_.identifier) contains i)
                     noMessages
                 else
-                    error(f, s"$i is not a field of record type ${show(alias(t))}")
+                    error(f, s"$i is not a field of record type ${show(t)}")
             case Some(t) =>
-                error(f, s"selection of $i field from non-record type ${show(alias(t))}")
+                error(f, s"selection of $i field from non-record type ${show(t)}")
             case None =>
                 noMessages
         }
@@ -211,7 +211,7 @@ class SemanticAnalyser(
             case Some(VarT(_)) | None =>
                 noMessages
             case Some(t) =>
-                error(e, s"match of non-variant type ${show(alias(t))}")
+                error(e, s"match of non-variant type ${show(t)}")
         }
 
     def checkMainProgram(e : Expression) : Messages =
@@ -405,13 +405,7 @@ class SemanticAnalyser(
 
     lazy val tipe : Expression => Option[Expression] =
         attr {
-            case App(f, as) =>
-                tipe(f) match {
-                    case Some(FunT(ArgumentTypes(ts), t)) =>
-                        appType(f, ts, t, as)
-                    case _ =>
-                        None
-                }
+            case n : App =>
 
             case Blk(b) =>
                 blockTipe(b)
@@ -611,29 +605,6 @@ class SemanticAnalyser(
                     OkCases(caseTypes(0))
         }
 
-    def alias(e : Expression) : Expression =
-        e match {
-            case FunT(ArgumentTypes(as), t) =>
-                FunT(ArgumentTypes(as.map(aliasArgType)), alias(t))
-            case RecT(fs) =>
-                RecT(aliasFieldTypes(fs))
-            case VarT(Vector(FieldType("False", `uniT`),
-                FieldType("True", `uniT`))) =>
-                Idn(IdnUse("Boolean"))
-            case VarT(fs) =>
-                VarT(aliasFieldTypes(fs))
-            case VecT(t) =>
-                VecT(alias(t))
-            case _ =>
-                e
-        }
-
-    def aliasArgType(a : ArgumentType) : ArgumentType =
-        ArgumentType(a.optIdnDef, alias(a.expression))
-
-    def aliasFieldTypes(fs : Vector[FieldType]) : Vector[FieldType] =
-        fs.map { case FieldType(n, t) => FieldType(n, alias(t)) }
-
     val unaliasedType : Expression => Option[Expression] =
         attr {
             case e =>
@@ -823,7 +794,7 @@ class SemanticAnalyser(
             case REPLLet(Let(_, _, None, e)) =>
                 tipe(e)
             case REPLLet(Let(_, _, Some(LetType(t)), e)) =>
-                unalias(e, t)
+                Some(t)
         }
 
     lazy val replTypeValue : REPLInput => Option[Expression] =
@@ -836,12 +807,6 @@ class SemanticAnalyser(
                 Some(e)
             case _ =>
                 None
-        }
-
-    lazy val aliasedReplType : REPLInput => Option[Expression] =
-        attr {
-            case input =>
-                replType(input).map(alias)
         }
 
     def fieldtypeNames(fts : Vector[FieldType]) : Vector[String] =
