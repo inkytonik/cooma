@@ -187,7 +187,7 @@ class DeclarationTests extends SemanticTests {
     test(
         "val explicit pre=defined type (bad)",
         "{ val x : Boolean = 1 x }",
-        """|1:21:error: expected Boolean, got 1 of type Int
+        """|1:21:error: expected < False : Unit, True : Unit >, got 1 of type Int
            |{ val x : Boolean = 1 x }
            |                    ^
            |"""

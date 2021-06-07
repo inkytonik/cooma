@@ -8,35 +8,35 @@ class VectorTests extends ExpressionTests {
         "equality of vectors (equal, nil)",
         "equal(Vector(), [], [])",
         "true",
-        "Boolean"
+        "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of vectors (equal, flat)",
         "equal(Vector(Int), [1, 2, 3], [1, 2, 3])",
         "true",
-        "Boolean"
+        "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of vectors (equal, nested)",
         "equal(Vector({a : Int}), [{a = 1}, {a = 2}], [{a = 1}, {a = 2}])",
         "true",
-        "Boolean"
+        "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of vectors (unequal, flat)",
         "equal(Vector(Int), [1, 2, 3], [1, 2])",
         "false",
-        "Boolean"
+        "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of vectors (unequal, nested)",
         "equal(Vector({a : Int}), [{a = 1}, {a = 2}], [{a = 2}, {a = 2}])",
         "false",
-        "Boolean"
+        "< False : Unit, True : Unit >"
     )
 
     test(
@@ -88,7 +88,7 @@ class VectorTests extends ExpressionTests {
         "Boolean vector declaration",
         "[true, false]",
         "[true, false]",
-        "Vector(Boolean)"
+        "Vector(< False : Unit, True : Unit >)"
     )
 
     test(
@@ -98,7 +98,7 @@ class VectorTests extends ExpressionTests {
             Booleans.and(true, false),
             Booleans.and(true, true)]""",
         "[false, false, false, true]",
-        "Vector(Boolean)"
+        "Vector(< False : Unit, True : Unit >)"
     )
 
     test(

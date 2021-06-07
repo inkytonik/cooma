@@ -53,7 +53,49 @@ class FunctionTypeTests extends SemanticTests {
     )
 
     test(
-        "bad type application",
+        "type application",
+        "{fun (t : Type, x : t) x}(Int)",
+        ""
+    )
+
+    test(
+        "type application (one parameterised arg)",
+        "{fun (t : Type, x : t) x}(Int, 1)",
+        ""
+    )
+
+    test(
+        "type application (two parameterised args)",
+        "{fun (t : Type, x : t, y : t) x}(Int, 1, 2)",
+        ""
+    )
+
+    test(
+        "type application (one parameterised arg with normal arg)",
+        """{fun (t : Type, x : t, s : String) x}(Int, 1, "hi")""",
+        ""
+    )
+
+    test(
+        "bad type application (mis-matched usage of parameterised arg)",
+        """{fun (t : Type, x : t) x}(Int, "hi")""",
+        """|1:32:error: expected Int, got "hi" of type String
+           |{fun (t : Type, x : t) x}(Int, "hi")
+           |                               ^
+           |"""
+    )
+
+    test(
+        "bad type application (mis-matched usage of normal arg)",
+        """{fun (t : Type, x : t, s : String) x}(Int, 1, 2)""",
+        """|1:47:error: expected String, got 2 of type Int
+           |{fun (t : Type, x : t, s : String) x}(Int, 1, 2)
+           |                                              ^
+           |"""
+    )
+
+    test(
+        "bad type application (values as types and vice versa)",
         "{fun (x : Int, t : Type) x}(Int, 10)",
         """|1:29:error: expected Int, got Int of type Type
            |{fun (x : Int, t : Type) x}(Int, 10)

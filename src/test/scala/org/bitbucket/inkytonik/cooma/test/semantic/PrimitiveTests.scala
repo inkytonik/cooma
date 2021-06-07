@@ -341,15 +341,45 @@ class PrimitiveTests extends SemanticTests {
     )
 
     test(
-        s"Partial apply equal (type only)",
+        s"full apply equal",
+        s"equal(Int, 1, 2)",
+        ""
+    )
+
+    test(
+        s"partial apply equal (type only)",
         s"equal(Int)",
         ""
     )
 
     test(
-        s"Partial apply equal (type and arg)",
+        s"partial apply equal (type and arg)",
         s"equal(Int, 1)",
         ""
+    )
+
+    test(
+        "wrong argument type for equal (type)",
+        """equal(1, 1, 1)""",
+        """|1:7:error: expected Type, got 1 of type Int
+           |equal(1, 1, 1)
+           |      ^
+           |1:10:error: expected 1, got 1 of type Int
+           |equal(1, 1, 1)
+           |         ^
+           |1:13:error: expected 1, got 1 of type Int
+           |equal(1, 1, 1)
+           |            ^
+           |"""
+    )
+
+    test(
+        "wrong argument type for equal (value)",
+        """equal(Int, 1, "2")""",
+        """|1:15:error: expected Int, got "2" of type String
+           |equal(Int, 1, "2")
+           |              ^
+           |"""
     )
 
     test(

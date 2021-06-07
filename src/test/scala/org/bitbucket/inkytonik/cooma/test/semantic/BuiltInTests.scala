@@ -41,9 +41,9 @@ class BuiltInTests extends SemanticTests {
     )
 
     test(
-        "aliases are used in type error messages",
+        "aliases are expanded in type error messages",
         "{fun (b : Boolean) 0}(0)",
-        """|1:23:error: expected Boolean, got 0 of type Int
+        """|1:23:error: expected < False : Unit, True : Unit >, got 0 of type Int
            |{fun (b : Boolean) 0}(0)
            |                      ^
            |"""

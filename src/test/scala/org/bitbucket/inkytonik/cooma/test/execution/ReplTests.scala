@@ -49,7 +49,7 @@ class ReplTests extends ExecutionTests {
                         fun (x : Boolean) x
                         res0(true)
                     """,
-        "res0 : (x : Boolean) Boolean = <function>\nres1 : Boolean = true"
+        "res0 : (x : < False : Unit, True : Unit >) < False : Unit, True : Unit > = <function>\nres1 : < False : Unit, True : Unit > = true"
     )
 
     test(
