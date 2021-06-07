@@ -141,7 +141,7 @@ trait REPL extends REPLBase[Config] {
         val tree = new Tree[ASTNode, REPLInput](input)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
         (analyser.errors, analyser.replTypeValue(input),
-            analyser.replType(input), analyser.aliasedReplType(input)) match {
+            analyser.replType(input), analyser.replType(input)) match {
                 case (Vector(), optTypeValue, replType, optAliasedReplType) =>
                     val input2 =
                         input match {
@@ -163,10 +163,6 @@ trait REPL extends REPLBase[Config] {
                                 defineLet(i, analyser.unalias(e, t), e)
                         }
                     Right((input2, optTypeValue, optAliasedReplType))
-
-                // case (Vector(), optTypeValue, replType, None) =>
-                //     // sys.error(s"checkInput: couldn't find aliased REPL type for $input")
-                //     Right((input, optTypeValue, ))
 
                 case (messages, _, _, _) =>
                     Left(messages)
