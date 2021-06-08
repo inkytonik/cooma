@@ -118,8 +118,8 @@ trait REPL extends REPLBase[Config] {
                 checkInput(input, config) match {
                     case Left(messages) =>
                         messaging.report(source, messages, config.output())
-                    case Right((input, optTypeValue, optAliasedType)) =>
-                        processInput(input, optTypeValue, optAliasedType, config)
+                    case Right((input, optTypeValue, optReplType)) =>
+                        processInput(input, optTypeValue, optReplType, config)
                 }
             } else
                 config.output().emitln(p.formatParseError(pr.parseError, false))
@@ -142,7 +142,10 @@ trait REPL extends REPLBase[Config] {
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
         (analyser.errors, analyser.replTypeValue(input),
             analyser.replType(input), analyser.replType(input)) match {
-                case (Vector(), optTypeValue, replType, optAliasedReplType) =>
+                case (Vector(), _, _, None) =>
+                    sys.error(s"checkInput: couldn't find REPL type for $input")
+
+                case (Vector(), optTypeValue, replType, optReplType) =>
                     val input2 =
                         input match {
                             case REPLDef(Def(IdnDef(i), Body(as, t, e))) =>
@@ -162,7 +165,7 @@ trait REPL extends REPLBase[Config] {
                             case REPLLet(Let(_, IdnDef(i), Some(LetType(t)), e)) =>
                                 defineLet(i, analyser.unalias(e, t), e)
                         }
-                    Right((input2, optTypeValue, optAliasedReplType))
+                    Right((input2, optTypeValue, optReplType))
 
                 case (messages, _, _, _) =>
                     Left(messages)
@@ -172,14 +175,14 @@ trait REPL extends REPLBase[Config] {
     /**
      * Embed an input entry for the REPL.
      */
-    def processInput(input : REPLInput, optTypeValue : Option[Expression], optAliasedType : Option[Expression], config : Config) =
+    def processInput(input : REPLInput, optTypeValue : Option[Expression], optReplType : Option[Expression], config : Config) =
         input match {
             case REPLDef(fd @ Def(IdnDef(i), _)) =>
-                processDef(i, fd, optTypeValue, optAliasedType, config)
+                processDef(i, fd, optTypeValue, optReplType, config)
             case REPLExp(e : Idn) =>
-                processIdn(show(input), e, optTypeValue, optAliasedType, config)
+                processIdn(show(input), e, optTypeValue, optReplType, config)
             case REPLLet(vd @ Let(_, IdnDef(i), _, e)) =>
-                processLet(i, vd, optTypeValue, optAliasedType, config)
+                processLet(i, vd, optTypeValue, optReplType, config)
             case _ =>
                 sys.error(s"$input not supported for the moment")
         }
@@ -187,25 +190,25 @@ trait REPL extends REPLBase[Config] {
     /**
      * Process a user-entered value binding.
      */
-    def processLet(i : String, ld : Let, optTypeValue : Option[Expression], optAliasedType : Option[Expression], config : Config) : Unit = {
+    def processLet(i : String, ld : Let, optTypeValue : Option[Expression], optReplType : Option[Expression], config : Config) : Unit = {
         val program = Program(Blk(BlkLet(ld, Return(Idn(IdnUse(i))))))
-        process(program, i, optTypeValue, optAliasedType, config)
+        process(program, i, optTypeValue, optReplType, config)
     }
 
     /**
      * Process a user-entered function definition binding.
      */
-    def processDef(i : String, fd : Def, optTypeValue : Option[Expression], optAliasedType : Option[Expression], config : Config) : Unit = {
+    def processDef(i : String, fd : Def, optTypeValue : Option[Expression], optReplType : Option[Expression], config : Config) : Unit = {
         val program = Program(Blk(BlkDef(Defs(Vector(fd)), Return(Idn(IdnUse(i))))))
-        process(program, i, optTypeValue, optAliasedType, config)
+        process(program, i, optTypeValue, optReplType, config)
     }
 
     /**
      * Process a user-entered identifier expression.
      */
-    def processIdn(i : String, e : Expression, optTypeValue : Option[Expression], optAliasedType : Option[Expression], config : Config) : Unit = {
+    def processIdn(i : String, e : Expression, optTypeValue : Option[Expression], optReplType : Option[Expression], config : Config) : Unit = {
         val program = Program(e)
-        process(program, i, optTypeValue, optAliasedType, config)
+        process(program, i, optTypeValue, optReplType, config)
     }
 
     /**
@@ -215,7 +218,7 @@ trait REPL extends REPLBase[Config] {
         program : Program,
         i : String,
         optTypeValue : Option[Expression],
-        optAliasedType : Option[Expression],
+        optReplType : Option[Expression],
         config : Config
     ) : Unit
 
@@ -226,13 +229,13 @@ trait REPL extends REPLBase[Config] {
     def execute(
         i : String,
         optTypeValue : Option[Expression],
-        optAliasedType : Option[Expression],
+        optReplType : Option[Expression],
         config : Config,
         eval : => Unit
     ) =
-        optAliasedType match {
+        optReplType match {
             case Some(`typT`) =>
-                output(i, optTypeValue, optAliasedType, None, config)
+                output(i, optTypeValue, optReplType, None, config)
             case _ =>
                 eval
         }
@@ -243,12 +246,12 @@ trait REPL extends REPLBase[Config] {
     def output(
         i : String,
         optTypeValue : Option[Expression],
-        optAliasedType : Option[Expression],
+        optReplType : Option[Expression],
         optResult : Option[OutputValueR],
         config : Config
     ) : Unit = {
         val value =
-            optAliasedType match {
+            optReplType match {
                 case Some(`typT`) =>
                     optTypeValue match {
                         case Some(typeValue) =>
@@ -264,7 +267,7 @@ trait REPL extends REPLBase[Config] {
                             ""
                     }
             }
-        val tipe = optAliasedType.map(t => s" : ${show(t)}").getOrElse("")
+        val tipe = optReplType.map(t => s" : ${show(t)}").getOrElse("")
         config.output().emitln(s"$i$tipe$value")
     }
 

@@ -460,9 +460,10 @@ class SemanticAnalyser(
             case _ : Num =>
                 Some(intT)
 
-            case n @ Prm(p, args) =>
-                userPrimitiveType(p) match {
-                    case FunT(ArgumentTypes(ts), t) if args.length == ts.length =>
+            case n @ Prm(p, as) =>
+                val ftype = userPrimitiveType(p)
+                appType(n, Some(ftype), as) match {
+                    case (_, t) =>
                         unalias(n, t)
                     case _ =>
                         None
@@ -534,30 +535,33 @@ class SemanticAnalyser(
 
     val appType : App => (Option[Vector[ArgumentType]], Option[Expression]) =
         attr {
-            case App(f, as) =>
-                tipe(f) match {
-                    case Some(FunT(ArgumentTypes(ts), t)) =>
-                        appType(f, ts, Vector(), t, as)
-                    case _ =>
-                        (None, None)
-                }
+            case app @ App(f, as) =>
+                appType(app, tipe(f), as)
         }
 
-    def appType(f : Expression, ts : Vector[ArgumentType], newts : Vector[ArgumentType], t : Expression,
+    def appType(n : Expression, ftype : Option[Expression], as : Vector[Expression]) : (Option[Vector[ArgumentType]], Option[Expression]) =
+        ftype match {
+            case Some(FunT(ArgumentTypes(ts), t)) =>
+                appType(n, ts, Vector(), t, as)
+            case _ =>
+                (None, None)
+        }
+
+    def appType(n : Expression, ts : Vector[ArgumentType], newts : Vector[ArgumentType], t : Expression,
         as : Vector[Expression]) : (Option[Vector[ArgumentType]], Option[Expression]) =
         if (as.isEmpty)
             if (ts.isEmpty)
-                (Some(newts), unalias(f, t))
+                (Some(newts), unalias(n, t))
             else
-                (Some(newts), unaliasFunT(f, ts, t))
+                (Some(newts), unaliasFunT(n, ts, t))
         else if (ts.isEmpty)
             (None, None)
         else
             ts.head match {
                 case ArgumentType(Some(IdnDef(x)), `typT`) =>
-                    appType(f, substArgTypes(x, as.head, ts.tail), newts :+ ts.head, substArgTypes(x, as.head, t), as.tail)
+                    appType(n, substArgTypes(x, as.head, ts.tail), newts :+ ts.head, substArgTypes(x, as.head, t), as.tail)
                 case _ =>
-                    appType(f, ts.tail, newts :+ ts.head, t, as.tail)
+                    appType(n, ts.tail, newts :+ ts.head, t, as.tail)
             }
 
     def makeRow(fields : Vector[Field]) : Option[Vector[FieldType]] = {

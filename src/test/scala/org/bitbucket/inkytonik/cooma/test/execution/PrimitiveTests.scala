@@ -203,7 +203,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
             forAll { (v : Vector[Int], i : Int) =>
                 val arg2 = vecToLiteral(v)
                 val result = vecToLiteral(func(v, i))
-                runPrimTest(s"prim $primName", s"Int, $arg2, $i", "", result)
+                runPrimTest(s"prim $primName", s"Int, $arg2, $i", " : Vector(Int)", result)
             }
         }
     }
@@ -217,7 +217,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                 val arg2 = vecToLiteral(v1)
                 val arg3 = vecToLiteral(v2)
                 val result = vecToLiteral(func(v1, v2))
-                runPrimTest(s"prim $primName", s"Int, $arg2, $arg3", "", result)
+                runPrimTest(s"prim $primName", s"Int, $arg2, $arg3", " : Vector(Int)", result)
             }
         }
     }
@@ -242,7 +242,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                         forAll(indexesOf(v)) { (i : Int) =>
                             whenever((i >= 0) && (i < v.length)) {
                                 val arg2 = vecToLiteral(v)
-                                runPrimTest(s"prim $primName", s"Int, $arg2, $i", "", s"${func(v, i)}")
+                                runPrimTest(s"prim $primName", s"Int, $arg2, $i", " : Int", s"${func(v, i)}")
                             }
                         }
                     }
@@ -274,7 +274,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
                                 forAll { (e : Int) =>
                                     val arg2 = vecToLiteral(v)
                                     val result = vecToLiteral(func(v, i, e))
-                                    runPrimTest(s"prim $primName", s"Int, $arg2, $i, $e", "", result)
+                                    runPrimTest(s"prim $primName", s"Int, $arg2, $i, $e", " : Vector(Int)", result)
                                 }
                             }
                         }
@@ -318,7 +318,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
             forAll { (v : Vector[Int], i : Int) =>
                 val arg2 = vecToLiteral(v)
                 val result = vecToLiteral(func(v, i))
-                runPrimTest(s"prim $primName", s"Int, $arg2, $i", "", result)
+                runPrimTest(s"prim $primName", s"Int, $arg2, $i", " : Vector(Int)", result)
             }
         }
     }
