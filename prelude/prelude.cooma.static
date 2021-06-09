@@ -1,23 +1,20 @@
-Boolean : 
+Boolean :
   Type =
   <
     False : Unit,
     True : Unit
-  >
-
-false : 
+  >;
+false :
   <
     False : Unit,
     True : Unit
-  >
-
-true : 
+  >;
+true :
   <
     False : Unit,
     True : Unit
-  >
-
-Booleans : 
+  >;
+Booleans :
   {
     and : (l : <
       False : Unit,
@@ -46,15 +43,13 @@ Booleans :
       False : Unit,
       True : Unit
     >
-  }
-
-equal : 
+  };
+equal :
   (t : Type, l : t, r : t) <
     False : Unit,
     True : Unit
-  >
-
-Ints : 
+  >;
+Ints :
   {
     abs : (i : Int) Int,
     add : (l : Int, r : Int) Int,
@@ -78,16 +73,14 @@ Ints :
       False : Unit,
       True : Unit
     >
-  }
-
-Strings : 
+  };
+Strings :
   {
     concat : (l : String, r : String) String,
     length : (s : String) Int,
     substr : (s : String, i : Int) String
-  }
-
-Vectors : 
+  };
+Vectors :
   {
     append : (t : Type, v : Vector(t), e : t) Vector(t),
     concat : (t : Type, l : Vector(t), r : Vector(t)) Vector(t),
@@ -95,60 +88,50 @@ Vectors :
     length : (t : Type, v : Vector(t)) Int,
     prepend : (t : Type, v : Vector(t), e : t) Vector(t),
     put : (t : Type, v : Vector(t), i : Int, e : t) Vector(t)
-  }
-
-FolderReader : 
+  };
+FolderReader :
   Type =
   {
     read : (suffix : String) String
-  }
-
-FolderWriter : 
+  };
+FolderWriter :
   Type =
   {
     write : (suffix : String, s : String) Unit
-  }
-
-HttpReturn : 
+  };
+HttpReturn :
   Type =
   {
     code : Int,
     body : String
-  }
-
-HttpDelete : 
+  };
+HttpDelete :
   Type =
   {
     delete : (suffix : String) HttpReturn
-  }
-
-HttpGet : 
+  };
+HttpGet :
   Type =
   {
     get : (suffix : String) HttpReturn
-  }
-
-HttpPost : 
+  };
+HttpPost :
   Type =
   {
     post : (suffix : String) HttpReturn
-  }
-
-HttpPut : 
+  };
+HttpPut :
   Type =
   {
     put : (suffix : String) HttpReturn
-  }
-
-Reader : 
+  };
+Reader :
   Type =
   {
     read : () String
-  }
-
-Writer : 
+  };
+Writer :
   Type =
   {
     write : (s : String) Unit
-  }
-
+  };

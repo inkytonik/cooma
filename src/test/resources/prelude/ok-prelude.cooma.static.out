@@ -1,10 +1,10 @@
 Foo :
   Type =
-  Int
+  Int;
 add :
-  (l : Int, r : Int) Int
+  (l : Int, r : Int) Int;
 sub :
-  (l : Int, r : Int) Int
+  (l : Int, r : Int) Int;
 x :
   {
     a : Int,
@@ -13,4 +13,4 @@ x :
     d : <
       e : Int
     >
-  }
+  };

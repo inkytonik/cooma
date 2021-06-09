@@ -3,7 +3,7 @@
     %letc $k3 true =
       %letc $k4 Booleans =
         %letf
-          equal $k5 t =
+          %def equal $k5 t =
             %letv $f6 =
               %fun $k7 l =
                 %letv $f8 =
@@ -268,7 +268,7 @@
                 $k143 r
               %in %letc $k144 _ =
                 $k143 false
-              %in %case l (False $k144) (True $k145)
+              %in %case l (False $k144) (True $k145) 
           %in $k141 $f142
       %in %letv $f146 =
         %fun $k147 b =
@@ -276,7 +276,7 @@
             $k147 false
           %in %letc $k148 _ =
             $k147 true
-          %in %case b (False $k148) (True $k149)
+          %in %case b (False $k148) (True $k149) 
       %in %letv $f150 =
         %fun $k151 l =
           %letv $f152 =
@@ -285,7 +285,7 @@
                 $k153 true
               %in %letc $k154 _ =
                 $k153 r
-              %in %case l (False $k154) (True $k155)
+              %in %case l (False $k154) (True $k155) 
           %in $k151 $f152
       %in %letv $r139 =
         {

@@ -1,6 +1,6 @@
 %letc $k1 Foo =
   %letf
-    add $k2 l =
+    %def add $k2 l =
       %letv $f3 =
         %fun $k4 r =
           %letv $r5 =

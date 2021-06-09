@@ -71,7 +71,7 @@ public CoomaCaseTerm CaseTerm =
     ;
 
 public CoomaDefTerm DefTerm =
-     f:Identifier k:Identifier x:Identifier  void:"=":Symbol1 t:Term {
+    void:"%def":Symbol4 f:Identifier k:Identifier x:Identifier  void:"=":Symbol1 t:Term {
         yyValue = (CoomaDefTerm)backend.defTerm(f, k, x, t);
     }
     ;
@@ -244,7 +244,7 @@ String Symbol4 =
     Symbol4Alts Spacing;
 
 transient String Symbol4Alts =
-    "%fun";
+    "%def" / "%fun";
 
 String Symbol5 =
     Symbol5Alts Spacing;

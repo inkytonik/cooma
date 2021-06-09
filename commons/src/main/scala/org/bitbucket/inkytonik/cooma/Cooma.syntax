@@ -135,7 +135,7 @@ CaseTerm =
   '(' Identifier sp Identifier ')'.
 
 DefTerm =
-  \n Identifier sp Identifier sp Identifier sp '=' nestnl(Term).
+  \n "%def" Identifier sp Identifier sp Identifier sp '=' nestnl(Term).
 
 Value {line} =
     "%fun" Identifier sp Identifier sp '=' nestnl(Term)   {FunV}
@@ -192,9 +192,9 @@ StaticPrelude =
   Spacing StaticPreludeEntry* EOF.
 
 StaticPreludeEntry =
-    Identifier sp ':' nestnl(Expression) sp '=' nestnl(Expression) \n
+    Identifier sp ':' nestnl(Expression) sp '=' nestnl(Expression) ';' \n
       {StaticLetEntry}
-  | Identifier sp ':' nestnl(Expression) \n {StaticTypedEntry}.
+  | Identifier sp ':' nestnl(Expression) ';' \n {StaticTypedEntry}.
 
 DynamicPrelude =
   Spacing Term EOF.
