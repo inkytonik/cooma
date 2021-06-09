@@ -1,7 +1,7 @@
 %letf
-  f $k1 x =
+  %def f $k1 x =
     $k1 x
-  g $k2 y =
+  %def g $k2 y =
     f $k2 y
 %in %letv $i5 =
   10
