@@ -14,7 +14,7 @@ class PreludeDriver extends Driver {
 
     import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.SymbolTable.{FunctionEntity, LetEntity}
+    import org.bitbucket.inkytonik.cooma.SymbolTable.{FunctionEntity, LetEntity, typT}
     import org.bitbucket.inkytonik.kiama.util.{FileEmitter, Source}
     import scala.collection.immutable.VectorBuilder
 
@@ -34,6 +34,15 @@ class PreludeDriver extends Driver {
     }
 
     def writeStaticPrelude(source : Source, program : Program, analyser : SemanticAnalyser, config : Config) : Unit = {
+
+        def entityIsType(entity : CoomaEntity) : Boolean =
+            analyser.entityType(entity) match {
+                case Some(`typT` | FunT(_, `typT`)) =>
+                    true
+                case _ =>
+                    false
+            }
+
         val env = analyser.deepEnv(program.expression)
         val builder = new VectorBuilder[StaticPreludeEntry]
         for (scope <- env.reverse) {
@@ -42,12 +51,15 @@ class PreludeDriver extends Driver {
                     case Some(tipe) =>
                         entity match {
                             case LetEntity(decl) =>
-                                if (decl.letKind == Type())
+                                if (entityIsType(entity))
                                     builder.addOne(StaticLetEntry(id, tipe, decl.expression))
                                 else
                                     builder.addOne(StaticTypedEntry(id, tipe))
                             case FunctionEntity(decl) =>
-                                builder.addOne(StaticTypedEntry(id, tipe))
+                                if (entityIsType(entity))
+                                    builder.addOne(StaticLetEntry(id, tipe, Fun(decl.body.arguments, decl.body.expression2)))
+                                else
+                                    builder.addOne(StaticTypedEntry(id, tipe))
                             case _ =>
                                 sys.error(s"writeStaticPrelude: unexpected entity $entity")
                         }

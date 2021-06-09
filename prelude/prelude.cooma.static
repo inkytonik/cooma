@@ -135,3 +135,15 @@ Writer :
   {
     write : (s : String) Unit
   };
+Either :
+  (A : Type, B : Type) Type =
+  fun (A : Type, B : Type) <
+    Left : A,
+    Right : B
+  >;
+Option :
+  (T : Type) Type =
+  fun (T : Type) <
+    None : Unit,
+    Some : T
+  >;

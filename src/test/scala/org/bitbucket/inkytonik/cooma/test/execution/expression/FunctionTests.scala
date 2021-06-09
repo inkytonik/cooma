@@ -149,4 +149,68 @@ class FunctionTests extends ExpressionTests {
         "String"
     )
 
+    test(
+        "type application in type (def)",
+        """{
+             def MyOption(T : Type) Type = <None : Unit, Some : T>
+             val x : MyOption(Int) = <Some = 3>
+             x
+        }""",
+        "< Some = 3 >",
+        "< None : Unit, Some : Int >"
+    )
+
+    test(
+        "type application in type (val fun, single arg)",
+        """{
+             val MyOption = fun (T : Type) <None : Unit, Some : T>
+             val x : MyOption(Int) = <Some = 3>
+             x
+        }""",
+        "< Some = 3 >",
+        "< None : Unit, Some : Int >"
+    )
+
+    test(
+        "type application in type (type fun, single arg))",
+        """{
+             type MyOption = fun (T : Type) <None : Unit, Some : T>
+             val x : MyOption(Int) = <Some = 3>
+             x
+        }""",
+        "< Some = 3 >",
+        "< None : Unit, Some : Int >"
+    )
+
+    test(
+        "type application in type (prelude, single arg))",
+        """{
+             val x : Option(Int) = <Some = 3>
+             x
+        }""",
+        "< Some = 3 >",
+        "< None : Unit, Some : Int >"
+    )
+
+    test(
+        "type application in type (multiple args)",
+        """{
+             type MyEither = fun (A : Type, B : Type) < Left : A, Right : B >
+             val x : MyEither(Int, String) = <Left = 42>
+             x
+        }""",
+        "< Left = 42 >",
+        "< Left : Int, Right : String >"
+    )
+
+    test(
+        "type application in type (prelude, multiple args)",
+        """{
+             val x : Either(Int, String) = <Right = "hi">
+             x
+        }""",
+        """< Right = "hi" >""",
+        "< Left : Int, Right : String >"
+    )
+
 }

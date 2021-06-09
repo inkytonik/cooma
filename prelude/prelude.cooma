@@ -96,5 +96,11 @@
     write : (s : String) Unit
   }
 
+  // Useful type constructors
+
+  def Option (T : Type) Type = <None : Unit, Some : T>
+
+  def Either (A : Type, B : Type) Type = < Left : A, Right : B >
+
   {}
 }

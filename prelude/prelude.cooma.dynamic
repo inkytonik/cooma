@@ -25,292 +25,306 @@
                           %letc $k20 HttpPut =
                             %letc $k21 Reader =
                               %letc $k22 Writer =
-                                %letv $u23 =
+                                %letf
+                                  %def Option $k23 T =
+                                    %letv $u24 =
+                                      {
+                                      }
+                                    %in $k23 $u24
+                                  %def Either $k25 A =
+                                    %letv $f26 =
+                                      %fun $k27 B =
+                                        %letv $u28 =
+                                          {
+                                          }
+                                        %in $k27 $u28
+                                    %in $k25 $f26
+                                %in %letv $u29 =
                                   {
                                   }
-                                %in %halt $u23
-                              %in %letv $u24 =
+                                %in %halt $u29
+                              %in %letv $u30 =
                                 {
                                 }
-                              %in $k22 $u24
-                            %in %letv $u25 =
+                              %in $k22 $u30
+                            %in %letv $u31 =
                               {
                               }
-                            %in $k21 $u25
-                          %in %letv $u26 =
+                            %in $k21 $u31
+                          %in %letv $u32 =
                             {
                             }
-                          %in $k20 $u26
-                        %in %letv $u27 =
+                          %in $k20 $u32
+                        %in %letv $u33 =
                           {
                           }
-                        %in $k19 $u27
-                      %in %letv $u28 =
+                        %in $k19 $u33
+                      %in %letv $u34 =
                         {
                         }
-                      %in $k18 $u28
-                    %in %letv $u29 =
+                      %in $k18 $u34
+                    %in %letv $u35 =
                       {
                       }
-                    %in $k17 $u29
-                  %in %letv $u30 =
+                    %in $k17 $u35
+                  %in %letv $u36 =
                     {
                     }
-                  %in $k16 $u30
-                %in %letv $u31 =
+                  %in $k16 $u36
+                %in %letv $u37 =
                   {
                   }
-                %in $k15 $u31
-              %in %letv $u32 =
+                %in $k15 $u37
+              %in %letv $u38 =
                 {
                 }
-              %in $k14 $u32
-            %in %letv $f34 =
-              %fun $k35 t =
-                %letv $f36 =
-                  %fun $k37 v =
-                    %letv $f38 =
-                      %fun $k39 e =
-                        %letv $r40 =
+              %in $k14 $u38
+            %in %letv $f40 =
+              %fun $k41 t =
+                %letv $f42 =
+                  %fun $k43 v =
+                    %letv $f44 =
+                      %fun $k45 e =
+                        %letv $r46 =
                           %prim VecAppend t v e
-                        %in $k39 $r40
-                    %in $k37 $f38
-                %in $k35 $f36
-            %in %letv $f41 =
-              %fun $k42 t =
-                %letv $f43 =
-                  %fun $k44 l =
-                    %letv $f45 =
-                      %fun $k46 r =
-                        %letv $r47 =
+                        %in $k45 $r46
+                    %in $k43 $f44
+                %in $k41 $f42
+            %in %letv $f47 =
+              %fun $k48 t =
+                %letv $f49 =
+                  %fun $k50 l =
+                    %letv $f51 =
+                      %fun $k52 r =
+                        %letv $r53 =
                           %prim VecConcat t l r
-                        %in $k46 $r47
-                    %in $k44 $f45
-                %in $k42 $f43
-            %in %letv $f48 =
-              %fun $k49 t =
-                %letv $f50 =
-                  %fun $k51 v =
-                    %letv $f52 =
-                      %fun $k53 i =
-                        %letv $r54 =
+                        %in $k52 $r53
+                    %in $k50 $f51
+                %in $k48 $f49
+            %in %letv $f54 =
+              %fun $k55 t =
+                %letv $f56 =
+                  %fun $k57 v =
+                    %letv $f58 =
+                      %fun $k59 i =
+                        %letv $r60 =
                           %prim VecGet t v i
-                        %in $k53 $r54
-                    %in $k51 $f52
-                %in $k49 $f50
-            %in %letv $f55 =
-              %fun $k56 t =
-                %letv $f57 =
-                  %fun $k58 v =
-                    %letv $r59 =
+                        %in $k59 $r60
+                    %in $k57 $f58
+                %in $k55 $f56
+            %in %letv $f61 =
+              %fun $k62 t =
+                %letv $f63 =
+                  %fun $k64 v =
+                    %letv $r65 =
                       %prim VecLength t v
-                    %in $k58 $r59
-                %in $k56 $f57
-            %in %letv $f60 =
-              %fun $k61 t =
-                %letv $f62 =
-                  %fun $k63 v =
-                    %letv $f64 =
-                      %fun $k65 e =
-                        %letv $r66 =
+                    %in $k64 $r65
+                %in $k62 $f63
+            %in %letv $f66 =
+              %fun $k67 t =
+                %letv $f68 =
+                  %fun $k69 v =
+                    %letv $f70 =
+                      %fun $k71 e =
+                        %letv $r72 =
                           %prim VecPrepend t v e
-                        %in $k65 $r66
-                    %in $k63 $f64
-                %in $k61 $f62
-            %in %letv $f67 =
-              %fun $k68 t =
-                %letv $f69 =
-                  %fun $k70 v =
-                    %letv $f71 =
-                      %fun $k72 i =
-                        %letv $f73 =
-                          %fun $k74 e =
-                            %letv $r75 =
+                        %in $k71 $r72
+                    %in $k69 $f70
+                %in $k67 $f68
+            %in %letv $f73 =
+              %fun $k74 t =
+                %letv $f75 =
+                  %fun $k76 v =
+                    %letv $f77 =
+                      %fun $k78 i =
+                        %letv $f79 =
+                          %fun $k80 e =
+                            %letv $r81 =
                               %prim VecPut t v i e
-                            %in $k74 $r75
-                        %in $k72 $f73
-                    %in $k70 $f71
-                %in $k68 $f69
-            %in %letv $r33 =
+                            %in $k80 $r81
+                        %in $k78 $f79
+                    %in $k76 $f77
+                %in $k74 $f75
+            %in %letv $r39 =
               {
-                append = $f34
-                concat = $f41
-                get = $f48
-                length = $f55
-                prepend = $f60
-                put = $f67
+                append = $f40
+                concat = $f47
+                get = $f54
+                length = $f61
+                prepend = $f66
+                put = $f73
               }
-            %in $k13 $r33
-          %in %letv $f77 =
-            %fun $k78 l =
-              %letv $f79 =
-                %fun $k80 r =
-                  %letv $r81 =
+            %in $k13 $r39
+          %in %letv $f83 =
+            %fun $k84 l =
+              %letv $f85 =
+                %fun $k86 r =
+                  %letv $r87 =
                     %prim StrConcat l r
-                  %in $k80 $r81
-              %in $k78 $f79
-          %in %letv $f82 =
-            %fun $k83 s =
-              %letv $r84 =
+                  %in $k86 $r87
+              %in $k84 $f85
+          %in %letv $f88 =
+            %fun $k89 s =
+              %letv $r90 =
                 %prim StrLength s
-              %in $k83 $r84
-          %in %letv $f85 =
-            %fun $k86 s =
-              %letv $f87 =
-                %fun $k88 i =
-                  %letv $r89 =
+              %in $k89 $r90
+          %in %letv $f91 =
+            %fun $k92 s =
+              %letv $f93 =
+                %fun $k94 i =
+                  %letv $r95 =
                     %prim StrSubstr s i
-                  %in $k88 $r89
-              %in $k86 $f87
-          %in %letv $r76 =
+                  %in $k94 $r95
+              %in $k92 $f93
+          %in %letv $r82 =
             {
-              concat = $f77
-              length = $f82
-              substr = $f85
+              concat = $f83
+              length = $f88
+              substr = $f91
             }
-          %in $k12 $r76
-        %in %letv $f91 =
-          %fun $k92 i =
-            %letv $r93 =
+          %in $k12 $r82
+        %in %letv $f97 =
+          %fun $k98 i =
+            %letv $r99 =
               %prim IntAbs i
-            %in $k92 $r93
-        %in %letv $f94 =
-          %fun $k95 l =
-            %letv $f96 =
-              %fun $k97 r =
-                %letv $r98 =
+            %in $k98 $r99
+        %in %letv $f100 =
+          %fun $k101 l =
+            %letv $f102 =
+              %fun $k103 r =
+                %letv $r104 =
                   %prim IntAdd l r
-                %in $k97 $r98
-            %in $k95 $f96
-        %in %letv $f99 =
-          %fun $k100 l =
-            %letv $f101 =
-              %fun $k102 r =
-                %letv $r103 =
+                %in $k103 $r104
+            %in $k101 $f102
+        %in %letv $f105 =
+          %fun $k106 l =
+            %letv $f107 =
+              %fun $k108 r =
+                %letv $r109 =
                   %prim IntDiv l r
-                %in $k102 $r103
-            %in $k100 $f101
-        %in %letv $f104 =
-          %fun $k105 l =
-            %letv $f106 =
-              %fun $k107 r =
-                %letv $r108 =
+                %in $k108 $r109
+            %in $k106 $f107
+        %in %letv $f110 =
+          %fun $k111 l =
+            %letv $f112 =
+              %fun $k113 r =
+                %letv $r114 =
                   %prim IntMul l r
-                %in $k107 $r108
-            %in $k105 $f106
-        %in %letv $f109 =
-          %fun $k110 l =
-            %letv $f111 =
-              %fun $k112 r =
-                %letv $r113 =
+                %in $k113 $r114
+            %in $k111 $f112
+        %in %letv $f115 =
+          %fun $k116 l =
+            %letv $f117 =
+              %fun $k118 r =
+                %letv $r119 =
                   %prim IntPow l r
-                %in $k112 $r113
-            %in $k110 $f111
-        %in %letv $f114 =
-          %fun $k115 l =
-            %letv $f116 =
-              %fun $k117 r =
-                %letv $r118 =
+                %in $k118 $r119
+            %in $k116 $f117
+        %in %letv $f120 =
+          %fun $k121 l =
+            %letv $f122 =
+              %fun $k123 r =
+                %letv $r124 =
                   %prim IntSub l r
-                %in $k117 $r118
-            %in $k115 $f116
-        %in %letv $f119 =
-          %fun $k120 l =
-            %letv $f121 =
-              %fun $k122 r =
-                %letv $r123 =
+                %in $k123 $r124
+            %in $k121 $f122
+        %in %letv $f125 =
+          %fun $k126 l =
+            %letv $f127 =
+              %fun $k128 r =
+                %letv $r129 =
                   %prim IntLt l r
-                %in $k122 $r123
-            %in $k120 $f121
-        %in %letv $f124 =
-          %fun $k125 l =
-            %letv $f126 =
-              %fun $k127 r =
-                %letv $r128 =
+                %in $k128 $r129
+            %in $k126 $f127
+        %in %letv $f130 =
+          %fun $k131 l =
+            %letv $f132 =
+              %fun $k133 r =
+                %letv $r134 =
                   %prim IntLte l r
-                %in $k127 $r128
-            %in $k125 $f126
-        %in %letv $f129 =
-          %fun $k130 l =
-            %letv $f131 =
-              %fun $k132 r =
-                %letv $r133 =
+                %in $k133 $r134
+            %in $k131 $f132
+        %in %letv $f135 =
+          %fun $k136 l =
+            %letv $f137 =
+              %fun $k138 r =
+                %letv $r139 =
                   %prim IntGt l r
-                %in $k132 $r133
-            %in $k130 $f131
-        %in %letv $f134 =
-          %fun $k135 l =
-            %letv $f136 =
-              %fun $k137 r =
-                %letv $r138 =
+                %in $k138 $r139
+            %in $k136 $f137
+        %in %letv $f140 =
+          %fun $k141 l =
+            %letv $f142 =
+              %fun $k143 r =
+                %letv $r144 =
                   %prim IntGte l r
-                %in $k137 $r138
-            %in $k135 $f136
-        %in %letv $r90 =
+                %in $k143 $r144
+            %in $k141 $f142
+        %in %letv $r96 =
           {
-            abs = $f91
-            add = $f94
-            div = $f99
-            mul = $f104
-            pow = $f109
-            sub = $f114
-            lt = $f119
-            lte = $f124
-            gt = $f129
-            gte = $f134
+            abs = $f97
+            add = $f100
+            div = $f105
+            mul = $f110
+            pow = $f115
+            sub = $f120
+            lt = $f125
+            lte = $f130
+            gt = $f135
+            gte = $f140
           }
-        %in $k11 $r90
-      %in %letv $f140 =
-        %fun $k141 l =
-          %letv $f142 =
-            %fun $k143 r =
-              %letc $k145 _ =
-                $k143 r
-              %in %letc $k144 _ =
-                $k143 false
-              %in %case l (False $k144) (True $k145) 
-          %in $k141 $f142
+        %in $k11 $r96
       %in %letv $f146 =
-        %fun $k147 b =
-          %letc $k149 _ =
-            $k147 false
-          %in %letc $k148 _ =
-            $k147 true
-          %in %case b (False $k148) (True $k149) 
-      %in %letv $f150 =
-        %fun $k151 l =
-          %letv $f152 =
-            %fun $k153 r =
-              %letc $k155 _ =
-                $k153 true
-              %in %letc $k154 _ =
-                $k153 r
-              %in %case l (False $k154) (True $k155) 
-          %in $k151 $f152
-      %in %letv $r139 =
+        %fun $k147 l =
+          %letv $f148 =
+            %fun $k149 r =
+              %letc $k151 _ =
+                $k149 r
+              %in %letc $k150 _ =
+                $k149 false
+              %in %case l (False $k150) (True $k151) 
+          %in $k147 $f148
+      %in %letv $f152 =
+        %fun $k153 b =
+          %letc $k155 _ =
+            $k153 false
+          %in %letc $k154 _ =
+            $k153 true
+          %in %case b (False $k154) (True $k155) 
+      %in %letv $f156 =
+        %fun $k157 l =
+          %letv $f158 =
+            %fun $k159 r =
+              %letc $k161 _ =
+                $k159 true
+              %in %letc $k160 _ =
+                $k159 r
+              %in %case l (False $k160) (True $k161) 
+          %in $k157 $f158
+      %in %letv $r145 =
         {
-          and = $f140
-          not = $f146
-          or = $f150
+          and = $f146
+          not = $f152
+          or = $f156
         }
-      %in $k4 $r139
-    %in %letv $u157 =
+      %in $k4 $r145
+    %in %letv $u163 =
       {
       }
-    %in %letv $r156 =
+    %in %letv $r162 =
       <
-        True = $u157
+        True = $u163
       >
-    %in $k3 $r156
-  %in %letv $u159 =
+    %in $k3 $r162
+  %in %letv $u165 =
     {
     }
-  %in %letv $r158 =
+  %in %letv $r164 =
     <
-      False = $u159
+      False = $u165
     >
-  %in $k2 $r158
-%in %letv $u160 =
+  %in $k2 $r164
+%in %letv $u166 =
   {
   }
-%in $k1 $u160
+%in $k1 $u166

@@ -644,6 +644,28 @@ class SemanticAnalyser(
 
     def unalias(n : ASTNode, t : Expression) : Option[Expression] =
         t match {
+            case n @ App(Idn(f), as) =>
+                appResType(n) match {
+                    case Some(`typT`) =>
+                        val optArgsAndBody =
+                            entity(f) match {
+                                case FunctionEntity(Def(_, Body(Arguments(das), _, body))) =>
+                                    Some((das, body))
+                                case LetEntity(Let(_, _, _, Fun(Arguments(das), body))) =>
+                                    Some((das, body))
+                                case PredefLetEntity(_, _, Fun(Arguments(das), body)) =>
+                                    Some((das, body))
+                                case _ =>
+                                    None
+                            }
+                        optArgsAndBody.flatMap {
+                            case (das, body) =>
+                                appType(n, argsToArgTypes(das), Vector(), body, as)._2
+                        }
+                    case _ =>
+                        None
+                }
+
             case Cat(l, r) =>
                 (unalias(n, l), unalias(n, r)) match {
                     case (Some(RecT(l)), Some(RecT(r))) =>
