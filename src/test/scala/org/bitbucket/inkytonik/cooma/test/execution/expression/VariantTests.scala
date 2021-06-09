@@ -74,10 +74,50 @@ class VariantTests extends ExpressionTests {
     test(
         "multi-case match (later case, different order)",
         """{
-            def f () < x : Int, y : Int > = < x = 3>
+            def f () < x : Int, y : Int > = < x = 3 >
             f () match { case y(b) => 1 case x(a) => 2 }
         }""",
         "2",
+        "Int"
+    )
+
+    test(
+        "multi-case match (different bound var types, same order, first case)",
+        """{
+            def f () < x : Int, y : String > = < x = 3 >
+            f () match { case x(a) => 1 case y(b) => prim StrLength(b) }
+        }""",
+        "1",
+        "Int"
+    )
+
+    test(
+        "multi-case match (different bound var types, same order, second case)",
+        """{
+            def f () < x : Int, y : String > = < y = "hi" >
+            f () match { case x(a) => 1 case y(b) => prim StrLength(b) }
+        }""",
+        "2",
+        "Int"
+    )
+
+    test(
+        "multi-case match (different bound var types, different order, first case)",
+        """{
+            def f () < x : Int, y : String > = < y = "hi" >
+            f () match { case y(b) => prim StrLength(b) case x(a) => 1 }
+        }""",
+        "2",
+        "Int"
+    )
+
+    test(
+        "multi-case match (different bound var types, different order, second case)",
+        """{
+            def f () < x : Int, y : String > = < x = 3 >
+            f () match { case y(b) => prim StrLength(b) case x(a) => 1 }
+        }""",
+        "1",
         "Int"
     )
 

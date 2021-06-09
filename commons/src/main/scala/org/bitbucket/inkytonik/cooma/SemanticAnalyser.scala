@@ -584,10 +584,15 @@ class SemanticAnalyser(
         attr {
             case ArgumentEntity(n @ Argument(_, t, _)) =>
                 unalias(n, t)
-            case CaseValueEntity(tree.parent.pair(c, Mat(e, _))) =>
+            case CaseValueEntity(tree.parent.pair(Case(x, _, _), Mat(e, _))) =>
                 tipe(e) match {
-                    case Some(VarT(r)) if tree.index(c) - 1 < r.length =>
-                        Some(r(tree.index(c) - 1).expression)
+                    case Some(VarT(r)) =>
+                        r.find(_.identifier == x) match {
+                            case Some(field) =>
+                                unalias(e, field.expression)
+                            case None =>
+                                None
+                        }
                     case _ =>
                         None
                 }
