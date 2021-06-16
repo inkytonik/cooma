@@ -97,4 +97,13 @@ class VectorTests extends SemanticTests {
            |"""
     )
 
+    test(
+        "bad elemnt type for Vector",
+        "Vector(3)",
+        """|1:8:error: expected Type, got 3 of type Int
+           |Vector(3)
+           |       ^
+           |"""
+    )
+
 }

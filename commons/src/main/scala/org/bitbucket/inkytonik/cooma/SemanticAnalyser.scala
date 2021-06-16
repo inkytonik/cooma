@@ -828,6 +828,9 @@ class SemanticAnalyser(
                         None
                 }
 
+            case tree.parent(_ : VecT) =>
+                Some(typT)
+
             case _ =>
                 None
         }
