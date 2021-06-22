@@ -251,6 +251,47 @@ class ReplTests extends ExecutionTests {
     )
 
     test(
+        "user-defined type alias for prelude type (multiple)",
+        """
+           type MyBool = Boolean
+           val b : MyBool = true
+           b
+        """,
+        "MyBool : Type = < False : Unit, True : Unit >\nb : MyBool = true\nb : < False : Unit, True : Unit > = true"
+    )
+
+    test(
+        "REPL-defined type alias for prelude type constructor (multiple)",
+        """
+           Option(Int)
+           res0
+        """,
+        "res0 : Type = < None : Unit, Some : Int >\nres0 : Type = < None : Unit, Some : Int >"
+    )
+
+    test(
+        "user-defined type alias for prelude type constructor (multiple)",
+        """
+           type IntOption = Option(Int)
+           val o : IntOption = < Some = 42 >
+           o
+        """,
+        "IntOption : Type = < None : Unit, Some : Int >\no : IntOption = < Some = 42 >\no : < None : Unit, Some : Int > = < Some = 42 >"
+    )
+
+    test(
+        "user-defined type alias for prelude type (block)",
+        "{ type MyBool = Boolean val b : MyBool = true b }",
+        "res0 : < False : Unit, True : Unit > = true"
+    )
+
+    test(
+        "user-defined type alias for prelude type constructor (block)",
+        "{ type IntOption = Option(Int) val o : IntOption = < Some = 42 > o }",
+        "res0 : < None : Unit, Some : Int > = < Some = 42 >"
+    )
+
+    test(
         "user-defined type alias for structured type (direct, inferred type)",
         "type Foo = { foo : Int}",
         "Foo : Type = { foo : Int }"

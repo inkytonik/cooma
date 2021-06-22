@@ -852,9 +852,9 @@ class SemanticAnalyser(
             case REPLExp(e) =>
                 unalias(e, e)
             case REPLLet(Let(_, _, None, e)) =>
-                Some(e)
+                unalias(e, e)
             case REPLLet(Let(_, _, Some(LetType(t)), e)) =>
-                Some(e)
+                unalias(e, e)
             case _ =>
                 None
         }
