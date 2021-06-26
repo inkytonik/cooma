@@ -804,13 +804,13 @@ class SemanticAnalyser(
             case tree.parent(_ : FunT) =>
                 Some(typT)
 
-            case tree.parent(a : LetType) =>
+            case tree.parent(_ : LetType) =>
                 Some(typT)
 
-            case tree.parent.pair(a : Expression, Let(_, _, Some(LetType(t)), e)) =>
+            case tree.parent.pair(_ : Expression, Let(_, _, Some(LetType(t)), e)) =>
                 unalias(e, t)
 
-            case tree.parent.pair(a : Expression, Let(_, _, None, e)) =>
+            case tree.parent.pair(_ : Expression, Let(_, _, None, e)) =>
                 unalias(e, tipe(e))
 
             case tree.parent.pair(a : Expression, Prm(EqualP(), Vector(t, l, r))) =>
@@ -827,6 +827,9 @@ class SemanticAnalyser(
                     case _ =>
                         None
                 }
+
+            case tree.parent(_ : VecT) =>
+                Some(typT)
 
             case _ =>
                 None
@@ -849,9 +852,9 @@ class SemanticAnalyser(
             case REPLExp(e) =>
                 unalias(e, e)
             case REPLLet(Let(_, _, None, e)) =>
-                Some(e)
+                unalias(e, e)
             case REPLLet(Let(_, _, Some(LetType(t)), e)) =>
-                Some(e)
+                unalias(e, e)
             case _ =>
                 None
         }
