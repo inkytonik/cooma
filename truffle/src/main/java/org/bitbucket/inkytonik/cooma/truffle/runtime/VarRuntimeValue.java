@@ -37,11 +37,7 @@ public class VarRuntimeValue extends RuntimeValue implements TruffleObject, Comp
 
     @Override
     public String toString() {
-        val vp = v.print();
-        if (vp.equals("{}"))
-            return c.toLowerCase();
-        else
-            return String.format("< %s = %s >", c, v.print());
+        return String.format("< %s = %s >", c, v.print());
     }
 
     @Override

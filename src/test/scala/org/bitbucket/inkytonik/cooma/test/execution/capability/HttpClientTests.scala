@@ -61,7 +61,7 @@ class HttpClientTests extends ExecutionTests {
 
         test(s"run: $name") { implicit bc =>
             val result = runFile(filename, Seq("-r"), args)
-            result shouldBe "{ code = 200, body = \"GET / response\" }\n"
+            result shouldBe "< Right = { code = 200, body = \"GET / response\" } >\n"
         }
     }
 
@@ -72,7 +72,7 @@ class HttpClientTests extends ExecutionTests {
 
         test(s"run: $name") { implicit bc =>
             val result = runFile(filename, Seq("-r"), args)
-            result shouldBe "{ code = 200, body = \"GET /foo response\" }\n"
+            result shouldBe "< Right = { code = 200, body = \"GET /foo response\" } >\n"
         }
     }
 
@@ -96,14 +96,20 @@ class HttpClientTests extends ExecutionTests {
             val result = runFile(filename, Seq("-r"), args)
             result shouldBe
                 """|src/test/resources/capability/httpNotPermitted.cooma:2:16:error: delete is not a field of record type {
-                   |  get : (suffix : String) {
-                   |    code : Int,
-                   |    body : String
-                   |  },
-                   |  put : (suffix : String) {
-                   |    code : Int,
-                   |    body : String
-                   |  }
+                   |  get : (suffix : String) <
+                   |    Left : String,
+                   |    Right : {
+                   |      code : Int,
+                   |      body : String
+                   |    }
+                   |  >,
+                   |  put : (suffix : String) <
+                   |    Left : String,
+                   |    Right : {
+                   |      code : Int,
+                   |      body : String
+                   |    }
+                   |  >
                    |}
                    |    httpClient.delete("")
                    |               ^

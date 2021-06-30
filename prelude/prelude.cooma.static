@@ -92,12 +92,18 @@ Vectors :
 FolderReader :
   Type =
   {
-    read : (suffix : String) String
+    read : (suffix : String) <
+      Left : String,
+      Right : String
+    >
   };
 FolderWriter :
   Type =
   {
-    write : (suffix : String, s : String) Unit
+    write : (suffix : String, s : String) <
+      Left : String,
+      Right : Unit
+    >
   };
 HttpReturn :
   Type =
@@ -108,32 +114,50 @@ HttpReturn :
 HttpDelete :
   Type =
   {
-    delete : (suffix : String) HttpReturn
+    delete : (suffix : String) <
+      Left : String,
+      Right : HttpReturn
+    >
   };
 HttpGet :
   Type =
   {
-    get : (suffix : String) HttpReturn
+    get : (suffix : String) <
+      Left : String,
+      Right : HttpReturn
+    >
   };
 HttpPost :
   Type =
   {
-    post : (suffix : String) HttpReturn
+    post : (suffix : String) <
+      Left : String,
+      Right : HttpReturn
+    >
   };
 HttpPut :
   Type =
   {
-    put : (suffix : String) HttpReturn
+    put : (suffix : String) <
+      Left : String,
+      Right : HttpReturn
+    >
   };
 Reader :
   Type =
   {
-    read : () String
+    read : () <
+      Left : String,
+      Right : String
+    >
   };
 Writer :
   Type =
   {
-    write : (s : String) Unit
+    write : (s : String) <
+      Left : String,
+      Right : Unit
+    >
   };
 Either :
   (A : Type, B : Type) Type =

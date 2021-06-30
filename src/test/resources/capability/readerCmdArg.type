@@ -1,1 +1,9 @@
-(r : { read : () String }) String
+(r : {
+  read : () <
+    Left : String,
+    Right : String
+  >
+}) <
+  Left : String,
+  Right : String
+>

@@ -8,7 +8,7 @@ class PredefTests extends ExpressionTests {
     test(
         "true",
         "true",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >",
         "true"
     )
@@ -16,7 +16,7 @@ class PredefTests extends ExpressionTests {
     test(
         "false",
         "false",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >",
         "false"
     )
@@ -24,70 +24,70 @@ class PredefTests extends ExpressionTests {
     test(
         "Booleans.and(false, false)",
         "Booleans.and(false, false)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.and(false, true)",
         "Booleans.and(false, true)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.and(true, false)",
         "Booleans.and(true, false)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.and(true, true)",
         "Booleans.and(true, true)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.not(false)",
         "Booleans.not(false)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.not(true)",
         "Booleans.not(true)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.or(false, false)",
         "Booleans.or(false, false)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.or(false, true)",
         "Booleans.or(false, true)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.or(true, false)",
         "Booleans.or(true, false)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "Booleans.or(true, true)",
         "Booleans.or(true, true)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
@@ -274,112 +274,112 @@ class PredefTests extends ExpressionTests {
     test(
         "equality of integers (equal)",
         "equal(Int, 42, 42)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of integers (unequal)",
         "equal(Int, 42, 99)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of strings (equal)",
         s"""equal(String, "abc", "abc")""",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of strings (unequal)",
         s"""equal(String, "abc", "cba")""",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of Booleans (equal)",
         "equal(Boolean, true, true)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of Booleans (unequal)",
         "equal(Boolean, true, false)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of records (equal, flat)",
         "equal({x : Int, y : Int}, {x = 0, y = 1}, {y = 1, x = 0})",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of records (equal, nested)",
         "equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 0, a = 0}})",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of records (unequal, flat",
         "equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of records (unequal, nested)",
         "equal({x : { a : Int, b : Int }, y : Int}, {x = {a = 0, b = 0}, y = 1}, {y = 1, x = {b = 1, a = 0}})",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of Units (equal)",
         "equal(Unit, {}, {})",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of variants (equal, flat)",
         "equal(< a : Int, v : String >, < a = 1 >, < a = 1 >)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of variants (equal, nested)",
         "equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 1} >)",
-        "true",
+        "< True = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of variants (unequal, same constructor)",
         "equal(< a : Int, v : Int >, < a = 1 >, < a = 2 >)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of variants (unequal, different constructor)",
         "equal(< a : Int, v : Int >, < a = 1 >, < v = 2 >)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 
     test(
         "equality of variants (unequal, nested)",
         "equal(< a : { x : Int, y : Int }, v : String >, < a = {x = 1, y = 2} >, < a = {y = 2, x = 2} >)",
-        "false",
+        "< False = {} >",
         "< False : Unit, True : Unit >"
     )
 

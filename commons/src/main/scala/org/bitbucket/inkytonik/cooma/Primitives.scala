@@ -10,7 +10,11 @@
 
 package org.bitbucket.inkytonik.cooma
 
+import java.net.SocketException
+
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+
+import scala.util.{Failure, Success, Try}
 
 object Primitives {
 
@@ -299,11 +303,10 @@ trait Primitives {
     def folderReaderRead(rho : Env, root : String, suffixIdn : String) : ValueR = {
         val file = folderFile("FolderReaderRead", rho, root, suffixIdn)
         val in = new BufferedReader(new FileReader(file))
-        try {
-            strR(readReaderContents(in))
-        } catch {
-            case e : IOException =>
-                errCap("FolderReaderRead", e.getMessage)
+        Try(readReaderContents(in)) match {
+            case Success(value)           => varR("Right", strR(value))
+            case Failure(e : IOException) => varR("Left", strR(e.toString))
+            case Failure(e)               => throw e
         }
     }
 
@@ -314,28 +317,31 @@ trait Primitives {
             isStrR(text).getOrElse(errCap("FolderWriterWrite", s"can't write $text"))
         }
         val out = new BufferedWriter(new FileWriter(file))
-        try {
-            out.write(text)
-        } catch {
-            case e : IOException =>
-                errCap("FolderWriterWrite", e.getMessage)
-        } finally {
-            out.close()
+        Try(out.write(text)) match {
+            case Success(()) =>
+                out.close()
+                varR("Right", uniR)
+            case Failure(e : IOException) =>
+                varR("Left", strR(e.toString))
+            case Failure(e) =>
+                throw e
         }
-        recR(Vector())
     }
 
     def httpClient(rho : Env, methodName : String, url : String, x : String) : ValueR =
         isStrR(lookupR(rho, x)) match {
             case Some(suffix) =>
-                val (code, body) = {
-                    val response = Http(url + suffix).method(methodName).asString
-                    (response.code, response.body)
+                Try(Http(url + suffix).method(methodName).asString) match {
+                    case Success(response) =>
+                        varR("Right", recR(Vector(
+                            fldR("code", intR(response.code)),
+                            fldR("body", strR(response.body))
+                        )))
+                    case Failure(e @ (_ : IOException | _ : SocketException)) =>
+                        varR("Left", strR(e.toString))
+                    case Failure(e) =>
+                        throw e
                 }
-                recR(Vector(
-                    fldR("code", intR(code)),
-                    fldR("body", strR(body))
-                ))
             case None =>
                 errCap("HttpClient", s"can't find string operand $x")
         }
@@ -378,21 +384,24 @@ trait Primitives {
     }
 
     def readerRead(filename : String) : ValueR = {
-        if (CoomaConstants.CONSOLEIO != filename && !PrimitiveUtils.isFileReadable(filename))
-            errCap("ReaderRead", s"can't read $filename")
-        lazy val in : BufferedReader =
-            new BufferedReader(
+        lazy val in : Try[BufferedReader] =
+            Try(new BufferedReader(
                 filename match {
                     case CoomaConstants.CONSOLEIO => new InputStreamReader(System.in)
                     case _                        => new BufferedReader(new FileReader(filename))
                 }
-            )
-        try {
-            val s = readReaderContents(in)
-            strR(escape(s))
-        } catch {
-            case e : IOException =>
-                errCap("ReaderRead", e.getMessage)
+            ))
+        in.flatMap { in =>
+            val result = Try(readReaderContents(in))
+            if (result.isSuccess) in.close()
+            result
+        } match {
+            case Success(s) =>
+                varR("Right", strR(escape(s)))
+            case Failure(e : IOException) =>
+                varR("Left", strR(e.toString))
+            case Failure(e) =>
+                throw e
         }
     }
 
@@ -497,8 +506,6 @@ trait Primitives {
     }
 
     def writerWrite(filename : String, rho : Env, x : String) : ValueR = {
-        if (CoomaConstants.CONSOLEIO != filename && !PrimitiveUtils.isFileWritable(filename))
-            errCap("WriterWrite", s"can't write $filename")
         val value = lookupR(rho, x)
         val s = isIntR(value) match {
             case Some(i) =>
@@ -511,22 +518,20 @@ trait Primitives {
                         errPrim("WriterWrite", s"can't write $value")
                 }
         }
-        val out : Writer =
+        val out : Try[Writer] =
             filename match {
-                case CoomaConstants.CONSOLEIO =>
-                    stdout
-                case _ =>
-                    new BufferedWriter(new FileWriter(filename))
+                case CoomaConstants.CONSOLEIO => Success(stdout)
+                case _                        => Try(new BufferedWriter(new FileWriter(filename)))
             }
-        try {
-            out.write(s)
-        } catch {
-            case e : IOException =>
-                errPrim("WriterWrite", e.getMessage)
-        } finally {
-            out.close()
+        out.flatMap { out =>
+            val result = Try(out.write(s))
+            if (result.isSuccess) out.close()
+            result
+        } match {
+            case Success(())              => varR("Right", uniR)
+            case Failure(e : IOException) => varR("Left", strR(e.toString))
+            case Failure(e)               => throw e
         }
-        recR(Vector())
     }
 
 }

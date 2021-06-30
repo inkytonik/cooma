@@ -15,7 +15,7 @@ class FileIoTests extends ExecutionTests {
         val name = s"reader external argument ($filename)"
         val reader = makeTempFilename(".txt")
         val content = "Contents to be read\n"
-        val expectedResult = "\"" + s"${Util.escape(content)}" + "\"" + "\n"
+        val expectedResult = "< Right = \"" + s"${Util.escape(content)}" + "\"" + " >\n"
         val args = Seq(reader)
 
         test(s"run: $name") { implicit bc =>
@@ -51,15 +51,15 @@ class FileIoTests extends ExecutionTests {
         test(s"run: $name: result") { implicit bc =>
             createFile(writer, "")
             val result = runFile(filename, Seq("-r"), args)
-            result shouldBe "{}\n"
+            result shouldBe "< Right = {} >\n"
             FileSource(writer).content shouldBe content
             deleteFile(writer)
         }
 
         test(s"run: $name: non-existent writer") { implicit bc =>
-            val writer = "notThere.txt"
-            val result = runFile(filename, Seq(), Seq(writer))
-            result shouldBe s"CapabilityException: WriterWrite: can't write $writer\n"
+            val writer = "notThere/a.txt"
+            val result = runFile(filename, Seq("-r"), Seq(writer))
+            result shouldBe "< Left = \"java.io.FileNotFoundException: notThere/a.txt (No such file or directory)\" >\n"
             Files.exists(Paths.get(writer)) shouldBe false
         }
 
@@ -149,7 +149,7 @@ class FileIoTests extends ExecutionTests {
             createFile(writer, "")
             createFile(reader, content)
             val result = runFile(filename, Seq("-r"), args)
-            result shouldBe "{}\n"
+            result shouldBe "< Right = {} >\n"
             FileSource(writer).content shouldBe content
             FileSource(reader).content shouldBe content
             deleteFile(writer)
@@ -158,9 +158,9 @@ class FileIoTests extends ExecutionTests {
 
         test(s"run: $name: non-existent writer") { implicit bc =>
             createFile(reader, "")
-            val writer = "notThere.txt"
-            val result = runFile(filename, Seq(), Seq(writer, reader))
-            result shouldBe s"CapabilityException: WriterWrite: can't write $writer\n"
+            val writer = "notThere/a.txt"
+            val result = runFile(filename, Seq("-r"), Seq(writer, reader))
+            result shouldBe "< Left = \"java.io.FileNotFoundException: notThere/a.txt (No such file or directory)\" >\n"
             Files.exists(Paths.get(writer)) shouldBe false
             deleteFile(writer)
         }
@@ -168,8 +168,8 @@ class FileIoTests extends ExecutionTests {
         test(s"run: $name: non-existent reader") { implicit bc =>
             createFile(writer, "")
             val reader = "notThere.txt"
-            val result = runFile(filename, Seq(), Seq(writer, reader))
-            result shouldBe s"CapabilityException: ReaderRead: can't read $reader\n"
+            val result = runFile(filename, Seq("-r"), Seq(writer, reader))
+            result shouldBe "< Left = \"java.io.FileNotFoundException: notThere.txt (No such file or directory)\" >\n"
             Files.exists(Paths.get(reader)) shouldBe false
             deleteFile(writer)
         }
@@ -204,7 +204,7 @@ class FileIoTests extends ExecutionTests {
         test(s"run: $name: result") { implicit bc =>
             createFile(rw, "The file contents\n")
             val result = runFile(filename, Seq("-r"), args)
-            result shouldBe "\"The file contents\\n\"\n"
+            result shouldBe "< Right = \"The file contents\\n\" >\n"
             FileSource(rw).content shouldBe "Hello, world!\n"
             deleteFile(rw)
         }

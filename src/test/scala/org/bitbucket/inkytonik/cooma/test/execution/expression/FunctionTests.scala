@@ -125,10 +125,10 @@ class FunctionTests extends ExpressionTests {
                 b = id(Boolean, true),
                 i = id(Int, 10),
                 s = id(String, "hello"),
-                r = id(Reader, { read = fun () "hello" })
+                r = id(Reader, { read = fun () < Right = "hello" > })
             }
         }""",
-        """{ b = true, i = 10, s = "hello", r = { read = <function> } }""",
+        """{ b = < True = {} >, i = 10, s = "hello", r = { read = <function> } }""",
         """|{
            |  b : <
            |    False : Unit,
@@ -137,7 +137,10 @@ class FunctionTests extends ExpressionTests {
            |  i : Int,
            |  s : String,
            |  r : {
-           |    read : () String
+           |    read : () <
+           |      Left : String,
+           |      Right : String
+           |    >
            |  }
            |}"""
     )

@@ -1,7 +1,13 @@
 fun (httpClient : HttpGet & HttpPost & HttpPut) {
+    def getBody(response : <Left : String, Right : HttpReturn>) String = {
+        response match {
+            case Left(_) => ""
+            case Right(r) => r.body
+        }
+    }
     {
-        x0 = httpClient.get("").body,
-        x1 = httpClient.post("").body,
-        x2 = httpClient.put("").body
+        x0 = getBody(httpClient.get("")),
+        x1 = getBody(httpClient.post("")),
+        x2 = getBody(httpClient.put(""))
     }
 }
