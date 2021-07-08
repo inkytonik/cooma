@@ -35,9 +35,10 @@ trait ReferenceREPL extends REPL {
         i : String,
         optTypeValue : Option[Expression],
         optAliasedType : Option[Expression],
-        config : Config
+        config : Config,
+        analyser : SemanticAnalyser
     ) : Unit = {
-        val term = compileStandalone(program, positions)
+        val term = compileStandalone(program, positions, analyser)
 
         if (config.irPrint())
             config.output().emitln(showTerm(term))
