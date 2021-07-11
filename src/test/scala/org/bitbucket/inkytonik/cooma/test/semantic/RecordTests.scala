@@ -87,7 +87,7 @@ class RecordTests extends SemanticTests {
 
     test(
         "record concatenation (single)",
-        "{ x =  1} & { y = 2 }",
+        "{ x = 1 } & { y = 2 }",
         ""
     )
 
@@ -106,7 +106,7 @@ class RecordTests extends SemanticTests {
     test(
         "bad record concatenation (left)",
         "3 & { x = 1 }",
-        """|1:1:error: expected record or record type, got Int
+        """|1:1:error: expected record or record type, got 3 of type Int
            |3 & { x = 1 }
            |^
            |"""
@@ -115,7 +115,7 @@ class RecordTests extends SemanticTests {
     test(
         "bad record concatenation (right)",
         "{ x = 1 } & 3",
-        """|1:13:error: expected record, got Int
+        """|1:13:error: expected record, got 3 of type Int
            |{ x = 1 } & 3
            |            ^
            |"""
@@ -124,7 +124,7 @@ class RecordTests extends SemanticTests {
     test(
         "bad record concatenation (both)",
         "3 & 4",
-        """|1:1:error: expected record or record type, got Int
+        """|1:1:error: expected record or record type, got 3 of type Int
            |3 & 4
            |^
            |"""
@@ -151,7 +151,7 @@ class RecordTests extends SemanticTests {
     test(
         "bad record type concatenation (left)",
         "3 & { x: Int }",
-        """|1:1:error: expected record or record type, got Int
+        """|1:1:error: expected record or record type, got 3 of type Int
            |3 & { x: Int }
            |^
            |""".stripMargin
@@ -160,7 +160,7 @@ class RecordTests extends SemanticTests {
     test(
         "bad record type concatenation (right)",
         "{ x: Int } & 3",
-        """|1:14:error: expected record type, got Int
+        """|1:14:error: expected record type, got 3 of type Int
            |{ x: Int } & 3
            |             ^
            |""".stripMargin
@@ -178,7 +178,7 @@ class RecordTests extends SemanticTests {
     test(
         "bad record concatenation (value on left, type on right)",
         "{ x = 1 } & { y: String }",
-        """|1:13:error: expected record, got Type
+        """|1:13:error: expected record, got { y : String } of type Type
            |{ x = 1 } & { y: String }
            |            ^
            |""".stripMargin
@@ -187,7 +187,7 @@ class RecordTests extends SemanticTests {
     test(
         "bad record concatenation (type on left, value on right)",
         "{ x: Int } & { y = 4 }",
-        """|1:14:error: expected record type, got { y : Int }
+        """|1:14:error: expected record type, got { y = 4 } of type { y : Int }
            |{ x: Int } & { y = 4 }
            |             ^
            |""".stripMargin

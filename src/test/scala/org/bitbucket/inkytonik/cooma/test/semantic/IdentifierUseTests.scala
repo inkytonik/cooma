@@ -123,10 +123,10 @@ class IdentifierUseTests extends SemanticTests {
 
     test(
         "non-declared name in field definition (variant)",
-        "< x = y >",
-        """|1:7:error: y is not declared
-           |< x = y >
-           |      ^
+        "<< x = y >>",
+        """|1:8:error: y is not declared
+           |<< x = y >>
+           |       ^
            |"""
     )
 

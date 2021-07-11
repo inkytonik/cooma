@@ -43,7 +43,7 @@ class BuiltInTests extends SemanticTests {
     test(
         "aliases are expanded in type error messages",
         "{fun (b : Boolean) 0}(0)",
-        """|1:23:error: expected < False : Unit, True : Unit >, got 0 of type Int
+        """|1:23:error: expected << False : Unit, True : Unit >>, got 0 of type Int
            |{fun (b : Boolean) 0}(0)
            |                      ^
            |"""
@@ -57,14 +57,14 @@ class BuiltInTests extends SemanticTests {
 
     test(
         "HttpDelete & HttpGet & HttpPost & HttpPut is a record with the respective fields",
-        """|fun (httpClient : HttpDelete & HttpGet & HttpPost & HttpPut) {
-           |    val _ = httpClient.delete("")
-           |    val _ = httpClient.get("")
-           |    val _ = httpClient.post("")
-           |    val _ = httpClient.put("")
-           |    {}
-           |}
-           |""".stripMargin,
+        """fun (httpClient : HttpDelete & HttpGet & HttpPost & HttpPut) {
+               val _ = httpClient.delete("")
+               val _ = httpClient.get("")
+               val _ = httpClient.post("")
+               val _ = httpClient.put("")
+               {}
+           }
+           """,
         ""
     )
 
@@ -76,14 +76,14 @@ class BuiltInTests extends SemanticTests {
 
     test(
         "Reader read field has correct type",
-        "{ def f (r : Reader) <Left : String, Right : String> = r.read() 0 }",
+        "{ def f (r : Reader) <<Left : String, Right : String>> = r.read() 0 }",
         ""
     )
 
     test(
         "Reader doesn't have non-read field",
         "fun (r : Reader) r.foo",
-        """|1:20:error: foo is not a field of record type { read : () < Left : String, Right : String > }
+        """|1:20:error: foo is not a field of record type { read : () << Left : String, Right : String >> }
            |fun (r : Reader) r.foo
            |                   ^
            |"""
@@ -97,14 +97,14 @@ class BuiltInTests extends SemanticTests {
 
     test(
         "Writer write field has correct type",
-        """{ def f (w : Writer) <Left : String, Right : Unit> = w.write("hi") 0 }""",
+        """{ def f (w : Writer) <<Left : String, Right : Unit>> = w.write("hi") 0 }""",
         ""
     )
 
     test(
         "Writer doesn't have non-write field",
         "fun (w : Writer) w.foo",
-        """|1:20:error: foo is not a field of record type { write : (s : String) < Left : String, Right : Unit > }
+        """|1:20:error: foo is not a field of record type { write : (s : String) << Left : String, Right : Unit >> }
            |fun (w : Writer) w.foo
            |                   ^
            |"""
@@ -112,13 +112,13 @@ class BuiltInTests extends SemanticTests {
 
     test(
         "FolderReader has correct type",
-        """{ def f (r : FolderReader) <Left : String, Right : String> = r.read("a.txt") {} }""",
+        """{ def f (r : FolderReader) <<Left : String, Right : String>> = r.read("a.txt") {} }""",
         ""
     )
 
     test(
         "FolderWriter has correct type",
-        """{ def f (w : FolderWriter) <Left : String, Right : Unit> = w.write("a.txt", "text") {} }""",
+        """{ def f (w : FolderWriter) <<Left : String, Right : Unit>> = w.write("a.txt", "text") {} }""",
         ""
     )
 

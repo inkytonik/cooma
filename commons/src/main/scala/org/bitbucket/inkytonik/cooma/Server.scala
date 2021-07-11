@@ -15,7 +15,8 @@ trait Server {
     self : Driver =>
 
     import org.bitbucket.inkytonik.kiama.==>
-    import org.bitbucket.inkytonik.kiama.util.Position
+    import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.{Document, emptyDocument}
+    import org.bitbucket.inkytonik.kiama.util.{Position, Source}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter._
     import org.bitbucket.inkytonik.cooma.SymbolTable._
@@ -154,10 +155,10 @@ trait Server {
                 s"multiply-defined $i"
             case UnknownEntity() =>
                 s"unknown $i"
-            case PredefFunctionEntity(name, tipe) =>
-                hoverMarkdown(s"prelude functon $name", Some(tipe))
             case PredefLetEntity(name, tipe, value) =>
-                hoverMarkdown(s"prelude let $name", Some(tipe), Some(toDoc(value)))
+                hoverMarkdown(s"prelude $name", Some(tipe), Some(toDoc(value)))
+            case PredefTypedEntity(name, tipe) =>
+                hoverMarkdown(s"prelude $name", Some(tipe))
             case e : CoomaOkEntity =>
                 hoverMarkdown(s"${e.desc} $i", analyser.entityType(e),
                     Some(toDoc(e.decl)))
@@ -196,6 +197,11 @@ trait Server {
             case None =>
                 md("")
         }
+    }
+
+    def publishDesugaredTreeProduct(source : Source, document : => Document = emptyDocument) : Unit = {
+        if (settingBool("showDesugaredSourceTree"))
+            publishProduct(source, "desugaredtree", "scala", document)
     }
 
 }

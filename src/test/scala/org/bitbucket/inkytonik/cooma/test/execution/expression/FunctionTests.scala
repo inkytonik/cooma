@@ -63,9 +63,9 @@ class FunctionTests extends ExpressionTests {
 
     test(
         "variant argument (one)",
-        "{fun (r : < x : Int >) r}(< x = 20 >)",
-        "< x = 20 >",
-        "< x : Int >"
+        "{fun (r : << x : Int >>) r}(<< x = 20 >>)",
+        "<< x = 20 >>",
+        "<< x : Int >>"
     )
 
     test(
@@ -125,22 +125,22 @@ class FunctionTests extends ExpressionTests {
                 b = id(Boolean, true),
                 i = id(Int, 10),
                 s = id(String, "hello"),
-                r = id(Reader, { read = fun () < Right = "hello" > })
+                r = id(Reader, { read = fun () << Right = "hello" >> })
             }
         }""",
-        """{ b = < True = {} >, i = 10, s = "hello", r = { read = <function> } }""",
+        """{ b = << True = {} >>, i = 10, s = "hello", r = { read = <function> } }""",
         """|{
-           |  b : <
+           |  b : <<
            |    False : Unit,
            |    True : Unit
-           |  >,
+           |  >>,
            |  i : Int,
            |  s : String,
            |  r : {
-           |    read : () <
+           |    read : () <<
            |      Left : String,
            |      Right : String
-           |    >
+           |    >>
            |  }
            |}"""
     )
@@ -155,65 +155,65 @@ class FunctionTests extends ExpressionTests {
     test(
         "type application in type (def)",
         """{
-             def MyOption(T : Type) Type = <None : Unit, Some : T>
-             val x : MyOption(Int) = <Some = 3>
+             def MyOption(T : Type) Type = <<None : Unit, Some : T>>
+             val x : MyOption(Int) = <<Some = 3>>
              x
         }""",
-        "< Some = 3 >",
-        "< None : Unit, Some : Int >"
+        "<< Some = 3 >>",
+        "<< None : Unit, Some : Int >>"
     )
 
     test(
         "type application in type (val fun, single arg)",
         """{
-             val MyOption = fun (T : Type) <None : Unit, Some : T>
-             val x : MyOption(Int) = <Some = 3>
+             val MyOption = fun (T : Type) <<None : Unit, Some : T>>
+             val x : MyOption(Int) = <<Some = 3>>
              x
         }""",
-        "< Some = 3 >",
-        "< None : Unit, Some : Int >"
+        "<< Some = 3 >>",
+        "<< None : Unit, Some : Int >>"
     )
 
     test(
         "type application in type (type fun, single arg))",
         """{
-             type MyOption = fun (T : Type) <None : Unit, Some : T>
-             val x : MyOption(Int) = <Some = 3>
+             type MyOption = fun (T : Type) <<None : Unit, Some : T>>
+             val x : MyOption(Int) = <<Some = 3>>
              x
         }""",
-        "< Some = 3 >",
-        "< None : Unit, Some : Int >"
+        "<< Some = 3 >>",
+        "<< None : Unit, Some : Int >>"
     )
 
     test(
         "type application in type (prelude, single arg))",
         """{
-             val x : Option(Int) = <Some = 3>
+             val x : Option(Int) = <<Some = 3>>
              x
         }""",
-        "< Some = 3 >",
-        "< None : Unit, Some : Int >"
+        "<< Some = 3 >>",
+        "<< None : Unit, Some : Int >>"
     )
 
     test(
         "type application in type (multiple args)",
         """{
-             type MyEither = fun (A : Type, B : Type) < Left : A, Right : B >
-             val x : MyEither(Int, String) = <Left = 42>
+             type MyEither = fun (A : Type, B : Type) << Left : A, Right : B >>
+             val x : MyEither(Int, String) = <<Left = 42>>
              x
         }""",
-        "< Left = 42 >",
-        "< Left : Int, Right : String >"
+        "<< Left = 42 >>",
+        "<< Left : Int, Right : String >>"
     )
 
     test(
         "type application in type (prelude, multiple args)",
         """{
-             val x : Either(Int, String) = <Right = "hi">
+             val x : Either(Int, String) = <<Right = "hi">>
              x
         }""",
-        """< Right = "hi" >""",
-        "< Left : Int, Right : String >"
+        """<< Right = "hi" >>""",
+        "<< Left : Int, Right : String >>"
     )
 
 }

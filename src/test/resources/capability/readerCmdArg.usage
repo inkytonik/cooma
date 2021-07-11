@@ -1,4 +1,4 @@
 arguments:
   r: a reader "source of data to read"
 result type:
-  < Left : String, Right : String >
+  << Left : String, Right : String >>

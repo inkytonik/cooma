@@ -71,14 +71,14 @@ class SubtypeTests extends Tests {
             ("{x : Int, y : Int}", "{x : Int}"),
             ("{x : Int, y : Int}", "{y : Int}"),
             ("{x : {b : Int, a : Int}, y : Int}", "{x : {a : Int}}"),
-            ("{y : Int, x : <a : Int>}", "{x : <a : Int, b : Int>}"),
+            ("{y : Int, x : <<a : Int>>}", "{x : <<a : Int, b : Int>>}"),
             (
                 "({x : Int}, {y : String}) Int",
                 "({x : Int}, {x : Int, y : String}) Int"
             ),
-            ("<x : Int>", "<x : Int, y : Int>"),
-            ("<x : {b : Int, a : Int}>", "<x : {a : Int}, y : Int>"),
-            ("<x : <a : Int>>", "<y : Int, x : <b : Int, a : Int>>"),
+            ("<<x : Int>>", "<<x : Int, y : Int>>"),
+            ("<<x : {b : Int, a : Int}>>", "<<x : {a : Int}, y : Int>>"),
+            ("<<x : <<a : Int>>>>", "<<y : Int, x : <<b : Int, a : Int>>>>"),
             ("(Int) {x : Int, y : Int}", "(Int) {x : Int}"),
             ("Vector()", "Vector(Int)"),
             ("Vector({x : Int, y : Int})", "Vector({x : Int})")

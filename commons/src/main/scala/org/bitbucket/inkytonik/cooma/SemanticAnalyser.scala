@@ -22,6 +22,7 @@ class SemanticAnalyser(
 
     import org.bitbucket.inkytonik.kiama.==>
     import org.bitbucket.inkytonik.kiama.attribution.Decorators
+    import org.bitbucket.inkytonik.kiama.rewriting.Cloner.deepclone
     import org.bitbucket.inkytonik.kiama.rewriting.Rewriter.{everywhere, rewrite, rule}
     import org.bitbucket.inkytonik.kiama.util.Messaging.{check, collectMessages, error, Messages, noMessages}
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
@@ -159,8 +160,8 @@ class SemanticAnalyser(
                 checkOverlapping(rl, rr)
             case (Some(RecT(_)), Some(t)) =>
                 // term-level concatenation, invalid right operand
-                error(r, s"expected record, got ${show(t)}")
-            case (Some(`typT`), Some(`typT`)) =>
+                error(r, s"expected record, got ${show(r)} of type ${show(t)}")
+            case (Some(TypT()), Some(TypT())) =>
                 // type-level concatenation
                 (unalias(e, l), unalias(e, r)) match {
                     case (None, _) | (_, None) =>
@@ -168,15 +169,15 @@ class SemanticAnalyser(
                     case (Some(RecT(rl)), Some(RecT(rr))) =>
                         checkOverlapping(rl, rr)
                     case (Some(RecT(_)), Some(t)) =>
-                        error(r, s"expected record type, got ${show(t)}")
+                        error(r, s"expected record type, got ${show(r)} of type ${show(t)}")
                     case (Some(t), _) =>
-                        error(l, s"expected record type, got ${show(t)}")
+                        error(l, s"expected record type, got ${show(l)} of type ${show(t)}")
                 }
-            case (Some(`typT`), Some(t)) =>
+            case (Some(TypT()), Some(t)) =>
                 // type-level concatenation, invalid right operand
-                error(r, s"expected record type, got ${show(t)}")
+                error(r, s"expected record type, got ${show(r)} of type ${show(t)}")
             case (Some(t), _) =>
-                error(l, s"expected record or record type, got ${show(t)}")
+                error(l, s"expected record or record type, got ${show(l)} of type ${show(t)}")
         }
     }
 
@@ -230,7 +231,7 @@ class SemanticAnalyser(
     def checkMainArgument(arg : Argument) : Messages = {
         def aux(t : Expression) : Boolean =
             t match {
-                case `strT` =>
+                case StrT() =>
                     true
                 case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>
                     true
@@ -405,11 +406,25 @@ class SemanticAnalyser(
 
     lazy val tipe : Expression => Option[Expression] =
         attr {
+            case _ : Abs =>
+                Some(intT)
+
+            case Add(l, _, _) =>
+                tipe(l) match {
+                    case Some(TypT()) =>
+                        Some(typT)
+                    case _ =>
+                        Some(intT)
+                }
+
             case n : App =>
                 appResType(n)
 
             case Blk(b) =>
                 blockTipe(b)
+
+            case _ : And | _ : Eql | _ : Or | _ : Rel =>
+                Some(boolT)
 
             case n @ Cat(e1, e2) =>
                 (tipe(e1), tipe(e2)) match {
@@ -418,7 +433,7 @@ class SemanticAnalyser(
                             Some(RecT(r1 ++ r2))
                         else
                             None
-                    case (Some(`typT`), Some(`typT`)) =>
+                    case (Some(TypT()), Some(TypT())) =>
                         (unalias(n, e1), unalias(n, e2)) match {
                             case (Some(RecT(r1)), Some(RecT(r2))) =>
                                 if (overlappingFields(r1, r2).isEmpty)
@@ -449,6 +464,17 @@ class SemanticAnalyser(
             case u @ Idn(IdnUse(x)) =>
                 entityType(lookup(env(u), x, UnknownEntity()))
 
+            case If(_, l, r) =>
+                tipe(l)
+
+            case Ind(e, Index(), i) =>
+                tipe(e) match {
+                    case Some(VecT(t)) =>
+                        Some(deepclone(t))
+                    case _ =>
+                        None
+                }
+
             case m : Mat =>
                 matchType(m) match {
                     case OkCases(optType) =>
@@ -457,8 +483,16 @@ class SemanticAnalyser(
                         None
                 }
 
+            case _ : Mul =>
+                Some(intT)
+
             case _ : Num =>
                 Some(intT)
+
+            case Pre(op, _) =>
+                op match {
+                    case Bang() => Some(boolT)
+                }
 
             case n @ Prm(p, as) =>
                 val ftype = userPrimitiveType(p)
@@ -476,20 +510,7 @@ class SemanticAnalyser(
                 Some(typT)
 
             case Sel(r, FieldUse(f)) =>
-                tipe(r) match {
-                    case Some(RecT(fieldTypes)) =>
-                        fieldTypes.find {
-                            case FieldType(i, t) =>
-                                i == f
-                        } match {
-                            case Some(FieldType(i, t)) =>
-                                Some(t)
-                            case None =>
-                                None
-                        }
-                    case _ =>
-                        None
-                }
+                selectionType(r, f)
 
             case _ : Str =>
                 Some(strT)
@@ -516,6 +537,9 @@ class SemanticAnalyser(
 
             case _ : VecNilT | _ : VecT =>
                 Some(typT)
+
+            case e =>
+                sys.error(s"tipe: unexpected expression $e")
         }
 
     def substArgTypes[T](x : String, t : Expression, a : T) = {
@@ -558,7 +582,7 @@ class SemanticAnalyser(
             (None, None)
         else
             ts.head match {
-                case ArgumentType(Some(IdnDef(x)), `typT`) =>
+                case ArgumentType(Some(IdnDef(x)), TypT()) =>
                     appType(n, substArgTypes(x, as.head, ts.tail), newts :+ ts.head, substArgTypes(x, as.head, t), as.tail)
                 case _ =>
                     appType(n, ts.tail, newts :+ ts.head, t, as.tail)
@@ -605,11 +629,30 @@ class SemanticAnalyser(
                     unalias(e, tipe)
                 else
                     Some(tipe)
-            case PredefFunctionEntity(_, tipe) =>
-                Some(tipe)
             case PredefLetEntity(_, tipe, _) =>
                 Some(tipe)
+            case PredefTypedEntity(_, tipe) =>
+                Some(tipe)
             case _ =>
+                None
+        }
+
+    def selectionType(r : Expression, f : String) : Option[Expression] =
+        tipe(r) match {
+            case Some(RecT(fieldTypes)) =>
+                fieldType(fieldTypes, f)
+            case _ =>
+                None
+        }
+
+    def fieldType(fieldTypes : Vector[FieldType], f : String) : Option[Expression] =
+        fieldTypes.find {
+            case FieldType(i, t) =>
+                i == f
+        } match {
+            case Some(FieldType(i, t)) =>
+                Some(t)
+            case None =>
                 None
         }
 
@@ -646,7 +689,7 @@ class SemanticAnalyser(
         t match {
             case n @ App(Idn(f), as) =>
                 appResType(n) match {
-                    case Some(`typT`) =>
+                    case Some(t) if t == typT =>
                         val optArgsAndBody =
                             entity(f) match {
                                 case FunctionEntity(Def(_, Body(Arguments(das), _, body))) =>
@@ -679,11 +722,11 @@ class SemanticAnalyser(
 
             case Idn(IdnUse(x)) =>
                 lookup(env(n), x, UnknownEntity()) match {
-                    case ArgumentEntity(Argument(_, `typT`, _)) =>
+                    case ArgumentEntity(Argument(_, TypT(), _)) =>
                         Some(t)
                     case LetEntity(Let(_, _, _, v)) if t != v =>
                         unalias(n, v)
-                    case PredefLetEntity(_, `typT`, v) =>
+                    case PredefLetEntity(_, TypT(), v) =>
                         unalias(n, v)
                     case e =>
                         None

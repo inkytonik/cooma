@@ -15,9 +15,10 @@ import org.bitbucket.inkytonik.kiama.util.CompilerBase
 
 abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server {
 
-    import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout, pretty, show}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-    import org.bitbucket.inkytonik.cooma.SymbolTable.{isCapabilityTypeName, preludeStaticEnv, strT}
+    import org.bitbucket.inkytonik.cooma.Desugar.desugar
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout, pretty, show}
+    import org.bitbucket.inkytonik.cooma.SymbolTable.{Environment, isCapabilityTypeName, preludeStaticEnv, StrT}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.{Messages, noMessages}
@@ -70,22 +71,31 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 publishSourceProduct(source, format(program))
                 publishSourceTreeProduct(source, pretty(any(program)))
             }
-            checkProgram(program, source, config) match {
-                case Vector() =>
-                    Left(program)
-                case messages =>
+            val env = preludeStaticEnv(config)
+            desugar(program, env, positions) match {
+                case Left(messages) =>
                     Right(messages)
+                case Right(desugaredProgram) =>
+                    if (config.desugaredASTPrint())
+                        config.output().emitln(layout(any(desugaredProgram), 5))
+                    if (config.server())
+                        publishDesugaredTreeProduct(source, pretty(any(program)))
+                    checkProgram(desugaredProgram, env, source, config) match {
+                        case Vector() =>
+                            Left(desugaredProgram)
+                        case messages =>
+                            Right(messages)
+                    }
             }
         } else
             Right(Vector(p.errorToMessage(pr.parseError)))
     }
 
-    def checkProgram(program : Program, source : Source, config : Config) : Messages =
+    def checkProgram(program : Program, env : Environment, source : Source, config : Config) : Messages =
         if (!config.server() && config.filenames().isEmpty) {
             noMessages
         } else {
             val tree = new Tree[ASTNode, Program](program)
-            val env = preludeStaticEnv(config)
             val analyser = new SemanticAnalyser(tree, env)
             analysers.get(source) match {
                 case Some(prevAnalyser) =>
@@ -117,7 +127,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                         Seq(capabilityDesc(name))
                     case Cat(e1, e2) =>
                         aux(e1) ++ aux(e2)
-                    case `strT` =>
+                    case StrT() =>
                         Seq("a string")
                     case t =>
                         Seq(s"unsupported argument type ${show(t)}")

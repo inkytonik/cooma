@@ -30,9 +30,9 @@
             %in %letv $i24 =
               3
             %in %letv $r23 =
-              <
+              <<
                 e = $i24
-              >
+              >>
             %in %letv $r9 =
               {
                 a = $r11

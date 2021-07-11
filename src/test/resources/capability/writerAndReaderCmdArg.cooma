@@ -1,8 +1,8 @@
 fun (w : Writer, r : Reader) {
-    type Result = <Left : String, Right : Unit>
+    type Result = <<Left : String, Right : Unit>>
     r.read() match {
         case Left(s) => {
-            val result : Result = <Left = s>
+            val result : Result = <<Left = s>>
             result
         }
         case Right(s) => {

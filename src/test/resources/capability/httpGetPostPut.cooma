@@ -1,5 +1,5 @@
 fun (httpClient : HttpGet & HttpPost & HttpPut) {
-    def getBody(response : <Left : String, Right : HttpReturn>) String = {
+    def getBody(response : <<Left : String, Right : HttpReturn>>) String = {
         response match {
             case Left(_) => ""
             case Right(r) => r.body

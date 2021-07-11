@@ -7,36 +7,36 @@ class VectorTests extends ExpressionTests {
     test(
         "equality of vectors (equal, nil)",
         "equal(Vector(), [], [])",
-        "< True = {} >",
-        "< False : Unit, True : Unit >"
+        "<< True = {} >>",
+        "<< False : Unit, True : Unit >>"
     )
 
     test(
         "equality of vectors (equal, flat)",
         "equal(Vector(Int), [1, 2, 3], [1, 2, 3])",
-        "< True = {} >",
-        "< False : Unit, True : Unit >"
+        "<< True = {} >>",
+        "<< False : Unit, True : Unit >>"
     )
 
     test(
         "equality of vectors (equal, nested)",
         "equal(Vector({a : Int}), [{a = 1}, {a = 2}], [{a = 1}, {a = 2}])",
-        "< True = {} >",
-        "< False : Unit, True : Unit >"
+        "<< True = {} >>",
+        "<< False : Unit, True : Unit >>"
     )
 
     test(
         "equality of vectors (unequal, flat)",
         "equal(Vector(Int), [1, 2, 3], [1, 2])",
-        "< False = {} >",
-        "< False : Unit, True : Unit >"
+        "<< False = {} >>",
+        "<< False : Unit, True : Unit >>"
     )
 
     test(
         "equality of vectors (unequal, nested)",
         "equal(Vector({a : Int}), [{a = 1}, {a = 2}], [{a = 2}, {a = 2}])",
-        "< False = {} >",
-        "< False : Unit, True : Unit >"
+        "<< False = {} >>",
+        "<< False : Unit, True : Unit >>"
     )
 
     test(
@@ -87,8 +87,8 @@ class VectorTests extends ExpressionTests {
     test(
         "Boolean vector declaration",
         "[true, false]",
-        "[< True = {} >, < False = {} >]",
-        "Vector(< False : Unit, True : Unit >)"
+        "[<< True = {} >>, << False = {} >>]",
+        "Vector(<< False : Unit, True : Unit >>)"
     )
 
     test(
@@ -97,8 +97,8 @@ class VectorTests extends ExpressionTests {
             Booleans.and(false, true),
             Booleans.and(true, false),
             Booleans.and(true, true)]""",
-        "[< False = {} >, < False = {} >, < False = {} >, < True = {} >]",
-        "Vector(< False : Unit, True : Unit >)"
+        "[<< False = {} >>, << False = {} >>, << False = {} >>, << True = {} >>]",
+        "Vector(<< False : Unit, True : Unit >>)"
     )
 
     test(
@@ -117,9 +117,9 @@ class VectorTests extends ExpressionTests {
 
     test(
         "variant Vector declaration",
-        "[< a = 1 >]",
-        "[< a = 1 >]",
-        "Vector(< a : Int >)"
+        "[<< a = 1 >>]",
+        "[<< a = 1 >>]",
+        "Vector(<< a : Int >>)"
     )
 
     test(

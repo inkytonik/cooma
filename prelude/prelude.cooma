@@ -1,27 +1,21 @@
 {
   // Booleans
 
-  type Boolean = <False : Unit, True : Unit>
+  type Boolean = <<False : Unit, True : Unit>>
 
-  val false : Boolean = <False = {}>
-  val true : Boolean = <True = {}>
+  val false : Boolean = <<False = {}>>
+  val true : Boolean = <<True = {}>>
+
+  def ite(t : Type, b : Boolean, l : t, r : t) t =
+    b match {
+      case True(_) => l
+      case False(_) => r
+    }
 
   val Booleans = {
-    and = fun (l : Boolean, r : Boolean)
-            l match {
-              case False(_) => false
-              case True(_) => r
-            },
-    not = fun (b : Boolean)
-            b match {
-              case False(_) => true
-              case True(_) => false
-            },
-    or = fun (l : Boolean, r : Boolean)
-           l match {
-             case False(_) => r
-             case True(_) => true
-           }
+    and = fun (l : Boolean, r : Boolean) ite(Boolean, l, r, false),
+    not = fun (b : Boolean) ite(Boolean, b, false, true),
+    or = fun (l : Boolean, r : Boolean) ite(Boolean, l, true, r)
   }
 
   def equal(t : Type, l : t, r : t) Boolean =
@@ -33,6 +27,7 @@
     abs = fun (i : Int) prim IntAbs(i),
     add = fun (l : Int, r : Int) prim IntAdd(l, r),
     div = fun (l : Int, r : Int) prim IntDiv(l, r),
+    mod = fun (l : Int, r : Int) prim IntMod(l, r),
     mul = fun (l : Int, r : Int) prim IntMul(l, r),
     pow = fun (l : Int, r : Int) prim IntPow(l, r),
     sub = fun (l : Int, r : Int) prim IntSub(l, r),
@@ -60,11 +55,11 @@
   // Capability types
 
   type FolderReader = {
-    read : (suffix : String) <Left : String, Right : String>
+    read : (suffix : String) <<Left : String, Right : String>>
   }
 
   type FolderWriter = {
-    write : (suffix : String, s : String) <Left : String, Right : Unit>
+    write : (suffix : String, s : String) <<Left : String, Right : Unit>>
   }
 
   type HttpReturn = {
@@ -73,34 +68,34 @@
   }
 
   type HttpDelete = {
-    delete : (suffix : String) <Left : String, Right : HttpReturn>
+    delete : (suffix : String) <<Left : String, Right : HttpReturn>>
   }
 
   type HttpGet = {
-    get : (suffix : String) <Left : String, Right : HttpReturn>
+    get : (suffix : String) <<Left : String, Right : HttpReturn>>
   }
 
   type HttpPost = {
-    post : (suffix : String) <Left : String, Right : HttpReturn>
+    post : (suffix : String) <<Left : String, Right : HttpReturn>>
   }
 
   type HttpPut = {
-    put : (suffix : String) <Left : String, Right : HttpReturn>
+    put : (suffix : String) <<Left : String, Right : HttpReturn>>
   }
 
   type Reader = {
-    read : () <Left : String, Right : String>
+    read : () <<Left : String, Right : String>>
   }
 
   type Writer = {
-    write : (s : String) <Left : String, Right : Unit>
+    write : (s : String) <<Left : String, Right : Unit>>
   }
 
   // Useful type constructors
 
-  def Option (T : Type) Type = <None : Unit, Some : T>
+  def Option (T : Type) Type = <<None : Unit, Some : T>>
 
-  def Either (A : Type, B : Type) Type = < Left : A, Right : B >
+  def Either (A : Type, B : Type) Type = <<Left : A, Right : B>>
 
   {}
 }

@@ -7,13 +7,8 @@ import org.bitbucket.inkytonik.cooma.test.ExecutionTests
 import org.scalacheck.Gen
 import org.scalatest.TryValues
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import wolfendale.scalacheck.regexp.RegexpGen
 
 class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks with TryValues {
-
-    def toCoomaString(b : Boolean) =
-        if (b) "< True = {} >"
-        else "< False = {} >"
 
     // Primitive properties
 
@@ -27,7 +22,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
 
     def testIntRelPrim(op : UserPrimitive, f : (BigInt, BigInt) => Boolean) : Unit =
         super.test(s"run: prim ${primName(op)}")(implicit bc =>
-            forAll((l : BigInt, r : BigInt) => runPrimTest(s"prim ${primName(op)}", s"$l, $r", " : < False : Unit, True : Unit >", toCoomaString(f(l, r)))))
+            forAll((l : BigInt, r : BigInt) => runPrimTest(s"prim ${primName(op)}", s"$l, $r", " : << False : Unit, True : Unit >>", toCoomaString(f(l, r)))))
 
     testInt1Prim(IntAbsP(), _.abs)
     testInt2Prim(IntAddP(), _ + _)
@@ -91,15 +86,10 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
 
         test(s"run: Int prim $primName") { implicit bc =>
             forAll { (l : BigInt, r : BigInt) =>
-                runPrimTest(s"prim $primName", s"Int, $l, $r", " : < False : Unit, True : Unit >", toCoomaString(l == r))
+                runPrimTest(s"prim $primName", s"Int, $l, $r", " : << False : Unit, True : Unit >>", toCoomaString(l == r))
             }
         }
     }
-
-    val stringLitREStr = """((\\([btnfr]|\\|"))|\w| ){0,40}"""
-    val stringLitRE = stringLitREStr.r
-    def isStringLit(s : String) = stringLitRE.matches(s)
-    val stringLit : Gen[String] = RegexpGen.from(stringLitREStr)
 
     {
         val primName = "StrConcat"
@@ -121,7 +111,7 @@ class PrimitiveTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks 
         test(s"run: String prim $primName") { implicit bc =>
             forAll(stringLit, stringLit) { (l : String, r : String) =>
                 whenever(isStringLit(l) && isStringLit(r)) {
-                    runPrimTest(s"prim $primName", s"""String, "$l", "$r"""", " : < False : Unit, True : Unit >", toCoomaString(func(l, r)))
+                    runPrimTest(s"prim $primName", s"""String, "$l", "$r"""", " : << False : Unit, True : Unit >>", toCoomaString(func(l, r)))
                 }
             }
         }

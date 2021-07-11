@@ -43,7 +43,7 @@ trait Compiler {
         }
 
         import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
-        import org.bitbucket.inkytonik.cooma.SymbolTable.{isCapabilityTypeName, PrimitiveType, strT, uniT}
+        import org.bitbucket.inkytonik.cooma.SymbolTable.{isCapabilityTypeName, PrimitiveType, StrT, uniT}
         import org.bitbucket.inkytonik.cooma.Util.fresh
 
         lazy val capabilityNames =
@@ -152,7 +152,7 @@ trait Compiler {
                 }
 
                 t match {
-                    case `strT` =>
+                    case StrT() =>
                         mkLetV(arg, a, prmV(ArgumentP(nArg), Vector()),
                             compileTop(e, nArg + 1))
                     case t =>

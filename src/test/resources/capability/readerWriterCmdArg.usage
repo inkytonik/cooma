@@ -1,4 +1,4 @@
 arguments:
   rw: a reader, a writer
 result type:
-  < Left : String, Right : String >
+  << Left : String, Right : String >>

@@ -1,4 +1,4 @@
 {
     val x = [999]
-    Vectors.get(Int, x, 0)
+    x!0
 }

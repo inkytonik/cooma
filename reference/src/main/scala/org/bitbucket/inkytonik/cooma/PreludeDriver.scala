@@ -37,7 +37,9 @@ class PreludeDriver extends Driver {
 
         def entityIsType(entity : CoomaEntity) : Boolean =
             analyser.entityType(entity) match {
-                case Some(`typT` | FunT(_, `typT`)) =>
+                case Some(t) if t == typT =>
+                    true
+                case Some(FunT(_, t)) if t == typT =>
                     true
                 case _ =>
                     false

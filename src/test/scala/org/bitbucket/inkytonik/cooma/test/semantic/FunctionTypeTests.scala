@@ -285,13 +285,13 @@ class FunctionTypeTests extends SemanticTests {
 
     test(
         "variant field type that isn't a type",
-        "{fun (r : < x : 1 >) 0}(< x = 1 >)",
-        """|1:17:error: expected Type, got 1 of type Int
-           |{fun (r : < x : 1 >) 0}(< x = 1 >)
-           |                ^
-           |1:25:error: expected < x : 1 >, got < x = 1 > of type < x : Int >
-           |{fun (r : < x : 1 >) 0}(< x = 1 >)
-           |                        ^
+        "{fun (r : << x : 1 >>) 0}(<< x = 1 >>)",
+        """|1:18:error: expected Type, got 1 of type Int
+           |{fun (r : << x : 1 >>) 0}(<< x = 1 >>)
+           |                 ^
+           |1:27:error: expected << x : 1 >>, got << x = 1 >> of type << x : Int >>
+           |{fun (r : << x : 1 >>) 0}(<< x = 1 >>)
+           |                          ^
            |"""
     )
 
