@@ -265,12 +265,12 @@ class BlockTests extends ExpressionTests {
     test(
         "variant argument",
         """{
-            def f (r : < x : Int, y : Int, z : Int >) < x : Int, y : Int, z : Int > = r
-            def g () < x : Int, y : Int > = < x = 3 >
+            def f (r : << x : Int, y : Int, z : Int >>) << x : Int, y : Int, z : Int >> = r
+            def g () << x : Int, y : Int >> = << x = 3 >>
             f(g())
             }""",
-        "< x = 3 >",
-        "< x : Int, y : Int, z : Int >"
+        "<< x = 3 >>",
+        "<< x : Int, y : Int, z : Int >>"
     )
 
 }

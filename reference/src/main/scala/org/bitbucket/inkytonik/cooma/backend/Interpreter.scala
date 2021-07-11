@@ -286,7 +286,7 @@ class Interpreter(config : Config) {
             case StrR(v1) =>
                 "\"" <> value(v1) <> "\""
             case VarR(FldR(v1, v2)) =>
-                "<" <+> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <+> ">"
+                "<<" <+> value(v1) <+> "=" <+> toDocRuntimeValue(v2) <+> ">>"
             case VecR(elems) =>
                 "[" <> ssep(elems.map(toDocRuntimeValue), ", ") <> "]"
         }

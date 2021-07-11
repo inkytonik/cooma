@@ -10,7 +10,7 @@ x :
     a : Int,
     b : Int,
     c : String,
-    d : <
+    d : <<
       e : Int
-    >
+    >>
   };

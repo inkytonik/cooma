@@ -54,13 +54,13 @@ class DeclarationTests extends SemanticTests {
 
     test(
         "duplicated variant name in variant type",
-        "{fun (a : < x : Int, x : Int, y : Int >) a}(<x = 3>)",
-        """|1:13:error: duplicate type field x
-           |{fun (a : < x : Int, x : Int, y : Int >) a}(<x = 3>)
-           |            ^
-           |1:22:error: duplicate type field x
-           |{fun (a : < x : Int, x : Int, y : Int >) a}(<x = 3>)
-           |                     ^
+        "{fun (a : << x : Int, x : Int, y : Int >>) a}(<<x = 3>>)",
+        """|1:14:error: duplicate type field x
+           |{fun (a : << x : Int, x : Int, y : Int >>) a}(<<x = 3>>)
+           |             ^
+           |1:23:error: duplicate type field x
+           |{fun (a : << x : Int, x : Int, y : Int >>) a}(<<x = 3>>)
+           |                      ^
            |"""
     )
 
@@ -165,29 +165,29 @@ class DeclarationTests extends SemanticTests {
 
     test(
         "val explicit variant type (ok)",
-        "{ val x : < a : Int, b : String > = < a = 1 > x }",
+        "{ val x : << a : Int, b : String >> = << a = 1 >> x }",
         ""
     )
 
     test(
         "val explicit variant type (bad)",
-        "{ val x : < a : Int, b : String > = < c = 1 > x }",
-        """|1:37:error: expected < a : Int, b : String >, got < c = 1 > of type < c : Int >
-           |{ val x : < a : Int, b : String > = < c = 1 > x }
-           |                                    ^
+        "{ val x : << a : Int, b : String >> = << c = 1 >> x }",
+        """|1:39:error: expected << a : Int, b : String >>, got << c = 1 >> of type << c : Int >>
+           |{ val x : << a : Int, b : String >> = << c = 1 >> x }
+           |                                      ^
            |"""
     )
 
     test(
         "val explicit pre=defined type (ok)",
-        "{ val x : Boolean = < True = {} > x }",
+        "{ val x : Boolean = << True = {} >> x }",
         ""
     )
 
     test(
         "val explicit pre=defined type (bad)",
         "{ val x : Boolean = 1 x }",
-        """|1:21:error: expected < False : Unit, True : Unit >, got 1 of type Int
+        """|1:21:error: expected << False : Unit, True : Unit >>, got 1 of type Int
            |{ val x : Boolean = 1 x }
            |                    ^
            |"""

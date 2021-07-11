@@ -94,7 +94,7 @@ public CoomaValueNode Value =
     / void:"\"":Symbol1 v:StringChars void:"\"":Symbol1 {
         yyValue = (CoomaValueNode)backend.strV(v);
     }
-    / void:"<":Symbol1 f:FldV void:">":Symbol1 {
+    / void:"<<":Symbol2 f:FldV void:">>":Symbol2 {
         yyValue = (CoomaValueNode)backend.varV(f);
     }
     / void:"[":Symbol1 es:vecElems void:"]":Symbol1 {
@@ -180,6 +180,9 @@ public UserPrimitive UserPrimitive =
     / void:"IntLt":Word {
         yyValue = new IntLtP();
     }
+    / void:"IntMod":Word {
+        yyValue = new IntModP();
+    }
     / void:"IntMul":Word {
         yyValue = new IntMulP();
     }
@@ -233,6 +236,12 @@ String Symbol1 =
 
 transient String Symbol1Alts =
     "=" / "(" / ")" / "{" / "}" / "\\" / "\"" / "<" / ">" / "[" / "]" / ",";
+
+String Symbol2 =
+    Symbol2Alts Spacing;
+
+transient String Symbol2Alts =
+    "<<" / ">>";
 
 String Symbol3 =
     Symbol3Alts Spacing;

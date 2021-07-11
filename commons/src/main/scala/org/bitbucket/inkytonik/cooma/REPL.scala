@@ -16,8 +16,9 @@ trait REPL extends REPLBase[Config] {
 
     self : Compiler with Backend =>
 
-    import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout, show}
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.Desugar.desugar
+    import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout, show}
     import org.bitbucket.inkytonik.cooma.SymbolTable._
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
@@ -115,11 +116,20 @@ trait REPL extends REPLBase[Config] {
             val pr = p.pREPLInput(0)
             if (pr.hasValue) {
                 val input = p.value(pr).asInstanceOf[REPLInput]
-                checkInput(input, config) match {
+                if (config.coomaASTPrint())
+                    config.output().emitln(layout(any(input), 5))
+                desugar(input, currentStaticEnv, positions) match {
                     case Left(messages) =>
                         messaging.report(source, messages, config.output())
-                    case Right((input, optTypeValue, optReplType)) =>
-                        processInput(input, optTypeValue, optReplType, config)
+                    case Right(desugaredInput) =>
+                        if (config.desugaredASTPrint())
+                            config.output().emitln(layout(any(desugaredInput), 5))
+                        checkInput(desugaredInput, config) match {
+                            case Left(messages) =>
+                                messaging.report(source, messages, config.output())
+                            case Right((input, optTypeValue, optReplType)) =>
+                                processInput(input, optTypeValue, optReplType, config)
+                        }
                 }
             } else
                 config.output().emitln(p.formatParseError(pr.parseError, false))
@@ -129,7 +139,7 @@ trait REPL extends REPLBase[Config] {
     def defineLet(i : String, optV : Option[Expression], optT : Option[Expression], e : Expression) : REPLLet = {
         val letValue =
             (optV, optT) match {
-                case (Some(t), Some(`typT`)) =>
+                case (Some(t), Some(u)) if u == typT =>
                     t
                 case _ =>
                     e
@@ -143,8 +153,6 @@ trait REPL extends REPLBase[Config] {
         input : REPLInput,
         config : Config
     ) : Either[Messages, (REPLInput, Option[Expression], Option[Expression])] = {
-        if (config.coomaASTPrint())
-            config.output().emitln(layout(any(input), 5))
         val tree = new Tree[ASTNode, REPLInput](input)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
         (analyser.errors, analyser.replTypeValue(input), analyser.replType(input)) match {
@@ -240,7 +248,7 @@ trait REPL extends REPLBase[Config] {
         eval : => Unit
     ) =
         optReplType match {
-            case Some(`typT`) =>
+            case Some(t) if t == typT =>
                 output(i, optTypeValue, optReplType, None, config)
             case _ =>
                 eval
@@ -258,7 +266,7 @@ trait REPL extends REPLBase[Config] {
     ) : Unit = {
         val value =
             optReplType match {
-                case Some(`typT`) =>
+                case Some(t) if t == typT =>
                     optTypeValue match {
                         case Some(typeValue) =>
                             s" = ${show(typeValue)}"

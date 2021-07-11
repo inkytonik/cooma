@@ -61,10 +61,10 @@ class TypeAliasTests extends SemanticTests {
     test(
         "bad concat of aliased record types",
         """{
-          |   type Foo = { x : Int, y : String }
-          |   type Bar = { x : Int }
-          |   fun (f : Foo, b : Bar) f & b
-          |}""",
+        |   type Foo = { x : Int, y : String }
+        |   type Bar = { x : Int }
+        |   fun (f : Foo, b : Bar) f & b
+        |}""",
         """|4:27:error: record concatenation has overlapping field(s) x
            |   fun (f : Foo, b : Bar) f & b
            |                          ^
@@ -86,101 +86,101 @@ class TypeAliasTests extends SemanticTests {
     test(
         "alias of record type of alias",
         """{
-                      type Foo = Int
-                      type Bar = { f : Foo }
-                      def m (x : Bar) Int = x.f
-                      0
-                   }""",
+        |    type Foo = Int
+        |    type Bar = { f : Foo }
+        |    def m (x : Bar) Int = x.f
+        |    0
+        |}""",
         ""
     )
 
     test(
         "argument alias of record type with nested alias",
         """{
-                      type Foo = Int
-                      type Bar = { f : (Foo) Int }
-                      def m (x : Bar) Int = x.f(1)
-                      0
-                   }""",
+        |    type Foo = Int
+        |    type Bar = { f : (Foo) Int }
+        |    def m (x : Bar) Int = x.f(1)
+        |    0
+        |}""",
         ""
     )
 
     test(
         "return alias of variant type with nested alias",
         """{
-                      type Foo = Int
-                      type Ble = { a : Int }
-                      type Bar = <f : (Foo) Ble>
-                      def m (x : Int) Bar =
-                         <f = fun (y : Foo) {a = 3}>
-                      0
-                   }""",
+            type Foo = Int
+            type Ble = { a : Int }
+            type Bar = <<f : (Foo) Ble>>
+            def m (x : Int) Bar =
+               <<f = fun (y : Foo) {a = 3}>>
+            0
+        }""",
         ""
     )
 
     test(
         "ok match alias of variant type",
         """{
-                      type Foo = <f : Unit>
-                      def m (x : Foo) Int =
-                         x match { case f(a) => 10 }
-                      0
-                   }""",
+            type Foo = <<f : Unit>>
+            def m (x : Foo) Int =
+               x match { case f(a) => 10 }
+            0
+        }""",
         ""
     )
 
     test(
         "bad match alias of variant type",
         """{
-          |   type Foo = <f : Unit>
-          |   def m (x : Foo) Int =
-          |     x match { case g(a) => 10 }
-          |   0
-          |}""",
-        """|4:16:error: variant g not present in matched type < f : Unit >
-           |     x match { case g(a) => 10 }
-           |               ^
+        |    type Foo = <<f : Unit>>
+        |    def m (x : Foo) Int =
+        |        x match { case g(a) => 10 }
+        |    0
+        |}""",
+        """|4:19:error: variant g not present in matched type << f : Unit >>
+           |        x match { case g(a) => 10 }
+           |                  ^
            |"""
     )
 
     test(
         "ok aliased case branches",
         """{
-                      type Foo = Int
-                      type Bar = Int
-                      def m (v : <a : Int, b : Int>, x : Foo, y : Bar) Int =
-                        v match { case a(c) => x case b(d) => y }
-                      0
-                   }""",
+            type Foo = Int
+            type Bar = Int
+            def m (v : <<a : Int, b : Int>>, x : Foo, y : Bar) Int =
+                v match { case a(c) => x case b(d) => y }
+            0
+        }""",
         ""
     )
 
     test(
         "bad aliased case branches",
         """{
-          |   type Foo = Int
-          |   type Bar = String
-          |   def m (v : <a : Int, b : Int>, x : Foo, y : Bar) Int =
-          |      v match { case a(c) => x case b(d) => y }
-          |   0
-          |}""",
-        """|5:30:error: case expression types are not the same
-           |      v match { case a(c) => x case b(d) => y }
-           |                             ^
-           |5:45:error: case expression types are not the same
-           |      v match { case a(c) => x case b(d) => y }
-           |                                            ^
+        |    type Foo = Int
+        |    type Bar = String
+        |    def m (v : <<a : Int, b : Int>>, x : Foo, y : Bar) Int =
+        |        v match { case a(c) => x case b(d) => y }
+        |    0
+        |}""",
+        """|5:32:error: case expression types are not the same
+           |        v match { case a(c) => x case b(d) => y }
+           |                               ^
+           |5:47:error: case expression types are not the same
+           |        v match { case a(c) => x case b(d) => y }
+           |                                              ^
            |"""
     )
 
     test(
         "alias of function type of alias",
         """{
-                      type Foo = Int
-                      type Bar = (Foo) Foo
-                      def m (x : Bar) Int = x(0)
-                      0
-                   }""",
+            type Foo = Int
+            type Bar = (Foo) Foo
+            def m (x : Bar) Int = x(0)
+            0
+        }""",
         ""
     )
 
