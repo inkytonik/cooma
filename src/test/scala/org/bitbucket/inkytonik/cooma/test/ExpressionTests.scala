@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma.test
 
-class ExpressionTests extends ExecutionTests {
+trait ExpressionTests extends ExecutionTests {
 
     def test(
         name : String,
