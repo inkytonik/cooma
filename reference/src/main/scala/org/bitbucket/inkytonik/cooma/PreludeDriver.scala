@@ -83,7 +83,7 @@ class PreludeDriver extends Driver {
         val system = new ReferenceBackend(this, source, config) with Compiler
         import system.{source => _, _}
 
-        val prelude = compileCommand(program, positions)
+        val prelude = compileCommand(program, positions, getAnalyser(source))
         val preludeText = PrettyPrinter.format(prelude, 5).layout
         val filename = s"${source.name}.dynamic"
         val emitter = new FileEmitter(filename)

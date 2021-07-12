@@ -20,6 +20,8 @@ trait TruffleREPL extends REPL {
 
     self : Compiler with TruffleBackend =>
 
+    def driver : TruffleDriver
+
     import org.bitbucket.inkytonik.cooma.Config
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.format
@@ -37,8 +39,10 @@ trait TruffleREPL extends REPL {
         i : String,
         optTypeValue : Option[Expression],
         optAliasedType : Option[Expression],
-        config : Config
+        config : Config,
+        analyser : SemanticAnalyser
     ) : Unit = {
+        driver.setAnalyser(analyser)
         execute(i, optTypeValue, optAliasedType, config, {
             val line = format(program).layout
             Try(currentDynamicEnv.eval(CoomaConstants.ID, line)).toEither match {
@@ -55,6 +59,6 @@ trait TruffleREPL extends REPL {
 }
 
 object TruffleReplFrontendHolder {
-    def repl(config : Config) : REPL with Compiler with Backend =
-        new TruffleBackend(config) with TruffleREPL with Compiler
+    def repl(config : Config, td : TruffleDriver) : REPL with Compiler with Backend =
+        new TruffleBackend(config) with TruffleREPL with Compiler { override val driver = td }
 }
