@@ -62,4 +62,12 @@ class Config(args : Seq[String]) extends REPLConfig(args) {
         descr = "Print the program's usage message (default: false)",
         default = Some(false))
 
+    override def hashCode : Int = args.hashCode
+
+    override def equals(o : Any) : Boolean =
+        o match {
+            case other : Config => this.args == other.args
+            case _              => false
+        }
+
 }
