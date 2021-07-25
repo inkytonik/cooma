@@ -53,7 +53,7 @@ class ReferenceDriver extends REPLDriver {
 
     override def process(source : Source, program : Program, config : Config) : Unit = {
         val system = new ReferenceBackend(this, source, config) with Compiler
-        val term = system.compileCommand(program, positions)
+        val term = system.compileCommand(program, positions, getAnalyser(source))
         if (config.irPrint())
             config.output().emitln(system.showTerm(term))
         if (config.irASTPrint())

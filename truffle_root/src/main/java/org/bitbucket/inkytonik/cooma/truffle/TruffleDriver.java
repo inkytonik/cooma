@@ -14,23 +14,31 @@ import org.bitbucket.inkytonik.cooma.Config;
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Program;
 import org.bitbucket.inkytonik.cooma.REPLDriver;
 import org.bitbucket.inkytonik.cooma.REPL;
+import org.bitbucket.inkytonik.cooma.SemanticAnalyser;
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 import org.bitbucket.inkytonik.kiama.util.Source;
 
 public class TruffleDriver extends REPLDriver {
 
     private CoomaTermNode currentCompiledNode;
+    private SemanticAnalyser analyser;
 
     @Override
     public REPL createREPL(Config config) {
-        return TruffleReplFrontendHolder.repl(config);
+        return TruffleReplFrontendHolder.repl(config, this);
     }
 
     @Override
     public void process(Source source, Program program, Config config) {
-        if (!config.usage().isSupplied()) {
-            TruffleCompiler compiler = new TruffleCompiler(config);
-            setCurrentCompiledNode(compiler.compileCommand(program));
+        try {
+            if (!config.usage().isSupplied()) {
+                TruffleCompiler compiler = new TruffleCompiler(config, analyser);
+                setCurrentCompiledNode(compiler.compileCommand(program));
+            }
+        }
+        catch (RuntimeException e) {
+            e.printStackTrace();
+            throw e;
         }
     }
 
@@ -42,4 +50,7 @@ public class TruffleDriver extends REPLDriver {
         this.currentCompiledNode = currentCompiledNode;
     }
 
+    public void setAnalyser(SemanticAnalyser analyser) {
+        this.analyser = analyser;
+    }
 }

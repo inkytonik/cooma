@@ -11,9 +11,9 @@
 package org.bitbucket.inkytonik.cooma.truffle
 
 import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode
-import org.bitbucket.inkytonik.cooma.{Config, CoomaParserSyntax}
+import org.bitbucket.inkytonik.cooma.{Config, CoomaParserSyntax, SemanticAnalyser}
 
-class TruffleCompiler(val config : Config) {
+class TruffleCompiler(val config : Config, analyser : SemanticAnalyser) {
 
     import org.bitbucket.inkytonik.cooma.Compiler
     import org.bitbucket.inkytonik.kiama.util.Positions
@@ -21,7 +21,7 @@ class TruffleCompiler(val config : Config) {
     val backendMixin = new TruffleBackend(config) with Compiler
 
     def compileCommand(prog : CoomaParserSyntax.Program) : CoomaTermNode = {
-        backendMixin.compileCommand(prog, new Positions)
+        backendMixin.compileCommand(prog, new Positions, analyser)
     }
 
     def showTerm(t : CoomaTermNode) : String = backendMixin.showTerm(t)
