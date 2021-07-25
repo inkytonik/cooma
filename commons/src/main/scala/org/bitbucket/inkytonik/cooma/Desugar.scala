@@ -4,7 +4,7 @@ object Desugar {
 
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
-    import org.bitbucket.inkytonik.cooma.SymbolTable.{Environment, IntT, StrT}
+    import org.bitbucket.inkytonik.cooma.SymbolTable.{Environment, intT, IntT, StrT}
     import org.bitbucket.inkytonik.kiama.rewriting.Rewriter.{everywhere, rewrite, rule}
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.{error, Messages, noMessages}
@@ -122,6 +122,8 @@ object Desugar {
 
                 case n @ Ind(e, Index(), i) =>
                     analyser.tipe(e) match {
+                        case Some(VecNilT()) =>
+                            vecOp(n, "get", intT, e, i)
                         case Some(VecT(t)) =>
                             vecOp(n, "get", t, e, i)
                         case Some(t) =>

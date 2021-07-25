@@ -238,7 +238,7 @@ class OperatorTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks {
     {
         val func = (v : Vector[Int], i : Int) => v(i).toString
 
-        test(s"run: binary Vector operator !") { implicit bc =>
+        test(s"run: binary Vector operator ! (non-empty)") { implicit bc =>
             forAll { (v : Vector[Int]) =>
                 whenever(!v.isEmpty) {
                     forAll(indexesOf(v)) { (i : Int) =>
@@ -250,6 +250,10 @@ class OperatorTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks {
                 }
             }
         }
+    }
+
+    test(s"run: binary Vector operator ! (empty)") { implicit bc =>
+        runBadExprTest("[]!0", "PrimitiveException: VecGet: vector index out of bounds - size: 0, index: 0")
     }
 
     // Precedence and associativity
