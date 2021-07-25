@@ -465,7 +465,7 @@ class SemanticAnalyser(
                 entityType(lookup(env(u), x, UnknownEntity()))
 
             case If(_, l, r) =>
-                tipe(l)
+                deepclone(tipe(l))
 
             case Ind(e, Index(), i) =>
                 tipe(e) match {

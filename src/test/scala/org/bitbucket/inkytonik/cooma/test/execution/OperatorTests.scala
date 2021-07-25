@@ -256,6 +256,18 @@ class OperatorTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks {
         runBadExprTest("[]!0", "PrimitiveException: VecGet: vector index out of bounds - size: 0, index: 0")
     }
 
+    test("if then else (single level, true)") { implicit bc =>
+        runExprTest("if true then 1 else 2", intReplType, "1")
+    }
+
+    test("if then else (single level, false)") { implicit bc =>
+        runExprTest("if false then 1 else 2", intReplType, "2")
+    }
+
+    test("if then else (multi-level)") { implicit bc =>
+        runExprTest("if true then 0 else if true then 1 else 2", intReplType, "0")
+    }
+
     // Precedence and associativity
 
     test("disjunction binds tighter than if-then-else") { implicit bc =>
