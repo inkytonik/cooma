@@ -46,6 +46,9 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
             compileFile(config.filenames()(0), config)
     }
 
+    def getAnalyser(source : Source) : SemanticAnalyser =
+        analysers.getOrElse(source, throw new RuntimeException(s"no analyser for $source"))
+
     val analysers = scala.collection.mutable.Map[Source, SemanticAnalyser]()
 
     override def compileSource(source : Source, config : Config) : Unit = {

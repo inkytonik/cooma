@@ -1,28 +1,20 @@
 package org.bitbucket.inkytonik.cooma.test
 
-import java.io.{ByteArrayOutputStream, PrintStream}
-
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Program}
-import org.bitbucket.inkytonik.cooma.truffle.{TruffleDriver, TruffleFrontend}
-import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, Frontend, Main, REPL, REPLDriver, ReferenceDriver, ReferenceFrontend}
-import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole, TestCompilerWithConfig}
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Program
+import org.bitbucket.inkytonik.cooma.test.BackendConfig._
+import org.bitbucket.inkytonik.cooma.truffle.TruffleDriver
+import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, Main, REPL, REPLDriver, ReferenceDriver}
+import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole}
 import org.rogach.scallop.throwError
 import org.scalacheck.Gen
 import org.scalactic.source.Position
 import wolfendale.scalacheck.regexp.RegexpGen
+import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.matchers.should
 
 import scala.util.{Failure, Success, Try}
 
-trait ExecutionTests extends REPLDriver with TestCompilerWithConfig[ASTNode, Program, Config] {
-
-    case class BackendConfig(name : String, frontend : Frontend, options : Seq[String])
-
-    val truffleOutContent = new ByteArrayOutputStream
-
-    val backends = Seq(
-        BackendConfig("Reference", new ReferenceFrontend, Seq()),
-        BackendConfig("GraalVM", new TruffleFrontend(out = new PrintStream(truffleOutContent)), Seq("-g"))
-    )
+trait ExecutionTests extends REPLDriver with AnyFunSuiteLike with should.Matchers {
 
     def test(name : String)(f : BackendConfig => Any)(implicit pos : Position) : Unit =
         for (bc <- backends) super.test(f"[${bc.name}] $name")(f(bc))
@@ -123,13 +115,6 @@ trait ExecutionTests extends REPLDriver with TestCompilerWithConfig[ASTNode, Pro
     override def process(source : Source, prog : Program, config : Config) : Unit = {
         val driver = createDriver(config)
         driver.process(source, prog, config)
-    }
-
-    override def testdriver(config : Config) : Unit = {
-        if (config.graalVM())
-            new TruffleFrontend().interpret(config)
-        else
-            super.testdriver(config)
     }
 
     // Helpers for data generation

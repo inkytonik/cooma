@@ -1,8 +1,9 @@
 package org.bitbucket.inkytonik.cooma.test.execution
 
-import org.bitbucket.inkytonik.cooma.test.ExecutionTests
+import org.bitbucket.inkytonik.cooma.test.BackendConfig._
+import org.bitbucket.inkytonik.cooma.test.FileTests
 
-class FileTests extends ExecutionTests {
+class BasicFileTests extends FileTests {
 
     val resourcesPath = "src/test/resources"
 

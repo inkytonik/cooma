@@ -127,8 +127,8 @@ trait REPL extends REPLBase[Config] {
                         checkInput(desugaredInput, config) match {
                             case Left(messages) =>
                                 messaging.report(source, messages, config.output())
-                            case Right((input, optTypeValue, optReplType)) =>
-                                processInput(input, optTypeValue, optReplType, config)
+                            case Right(CheckedInput(input, optTypeValue, optReplType, analyser)) =>
+                                processInput(input, optTypeValue, optReplType, config, analyser)
                         }
                 }
             } else
@@ -149,10 +149,19 @@ trait REPL extends REPLBase[Config] {
         REPLLet(let)
     }
 
+    case class CheckedInput(
+        input : REPLInput,
+        typeValue : Option[Expression],
+        replType : Option[Expression],
+        analyser : SemanticAnalyser
+    )
+
     def checkInput(
         input : REPLInput,
         config : Config
-    ) : Either[Messages, (REPLInput, Option[Expression], Option[Expression])] = {
+    ) : Either[Messages, CheckedInput] = {
+        if (config.coomaASTPrint())
+            config.output().emitln(layout(any(input), 5))
         val tree = new Tree[ASTNode, REPLInput](input)
         val analyser = new SemanticAnalyser(tree, enter(currentStaticEnv))
         (analyser.errors, analyser.replTypeValue(input), analyser.replType(input)) match {
@@ -179,7 +188,7 @@ trait REPL extends REPLBase[Config] {
                         case REPLLet(Let(_, IdnDef(i), Some(LetType(t)), e)) =>
                             defineLet(i, optTypeValue, analyser.unalias(e, t), e)
                     }
-                Right((input2, optTypeValue, optReplType))
+                Right(CheckedInput(input2, optTypeValue, optReplType, analyser))
 
             case (messages, _, _) =>
                 Left(messages)
@@ -189,14 +198,20 @@ trait REPL extends REPLBase[Config] {
     /**
      * Embed an input entry for the REPL.
      */
-    def processInput(input : REPLInput, optTypeValue : Option[Expression], optReplType : Option[Expression], config : Config) =
+    def processInput(
+        input : REPLInput,
+        optTypeValue : Option[Expression],
+        optReplType : Option[Expression],
+        config : Config,
+        analyser : SemanticAnalyser
+    ) : Unit =
         input match {
             case REPLDef(fd @ Def(IdnDef(i), _)) =>
-                processDef(i, fd, optTypeValue, optReplType, config)
+                processDef(i, fd, optTypeValue, optReplType, config, analyser)
             case REPLExp(e : Idn) =>
-                processIdn(show(input), e, optTypeValue, optReplType, config)
+                processIdn(show(input), e, optTypeValue, optReplType, config, analyser)
             case REPLLet(vd @ Let(_, IdnDef(i), _, e)) =>
-                processLet(i, vd, optTypeValue, optReplType, config)
+                processLet(i, vd, optTypeValue, optReplType, config, analyser)
             case _ =>
                 sys.error(s"$input not supported for the moment")
         }
@@ -204,25 +219,46 @@ trait REPL extends REPLBase[Config] {
     /**
      * Process a user-entered value binding.
      */
-    def processLet(i : String, ld : Let, optTypeValue : Option[Expression], optReplType : Option[Expression], config : Config) : Unit = {
+    def processLet(
+        i : String,
+        ld : Let,
+        optTypeValue : Option[Expression],
+        optReplType : Option[Expression],
+        config : Config,
+        analyser : SemanticAnalyser
+    ) : Unit = {
         val program = Program(Blk(BlkLet(ld, Return(Idn(IdnUse(i))))))
-        process(program, i, optTypeValue, optReplType, config)
+        process(program, i, optTypeValue, optReplType, config, analyser)
     }
 
     /**
      * Process a user-entered function definition binding.
      */
-    def processDef(i : String, fd : Def, optTypeValue : Option[Expression], optReplType : Option[Expression], config : Config) : Unit = {
+    def processDef(
+        i : String,
+        fd : Def,
+        optTypeValue : Option[Expression],
+        optReplType : Option[Expression],
+        config : Config,
+        analyser : SemanticAnalyser
+    ) : Unit = {
         val program = Program(Blk(BlkDef(Defs(Vector(fd)), Return(Idn(IdnUse(i))))))
-        process(program, i, optTypeValue, optReplType, config)
+        process(program, i, optTypeValue, optReplType, config, analyser)
     }
 
     /**
      * Process a user-entered identifier expression.
      */
-    def processIdn(i : String, e : Expression, optTypeValue : Option[Expression], optReplType : Option[Expression], config : Config) : Unit = {
+    def processIdn(
+        i : String,
+        e : Expression,
+        optTypeValue : Option[Expression],
+        optReplType : Option[Expression],
+        config : Config,
+        analyser : SemanticAnalyser
+    ) : Unit = {
         val program = Program(e)
-        process(program, i, optTypeValue, optReplType, config)
+        process(program, i, optTypeValue, optReplType, config, analyser)
     }
 
     /**
@@ -233,7 +269,8 @@ trait REPL extends REPLBase[Config] {
         i : String,
         optTypeValue : Option[Expression],
         optReplType : Option[Expression],
-        config : Config
+        config : Config,
+        analyser : SemanticAnalyser
     ) : Unit
 
     /**

@@ -18,19 +18,19 @@ trait Compiler {
     import org.bitbucket.inkytonik.cooma.Util.resetFresh
     import org.bitbucket.inkytonik.kiama.util.Positions
 
-    def compileCommand(prog : Program, positions : Positions) : Term = {
+    def compileCommand(prog : Program, positions : Positions, analyser : SemanticAnalyser) : Term = {
         resetFresh()
-        val compiler = new CompilerCore(positions)
+        val compiler = new CompilerCore(positions, analyser)
         compiler.compileTop(prog.expression, 0)
     }
 
-    def compileStandalone(prog : Program, positions : Positions) : Term = {
+    def compileStandalone(prog : Program, positions : Positions, analyser : SemanticAnalyser) : Term = {
         resetFresh()
-        val compiler = new CompilerCore(positions)
+        val compiler = new CompilerCore(positions, analyser)
         compiler.compileHalt(prog.expression)
     }
 
-    class CompilerCore(positions : Positions) {
+    class CompilerCore(positions : Positions, analyser : SemanticAnalyser) {
 
         import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{
             CaseTerm => _,
