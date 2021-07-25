@@ -334,8 +334,15 @@ class PredefTests extends ExpressionTests {
     )
 
     test(
-        "equality of records (unequal, flat",
+        "equality of records (unequal, flat)",
         "equal({x : Int, y : Int}, {x = 0, y = 0}, {y = 1, x = 0})",
+        "<< False = {} >>",
+        "<< False : Unit, True : Unit >>"
+    )
+
+    test(
+        "equality of records (unequal, flat, extra field)",
+        "equal({x : Int}, {x = 0}, {x = 0, y = 1})",
         "<< False = {} >>",
         "<< False : Unit, True : Unit >>"
     )

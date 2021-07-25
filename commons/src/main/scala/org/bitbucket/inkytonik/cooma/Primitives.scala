@@ -247,6 +247,9 @@ trait Primitives {
 
     def equal(prim : UserPrimitive, rho : Env, l : String, r : String) : ValueR = {
 
+        def sameFields(l : Vector[FldR], r : Vector[FldR]) : Boolean =
+            l.map(getFieldName).toSet == r.map(getFieldName).toSet
+
         def getField(f : String, r : Vector[FldR]) : Option[FldR] =
             r.find(getFieldName(_) == f)
 
@@ -261,15 +264,18 @@ trait Primitives {
                         case _ =>
                             (isRecR(lvalue), isRecR(rvalue)) match {
                                 case (Some(lfs), Some(rfs)) =>
-                                    lfs.forall(lfld => {
-                                        val f = getFieldName(lfld)
-                                        getField(f, rfs) match {
-                                            case Some(rfld) =>
-                                                equalValues(getFieldValue(lfld), getFieldValue(rfld))
-                                            case None =>
-                                                errPrim(primName(prim), s"can't find field $f in $rfs")
-                                        }
-                                    })
+                                    if (sameFields(lfs, rfs))
+                                        lfs.forall(lfld => {
+                                            val f = getFieldName(lfld)
+                                            getField(f, rfs) match {
+                                                case Some(rfld) =>
+                                                    equalValues(getFieldValue(lfld), getFieldValue(rfld))
+                                                case None =>
+                                                    errPrim(primName(prim), s"can't find field $f in $rfs")
+                                            }
+                                        })
+                                    else
+                                        false
                                 case _ =>
                                     (isVarR(lvalue), isVarR(rvalue)) match {
                                         case (Some((lc, lv)), Some((rc, rv))) =>
