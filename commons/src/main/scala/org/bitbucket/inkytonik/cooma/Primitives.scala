@@ -13,6 +13,7 @@ package org.bitbucket.inkytonik.cooma
 import java.net.SocketException
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+import org.bitbucket.inkytonik.cooma.primitive.Database
 
 import scala.util.{Failure, Success, Try}
 
@@ -48,7 +49,7 @@ object Primitives {
 
 }
 
-trait Primitives {
+trait Primitives extends Database {
 
     self : Backend =>
 
@@ -75,7 +76,7 @@ trait Primitives {
         p match {
             case ArgumentP(_) =>
                 0
-            case CapabilityP(_) | FolderReaderReadP(_) | HttpClientP(_, _) |
+            case CapabilityP(_) | DbTableAllP() | FolderReaderReadP(_) | HttpClientP(_, _) |
                 ReaderReadP(_) | WriterWriteP(_) =>
                 1
             case RecConcatP() | RecSelectP() | FolderWriterWriteP(_) =>
@@ -119,6 +120,9 @@ trait Primitives {
 
             case CapabilityP(cap) =>
                 capability(prim, cap, rho, xs(0))
+
+            case DbTableAllP() =>
+                dbTableAll(rho)
 
             case FolderReaderReadP(filename) =>
                 folderReaderRead(prim, rho, filename, xs(0))
