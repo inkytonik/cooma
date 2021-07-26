@@ -13,25 +13,71 @@ Program =
   Spacing Expression EOF.
 
 Expression {paren} =
-    "fun" '(' Arguments ")" Expression                 {Fun, right, 4}
-  | '(' ArgumentTypes ")" Expression                   {FunT, right, 4}
-  | Expression sp "match" '{' nest(Case+) \n '}'       {Mat, left, 3}
-  | Expression sp "&" Expression                       {Cat, left, 2}
-  | Expression '(' Expression ** "," ')'               {App, left, 1}
-  | Expression '.' FieldUse                            {Sel, left, 1}
-  | '{' '}'                                            {Uni}
-  | '{' nestnl(BlockExp) \n '}'                        {Blk}
-  | '{' nest(Field ++ ',') \n '}'                      {Rec}
-  | '{' nest(FieldType ++ ',') \n '}'                  {RecT}
-  | '<' nest(Field) \n '>'                             {Var}
-  | '<' nest(FieldType ++ ',') \n '>'                  {VarT}
-  | IntLit                                             {Num, 1: BigInt.apply : BigInt}
-  | StringLit                                          {Str}
-  | '[' VecElems ']'                                   {Vec}
-  | 'Vector' '(' ')'                                   {VecNilT}
-  | 'Vector' '(' Expression ')'                        {VecT}
-  | "prim" UserPrimitive '(' Expression ** "," ')'     {Prm}
-  | IdnUse                                             {Idn}.
+    "fun" '(' Arguments ")" Expression                    {Fun, right, 15}
+  | '(' ArgumentTypes ")" Expression                      {FunT, right, 15}
+  | Expression sp "match" '{' nest(Case+) \n '}'          {Mat, left, 14}
+  | "if" Expression "then" Expression "else" Expression   {If, right, 13}
+  | Expression sp "&" Expression                          {Cat, left, 12}
+  | Expression sp OrOp Expression                         {Or, left, 11}
+  | Expression sp AndOp Expression                        {And, left, 10}
+  | Expression sp EqlOp Expression                        {Eql, left, 9}
+  | Expression sp RelOp Expression                        {Rel, none, 8}
+  | Expression sp AddOp Expression                        {Add, left, 7}
+  | Expression sp MulOp Expression                        {Mul, left, 6}
+  | Expression sp ExpOp Expression                        {Exp, right, 5}
+  | Expression sp IndOp Expression                        {Ind, left, 4}
+  | PreOp Expression                                      {Pre, 3}
+  | "|" Expression "|"                                    {Abs, 2}
+  | Expression '(' Expression ** "," ')'                  {App, left, 1}
+  | Expression '.' FieldUse                               {Sel, left, 1}
+  | '{' '}'                                               {Uni}
+  | '{' nestnl(BlockExp) \n '}'                           {Blk}
+  | '{' nest(Field ++ ',') \n '}'                         {Rec}
+  | '{' nest(FieldType ++ ',') \n '}'                     {RecT}
+  | '<<' nest(Field) \n '>>'                              {Var}
+  | '<<' nest(FieldType ++ ',') \n '>>'                   {VarT}
+  | IntLit                                                {Num, 1: BigInt.apply : BigInt}
+  | StringLit                                             {Str}
+  | '[' VecElems ']'                                      {Vec}
+  | 'Vector' '(' ')'                                      {VecNilT}
+  | 'Vector' '(' Expression ')'                           {VecT}
+  | "prim" UserPrimitive '(' Expression ** "," ')'        {Prm}
+  | IdnUse                                                {Idn}.
+
+AddOp =
+    "++" {Concat}
+  | "+" {Plus}
+  | "-" {Minus}.
+
+AndOp =
+  "&&" {AmpAmp}.
+
+EqlOp =
+    "==" {Equal}
+  | "!=" {NotEqual}.
+
+ExpOp =
+  "**" {Expn}.
+
+IndOp =
+  "!" {Index}.
+
+MulOp =
+    "%" {Percent}
+  | "*" {Star}
+  | "/" {Slash}.
+
+OrOp =
+  "||" {BarBar}.
+
+PreOp =
+  '!' {Bang}.
+
+RelOp =
+    ">=" {Gte}
+  | ">"  {Gt}
+  | "<=" {Lte}
+  | "<"  {Lt}.
 
 Arguments =
   Argument ** ",".
@@ -117,6 +163,9 @@ OctDigit : String =
 Whitespace : Void =
   Spacing EOF.
 
+Spacing1 : Void =
+  (Space / Comment)+.
+
 // Reference backend constructs
 
 Term =
@@ -143,7 +192,7 @@ Value {line} =
   | "%prim" Primitive (sp Identifier)*                    {PrmV}
   | '{' nest(FldV*) \n '}'                                {RecV}
   | '"' StringChars '"'                                   {StrV}
-  | '<' nest(FldV) \n '>'                                 {VarV}
+  | '<<' nest(FldV) \n '>>'                               {VarV}
   | '[' (Identifier ** ",") ']'                           {VecV}.
 
 FldV =
@@ -170,6 +219,7 @@ UserPrimitive =
   | 'IntGt'       {IntGtP}
   | 'IntLte'      {IntLteP}
   | 'IntLt'       {IntLtP}
+  | 'IntMod'      {IntModP}
   | 'IntMul'      {IntMulP}
   | 'IntPow'      {IntPowP}
   | 'IntSub'      {IntSubP}

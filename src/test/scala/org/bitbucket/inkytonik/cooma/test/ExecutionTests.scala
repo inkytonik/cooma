@@ -6,7 +6,9 @@ import org.bitbucket.inkytonik.cooma.truffle.TruffleDriver
 import org.bitbucket.inkytonik.cooma.{Backend, Compiler, Config, Main, REPL, REPLDriver, ReferenceDriver}
 import org.bitbucket.inkytonik.kiama.util.{Source, StringConsole}
 import org.rogach.scallop.throwError
+import org.scalacheck.Gen
 import org.scalactic.source.Position
+import wolfendale.scalacheck.regexp.RegexpGen
 import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should
 
@@ -63,8 +65,7 @@ trait ExecutionTests extends REPLDriver with AnyFunSuiteLike with should.Matcher
     def runREPLOnLines(input : String, options : Seq[String])(implicit bc : BackendConfig) : String =
         runREPLTest(":lines", input, options)
 
-    def runPrimTest(name : String, args : String, tipe : String, answer : String)(implicit bc : BackendConfig) : Unit = {
-        val code = s"$name($args)"
+    def runExprTest(code : String, tipe : String, answer : String)(implicit bc : BackendConfig) : Unit = {
         val result1 = runString(name, code, Seq())
         result1 shouldBe ""
         val result2 = runString(name, code, Seq("-r"))
@@ -73,8 +74,7 @@ trait ExecutionTests extends REPLDriver with AnyFunSuiteLike with should.Matcher
         result3 shouldBe s"""res0$tipe = $answer\n"""
     }
 
-    def runBadPrimTest(name : String, args : String, error : String)(implicit bc : BackendConfig) : Unit = {
-        val code = s"$name($args)"
+    def runBadExprTest(code : String, error : String)(implicit bc : BackendConfig) : Unit = {
         val result1 = runString(name, code, Seq())
         result1 shouldBe s"$error\n"
         val result2 = runString(name, code, Seq("-r"))
@@ -82,6 +82,12 @@ trait ExecutionTests extends REPLDriver with AnyFunSuiteLike with should.Matcher
         val result3 = runREPLOnLine(code, Seq())
         result3 shouldBe s"$error\n"
     }
+
+    def runPrimTest(name : String, args : String, tipe : String, answer : String)(implicit bc : BackendConfig) : Unit =
+        runExprTest(s"$name($args)", tipe, answer)
+
+    def runBadPrimTest(name : String, args : String, error : String)(implicit bc : BackendConfig) : Unit =
+        runBadExprTest(s"$name($args)", error)
 
     override def createConfig(args : Seq[String]) : Config = {
         // set Scallop so that errors don't just exit the process
@@ -110,5 +116,18 @@ trait ExecutionTests extends REPLDriver with AnyFunSuiteLike with should.Matcher
         val driver = createDriver(config)
         driver.process(source, prog, config)
     }
+
+    // Helpers for data generation
+
+    val stringLitREStr = """((\\([btnfr]|\\|"))|\w| ){0,40}"""
+    val stringLitRE = stringLitREStr.r
+    def isStringLit(s : String) = stringLitRE.matches(s)
+    val stringLit : Gen[String] = RegexpGen.from(stringLitREStr)
+
+    // Helpers for conversion to Cooma syntax
+
+    def toCoomaString(b : Boolean) =
+        if (b) "<< True = {} >>"
+        else "<< False = {} >>"
 
 }

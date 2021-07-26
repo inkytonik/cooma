@@ -6,29 +6,29 @@ class MatchTests extends SemanticTests {
 
     test(
         "basic match (bind)",
-        "< x = 1 > match { case x(a) => a }",
+        "<< x = 1 >> match { case x(a) => a }",
         ""
     )
 
     test(
         "basic match (wildcard)",
-        "< x = 1 > match { case x(_) => 1 }",
+        "<< x = 1 >> match { case x(_) => 1 }",
         ""
     )
 
     test(
         "basic match (wildcard not usable)",
-        "< x = 1 > match { case x(_) => _ }",
-        """|1:32:error: _ is not declared
-           |< x = 1 > match { case x(_) => _ }
-           |                               ^
+        "<< x = 1 >> match { case x(_) => _ }",
+        """|1:34:error: _ is not declared
+           |<< x = 1 >> match { case x(_) => _ }
+           |                                 ^
            |"""
     )
 
     test(
         "basic match correct type",
         """{
-             def f () Int = < x = 1 > match { case x(a) => a }
+             def f () Int = << x = 1 >> match { case x(a) => a }
              f ()
            }""",
         ""
@@ -46,28 +46,28 @@ class MatchTests extends SemanticTests {
     test(
         "basic match wrong result type",
         """{
-          |  def f () String = < x = 1 > match { case x(a) => a }
+          |  def f () String = << x = 1 >> match { case x(a) => a }
           |  f ()
           |}""",
-        """|2:21:error: expected String, got < x = 1 > match { case x(a) => a } of type Int
-           |  def f () String = < x = 1 > match { case x(a) => a }
+        """|2:21:error: expected String, got << x = 1 >> match { case x(a) => a } of type Int
+           |  def f () String = << x = 1 >> match { case x(a) => a }
            |                    ^
            |"""
     )
 
     test(
         "non-declared name in match case",
-        "< x = 1 > match { case x(a) => y }",
-        """|1:32:error: y is not declared
-           |< x = 1 > match { case x(a) => y }
-           |                               ^
+        "<< x = 1 >> match { case x(a) => y }",
+        """|1:34:error: y is not declared
+           |<< x = 1 >> match { case x(a) => y }
+           |                                 ^
            |"""
     )
 
     test(
         "correct number and type of cases for match",
         """{
-            def f () <x : Int, y : Int> = <x = 3>
+            def f () <<x : Int, y : Int>> = <<x = 3>>
             f () match { case x(a) => 1 case y(b) => 2 }
         }""",
         ""
@@ -76,7 +76,7 @@ class MatchTests extends SemanticTests {
     test(
         "correct number of cases but wrong type for match",
         """{
-          |  def f () <x : Int, y : Int> = <x = 3>
+          |  def f () <<x : Int, y : Int>> = <<x = 3>>
           |  f () match { case x(a) => 1 case y(b) => "hi" }
           |}""",
         """|3:29:error: case expression types are not the same
@@ -91,7 +91,7 @@ class MatchTests extends SemanticTests {
     test(
         "incorrect number of cases for match",
         """{
-          |  def f () < x : Int, y : Int > = < x = 3 >
+          |  def f () << x : Int, y : Int >> = << x = 3 >>
           |  f () match { case x(a) => 1 }
           |}""",
         """|3:16:error: expected 2 cases, got 1
@@ -103,7 +103,7 @@ class MatchTests extends SemanticTests {
     test(
         "duplicate cases for match",
         """{
-          |  def f () < x : Int, y : Int > = < x = 3 >
+          |  def f () << x : Int, y : Int >> = << x = 3 >>
           |  f () match { case x(a) => 1 case x(b) => 2 }
           |}""",
         """|3:16:error: duplicate case for variant x
@@ -118,10 +118,10 @@ class MatchTests extends SemanticTests {
     test(
         "incorrect variant for match",
         """{
-          |  def f () < x : Int, y : Int > = < x = 3 >
+          |  def f () << x : Int, y : Int >> = << x = 3 >>
           |  f () match { case w(a) => 1 case y(b) => 2 }
           |}""",
-        """|3:16:error: variant w not present in matched type < x : Int, y : Int >
+        """|3:16:error: variant w not present in matched type << x : Int, y : Int >>
            |  f () match { case w(a) => 1 case y(b) => 2 }
            |               ^
            |"""

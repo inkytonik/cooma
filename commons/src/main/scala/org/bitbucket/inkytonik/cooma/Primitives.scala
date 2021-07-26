@@ -40,7 +40,7 @@ object Primitives {
             IntLtP()
         )
 
-    def primName(prim : UserPrimitive) : String =
+    def primName(prim : Product) : String =
         prim.productPrefix.dropRight(1)
 
     def primFunName(prim : UserPrimitive) : String =
@@ -57,6 +57,7 @@ trait Primitives {
 
     import org.bitbucket.inkytonik.cooma.CoomaException._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
+    import org.bitbucket.inkytonik.cooma.Primitives.primName
     import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh, unescape}
     import scalaj.http.Http
@@ -84,7 +85,7 @@ trait Primitives {
                     case IntAbsP() | StrLengthP() =>
                         1
                     case IntAddP() | IntDivP() | IntGtP() | IntGteP() | IntLtP() |
-                        IntLteP() | IntMulP() | IntPowP() | IntSubP() |
+                        IntLteP() | IntModP() | IntMulP() | IntPowP() | IntSubP() |
                         StrConcatP() | StrSubstrP() | VecLengthP() =>
                         2
                     case EqualP() | VecConcatP() | VecGetP() | VecAppendP() |
@@ -95,103 +96,105 @@ trait Primitives {
                 }
         }
 
-    def getStrParam(show : String, rho : Env, x : String) : String =
+    def getStrParam(prim : UserPrimitive, rho : Env, x : String) : String =
         isStrR(lookupR(rho, x)) match {
             case Some(v) =>
                 v
             case _ =>
-                errPrim(show, s"can't find string operand $x")
+                errPrim(primName(prim), s"can't find string operand $x")
         }
 
-    def getIntParam(show : String, rho : Env, x : String) : BigInt =
+    def getIntParam(prim : UserPrimitive, rho : Env, x : String) : BigInt =
         isIntR(lookupR(rho, x)) match {
             case Some(v) =>
                 v
             case _ =>
-                errPrim(show, s"can't find integer operand $x")
+                errPrim(primName(prim), s"can't find integer operand $x")
         }
 
-    def run(p : Primitive, rho : Env, xs : Seq[String], args : Seq[String]) : ValueR =
-        p match {
+    def run(prim : Primitive, rho : Env, xs : Seq[String], args : Seq[String]) : ValueR =
+        prim match {
             case ArgumentP(i) =>
-                argument(i, args)
+                argument(prim, i, args)
 
             case CapabilityP(cap) =>
-                capability(cap, rho, xs(0))
+                capability(prim, cap, rho, xs(0))
 
             case FolderReaderReadP(filename) =>
-                folderReaderRead(rho, filename, xs(0))
+                folderReaderRead(prim, rho, filename, xs(0))
 
             case FolderWriterWriteP(filename) =>
-                folderWriterWrite(rho, filename, xs(0), xs(1))
+                folderWriterWrite(prim, rho, filename, xs(0), xs(1))
 
             case HttpClientP(method, url) =>
-                httpClient(rho, method, url, xs(0))
+                httpClient(prim, rho, method, url, xs(0))
 
             case ReaderReadP(filename) =>
-                readerRead(filename)
+                readerRead(prim, filename)
 
             case RecConcatP() =>
-                recConcat(rho, xs(0), xs(1))
+                recConcat(prim, rho, xs(0), xs(1))
 
             case RecSelectP() =>
-                recSelect(rho, xs(0), xs(1))
+                recSelect(prim, rho, xs(0), xs(1))
 
             case WriterWriteP(filename) =>
-                writerWrite(filename, rho, xs(0))
+                writerWrite(prim, filename, rho, xs(0))
 
-            case UserP(u) =>
-                u match {
+            case UserP(prim) =>
+                prim match {
                     case EqualP() =>
-                        equal(rho, xs(1), xs(2))
+                        equal(prim, rho, xs(1), xs(2))
                     case IntAbsP() =>
-                        intUnPrim("intAbs", rho, xs(0), _.abs)
+                        intUnPrim(prim, rho, xs(0), _.abs)
                     case IntAddP() =>
-                        intBinPrim("intAdd", rho, xs(0), xs(1), _ + _)
+                        intBinPrim(prim, rho, xs(0), xs(1), _ + _)
                     case IntDivP() =>
-                        intDiv(rho, xs(0), xs(1))
+                        intDiv(prim, rho, xs(0), xs(1), _ / _)
                     case IntGtP() =>
-                        intRelPrim("intGt", rho, xs(0), xs(1), _ > _)
+                        intRelPrim(prim, rho, xs(0), xs(1), _ > _)
                     case IntGteP() =>
-                        intRelPrim("intGte", rho, xs(0), xs(1), _ >= _)
+                        intRelPrim(prim, rho, xs(0), xs(1), _ >= _)
                     case IntLtP() =>
-                        intRelPrim("intLt", rho, xs(0), xs(1), _ < _)
+                        intRelPrim(prim, rho, xs(0), xs(1), _ < _)
                     case IntLteP() =>
-                        intRelPrim("intLte", rho, xs(0), xs(1), _ <= _)
+                        intRelPrim(prim, rho, xs(0), xs(1), _ <= _)
+                    case IntModP() =>
+                        intDiv(prim, rho, xs(0), xs(1), _ % _)
                     case IntMulP() =>
-                        intBinPrim("intMul", rho, xs(0), xs(1), _ * _)
+                        intBinPrim(prim, rho, xs(0), xs(1), _ * _)
                     case IntPowP() =>
-                        intPow(rho, xs(0), xs(1))
+                        intPow(prim, rho, xs(0), xs(1))
                     case IntSubP() =>
-                        intBinPrim("intSub", rho, xs(0), xs(1), _ - _)
+                        intBinPrim(prim, rho, xs(0), xs(1), _ - _)
                     case StrConcatP() =>
-                        strConcat(rho, xs(0), xs(1))
+                        strConcat(prim, rho, xs(0), xs(1))
                     case StrLengthP() =>
-                        strLength(rho, xs(0))
+                        strLength(prim, rho, xs(0))
                     case StrSubstrP() =>
-                        strSubstr(rho, xs(0), xs(1))
+                        strSubstr(prim, rho, xs(0), xs(1))
                     case VecAppendP() =>
-                        vecAppend(rho, xs(1), xs(2))
+                        vecAppend(prim, rho, xs(1), xs(2))
                     case VecConcatP() =>
-                        vecConcat(rho, xs(1), xs(2))
+                        vecConcat(prim, rho, xs(1), xs(2))
                     case VecGetP() =>
-                        vecGet(rho, xs(1), xs(2))
+                        vecGet(prim, rho, xs(1), xs(2))
                     case VecLengthP() =>
-                        vecLength(rho, xs(1))
+                        vecLength(prim, rho, xs(1))
                     case VecPrependP() =>
-                        vecPrepend(rho, xs(1), xs(2))
+                        vecPrepend(prim, rho, xs(1), xs(2))
                     case VecPutP() =>
-                        vecPut(rho, xs(1), xs(2), xs(3))
+                        vecPut(prim, rho, xs(1), xs(2), xs(3))
                 }
         }
 
-    def argument(i : Int, args : Seq[String]) : ValueR =
+    def argument(prim : Primitive, i : Int, args : Seq[String]) : ValueR =
         if ((i < 0) || (i >= args.length))
             errPrim("Argument", s"command-line argument $i does not exist (arg count = ${args.length})")
         else
             strR(args(i))
 
-    def capability(cap : String, rho : Env, x : String) : ValueR = {
+    def capability(prim : Primitive, cap : String, rho : Env, x : String) : ValueR = {
 
         def makeCapability(pairs : Vector[(String, Primitive, Int)]) : ValueR =
             recR(pairs.map {
@@ -242,7 +245,10 @@ trait Primitives {
         }
     }
 
-    def equal(rho : Env, l : String, r : String) : ValueR = {
+    def equal(prim : UserPrimitive, rho : Env, l : String, r : String) : ValueR = {
+
+        def sameFields(l : Vector[FldR], r : Vector[FldR]) : Boolean =
+            l.map(getFieldName).toSet == r.map(getFieldName).toSet
 
         def getField(f : String, r : Vector[FldR]) : Option[FldR] =
             r.find(getFieldName(_) == f)
@@ -258,15 +264,18 @@ trait Primitives {
                         case _ =>
                             (isRecR(lvalue), isRecR(rvalue)) match {
                                 case (Some(lfs), Some(rfs)) =>
-                                    lfs.forall(lfld => {
-                                        val f = getFieldName(lfld)
-                                        getField(f, rfs) match {
-                                            case Some(rfld) =>
-                                                equalValues(getFieldValue(lfld), getFieldValue(rfld))
-                                            case None =>
-                                                errPrim("Equal", s"can't find field $f in $rfs")
-                                        }
-                                    })
+                                    if (sameFields(lfs, rfs))
+                                        lfs.forall(lfld => {
+                                            val f = getFieldName(lfld)
+                                            getField(f, rfs) match {
+                                                case Some(rfld) =>
+                                                    equalValues(getFieldValue(lfld), getFieldValue(rfld))
+                                                case None =>
+                                                    errPrim(primName(prim), s"can't find field $f in $rfs")
+                                            }
+                                        })
+                                    else
+                                        false
                                 case _ =>
                                     (isVarR(lvalue), isVarR(rvalue)) match {
                                         case (Some((lc, lv)), Some((rc, rv))) =>
@@ -290,18 +299,18 @@ trait Primitives {
             falseR
     }
 
-    def folderFile(primName : String, rho : Env, root : String, suffixIdn : String) : File = {
+    def folderFile(prim : Primitive, rho : Env, root : String, suffixIdn : String) : File = {
         val suffix = lookupR(rho, suffixIdn)
         val filename =
             isStrR(suffix)
                 .map(suffix => s"$root/$suffix")
-                .getOrElse(errCap(primName, s"expected String, got $suffix"))
+                .getOrElse(errCap(primName(prim), s"expected String, got $suffix"))
         if (Paths.get(filename).normalize.startsWith(Paths.get(root).normalize)) new File(filename)
-        else errCap(primName, s"$filename is not a descendant of $root")
+        else errCap(primName(prim), s"$filename is not a descendant of $root")
     }
 
-    def folderReaderRead(rho : Env, root : String, suffixIdn : String) : ValueR = {
-        val file = folderFile("FolderReaderRead", rho, root, suffixIdn)
+    def folderReaderRead(prim : Primitive, rho : Env, root : String, suffixIdn : String) : ValueR = {
+        val file = folderFile(prim, rho, root, suffixIdn)
         val in = new BufferedReader(new FileReader(file))
         Try(readReaderContents(in)) match {
             case Success(value)           => varR("Right", strR(value))
@@ -310,11 +319,11 @@ trait Primitives {
         }
     }
 
-    def folderWriterWrite(rho : Env, root : String, suffixIdn : String, x : String) : ValueR = {
-        val file = folderFile("FolderWriterWrite", rho, root, suffixIdn)
+    def folderWriterWrite(prim : Primitive, rho : Env, root : String, suffixIdn : String, x : String) : ValueR = {
+        val file = folderFile(prim, rho, root, suffixIdn)
         val text = {
             val text = lookupR(rho, x)
-            isStrR(text).getOrElse(errCap("FolderWriterWrite", s"can't write $text"))
+            isStrR(text).getOrElse(errCap(primName(prim), s"can't write $text"))
         }
         val out = new BufferedWriter(new FileWriter(file))
         Try(out.write(text)) match {
@@ -328,7 +337,7 @@ trait Primitives {
         }
     }
 
-    def httpClient(rho : Env, methodName : String, url : String, x : String) : ValueR =
+    def httpClient(prim : Primitive, rho : Env, methodName : String, url : String, x : String) : ValueR =
         isStrR(lookupR(rho, x)) match {
             case Some(suffix) =>
                 Try(Http(url + suffix).method(methodName).asString) match {
@@ -343,47 +352,47 @@ trait Primitives {
                         throw e
                 }
             case None =>
-                errCap("HttpClient", s"can't find string operand $x")
+                errCap(primName(prim), s"can't find string operand $x")
         }
 
-    def intBinPrim(show : String, rho : Env, l : String, r : String, op : (BigInt, BigInt) => BigInt) : ValueR = {
-        val li = getIntParam(show, rho, l)
-        val ri = getIntParam(show, rho, r)
+    def intBinPrim(prim : UserPrimitive, rho : Env, l : String, r : String, op : (BigInt, BigInt) => BigInt) : ValueR = {
+        val li = getIntParam(prim, rho, l)
+        val ri = getIntParam(prim, rho, r)
         intR(op(li, ri))
     }
 
-    def intDiv(rho : Env, l : String, r : String) : ValueR = {
-        val ri = getIntParam("intDiv", rho, r)
+    def intDiv(prim : UserPrimitive, rho : Env, l : String, r : String, func : (BigInt, BigInt) => BigInt) : ValueR = {
+        val ri = getIntParam(prim, rho, r)
         if (ri == 0)
-            errPrim("IntDiv", s"division by zero")
+            errPrim(primName(prim), s"division by zero")
         else {
-            val li = getIntParam("intDiv", rho, l)
-            intR(li / ri)
+            val li = getIntParam(prim, rho, l)
+            intR(func(li, ri))
         }
     }
 
-    def intPow(rho : Env, l : String, r : String) : ValueR = {
-        val ri = getIntParam("intPow", rho, r)
+    def intPow(prim : UserPrimitive, rho : Env, l : String, r : String) : ValueR = {
+        val ri = getIntParam(prim, rho, r)
         if (ri < 0)
-            errPrim("IntPow", s"illegal negative power $ri given")
+            errPrim(primName(prim), s"illegal negative power $ri given")
         else {
-            val li = getIntParam("intPow", rho, l)
+            val li = getIntParam(prim, rho, l)
             intR(li.pow(ri.toInt))
         }
     }
 
-    def intRelPrim(show : String, rho : Env, l : String, r : String, op : (BigInt, BigInt) => Boolean) : ValueR = {
-        val li = getIntParam(show, rho, l)
-        val ri = getIntParam(show, rho, r)
+    def intRelPrim(prim : UserPrimitive, rho : Env, l : String, r : String, op : (BigInt, BigInt) => Boolean) : ValueR = {
+        val li = getIntParam(prim, rho, l)
+        val ri = getIntParam(prim, rho, r)
         if (op(li, ri)) trueR else falseR
     }
 
-    def intUnPrim(show : String, rho : Env, i : String, op : BigInt => BigInt) : ValueR = {
-        val ii = getIntParam(show, rho, i)
+    def intUnPrim(prim : UserPrimitive, rho : Env, i : String, op : BigInt => BigInt) : ValueR = {
+        val ii = getIntParam(prim, rho, i)
         intR(op(ii))
     }
 
-    def readerRead(filename : String) : ValueR = {
+    def readerRead(prim : Primitive, filename : String) : ValueR = {
         lazy val in : Try[BufferedReader] =
             Try(new BufferedReader(
                 filename match {
@@ -405,7 +414,7 @@ trait Primitives {
         }
     }
 
-    def recConcat(rho : Env, l : String, r : String) : ValueR = {
+    def recConcat(prim : Primitive, rho : Env, l : String, r : String) : ValueR = {
         val vl = lookupR(rho, l)
         val vr = lookupR(rho, r)
         def aux(v : ValueR, side : String) : Vector[FldR] =
@@ -413,12 +422,12 @@ trait Primitives {
                 case Some(fields) =>
                     fields
                 case None =>
-                    errPrim("RecConcat", s"$side argument $r of record concatenation is non-record")
+                    errPrim(primName(prim), s"$side argument $r of record concatenation is non-record")
             }
         recR(aux(vl, "first") ++ aux(vr, "second"))
     }
 
-    def recSelect(rho : Env, r : String, f : String) : ValueR = {
+    def recSelect(prim : Primitive, rho : Env, r : String, f : String) : ValueR = {
         val value = lookupR(rho, r)
         isRecR(value) match {
             case Some(fields) =>
@@ -428,29 +437,29 @@ trait Primitives {
                 } match {
                     case Some(v) => v
                     case None =>
-                        errPrim("RecSelect", s"can't find field $f in $fields")
+                        errPrim(primName(prim), s"can't find field $f in $fields")
                 }
-            case None => errPrim("RecSelect", s"$r is non-record $value, looking for field $f")
+            case None => errPrim(primName(prim), s"$r is non-record $value, looking for field $f")
         }
     }
 
-    def strConcat(rho : Env, x : String, y : String) : ValueR = {
-        val sx = getStrParam("StrConcat", rho, x)
-        val sy = getStrParam("StrConcat", rho, y)
+    def strConcat(prim : UserPrimitive, rho : Env, x : String, y : String) : ValueR = {
+        val sx = getStrParam(prim, rho, x)
+        val sy = getStrParam(prim, rho, y)
         strR(escape(unescape(sx) + unescape(sy)))
     }
 
-    def strLength(rho : Env, x : String) : ValueR = {
-        val sx = getStrParam("StrLength", rho, x)
+    def strLength(prim : UserPrimitive, rho : Env, x : String) : ValueR = {
+        val sx = getStrParam(prim, rho, x)
         intR(unescape(sx).length)
     }
 
-    def strSubstr(rho : Env, x : String, i : String) : ValueR = {
-        val sx = getStrParam("strSubstr", rho, x)
+    def strSubstr(prim : UserPrimitive, rho : Env, x : String, i : String) : ValueR = {
+        val sx = getStrParam(prim, rho, x)
         val usx = unescape(sx)
-        val ii = getIntParam("strSubstr", rho, i)
+        val ii = getIntParam(prim, rho, i)
         if ((ii < 0) || (ii > usx.length))
-            errPrim("StrSubstr", s"""index $ii out of range for string "$sx"""")
+            errPrim(primName(prim), s"""index $ii out of range for string "$sx"""")
         else
             strR(escape(usx.substring(ii.toInt)))
     }
@@ -463,15 +472,15 @@ trait Primitives {
                 errPrim("LookupVector", s"$name is ${lookupR(rho, name)}, expected Vector value")
         }
 
-    def vecAppend(rho : Env, v : String, x : String) : ValueR = {
+    def vecAppend(prim : UserPrimitive, rho : Env, v : String, x : String) : ValueR = {
         val elems = lookupVector(rho, v)
         vecR(elems :+ lookupR(rho, x))
     }
 
-    def vecConcat(rho : Env, v : String, w : String) : ValueR =
+    def vecConcat(prim : UserPrimitive, rho : Env, v : String, w : String) : ValueR =
         vecR(lookupVector(rho, v) ++ lookupVector(rho, w))
 
-    def vecGet(rho : Env, v : String, i : String) : ValueR =
+    def vecGet(prim : UserPrimitive, rho : Env, v : String, i : String) : ValueR =
         isIntR(lookupR(rho, i)) match {
             case Some(i) =>
                 val elems = lookupVector(rho, v)
@@ -481,31 +490,31 @@ trait Primitives {
                 else
                     errPrim("VecGet", s"vector index out of bounds - size: ${elems.size}, index: $index")
             case _ =>
-                errPrim("VecGet", s"can't find integer (index) operand $i")
+                errPrim(primName(prim), s"can't find integer (index) operand $i")
         }
 
-    def vecLength(rho : Env, v : String) : ValueR =
+    def vecLength(prim : UserPrimitive, rho : Env, v : String) : ValueR =
         intR(lookupVector(rho, v).length)
 
-    def vecPrepend(rho : Env, v : String, x : String) : ValueR = {
+    def vecPrepend(prim : UserPrimitive, rho : Env, v : String, x : String) : ValueR = {
         val elems = lookupVector(rho, v)
         vecR(lookupR(rho, x) +: elems)
     }
 
-    def vecPut(rho : Env, v : String, i : String, x : String) : ValueR = {
+    def vecPut(prim : UserPrimitive, rho : Env, v : String, i : String, x : String) : ValueR = {
         val elems = lookupVector(rho, v)
         isIntR(lookupR(rho, i)) match {
             case Some(idx) =>
                 if (elems.indices contains idx)
                     vecR(elems.updated(idx.intValue, lookupR(rho, x)))
                 else
-                    errPrim("VecPut", s"vector index out of bounds - size: ${elems.size}, index: $idx")
+                    errPrim(primName(prim), s"vector index out of bounds - size: ${elems.size}, index: $idx")
             case None =>
-                errPrim("VecPut", s"can't find index operand $i")
+                errPrim(primName(prim), s"can't find index operand $i")
         }
     }
 
-    def writerWrite(filename : String, rho : Env, x : String) : ValueR = {
+    def writerWrite(prim : Primitive, filename : String, rho : Env, x : String) : ValueR = {
         val value = lookupR(rho, x)
         val s = isIntR(value) match {
             case Some(i) =>
@@ -515,7 +524,7 @@ trait Primitives {
                     case Some(s) =>
                         unescape(s)
                     case None =>
-                        errPrim("WriterWrite", s"can't write $value")
+                        errPrim(primName(prim), s"can't write $value")
                 }
         }
         val out : Try[Writer] =

@@ -55,14 +55,14 @@ object SymbolTable extends Environments[CoomaEntity] {
             }
     }
 
-    case class PredefFunctionEntity(name : String, tipe : Expression) extends CoomaOkEntity {
+    case class PredefTypedEntity(name : String, tipe : Expression) extends CoomaOkEntity {
         val decl = null
-        val desc = "predef def"
+        val desc = "predef typed"
     }
 
     case class PredefLetEntity(name : String, tipe : Expression, value : Expression) extends CoomaOkEntity {
         val decl = null
-        val desc = "predef let"
+        val desc = "predef typed and valued"
     }
 
     /**
@@ -81,12 +81,52 @@ object SymbolTable extends Environments[CoomaEntity] {
         override val isError = true
     }
 
-    // Short-hands for types and stadnard type checks
+    // Short-hands for types and standard type checks
 
-    val intT : Expression = Idn(IdnUse("Int"))
-    val strT : Expression = Idn(IdnUse("String"))
-    val typT : Expression = Idn(IdnUse("Type"))
-    val uniT : Expression = Idn(IdnUse("Unit"))
+    def intT : Expression = Idn(IdnUse("Int"))
+    def strT : Expression = Idn(IdnUse("String"))
+    def typT : Expression = Idn(IdnUse("Type"))
+    def uniT : Expression = Idn(IdnUse("Unit"))
+
+    object IntT {
+        def unapply(e : Expression) : Boolean =
+            e match {
+                case Idn(IdnUse("Int")) =>
+                    true
+                case _ =>
+                    false
+            }
+    }
+
+    object StrT {
+        def unapply(e : Expression) : Boolean =
+            e match {
+                case Idn(IdnUse("String")) =>
+                    true
+                case _ =>
+                    false
+            }
+    }
+
+    object TypT {
+        def unapply(e : Expression) : Boolean =
+            e match {
+                case Idn(IdnUse("Type")) =>
+                    true
+                case _ =>
+                    false
+            }
+    }
+
+    object UniT {
+        def unapply(e : Expression) : Boolean =
+            e match {
+                case Idn(IdnUse("Unit")) =>
+                    true
+                case _ =>
+                    false
+            }
+    }
 
     def isPrimitiveTypeName(s : String) : Boolean =
         (s == "Int") || (s == "String") || (s == "Type") || (s == "Unit")
@@ -106,7 +146,7 @@ object SymbolTable extends Environments[CoomaEntity] {
             PrimitiveType.unapply(Idn(IdnUse(s)))
     }
 
-    val boolT : Expression =
+    def boolT : Expression =
         Idn(IdnUse("Boolean"))
 
     def isCapabilityTypeName(s : String) : Boolean =
@@ -147,7 +187,7 @@ object SymbolTable extends Environments[CoomaEntity] {
                 )
             case IntAbsP() =>
                 mkPrimType(Vector(intT), intT)
-            case IntAddP() | IntDivP() | IntMulP() | IntPowP() | IntSubP() =>
+            case IntAddP() | IntDivP() | IntModP() | IntMulP() | IntPowP() | IntSubP() =>
                 mkPrimType(Vector(intT, intT), intT)
             case IntGtP() | IntGteP() | IntLtP() | IntLteP() =>
                 mkPrimType(Vector(intT, intT), boolT)
@@ -187,7 +227,7 @@ object SymbolTable extends Environments[CoomaEntity] {
                 val entries = prelude.optStaticPreludeEntrys
                 entries.foldLeft(rootenv()) {
                     case (env, StaticTypedEntry(id, tipe)) =>
-                        define(env, id, PredefFunctionEntity(id, tipe))
+                        define(env, id, PredefTypedEntity(id, tipe))
                     case (env, StaticLetEntry(id, tipe, exp)) =>
                         define(env, id, PredefLetEntity(id, tipe, exp))
                 }

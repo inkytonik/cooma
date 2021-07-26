@@ -35,7 +35,8 @@ lazy val commonsettings = Seq(
 			"-unchecked",
 			"-Xfatal-warnings",
 			"-Xcheckinit",
-			"-Xlint:-stars-align,_"
+			"-Xlint:-stars-align,_",
+			"-Ypatmat-exhaust-depth", "40"
 		),
 	resolvers ++= Seq (
 		Resolver.sonatypeRepo ("releases"),

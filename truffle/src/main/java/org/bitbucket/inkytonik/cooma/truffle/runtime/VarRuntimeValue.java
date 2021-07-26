@@ -37,7 +37,7 @@ public class VarRuntimeValue extends RuntimeValue implements TruffleObject, Comp
 
     @Override
     public String toString() {
-        return String.format("< %s = %s >", c, v.print());
+        return String.format("<< %s = %s >>", c, v.print());
     }
 
     @Override
