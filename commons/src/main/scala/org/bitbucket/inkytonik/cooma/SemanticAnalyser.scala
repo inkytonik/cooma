@@ -231,6 +231,11 @@ class SemanticAnalyser(
     def checkMainArgument(arg : Argument) : Messages = {
         def aux(t : Expression) : Boolean =
             t match {
+                case App(Idn(IdnUse("Table")), Vector(RecT(headers))) =>
+                    headers.forall {
+                        case FieldType(_, Idn(IdnUse("String"))) => true
+                        case _                                   => false
+                    }
                 case StrT() =>
                     true
                 case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>

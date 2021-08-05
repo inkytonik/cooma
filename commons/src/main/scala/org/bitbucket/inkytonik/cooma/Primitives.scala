@@ -58,8 +58,8 @@ trait Primitives extends Database {
 
     import org.bitbucket.inkytonik.cooma.CoomaException._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
-    import org.bitbucket.inkytonik.cooma.Primitives.primName
     import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
+    import org.bitbucket.inkytonik.cooma.Primitives.primName
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh, unescape}
     import scalaj.http.Http
 
@@ -234,7 +234,11 @@ trait Primitives extends Database {
             case None    => errCap(cap, s"got non-String argument $value")
         }
 
+        val TableCapRegex = """Table:([a-zA-Z0-9_\-]+)""".r
         cap match {
+            case TableCapRegex(desiredHeaders) =>
+                dbConfigure(argument, desiredHeaders.split(',').toVector)
+                makeCapability(Vector(("all", DbTableAllP(), 1)))
             case "FolderReader" =>
                 makeCapability(Vector(("read", FolderReaderReadP(argument), 1)))
             case "FolderWriter" =>
@@ -246,6 +250,8 @@ trait Primitives extends Database {
                 makeCapability(Vector(("read", ReaderReadP(argument), 1)))
             case "Writer" =>
                 makeCapability(Vector(("write", WriterWriteP(argument), 1)))
+            case x =>
+                errPrim("Capability", s"unknown capability $cap")
         }
     }
 

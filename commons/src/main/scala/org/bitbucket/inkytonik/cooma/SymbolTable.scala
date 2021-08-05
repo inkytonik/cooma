@@ -151,7 +151,7 @@ object SymbolTable extends Environments[CoomaEntity] {
 
     def isCapabilityTypeName(s : String) : Boolean =
         (s == "FolderReader") || (s == "FolderWriter") || (s == "Reader") ||
-            (s == "Writer") || isHttpMethodName(s)
+            (s == "Writer") || isHttpMethodName(s) || (s == "Table")
 
     def isHttpMethodName(s : String) : Boolean =
         (s == "HttpDelete") || (s == "HttpGet") || (s == "HttpPost") ||
