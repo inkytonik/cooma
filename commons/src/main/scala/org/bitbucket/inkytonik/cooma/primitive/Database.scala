@@ -1,10 +1,11 @@
 package org.bitbucket.inkytonik.cooma.primitive
 
+import java.io.{BufferedInputStream, File, FileInputStream}
 import java.sql.{Connection, DriverManager}
 
 import org.bitbucket.inkytonik.cooma.Backend
-import org.bitbucket.inkytonik.cooma.primitive.Database.ConnectionData
 import org.bitbucket.inkytonik.cooma.CoomaException._
+import org.bitbucket.inkytonik.cooma.primitive.Database.ConnectionData
 
 import scala.annotation.tailrec
 
@@ -24,7 +25,22 @@ trait Database {
             case ArgumentRegex(path, tablename) => (path, tablename)
             case x                              => errCap("Table", s"invalid table path '$x'")
         }
-        val connection = DriverManager.getConnection(s"jdbc:sqlite:$path")
+        val connection = {
+            val file = new File(path)
+            if (!file.isFile)
+                errCap("Table", s"file $path does not exist")
+            // check that this is an SQLite file
+            val header = {
+                val bis = new BufferedInputStream(new FileInputStream(file))
+                val array = new Array[Byte](16)
+                bis.read(array)
+                bis.close()
+                array.iterator
+            }
+            if (!header.zip("SQLite format 3".getBytes :+ 0).forall { case (e, a) => e == a })
+                errCap("Table", s"$path is not an SQLite database")
+            DriverManager.getConnection(s"jdbc:sqlite:$path")
+        }
         // validate headers
         val query = s"PRAGMA table_info($tablename)"
         val result = connection.prepareStatement(query).executeQuery()
@@ -32,9 +48,12 @@ trait Database {
         def getHeaders(out : Set[String]) : Set[String] =
             if (result.next()) getHeaders(out + result.getString("name"))
             else out
-        val invalid = desiredHeaders.toSet -- getHeaders(Set.empty)
+        val headers = getHeaders(Set.empty)
+        if (headers.isEmpty)
+            errCap("Table", s"table $tablename does not exist")
+        val invalid = desiredHeaders.toSet -- headers
         if (invalid.nonEmpty)
-            errCap("Table", invalid.mkString(s"table $tablename is missing columns: ", ",", ""))
+            errCap("Table", invalid.mkString(s"table $tablename is missing columns: ", ", ", ""))
         connectionData = Some(ConnectionData(connection, tablename, desiredHeaders))
     }
 
@@ -70,13 +89,6 @@ object Database {
         connection : Connection,
         tablename : String,
         headers : Vector[String]
-    ) {
-
-        require(
-            tablename.forall(c => c.isLetterOrDigit || c == '_'),
-            s"invalid tablename $tablename"
-        )
-
-    }
+    )
 
 }

@@ -234,7 +234,7 @@ trait Primitives extends Database {
             case None    => errCap(cap, s"got non-String argument $value")
         }
 
-        val TableCapRegex = """Table:([a-zA-Z0-9_\-]+)""".r
+        val TableCapRegex = """Table:([a-zA-Z0-9_\-,]+)""".r
         cap match {
             case TableCapRegex(desiredHeaders) =>
                 dbConfigure(argument, desiredHeaders.split(',').toVector)

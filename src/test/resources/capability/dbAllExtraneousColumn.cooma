@@ -1,0 +1,6 @@
+fun (table: Table({
+    id : String,
+    foo : String,
+    bar : String
+})) table.all()
+
