@@ -87,6 +87,10 @@
     read : () <<Left : String, Right : String>>
   }
 
+  type Table = fun (A : Type) {
+    all : () Vector(A)
+  }
+
   type Writer = {
     write : (s : String) <<Left : String, Right : Unit>>
   }

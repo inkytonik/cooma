@@ -1,0 +1,1 @@
+fun (table: Table(String)) table.all()

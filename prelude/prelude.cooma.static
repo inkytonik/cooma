@@ -157,6 +157,11 @@ Reader :
       Right : String
     >>
   };
+Table :
+  (A : Type) Type =
+  fun (A : Type) {
+    all : () Vector(A)
+  };
 Writer :
   Type =
   {

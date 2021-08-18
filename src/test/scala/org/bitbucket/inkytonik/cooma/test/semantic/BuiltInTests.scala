@@ -122,4 +122,10 @@ class BuiltInTests extends SemanticTests {
         ""
     )
 
+    test(
+        "Table has correct type",
+        """{ def f (t : Table(Unit)) Vector(Unit) = t.all() {} }""",
+        ""
+    )
+
 }

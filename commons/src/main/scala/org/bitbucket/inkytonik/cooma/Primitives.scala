@@ -13,6 +13,7 @@ package org.bitbucket.inkytonik.cooma
 import java.net.SocketException
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+import org.bitbucket.inkytonik.cooma.primitive.Database
 
 import scala.util.{Failure, Success, Try}
 
@@ -48,7 +49,7 @@ object Primitives {
 
 }
 
-trait Primitives {
+trait Primitives extends Database {
 
     self : Backend =>
 
@@ -57,8 +58,8 @@ trait Primitives {
 
     import org.bitbucket.inkytonik.cooma.CoomaException._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
-    import org.bitbucket.inkytonik.cooma.Primitives.primName
     import org.bitbucket.inkytonik.cooma.PrimitiveUtils.readReaderContents
+    import org.bitbucket.inkytonik.cooma.Primitives.primName
     import org.bitbucket.inkytonik.cooma.Util.{escape, fresh, unescape}
     import scalaj.http.Http
 
@@ -75,7 +76,7 @@ trait Primitives {
         p match {
             case ArgumentP(_) =>
                 0
-            case CapabilityP(_) | FolderReaderReadP(_) | HttpClientP(_, _) |
+            case CapabilityP(_) | DbTableAllP() | FolderReaderReadP(_) | HttpClientP(_, _) |
                 ReaderReadP(_) | WriterWriteP(_) =>
                 1
             case RecConcatP() | RecSelectP() | FolderWriterWriteP(_) =>
@@ -119,6 +120,9 @@ trait Primitives {
 
             case CapabilityP(cap) =>
                 capability(prim, cap, rho, xs(0))
+
+            case DbTableAllP() =>
+                dbTableAll(rho)
 
             case FolderReaderReadP(filename) =>
                 folderReaderRead(prim, rho, filename, xs(0))
@@ -230,7 +234,11 @@ trait Primitives {
             case None    => errCap(cap, s"got non-String argument $value")
         }
 
+        val TableCapRegex = """Table:([a-zA-Z0-9_\-,]+)""".r
         cap match {
+            case TableCapRegex(desiredHeaders) =>
+                dbConfigure(argument, desiredHeaders.split(',').toVector)
+                makeCapability(Vector(("all", DbTableAllP(), 1)))
             case "FolderReader" =>
                 makeCapability(Vector(("read", FolderReaderReadP(argument), 1)))
             case "FolderWriter" =>
@@ -242,6 +250,8 @@ trait Primitives {
                 makeCapability(Vector(("read", ReaderReadP(argument), 1)))
             case "Writer" =>
                 makeCapability(Vector(("write", WriterWriteP(argument), 1)))
+            case x =>
+                errPrim("Capability", s"unknown capability $cap")
         }
     }
 

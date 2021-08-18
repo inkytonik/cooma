@@ -154,6 +154,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 case "HttpPost"     => "a HTTP client (POST)"
                 case "HttpPut"      => "a HTTP client (PUT)"
                 case "Reader"       => "a reader"
+                case "Table"        => "a database table"
                 case "Writer"       => "a writer"
                 case _ =>
                     sys.error(s"printCapabilityDesc: unknown capability name $name")
