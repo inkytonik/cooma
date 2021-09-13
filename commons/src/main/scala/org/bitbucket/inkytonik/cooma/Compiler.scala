@@ -10,6 +10,8 @@
 
 package org.bitbucket.inkytonik.cooma
 
+import org.bitbucket.inkytonik.cooma.primitive.Database
+
 trait Compiler {
 
     self : Backend =>
@@ -162,8 +164,18 @@ trait Compiler {
                                     aux(e1) ::: aux(e2)
                                 case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>
                                     name :: Nil
-                                case App(Idn(IdnUse("Table")), Vector(RecT(headers))) =>
-                                    headers.map(_.identifier).mkString("Table:", ",", "") :: Nil
+                                case App(Idn(IdnUse("Database")), Vector(RecT(ts))) =>
+                                    val tables =
+                                        ts.map {
+                                            case FieldType(tablename, exp) =>
+                                                exp match {
+                                                    case App(Idn(IdnUse("Table")), Vector(RecT(fields))) =>
+                                                        tablename -> fields.map(_.identifier)
+                                                    case _ =>
+                                                        sys.error(s"compileTopArg: ${show(t)} arguments not supported")
+                                                }
+                                        }
+                                    Database.encodeSpec(nArg, tables) :: Nil
                                 case t =>
                                     sys.error(s"compileTopArg: ${show(t)} arguments not supported")
                             }

@@ -54,6 +54,8 @@
 
   // Capability types
 
+  type Database = fun (A : Type) A
+
   type FolderReader = {
     read : (suffix : String) <<Left : String, Right : String>>
   }

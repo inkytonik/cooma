@@ -76,7 +76,7 @@ trait Primitives extends Database {
         p match {
             case ArgumentP(_) =>
                 0
-            case CapabilityP(_) | DbTableAllP() | FolderReaderReadP(_) | HttpClientP(_, _) |
+            case CapabilityP(_) | DbTableAllP(_) | FolderReaderReadP(_) | HttpClientP(_, _) |
                 ReaderReadP(_) | WriterWriteP(_) =>
                 1
             case RecConcatP() | RecSelectP() | FolderWriterWriteP(_) =>
@@ -113,16 +113,33 @@ trait Primitives extends Database {
                 errPrim(primName(prim), s"can't find integer operand $x")
         }
 
+    /**
+     * @param prim  the `Primitive` object (as instantiated by `capability`)
+     * @param rho   the environment
+     * @param xs    primitive arguments
+     * @param args  command-line arguments
+     * @return      result (Cooma value) of primitive application
+     */
     def run(prim : Primitive, rho : Env, xs : Seq[String], args : Seq[String]) : ValueR =
         prim match {
             case ArgumentP(i) =>
                 argument(prim, i, args)
 
             case CapabilityP(cap) =>
-                capability(prim, cap, rho, xs(0))
+                capability(cap, rho, xs(0))
 
-            case DbTableAllP() =>
-                dbTableAll(rho)
+            case DbTableAllP(path) =>
+                val (index, tablename) =
+                    path.split(':').toSeq match {
+                        case index +: tablename +: Nil =>
+                            index.toIntOption match {
+                                case Some(index) => (index, tablename)
+                                case None        => errPrim("DatabaseClient", s"invalid path $path")
+                            }
+                        case x =>
+                            errPrim("DatabaseClient", s"invalid path $x")
+                    }
+                dbTableAll(index, tablename)
 
             case FolderReaderReadP(filename) =>
                 folderReaderRead(prim, rho, filename, xs(0))
@@ -198,7 +215,13 @@ trait Primitives extends Database {
         else
             strR(args(i))
 
-    def capability(prim : Primitive, cap : String, rho : Env, x : String) : ValueR = {
+    /**
+     * @param cap       the capability specifier
+     * @param rho       the environment
+     * @param x         the command-line argument to be passed to the capability constructor
+     * @return          the capability object
+     */
+    def capability(cap : String, rho : Env, x : String) : ValueR = {
 
         def makeCapability(pairs : Vector[(String, Primitive, Int)]) : ValueR =
             recR(pairs.map {
@@ -234,11 +257,23 @@ trait Primitives extends Database {
             case None    => errCap(cap, s"got non-String argument $value")
         }
 
-        val TableCapRegex = """Table:([a-zA-Z0-9_\-,]+)""".r
+        val DatabaseClientRegex = """DatabaseClient::[a-zA-Z0-9_\-,:]+""".r
         cap match {
-            case TableCapRegex(desiredHeaders) =>
-                dbConfigure(argument, desiredHeaders.split(',').toVector)
-                makeCapability(Vector(("all", DbTableAllP(), 1)))
+            case DatabaseClientRegex() =>
+                Database.decodeSpec(cap) match {
+                    case Some((index, tables)) =>
+                        dbConfigure(argument, tables.toMap, index)
+                        val tableCaps =
+                            tables.map {
+                                case (tablename, _) =>
+                                    val prim = DbTableAllP(s"$index:$tablename")
+                                    val tableCap = makeCapability(Vector(("all", prim, 1)))
+                                    fldR(tablename, tableCap)
+                            }
+                        recR(tableCaps.toVector)
+                    case None =>
+                        errPrim("Capability", s"invalid DatabaseClient spec $cap")
+                }
             case "FolderReader" =>
                 makeCapability(Vector(("read", FolderReaderReadP(argument), 1)))
             case "FolderWriter" =>
