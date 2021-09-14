@@ -1,0 +1,8 @@
+fun (db : Database({
+  many_text_columns : Table({
+    id : String,
+    c1 : String,
+    e : String,
+    c3 : String
+  })
+})) db.many_text_columns.all()

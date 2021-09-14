@@ -108,7 +108,7 @@ object Database {
     def encodeSpec(index : Int, tables : Seq[(String, Vector[String])]) : String =
         tables
             .map { case (tablename, columns) => columns.mkString(s"$tablename:", ",", "") }
-            .mkString(s"DatabaseClient::$index::", ":", "")
+            .mkString(s"DatabaseClient::$index::", "::", "")
 
     def decodeSpec(spec : String) : Option[(Int, Seq[(String, Vector[String])])] =
         spec.split("::").toSeq match {

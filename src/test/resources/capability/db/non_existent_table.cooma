@@ -1,0 +1,5 @@
+fun (db : Database({
+  e : Table({
+    id : String
+  })
+})) {}
