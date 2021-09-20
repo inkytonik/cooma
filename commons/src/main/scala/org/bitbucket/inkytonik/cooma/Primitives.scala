@@ -13,7 +13,7 @@ package org.bitbucket.inkytonik.cooma
 import java.net.SocketException
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
-import org.bitbucket.inkytonik.cooma.primitive.Database
+import org.bitbucket.inkytonik.cooma.primitive.{Database, FileIo}
 
 import scala.util.{Failure, Success, Try}
 
@@ -49,7 +49,7 @@ object Primitives {
 
 }
 
-trait Primitives extends Database {
+trait Primitives extends Database with FileIo {
 
     self : Backend =>
 
@@ -240,15 +240,19 @@ trait Primitives extends Database {
                 dbConfigure(argument, desiredHeaders.split(',').toVector)
                 makeCapability(Vector(("all", DbTableAllP(), 1)))
             case "FolderReader" =>
+                checkFolderReader(argument)
                 makeCapability(Vector(("read", FolderReaderReadP(argument), 1)))
             case "FolderWriter" =>
+                checkFolderWriter(argument)
                 makeCapability(Vector(("write", FolderWriterWriteP(argument), 2)))
             case "HttpDelete" | "HttpGet" | "HttpPost" | "HttpPut" =>
                 val method = cap.drop(4).toLowerCase()
                 makeCapability(Vector((method, HttpClientP(method, argument), 1)))
             case "Reader" =>
+                checkReader(argument)
                 makeCapability(Vector(("read", ReaderReadP(argument), 1)))
             case "Writer" =>
+                checkWriter(argument)
                 makeCapability(Vector(("write", WriterWriteP(argument), 1)))
             case x =>
                 errPrim("Capability", s"unknown capability $cap")
