@@ -59,7 +59,7 @@ class FileIoTests extends ExecutionTests {
         test(s"run: $name: non-existent writer") { implicit bc =>
             val writer = "notThere/a.txt"
             val result = runFile(filename, Seq("-r"), Seq(writer))
-            result shouldBe "<< Left = \"java.io.FileNotFoundException: notThere/a.txt (No such file or directory)\" >>\n"
+            result shouldBe "CapabilityException: Writer: Parent of 'notThere/a.txt' does not exist\n"
             Files.exists(Paths.get(writer)) shouldBe false
         }
 
@@ -121,8 +121,10 @@ class FileIoTests extends ExecutionTests {
         val root = Paths.get("./src/main/resources/tmp/sub")
 
         test(s"run: $name") { implicit bc =>
+            root.toFile.mkdirs()
             val result = runFile(sourceFilename, Seq(), Seq(root.toString))
             result shouldBe "CapabilityException: FolderReaderRead: ./src/main/resources/tmp/sub/../a.txt is not a descendant of ./src/main/resources/tmp/sub\n"
+            root.toFile.delete()
         }
     }
 
@@ -160,7 +162,7 @@ class FileIoTests extends ExecutionTests {
             createFile(reader, "")
             val writer = "notThere/a.txt"
             val result = runFile(filename, Seq("-r"), Seq(writer, reader))
-            result shouldBe "<< Left = \"java.io.FileNotFoundException: notThere/a.txt (No such file or directory)\" >>\n"
+            result shouldBe "CapabilityException: Writer: Parent of 'notThere/a.txt' does not exist\n"
             Files.exists(Paths.get(writer)) shouldBe false
             deleteFile(writer)
         }
@@ -169,7 +171,7 @@ class FileIoTests extends ExecutionTests {
             createFile(writer, "")
             val reader = "notThere.txt"
             val result = runFile(filename, Seq("-r"), Seq(writer, reader))
-            result shouldBe "<< Left = \"java.io.FileNotFoundException: notThere.txt (No such file or directory)\" >>\n"
+            result shouldBe "CapabilityException: Reader: 'notThere.txt' does not exist\n"
             Files.exists(Paths.get(reader)) shouldBe false
             deleteFile(writer)
         }
