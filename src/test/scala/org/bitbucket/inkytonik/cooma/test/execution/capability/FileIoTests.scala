@@ -1,5 +1,6 @@
 package org.bitbucket.inkytonik.cooma.test.execution.capability
 
+import java.io.File
 import java.nio.file.{Files, Paths}
 
 import org.bitbucket.inkytonik.cooma.Util
@@ -209,6 +210,23 @@ class FileIoTests extends ExecutionTests {
             result shouldBe "<< Right = \"The file contents\\n\" >>\n"
             FileSource(rw).content shouldBe "Hello, world!\n"
             deleteFile(rw)
+        }
+    }
+
+    {
+        val filename = "src/test/resources/capability/runnerCmdArg.cooma"
+        val name = s"Runner command arguments ($filename)"
+
+        test(s"run: $name: result") { implicit bc =>
+            val r =
+                if (System.getProperty("os.name").contains("Windows")) "./a.bat"
+                else "./a.sh"
+            // the script turns out the same in both Bash and Batch!
+            createFile(r, "echo Hello, world!\nexit 42\n")
+            (new File(r)).setExecutable(true)
+            val result = runFile(filename, Seq("-r"), Seq(r))
+            result shouldBe """{ exitValue = 42, output = "Hello, world!\n" }""" + "\n"
+            deleteFile(r)
         }
     }
 

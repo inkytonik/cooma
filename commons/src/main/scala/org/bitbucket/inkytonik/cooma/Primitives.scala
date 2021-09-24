@@ -531,8 +531,8 @@ trait Primitives extends Database with FileIo {
             builder.result()
         }
         recR(Vector(
-            fldR("output", strR(escape(output))),
-            fldR("exitValue", intR(exitValue))
+            fldR("exitValue", intR(exitValue)),
+            fldR("output", strR(escape(output)))
         ))
     }
 
