@@ -1,0 +1,1 @@
+fun (r : Runner) r.run([])
