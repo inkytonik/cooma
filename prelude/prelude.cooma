@@ -89,6 +89,15 @@
     read : () <<Left : String, Right : String>>
   }
 
+  type RunnerReturn = {
+    exitValue : Int,
+    output : String
+  }
+
+  type Runner = {
+    run : (args : Vector(String)) RunnerReturn
+  }
+
   type Table = fun (A : Type) {
     all : () Vector(A)
   }

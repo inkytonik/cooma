@@ -15,6 +15,7 @@ import java.net.SocketException
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
 import org.bitbucket.inkytonik.cooma.primitive.{Database, FileIo}
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 object Primitives {
@@ -55,6 +56,7 @@ trait Primitives extends Database with FileIo {
 
     import java.io._
     import java.nio.file.Paths
+    import scala.jdk.CollectionConverters._
 
     import org.bitbucket.inkytonik.cooma.CoomaException._
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
@@ -77,7 +79,7 @@ trait Primitives extends Database with FileIo {
             case ArgumentP(_) =>
                 0
             case CapabilityP(_) | DbTableAllP(_) | FolderReaderReadP(_) | HttpClientP(_, _) |
-                ReaderReadP(_) | WriterWriteP(_) =>
+                ReaderReadP(_) | RunnerRunP(_) | WriterWriteP(_) =>
                 1
             case RecConcatP() | RecSelectP() | FolderWriterWriteP(_) =>
                 2
@@ -152,6 +154,9 @@ trait Primitives extends Database with FileIo {
 
             case ReaderReadP(filename) =>
                 readerRead(prim, filename)
+
+            case RunnerRunP(filename) =>
+                runnerRun(prim, filename, rho, xs(0))
 
             case RecConcatP() =>
                 recConcat(prim, rho, xs(0), xs(1))
@@ -286,6 +291,9 @@ trait Primitives extends Database with FileIo {
             case "Reader" =>
                 checkReader(argument)
                 makeCapability(Vector(("read", ReaderReadP(argument), 1)))
+            case "Runner" =>
+                checkRunner(argument)
+                makeCapability(Vector(("run", RunnerRunP(argument), 1)))
             case "Writer" =>
                 checkWriter(argument)
                 makeCapability(Vector(("write", WriterWriteP(argument), 1)))
@@ -490,6 +498,42 @@ trait Primitives extends Database with FileIo {
                 }
             case None => errPrim(primName(prim), s"$r is non-record $value, looking for field $f")
         }
+    }
+
+    def runnerRun(prim : Primitive, filename : String, rho : Env, x : String) : ValueR = {
+        val value = lookupR(rho, x)
+        val cmdargs : Seq[String] =
+            isVecR(value) match {
+                case Some(vec) =>
+                    vec.map(isStrR).foldLeft(Seq.empty[String]) {
+                        case (out, Some(s)) => out :+ s
+                        case (_, None)      => errPrim(primName(prim), "non-String argument")
+                    }
+                case None =>
+                    errPrim(primName(prim), "non-Vec argument list")
+            }
+        val proc = new ProcessBuilder((filename +: cmdargs).asJava).start()
+        proc.waitFor()
+        val exitValue = proc.exitValue()
+        val output = {
+            val reader = new BufferedReader(new InputStreamReader(proc.getInputStream))
+            val builder = new StringBuilder
+            @tailrec
+            def aux() : Unit = {
+                val line = reader.readLine()
+                if (line != null) {
+                    builder.append(s"$line\n")
+                    aux()
+                }
+            }
+            aux()
+            reader.close()
+            builder.result()
+        }
+        recR(Vector(
+            fldR("output", strR(escape(output))),
+            fldR("exitValue", intR(exitValue))
+        ))
     }
 
     def strConcat(prim : UserPrimitive, rho : Env, x : String, y : String) : ValueR = {

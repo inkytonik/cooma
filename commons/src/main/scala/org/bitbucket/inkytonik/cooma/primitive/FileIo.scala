@@ -18,6 +18,14 @@ trait FileIo {
         if (!file.canRead) errCap(cap, s"Cannot read '$path'")
     }
 
+    def checkRunner(path : String) : Unit = {
+        val file = new File(path)
+        val cap = "Runner"
+        if (!file.exists) errCap(cap, s"'$path' does not exist")
+        if (file.isDirectory) errCap(cap, s"'$path' is a directory")
+        if (!file.canExecute) errCap(cap, s"Cannot run '$path'")
+    }
+
     def checkWriter(path : String) : Unit = {
         if (path != "-") {
             val file = new File(path)

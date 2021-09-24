@@ -208,6 +208,7 @@ Primitive =
   | "ReaderRead" Filename                  {ReaderReadP}
   | 'RecConcat'                            {RecConcatP}
   | 'RecSelect'                            {RecSelectP}
+  | 'RunnerRun' Filename                   {RunnerRunP}
   | "WriterWrite" Filename                 {WriterWriteP}
   | UserPrimitive                          {UserP}.
 

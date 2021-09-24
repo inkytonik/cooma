@@ -160,6 +160,17 @@ Reader :
       Right : String
     >>
   };
+RunnerReturn :
+  Type =
+  {
+    exitValue : Int,
+    output : String
+  };
+Runner :
+  Type =
+  {
+    run : (args : Vector(String)) RunnerReturn
+  };
 Table :
   (A : Type) Type =
   fun (A : Type) {

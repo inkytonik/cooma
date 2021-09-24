@@ -150,7 +150,7 @@ object SymbolTable extends Environments[CoomaEntity] {
         Idn(IdnUse("Boolean"))
 
     def isCapabilityTypeName(s : String) : Boolean =
-        (s == "FolderReader") || (s == "FolderWriter") || (s == "Reader") ||
+        (s == "FolderReader") || (s == "FolderWriter") || (s == "Reader") || (s == "Runner") ||
             (s == "Writer") || isHttpMethodName(s) || (s == "Database")
 
     def isHttpMethodName(s : String) : Boolean =
