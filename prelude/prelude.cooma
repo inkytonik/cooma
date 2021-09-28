@@ -66,7 +66,7 @@
   }
 
   type FolderRunner = {
-    run : (suffix : String, args : Vector(String)) RunnerReturn
+    run : (suffix : String, args : Vector(String)) <<Left : String, Right : RunnerReturn>>
   }
 
   type FolderWriter = {

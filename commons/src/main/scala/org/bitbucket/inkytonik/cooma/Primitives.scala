@@ -384,7 +384,14 @@ trait Primitives extends Database with FileIo {
 
     def folderRunnerRun(prim : Primitive, rho : Env, root : String, suffixIdn : String, x : String) : ValueR = {
         val filename = folderFile(prim, rho, root, suffixIdn).getPath
-        runnerRun(prim, filename, rho, x)
+        Try(runnerRun(prim, filename, rho, x)) match {
+            case Success(rr) =>
+                varR("Right", rr)
+            case Failure(e : IOException) =>
+                varR("Left", strR(e.toString))
+            case Failure(e) =>
+                throw e
+        }
     }
 
     def folderWriterWrite(prim : Primitive, rho : Env, root : String, suffixIdn : String, x : String) : ValueR = {
