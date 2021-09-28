@@ -11,6 +11,15 @@ import org.bitbucket.inkytonik.kiama.util.IO.{createFile, deleteFile}
 
 class FileIoTests extends ExecutionTests {
 
+    val isWindows = System.getProperty("os.name").contains("Windows")
+    val ext = if (isWindows) "bat" else "sh"
+    val interpolator = if (isWindows) '%' else '$'
+
+    def createHelloWorld(greeting : String, exitValue : Int) : String =
+        s"""echo $greeting ${interpolator}1
+           |exit $exitValue
+           |""".stripMargin
+
     {
         val filename = "src/test/resources/capability/readerCmdArg.cooma"
         val name = s"reader external argument ($filename)"
@@ -218,16 +227,45 @@ class FileIoTests extends ExecutionTests {
         val name = s"Runner command arguments ($filename)"
 
         test(s"run: $name: result") { implicit bc =>
-            val (r, contents) =
-                if (System.getProperty("os.name").contains("Windows"))
-                    ("./a.bat", "echo Hello %1\nexit 42\n")
-                else
-                    ("./a.sh", "echo Hello $1\nexit 42\n")
-            createFile(r, contents)
+            val r = s"./a.$ext"
+            createFile(r, createHelloWorld("Hello", 42))
             (new File(r)).setExecutable(true)
             val result = runFile(filename, Seq("-r"), Seq(r))
             result shouldBe """{ exitValue = 42, output = "Hello Tony\n" }""" + "\n"
             deleteFile(r)
+        }
+    }
+
+    {
+        val filename = "src/test/resources/capability/folderRunnerCmdArg.cooma"
+        val name = s"FolderRunner command arguments ($filename)"
+
+        test(s"run: $name: result") { implicit bc =>
+            val root = Paths.get("./src/main/resources/tmp")
+            val sub = root.resolve("sub")
+            sub.toFile.mkdirs()
+            val a = root.resolve(s"a.$ext")
+            val b = sub.resolve(s"b.$ext")
+            Files.write(a, createHelloWorld("Hello", 42).getBytes)
+            Files.write(b, createHelloWorld("Greetings", 0).getBytes)
+            a.toFile.setExecutable(true)
+            b.toFile.setExecutable(true)
+            val result = runFile(filename, Seq("-r"), Seq(root.toString, ext))
+            b.toFile.delete()
+            a.toFile.delete()
+            sub.toFile.delete()
+            result shouldBe
+                """|{
+                   |  a = << Right = {
+                   |    exitValue = 42,
+                   |    output = "Hello Tony\n"
+                   |  } >>,
+                   |  b = << Right = {
+                   |    exitValue = 0,
+                   |    output = "Greetings Nicholas\n"
+                   |  } >>
+                   |}
+                   |""".stripMargin
         }
     }
 
