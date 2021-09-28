@@ -81,7 +81,7 @@ trait Primitives extends Database with FileIo {
             case CapabilityP(_) | DbTableAllP(_) | FolderReaderReadP(_) | HttpClientP(_, _) |
                 ReaderReadP(_) | RunnerRunP(_) | WriterWriteP(_) =>
                 1
-            case RecConcatP() | RecSelectP() | FolderWriterWriteP(_) =>
+            case RecConcatP() | RecSelectP() | FolderRunnerRunP(_) | FolderWriterWriteP(_) =>
                 2
             case UserP(u) =>
                 u match {
@@ -145,6 +145,9 @@ trait Primitives extends Database with FileIo {
 
             case FolderReaderReadP(filename) =>
                 folderReaderRead(prim, rho, filename, xs(0))
+
+            case FolderRunnerRunP(filename) =>
+                folderRunnerRun(prim, rho, filename, xs(0), xs(1))
 
             case FolderWriterWriteP(filename) =>
                 folderWriterWrite(prim, rho, filename, xs(0), xs(1))
@@ -282,6 +285,9 @@ trait Primitives extends Database with FileIo {
             case "FolderReader" =>
                 checkFolderReader(argument)
                 makeCapability(Vector(("read", FolderReaderReadP(argument), 1)))
+            case "FolderRunner" =>
+                checkFolderRunner(argument)
+                makeCapability(Vector(("run", FolderRunnerRunP(argument), 2)))
             case "FolderWriter" =>
                 checkFolderWriter(argument)
                 makeCapability(Vector(("write", FolderWriterWriteP(argument), 2)))
@@ -374,6 +380,11 @@ trait Primitives extends Database with FileIo {
             case Failure(e : IOException) => varR("Left", strR(e.toString))
             case Failure(e)               => throw e
         }
+    }
+
+    def folderRunnerRun(prim : Primitive, rho : Env, root : String, suffixIdn : String, x : String) : ValueR = {
+        val filename = folderFile(prim, rho, root, suffixIdn).getPath
+        runnerRun(prim, filename, rho, x)
     }
 
     def folderWriterWrite(prim : Primitive, rho : Env, root : String, suffixIdn : String, x : String) : ValueR = {

@@ -218,14 +218,15 @@ class FileIoTests extends ExecutionTests {
         val name = s"Runner command arguments ($filename)"
 
         test(s"run: $name: result") { implicit bc =>
-            val r =
-                if (System.getProperty("os.name").contains("Windows")) "./a.bat"
-                else "./a.sh"
-            // the script turns out the same in both Bash and Batch!
-            createFile(r, "echo Hello, world!\nexit 42\n")
+            val (r, contents) =
+                if (System.getProperty("os.name").contains("Windows"))
+                    ("./a.bat", "echo Hello %1\nexit 42\n")
+                else
+                    ("./a.sh", "echo Hello $1\nexit 42\n")
+            createFile(r, contents)
             (new File(r)).setExecutable(true)
             val result = runFile(filename, Seq("-r"), Seq(r))
-            result shouldBe """{ exitValue = 42, output = "Hello, world!\n" }""" + "\n"
+            result shouldBe """{ exitValue = 42, output = "Hello Tony\n" }""" + "\n"
             deleteFile(r)
         }
     }
