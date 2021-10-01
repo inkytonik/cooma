@@ -106,6 +106,17 @@ FolderReader :
       Right : String
     >>
   };
+RunnerReturn :
+  Type =
+  {
+    exitValue : Int,
+    output : String
+  };
+FolderRunner :
+  Type =
+  {
+    run : (suffix : String, args : Vector(String)) RunnerReturn
+  };
 FolderWriter :
   Type =
   {
@@ -159,6 +170,11 @@ Reader :
       Left : String,
       Right : String
     >>
+  };
+Runner :
+  Type =
+  {
+    run : (args : Vector(String)) RunnerReturn
   };
 Table :
   (A : Type) Type =

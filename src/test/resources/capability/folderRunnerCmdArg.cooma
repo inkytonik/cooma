@@ -1,0 +1,5 @@
+fun (runner: FolderRunner, ext: String) {
+    val a = runner.run(Strings.concat("a.", ext), ["Tony"])
+    val b = runner.run(Strings.concat("sub/b.", ext), ["Nicholas"])
+    { a = a, b = b }
+}

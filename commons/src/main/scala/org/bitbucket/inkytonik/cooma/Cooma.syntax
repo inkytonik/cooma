@@ -203,11 +203,13 @@ Primitive =
   | "Capability" Identifier                {CapabilityP}
   | 'DbTableAll' Filename                  {DbTableAllP}
   | "FolderReaderRead" Filename            {FolderReaderReadP}
+  | "FolderRunnerRun" Filename             {FolderRunnerRunP}
   | "FolderWriterWrite" Filename           {FolderWriterWriteP}
   | "HttpClient" Identifier sp StringLit   {HttpClientP}
   | "ReaderRead" Filename                  {ReaderReadP}
   | 'RecConcat'                            {RecConcatP}
   | 'RecSelect'                            {RecSelectP}
+  | 'RunnerRun' Filename                   {RunnerRunP}
   | "WriterWrite" Filename                 {WriterWriteP}
   | UserPrimitive                          {UserP}.
 

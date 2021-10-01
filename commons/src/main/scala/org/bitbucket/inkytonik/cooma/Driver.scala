@@ -18,7 +18,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
     import org.bitbucket.inkytonik.cooma.Desugar.desugar
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout, pretty, show}
-    import org.bitbucket.inkytonik.cooma.SymbolTable.{Environment, isCapabilityTypeName, preludeStaticEnv, StrT}
+    import org.bitbucket.inkytonik.cooma.SymbolTable.{Environment, capabilityTypeNames, preludeStaticEnv, StrT}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
     import org.bitbucket.inkytonik.kiama.relation.Tree
     import org.bitbucket.inkytonik.kiama.util.Messaging.{Messages, noMessages}
@@ -126,7 +126,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
             config.output().emit(s"  ${argument.idnDef.identifier}: ")
             def aux(t : Expression) : Seq[String] =
                 t match {
-                    case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>
+                    case Idn(IdnUse(name)) if capabilityTypeNames(name) =>
                         Seq(capabilityDesc(name))
                     case Cat(e1, e2) =>
                         aux(e1) ++ aux(e2)

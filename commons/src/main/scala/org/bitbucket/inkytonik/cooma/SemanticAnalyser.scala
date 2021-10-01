@@ -27,6 +27,7 @@ class SemanticAnalyser(
     import org.bitbucket.inkytonik.kiama.util.Messaging.{check, collectMessages, error, Messages, noMessages}
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+    import org.bitbucket.inkytonik.cooma.SymbolTable.capabilityTypeNames
 
     val decorators = new Decorators(tree)
     import decorators._
@@ -242,7 +243,7 @@ class SemanticAnalyser(
                     }
                 case StrT() =>
                     true
-                case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>
+                case Idn(IdnUse(name)) if capabilityTypeNames(name) =>
                     true
                 case Cat(l, r) =>
                     aux(l) && aux(r)

@@ -11,7 +11,11 @@ class FileIoValidationTests extends ExecutionTests {
     val srcReader = "./src/test/resources/capability/readerCmdArg.cooma"
     val srcWriter = "./src/test/resources/capability/writerCmdArg.cooma"
     val srcFolderReader = "./src/test/resources/capability/folderReaderCmdArg.cooma"
+    val srcFolderRunner = "./src/test/resources/capability/folderRunnerCmdArg.cooma"
     val srcFolderWriter = "./src/test/resources/capability/folderWriterCmdArg.cooma"
+    val srcRunner = "./src/test/resources/capability/runnerCmdArg.cooma"
+
+    val ext = if (System.getProperty("os.name").contains("Windows")) "bat" else "sh"
 
     def reset() : Unit = {
         def aux(file : File) : Unit = {
@@ -198,6 +202,82 @@ class FileIoValidationTests extends ExecutionTests {
         val result = runFile(srcFolderWriter, Seq.empty, Seq(filename))
         reset()
         result shouldBe "CapabilityException: FolderWriter: Cannot write './src/test/resources/tmp/0'\n"
+    }
+
+    test("Runner: ok") { implicit bc =>
+        val filename = s"$root/a"
+        val file = new File(filename)
+        file.createNewFile()
+        file.setExecutable(true)
+        val result = runFile(srcRunner, Seq.empty, Seq(filename))
+        reset()
+        result shouldBe ""
+    }
+
+    test("Runner: does not exist") { implicit bc =>
+        val filename = s"$root/a"
+        val result = runFile(srcRunner, Seq.empty, Seq(filename))
+        result shouldBe "CapabilityException: Runner: './src/test/resources/tmp/a' does not exist\n"
+    }
+
+    test("Runner: is a directory") { implicit bc =>
+        val filename = s"$root/a"
+        val dir = new File(filename)
+        dir.mkdir()
+        val result = runFile(srcRunner, Seq.empty, Seq(filename))
+        reset()
+        result shouldBe "CapabilityException: Runner: './src/test/resources/tmp/a' is a directory\n"
+    }
+
+    test("Runner: insufficient permissions") { implicit bc =>
+        val filename = s"$root/a"
+        val file = new File(filename)
+        file.createNewFile()
+        file.setExecutable(false)
+        val result = runFile(srcRunner, Seq.empty, Seq(filename))
+        reset()
+        result shouldBe "CapabilityException: Runner: Cannot run './src/test/resources/tmp/a'\n"
+    }
+
+    test("FolderRunner: ok") { implicit bc =>
+        val filename = s"$root/0"
+        val dir = new File(filename)
+        val sub = new File(s"$filename/sub")
+        dir.mkdir()
+        sub.mkdir()
+        val a = new File(s"$filename/a.$ext")
+        val b = new File(s"$filename/sub/b.$ext")
+        a.createNewFile()
+        a.setExecutable(true)
+        b.createNewFile()
+        b.setExecutable(true)
+        val result = runFile(srcFolderRunner, Seq.empty, Seq(filename, ext))
+        reset()
+        result shouldBe ""
+    }
+
+    test("FolderRunner: does not exist") { implicit bc =>
+        val filename = s"$root/0"
+        val result = runFile(srcFolderRunner, Seq.empty, Seq(filename, ext))
+        result shouldBe "CapabilityException: FolderRunner: './src/test/resources/tmp/0' does not exist\n"
+    }
+
+    test("FolderRunner: is not a directory") { implicit bc =>
+        val filename = s"$root/0"
+        (new File(filename)).createNewFile()
+        val result = runFile(srcFolderRunner, Seq.empty, Seq(filename, ext))
+        reset()
+        result shouldBe "CapabilityException: FolderRunner: './src/test/resources/tmp/0' is not a directory\n"
+    }
+
+    test("FolderRunner: insufficient permissions") { implicit bc =>
+        val filename = s"$root/0"
+        val dir = new File(filename)
+        dir.mkdir()
+        dir.setReadable(false)
+        val result = runFile(srcFolderRunner, Seq.empty, Seq(filename, ext))
+        reset()
+        result shouldBe "CapabilityException: FolderRunner: Cannot run './src/test/resources/tmp/0'\n"
     }
 
 }

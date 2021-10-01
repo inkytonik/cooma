@@ -149,13 +149,11 @@ object SymbolTable extends Environments[CoomaEntity] {
     def boolT : Expression =
         Idn(IdnUse("Boolean"))
 
-    def isCapabilityTypeName(s : String) : Boolean =
-        (s == "FolderReader") || (s == "FolderWriter") || (s == "Reader") ||
-            (s == "Writer") || isHttpMethodName(s) || (s == "Database")
+    val httpMethodNames =
+        Set("HttpDelete", "HttpGet", "HttpPost", "HttpPut")
 
-    def isHttpMethodName(s : String) : Boolean =
-        (s == "HttpDelete") || (s == "HttpGet") || (s == "HttpPost") ||
-            (s == "HttpPut")
+    val capabilityTypeNames =
+        Set("Database", "FolderReader", "FolderRunner", "FolderWriter", "Reader", "Runner", "Writer") ++ httpMethodNames
 
     // Primitive types
 

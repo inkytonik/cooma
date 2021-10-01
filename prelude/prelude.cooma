@@ -60,6 +60,15 @@
     read : (suffix : String) <<Left : String, Right : String>>
   }
 
+  type RunnerReturn = {
+    exitValue : Int,
+    output : String
+  }
+
+  type FolderRunner = {
+    run : (suffix : String, args : Vector(String)) <<Left : String, Right : RunnerReturn>>
+  }
+
   type FolderWriter = {
     write : (suffix : String, s : String) <<Left : String, Right : Unit>>
   }
@@ -87,6 +96,10 @@
 
   type Reader = {
     read : () <<Left : String, Right : String>>
+  }
+
+  type Runner = {
+    run : (args : Vector(String)) RunnerReturn
   }
 
   type Table = fun (A : Type) {

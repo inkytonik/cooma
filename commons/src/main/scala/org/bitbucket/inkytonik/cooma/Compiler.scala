@@ -34,28 +34,10 @@ trait Compiler {
 
     class CompilerCore(positions : Positions, analyser : SemanticAnalyser) {
 
-        import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{
-            CaseTerm => _,
-            DefTerm => _,
-            Cont => _,
-            FldV => _,
-            Term => _,
-            Value => _,
-            _
-        }
-
+        import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{CaseTerm => _, Cont => _, DefTerm => _, FldV => _, Term => _, Value => _, _}
         import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
-        import org.bitbucket.inkytonik.cooma.SymbolTable.{isCapabilityTypeName, PrimitiveType, StrT, uniT}
+        import org.bitbucket.inkytonik.cooma.SymbolTable.{PrimitiveType, StrT, capabilityTypeNames, uniT}
         import org.bitbucket.inkytonik.cooma.Util.fresh
-
-        lazy val capabilityNames =
-            Set("HttpGet", "HttpDelete", "HttpPut", "HttpPost", "Reader", "Writer")
-
-        /**
-         * Name of capability type?
-         */
-        def isCapabilityName(n : String) : Boolean =
-            capabilityNames(n)
 
         /**
          * Case class and map that stores primitives metadata.
@@ -162,7 +144,7 @@ trait Compiler {
                             t match {
                                 case Cat(e1, e2) =>
                                     aux(e1) ::: aux(e2)
-                                case Idn(IdnUse(name)) if isCapabilityTypeName(name) =>
+                                case Idn(IdnUse(name)) if capabilityTypeNames(name) =>
                                     name :: Nil
                                 case App(Idn(IdnUse("Database")), Vector(RecT(ts))) =>
                                     val tables =
