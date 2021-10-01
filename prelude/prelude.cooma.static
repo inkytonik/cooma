@@ -95,6 +95,9 @@ Vectors :
     prepend : (t : Type, v : Vector(t), e : t) Vector(t),
     put : (t : Type, v : Vector(t), i : Int, e : t) Vector(t)
   };
+Database :
+  (A : Type) Type =
+  fun (A : Type) A;
 FolderReader :
   Type =
   {

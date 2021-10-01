@@ -1,0 +1,3 @@
+fun (db : Database({
+  text_columns : String
+})) {}

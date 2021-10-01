@@ -1,0 +1,7 @@
+CREATE TABLE t (
+    id INTEGER PRIMARY KEY,
+    x TEXT NOT NULL
+);
+
+INSERT INTO t (x) VALUES
+('nbf');

@@ -201,7 +201,7 @@ FldV =
 Primitive =
     "Argument" IntLit                      {ArgumentP, 1: Integer.parseInt : Int}
   | "Capability" Identifier                {CapabilityP}
-  | 'DbTableAll'                           {DbTableAllP}
+  | 'DbTableAll' Filename                  {DbTableAllP}
   | "FolderReaderRead" Filename            {FolderReaderReadP}
   | "FolderWriterWrite" Filename           {FolderWriterWriteP}
   | "HttpClient" Identifier sp StringLit   {HttpClientP}

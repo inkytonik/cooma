@@ -1,0 +1,5 @@
+fun (db : Database({
+  text_columns : {
+    id : Unit
+  }
+})) {}
