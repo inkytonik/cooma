@@ -265,12 +265,12 @@ trait Primitives extends Database with FileIo {
             case None    => errCap(cap, s"got non-String argument $value")
         }
 
-        val DatabaseClientRegex = """DatabaseClient::[a-zA-Z0-9_\-,:]+""".r
+        val DatabaseClientRegex = """DatabaseClient:[0-9]+:[a-zA-Z0-9+/=]+""".r
         cap match {
             case DatabaseClientRegex() =>
                 Database.decodeSpec(cap) match {
                     case Some((index, tables)) =>
-                        dbConfigure(argument, tables.toMap, index)
+                        dbConfigure(argument, tables, index)
                         val tableCaps =
                             tables.map {
                                 case (tablename, _) =>

@@ -10,7 +10,9 @@
 
 package org.bitbucket.inkytonik.cooma
 
+import org.bitbucket.inkytonik.cooma.SymbolTable.{BoolT, IntT}
 import org.bitbucket.inkytonik.cooma.primitive.Database
+import org.bitbucket.inkytonik.cooma.primitive.Database.{Column, DatabaseType}
 
 trait Compiler {
 
@@ -152,12 +154,32 @@ trait Compiler {
                                             case FieldType(tablename, exp) =>
                                                 exp match {
                                                     case App(Idn(IdnUse("Table")), Vector(RecT(fields))) =>
-                                                        tablename -> fields.map(_.identifier)
+                                                        tablename -> fields.map {
+                                                            case FieldType(columnName, tipe) =>
+                                                                def getBaseType(tipe : Expression) : DatabaseType =
+                                                                    tipe match {
+                                                                        case BoolT() =>
+                                                                            DatabaseType.Boolean
+                                                                        case IntT() =>
+                                                                            DatabaseType.Int
+                                                                        case StrT() =>
+                                                                            DatabaseType.String
+                                                                        case _ =>
+                                                                            sys.error(s"compileTopArg: ${show(t)} arguments not supported")
+                                                                    }
+                                                                val (baseType, nullable) =
+                                                                    tipe match {
+                                                                        case App(Idn(IdnUse("Option")), Vector(t : Expression)) => (t, true)
+                                                                        case t => (t, false)
+                                                                    }
+                                                                columnName -> Column(getBaseType(baseType), nullable)
+                                                        }.toMap
                                                     case _ =>
                                                         sys.error(s"compileTopArg: ${show(t)} arguments not supported")
                                                 }
                                         }
-                                    Database.encodeSpec(nArg, tables) :: Nil
+
+                                    Database.encodeSpec(nArg, tables.toMap) :: Nil
                                 case t =>
                                     sys.error(s"compileTopArg: ${show(t)} arguments not supported")
                             }

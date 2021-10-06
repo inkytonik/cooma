@@ -83,10 +83,21 @@ object SymbolTable extends Environments[CoomaEntity] {
 
     // Short-hands for types and standard type checks
 
+    def boolT : Expression = Idn(IdnUse("Boolean"))
     def intT : Expression = Idn(IdnUse("Int"))
     def strT : Expression = Idn(IdnUse("String"))
     def typT : Expression = Idn(IdnUse("Type"))
     def uniT : Expression = Idn(IdnUse("Unit"))
+
+    object BoolT {
+        def unapply(e : Expression) : Boolean =
+            e match {
+                case Idn(IdnUse("Boolean")) =>
+                    true
+                case _ =>
+                    false
+            }
+    }
 
     object IntT {
         def unapply(e : Expression) : Boolean =
@@ -145,9 +156,6 @@ object SymbolTable extends Environments[CoomaEntity] {
         def unapply(s : String) : Boolean =
             PrimitiveType.unapply(Idn(IdnUse(s)))
     }
-
-    def boolT : Expression =
-        Idn(IdnUse("Boolean"))
 
     val httpMethodNames =
         Set("HttpDelete", "HttpGet", "HttpPost", "HttpPut")
