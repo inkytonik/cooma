@@ -69,13 +69,13 @@ class DatabaseClientTests extends ExecutionTests {
                    |    c3 = "gut"
                    |  }],
                    |  ic = [{
-                   |    id = "1",
-                   |    x = "17",
-                   |    y = "30"
+                   |    id = 1,
+                   |    x = 17,
+                   |    y = 30
                    |  }, {
-                   |    id = "2",
-                   |    x = "90",
-                   |    y = "22"
+                   |    id = 2,
+                   |    x = 90,
+                   |    y = 22
                    |  }]
                    |}
                    |""".stripMargin
@@ -109,29 +109,29 @@ class DatabaseClientTests extends ExecutionTests {
                    |    c3 = "gut"
                    |  }],
                    |  ic = [{
-                   |    id = "1",
-                   |    x = "17",
-                   |    y = "30"
+                   |    id = 1,
+                   |    x = 17,
+                   |    y = 30
                    |  }, {
-                   |    id = "2",
-                   |    x = "90",
-                   |    y = "22"
+                   |    id = 2,
+                   |    x = 90,
+                   |    y = 22
                    |  }],
                    |  t1 = [{
-                   |    id = "1",
+                   |    id = 1,
                    |    name = "nbk"
                    |  }, {
-                   |    id = "2",
+                   |    id = 2,
                    |    name = "hnn"
                    |  }],
                    |  t2 = [{
-                   |    id = "1",
-                   |    x = "480",
-                   |    y = "847"
+                   |    id = 1,
+                   |    x = 480,
+                   |    y = 847
                    |  }, {
-                   |    id = "2",
-                   |    x = "440",
-                   |    y = "197"
+                   |    id = 2,
+                   |    x = 440,
+                   |    y = 197
                    |  }],
                    |  t = [{
                    |    x = "nbf"
@@ -193,7 +193,10 @@ class DatabaseClientTests extends ExecutionTests {
         test(s"extraneous column") { implicit bc =>
             val filename = s"$basePath/extraneous_column.cooma"
             val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
-            result shouldBe "CapabilityException: DatabaseClient: table many_text_columns is missing columns: e\n"
+            result shouldBe
+                """|CapabilityException: DatabaseClient: specification of table 'many_text_columns' does not match actual table:
+                   |    column 'e' does not exist
+                   |""".stripMargin
         }
     }
 

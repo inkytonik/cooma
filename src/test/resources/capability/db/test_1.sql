@@ -1,5 +1,5 @@
 CREATE TABLE text_columns (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL
 );
 
@@ -10,7 +10,7 @@ INSERT INTO text_columns (id, name) VALUES
 
 
 CREATE TABLE many_text_columns (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY NOT NULL,
     c1 TEXT NOT NULL,
     c2 TEXT NOT NULL,
     c3 TEXT NOT NULL,
@@ -23,7 +23,7 @@ INSERT INTO many_text_columns (id, c1, c2, c3, c4) VALUES
 
 
 CREATE TABLE nullable_columns (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY NOT NULL,
     name_1 TEXT,
     name_2 TEXT
 );
@@ -36,7 +36,7 @@ INSERT INTO nullable_columns (id, name_1, name_2) VALUES
 
 
 CREATE TABLE integer_columns (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY NOT NULL,
     x INTEGER NOT NULL,
     y INTEGER NOT NULL
 );
@@ -47,7 +47,7 @@ INSERT INTO integer_columns (x, y) VALUES
 
 
 CREATE TABLE numeric_columns (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY NOT NULL,
     x NUMERIC NOT NULL,
     y NUMERIC NOT NULL,
     z NUMERIC NOT NULL
@@ -68,7 +68,7 @@ INSERT INTO boolean_columns (p, q) VALUES
 
 
 CREATE TABLE mixed_columns (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY NOT NULL,
     a TEXT NOT NULL,
     b TEXT,
     c INTEGER NOT NULL,

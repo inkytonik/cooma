@@ -9,9 +9,9 @@ fun (db : Database({
     c3 : String
   }),
   integer_columns : Table({
-    id : String,
-    x : String,
-    y : String
+    id : Int,
+    x : Int,
+    y : Int
   })
 })) {
   tc = db.text_columns.all(),

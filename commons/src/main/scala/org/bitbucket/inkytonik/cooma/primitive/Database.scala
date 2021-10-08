@@ -49,14 +49,14 @@ trait Database {
             val query = s"PRAGMA table_info($tablename)"
             val result = connection.prepareStatement(query).executeQuery()
             @tailrec
-            def getHeaders(out : Map[String, (String, Boolean)]) : Map[String, (String, Boolean)] = {
-                val name = result.getString("name")
-                val typename = result.getString("type")
-                val nullable = !result.getBoolean("notnull")
-                val entry = name -> ((typename, nullable))
-                if (result.next()) getHeaders(out + entry)
-                else out
-            }
+            def getHeaders(out : Map[String, (String, Boolean)]) : Map[String, (String, Boolean)] =
+                if (result.next()) {
+                    val name = result.getString("name")
+                    val typename = result.getString("type")
+                    val nullable = !result.getBoolean("notnull")
+                    val entry = name -> ((typename, nullable))
+                    getHeaders(out + entry)
+                } else out
             val actualColumns = getHeaders(Map.empty)
             // check table exists
             if (actualColumns.isEmpty)
