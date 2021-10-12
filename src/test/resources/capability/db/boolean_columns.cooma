@@ -1,0 +1,7 @@
+fun (db : Database({
+  boolean_columns : Table({
+    id : Int,
+    p : Boolean,
+    q : Boolean
+  })
+})) db.boolean_columns.all()

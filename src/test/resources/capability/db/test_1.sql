@@ -58,7 +58,7 @@ INSERT INTO numeric_columns (x, y, z) VALUES
 
 
 CREATE TABLE boolean_columns (
-    id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY NOT NULL,
     p BOOLEAN NOT NULL,
     q BOOLEAN NOT NULL
 );

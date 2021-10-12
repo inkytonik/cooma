@@ -1,0 +1,7 @@
+fun (db : Database({
+  mixed_columns : Table({
+    id : String,
+    a : Option(String),
+    b : String
+  })
+})) {}

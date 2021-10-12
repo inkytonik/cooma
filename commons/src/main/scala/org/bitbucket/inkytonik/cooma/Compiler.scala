@@ -12,7 +12,7 @@ package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.SymbolTable.{BoolT, IntT}
 import org.bitbucket.inkytonik.cooma.primitive.Database
-import org.bitbucket.inkytonik.cooma.primitive.Database.{Column, DatabaseType}
+import org.bitbucket.inkytonik.cooma.primitive.Database.{Column, DatabaseType, DtBoolean, DtInt, DtString}
 
 trait Compiler {
 
@@ -159,11 +159,11 @@ trait Compiler {
                                                                 def getBaseType(tipe : Expression) : DatabaseType =
                                                                     tipe match {
                                                                         case BoolT() =>
-                                                                            DatabaseType.Boolean
+                                                                            DtBoolean
                                                                         case IntT() =>
-                                                                            DatabaseType.Int
+                                                                            DtInt
                                                                         case StrT() =>
-                                                                            DatabaseType.String
+                                                                            DtString
                                                                         case _ =>
                                                                             sys.error(s"compileTopArg: ${show(t)} arguments not supported")
                                                                     }

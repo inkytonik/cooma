@@ -1,0 +1,7 @@
+fun (db : Database({
+  nullable_columns : Table({
+    id : String,
+    name_1 : Option(String),
+    name_2 : Option(String)
+  })
+})) db.nullable_columns.all()

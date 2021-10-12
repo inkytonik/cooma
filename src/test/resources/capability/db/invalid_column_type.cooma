@@ -1,5 +1,5 @@
 fun (db : Database({
-  text_columns : {
+  text_columns : Table({
     id : Unit
-  }
+  })
 })) {}

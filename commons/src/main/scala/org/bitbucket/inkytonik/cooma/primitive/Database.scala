@@ -6,8 +6,8 @@ import java.util.Base64
 
 import org.bitbucket.inkytonik.cooma.Backend
 import org.bitbucket.inkytonik.cooma.CoomaException._
-import org.bitbucket.inkytonik.cooma.primitive.Database.{Column, ConnectionData, DatabaseType}
-import play.api.libs.json.Json
+import org.bitbucket.inkytonik.cooma.primitive.Database.{Column, ConnectionData, DtBoolean, DtInt, DtString}
+import play.api.libs.json._
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -71,15 +71,12 @@ trait Database {
                             val prefix = aTypename.toUpperCase.filter(_.isLetter)
                             val compatible =
                                 eTypename match {
-                                    case DatabaseType.Boolean =>
+                                    case DtBoolean =>
                                         prefix.contains("BOOL") || prefix.contains("INT")
-                                    case DatabaseType.Int =>
+                                    case DtInt =>
                                         prefix.contains("INT")
-                                    case DatabaseType.String =>
+                                    case DtString =>
                                         true
-                                    case x =>
-                                        // exhaustivity checker is confused
-                                        throw new MatchError(x)
                                 }
                             if (compatible) {
                                 // check nullability
@@ -92,7 +89,7 @@ trait Database {
                                         None
                                 }
                             } else
-                                Some(s"column '$header' has type '$aTypename', incompatible with '$eTypename'")
+                                Some(s"column '$header' has type '$aTypename', incompatible with '${eTypename.toString.drop(2)}'")
                         case None =>
                             Some(s"column '$header' does not exist")
                     }
@@ -110,50 +107,96 @@ trait Database {
         }
     }
 
-    def dbTableAll(index : Int, tablename : String) : ValueR =
+    def dbAccessTable[A](index : Int, tablename : String)(f : (Connection, Map[String, Column]) => A) : A =
         // check database exists
         connectionData.get(index) match {
             case Some(ConnectionData(connection, tables)) =>
                 // check table exists
                 tables.get(tablename) match {
                     case Some(columns) =>
-                        // run query
-                        val query = f"SELECT * FROM `$tablename`;"
-                        val result = connection.prepareStatement(query).executeQuery()
-                        // get result
-                        @tailrec
-                        def aux(out : Vector[ValueR]) : ValueR =
-                            if (result.next()) {
-                                val row = columns.iterator.map {
-                                    case (columnName, Column(t, n)) =>
-                                        val valueNonNullable =
-                                            t match {
-                                                case DatabaseType.Boolean =>
-                                                    varR(if (result.getBoolean(columnName)) "True" else "False", uniR)
-                                                case DatabaseType.Int =>
-                                                    intR(result.getInt(columnName))
-                                                case DatabaseType.String =>
-                                                    strR(result.getString(columnName))
-                                                case x =>
-                                                    // exhaustivity checker is confused
-                                                    throw new MatchError(x)
-                                            }
-                                        val value =
-                                            (n, result.wasNull()) match {
-                                                case (true, true)  => varR("None", uniR)
-                                                case (true, false) => varR("Some", valueNonNullable)
-                                                case (false, _)    => valueNonNullable
-                                            }
-                                        fldR(columnName, value)
-                                }
-                                aux(out :+ recR(row.toVector))
-                            } else vecR(out)
-                        aux(Vector.empty)
+                        f(connection, columns)
                     case None =>
                         errPrim("DatabaseClient", s"table '$tablename' does not exist or cannot be accessed")
                 }
             case None =>
                 errPrim("DatabaseClient", s"argument $index is not a DatabaseClient")
+        }
+
+    def dbTableAll(index : Int, tablename : String) : ValueR =
+        dbAccessTable(index, tablename) { (connection, columns) =>
+            // run query
+            val query = f"SELECT * FROM `$tablename`;"
+            val result = connection.prepareStatement(query).executeQuery()
+            // get result
+            @tailrec
+            def aux(out : Vector[ValueR]) : ValueR =
+                if (result.next()) {
+                    val row = columns.iterator.map {
+                        case (columnName, Column(t, n)) =>
+                            val valueNonNullable =
+                                t match {
+                                    case DtBoolean =>
+                                        varR(if (result.getBoolean(columnName)) "True" else "False", uniR)
+                                    case DtInt =>
+                                        intR(result.getInt(columnName))
+                                    case DtString =>
+                                        strR(result.getString(columnName))
+                                }
+                            val value =
+                                (n, result.wasNull()) match {
+                                    case (true, true)  => varR("None", uniR)
+                                    case (true, false) => varR("Some", valueNonNullable)
+                                    case (false, _)    => valueNonNullable
+                                }
+                            fldR(columnName, value)
+                    }
+                    aux(out :+ recR(row.toVector))
+                } else vecR(out)
+            aux(Vector.empty)
+        }
+
+    protected def toQuery(value : ValueR, column : Column) : String = {
+        val Column(t, n) = column
+        def getBaseQueryValue(value : ValueR) : String =
+            t match {
+                case DtBoolean =>
+                    isVarR(value) match {
+                        case Some(("True", _))  => "TRUE"
+                        case Some(("False", _)) => "FALSE"
+                        case _                  => errCap("DatabaseClient", "expected Boolean")
+                    }
+                case DtInt =>
+                    isIntR(value).getOrElse(errCap("DatabaseClient", "expected Int")).toString
+                case DtString =>
+                    isStrR(value).getOrElse(errCap("DatabaseClient", "expected String"))
+            }
+        if (n)
+            isVarR(value) match {
+                case Some(("Some", value)) => getBaseQueryValue(value)
+                case Some(("None", _))     => "NULL"
+                case _                     => errCap("DatabaseClient", "expected Option")
+            }
+        else
+            getBaseQueryValue(value)
+    }
+
+    def dbInsert(index : Int, tablename : String, value : ValueR) : ValueR =
+        dbAccessTable(index, tablename) { (connection, columns) =>
+            val record = isRecR(value).getOrElse(errCap("DatabaseClient", "non-record value"))
+            val fields = record.map(isFldR(_).getOrElse(errCap("DatabaseClient", "non-field value")))
+            val (headers, _) = fields.unzip
+            val queryHeaders = headers.mkString("(", ", ", ")")
+            val queryValues =
+                fields
+                    .map {
+                        case (header, value) =>
+                            val column = columns.getOrElse(header, errCap("DatabaseClient", s"missing column '$header'"))
+                            toQuery(value, column)
+                    }
+                    .mkString("(", ", ", ")")
+            val query = f"INSERT INTO $tablename $queryHeaders VALUES $queryValues;"
+            connection.prepareStatement(query).executeUpdate()
+            uniR // TODO
         }
 
     override def finalize() : Unit = {
@@ -175,18 +218,31 @@ object Database {
         n : Boolean
     )
 
-    type DatabaseType = DatabaseType.Value
+    sealed trait DatabaseType extends Product
 
-    object DatabaseType extends Enumeration {
+    case object DtBoolean extends DatabaseType
+    case object DtInt extends DatabaseType
+    case object DtString extends DatabaseType
 
-        val Boolean = Value
-        val Int = Value
-        val String = Value
-
+    implicit lazy val fmtDatabaseType : Format[DatabaseType] = {
+        val reads =
+            Reads[DatabaseType] {
+                case JsString("Boolean") => JsSuccess(DtBoolean)
+                case JsString("Int")     => JsSuccess(DtInt)
+                case JsString("String")  => JsSuccess(DtString)
+                case _                   => JsError("Expected 'Boolean', 'Int', or 'String'")
+            }
+        val writes =
+            Writes[DatabaseType] {
+                case DtBoolean => JsString("Boolean")
+                case DtInt     => JsString("Int")
+                case DtString  => JsString("String")
+            }
+        Format(reads, writes)
     }
 
-    implicit lazy val fmtDatabaseType = Json.formatEnum(DatabaseType)
-    implicit lazy val fmtColumn = Json.format[Column]
+    implicit lazy val fmtColumn =
+        Json.format[Column]
 
     def encodeSpec(index : Int, tables : Map[String, Map[String, Column]]) : String = {
         val tablesEncoded = Base64.getEncoder.encodeToString(Json.toJson(tables).toString.getBytes)
