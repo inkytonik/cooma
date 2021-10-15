@@ -191,7 +191,10 @@ lazy val commons = (project in file("commons"))
 		ratsUseKiama := 2,
 
 		libraryDependencies ++= kiamaDependencies,
-		libraryDependencies += "org.scalaj" %% "scalaj-http" % "2.4.2"
+		libraryDependencies ++= Seq(
+			"com.typesafe.play" %% "play-json" % "2.9.2",
+			"org.scalaj" %% "scalaj-http" % "2.4.2"
+		)
 	)
 
 

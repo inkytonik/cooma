@@ -236,8 +236,15 @@ class SemanticAnalyser(
                     tables.forall {
                         case FieldType(_, App(Idn(IdnUse("Table")), Vector(RecT(headers)))) =>
                             headers.forall {
-                                case FieldType(_, Idn(IdnUse("String"))) => true
-                                case _                                   => false
+                                case FieldType(_, t) =>
+                                    def isBaseType(s : String) : Boolean =
+                                        s == "Boolean" || s == "Int" || s == "String"
+                                    t match {
+                                        case Idn(IdnUse(s)) => isBaseType(s)
+                                        case App(Idn(IdnUse("Option")), Vector(Idn(IdnUse(s)))) => isBaseType(s)
+                                        case _ => false
+                                    }
+                                case _ => false
                             }
                         case _ => false
                     }

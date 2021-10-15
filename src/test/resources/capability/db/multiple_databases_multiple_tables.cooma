@@ -10,20 +10,20 @@ fun (
       c3 : String
     }),
     integer_columns : Table({
-      id : String,
-      x : String,
-      y : String
+      id : Int,
+      x : Int,
+      y : Int
     })
   }),
   db_2 : Database({
     table_1 : Table({
-      id : String,
+      id : Int,
       name : String
     }),
     table_2 : Table({
-      id : String,
-      x : String,
-      y : String
+      id : Int,
+      x : Int,
+      y : Int
     })
   }),
   db_3 : Database({

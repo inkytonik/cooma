@@ -1,5 +1,0 @@
-fun (table: Table({
-    id : String,
-    name : String,
-    wam : String
-})) table.all()
