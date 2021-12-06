@@ -40,7 +40,7 @@ object Query {
     def getById(
         conn : Connection,
         table : Metadata.Table,
-        id : DbValue
+        id : DbValue.Integer
     ) : Option[Seq[(String, DbValue)]] = {
         val Metadata.Table(tablename, columns) = table
         val query = s"SELECT * FROM $tablename WHERE id = $id;"
@@ -85,7 +85,7 @@ object Query {
     def delete(
         conn : Connection,
         table : Metadata.Table,
-        id : DbValue
+        id : DbValue.Integer
     ) : Unit = {
         val Metadata.Table(tablename, _) = table
         val query = s"DELETE FROM $tablename WHERE id = $id;"

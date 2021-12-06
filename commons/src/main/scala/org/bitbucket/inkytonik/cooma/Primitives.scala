@@ -13,6 +13,7 @@ package org.bitbucket.inkytonik.cooma
 import java.net.SocketException
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
+import org.bitbucket.inkytonik.cooma.primitive.database.Metadata
 import org.bitbucket.inkytonik.cooma.primitive.{Database, FileIo}
 
 import scala.annotation.tailrec
@@ -78,8 +79,10 @@ trait Primitives extends Database with FileIo {
         p match {
             case ArgumentP(_) =>
                 0
-            case CapabilityP(_) | DbTableAllP(_) | FolderReaderReadP(_) | HttpClientP(_, _) |
-                ReaderReadP(_) | RunnerRunP(_) | WriterWriteP(_) =>
+            case CapabilityP(_) | DbTableAllP(_, _) | DbTableDeleteP(_, _) |
+                DbTableGetByIdP(_, _) | DbTableInsertP(_, _) | DbTableUpdateP(_, _) |
+                FolderReaderReadP(_) | HttpClientP(_, _) | ReaderReadP(_) | RunnerRunP(_) |
+                WriterWriteP(_) =>
                 1
             case RecConcatP() | RecSelectP() | FolderRunnerRunP(_) | FolderWriterWriteP(_) =>
                 2
@@ -130,18 +133,20 @@ trait Primitives extends Database with FileIo {
             case CapabilityP(cap) =>
                 capability(cap, rho, xs(0))
 
-            case DbTableAllP(path) =>
-                val (index, tablename) =
-                    path.split(':').toSeq match {
-                        case index +: tablename +: Nil =>
-                            index.toIntOption match {
-                                case Some(index) => (index, tablename)
-                                case None        => errPrim("DatabaseClient", s"invalid path $path")
-                            }
-                        case x =>
-                            errPrim("DatabaseClient", s"invalid path $x")
-                    }
-                dbTableAll(index, tablename)
+            case DbTableAllP(index, tablename) =>
+                dbAll(index, tablename)
+
+            case DbTableDeleteP(index, tablename) =>
+                dbDelete(index, tablename, lookupR(rho, xs(0)))
+
+            case DbTableGetByIdP(index, tablename) =>
+                dbGetById(index, tablename, lookupR(rho, xs(0)))
+
+            case DbTableInsertP(index, tablename) =>
+                dbInsert(index, tablename, lookupR(rho, xs(0)))
+
+            case DbTableUpdateP(index, tablename) =>
+                dbUpdate(index, tablename, lookupR(rho, xs(0)))
 
             case FolderReaderReadP(filename) =>
                 folderReaderRead(prim, rho, filename, xs(0))
@@ -265,23 +270,28 @@ trait Primitives extends Database with FileIo {
             case None    => errCap(cap, s"got non-String argument $value")
         }
 
-        val DatabaseClientRegex = """DatabaseClient:[0-9]+:[a-zA-Z0-9+/=]+""".r
+        val DatabaseClientRegex = """DatabaseClient:([0-9]+):([a-zA-Z0-9+/=]+)""".r
         cap match {
-            case DatabaseClientRegex() =>
-                Database.decodeSpec(cap) match {
-                    case Some((index, tables)) =>
-                        dbConfigure(argument, tables, index)
-                        val tableCaps =
-                            tables.map {
-                                case (tablename, _) =>
-                                    val prim = DbTableAllP(s"$index:$tablename")
-                                    val tableCap = makeCapability(Vector(("all", prim, 1)))
-                                    fldR(tablename, tableCap)
-                            }
-                        recR(tableCaps.toVector)
-                    case None =>
-                        errPrim("Capability", s"invalid DatabaseClient spec $cap")
-                }
+            case DatabaseClientRegex(indexStr, spec) =>
+                val metadata = Metadata.fromSpec(spec)
+                val index = indexStr.toInt
+                dbConfigure(argument, metadata, index.toInt)
+                val tableCaps =
+                    metadata.tables.map {
+                        case Metadata.Table(tablename, _) =>
+                            def mk(methodName : String, f : (Int, String) => Primitive) =
+                                (methodName, f(index, tablename), 1)
+                            val rec =
+                                makeCapability(Vector(
+                                    mk("all", DbTableAllP),
+                                    mk("delete", DbTableDeleteP),
+                                    mk("getById", DbTableGetByIdP),
+                                    mk("insert", DbTableInsertP),
+                                    mk("update", DbTableUpdateP)
+                                ))
+                            fldR(tablename, rec)
+                    }
+                recR(tableCaps.toVector)
             case "FolderReader" =>
                 checkFolderReader(argument)
                 makeCapability(Vector(("read", FolderReaderReadP(argument), 1)))

@@ -9,6 +9,8 @@ import scala.annotation.tailrec
 
 object Validation {
 
+    Class.forName("org.sqlite.JDBC")
+
     case class SqlColumn(
         name : String,
         tipe : String,
@@ -44,7 +46,7 @@ object Validation {
                 case ("id", true)  => Seq.empty
                 case ("id", false) => Seq(s"column 'id' is not a primary key")
                 case (name, true)  => Seq(s"column '$name' is a primary key")
-                case (name, false) => Seq.empty
+                case (_, false)    => Seq.empty
             }
         typeError ++ nullableError ++ primaryKeyError
     }
@@ -125,30 +127,27 @@ object Validation {
         } else None
     }
 
-    def validateDatabase(path : String, metadata : Metadata, index : Int) : Option[String] = {
-        val error =
-            for {
-                _ <- {
-                    // check file exists
-                    val file = new File(path)
-                    if (file.isFile) Right(())
-                    else Left(s"'$path' is not a file")
-                }
-                _ <- {
-                    // check SQLite file
-                    val bis = new BufferedInputStream(new FileInputStream(path))
-                    val array = new Array[Byte](16)
-                    bis.read(array)
-                    bis.close()
-                    val actual = array.toSeq
-                    val expected = "SQLite format 3".getBytes.toSeq :+ 0.toByte
-                    if (actual == expected) Right(())
-                    else Left(s"'$path' is not an SQLite database")
-                }
-                connection = DriverManager.getConnection(s"jdbc:sqlite:$path")
-                _ <- validateTables(metadata.tables, connection).toLeft(())
-            } yield ()
-        error.left.toOption
-    }
+    def validateDatabase(path : String, metadata : Metadata, index : Int) : Either[String, Connection] =
+        for {
+            _ <- {
+                // check file exists
+                val file = new File(path)
+                if (file.isFile) Right(())
+                else Left(s"'$path' is not a file")
+            }
+            _ <- {
+                // check SQLite file
+                val bis = new BufferedInputStream(new FileInputStream(path))
+                val array = new Array[Byte](16)
+                bis.read(array)
+                bis.close()
+                val actual = array.toSeq
+                val expected = "SQLite format 3".getBytes.toSeq :+ 0.toByte
+                if (actual == expected) Right(())
+                else Left(s"'$path' is not an SQLite database")
+            }
+            connection = DriverManager.getConnection(s"jdbc:sqlite:$path")
+            _ <- validateTables(metadata.tables, connection).toLeft(())
+        } yield connection
 
 }
