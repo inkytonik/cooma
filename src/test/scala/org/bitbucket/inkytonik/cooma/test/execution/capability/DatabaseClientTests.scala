@@ -11,13 +11,13 @@ class DatabaseClientTests extends ExecutionTests {
         val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
         result shouldBe
             """|[{
-               |  id = "fvt",
+               |  id = 1,
                |  name = "jlr"
                |}, {
-               |  id = "bdt",
+               |  id = 2,
                |  name = "mhu"
                |}, {
-               |  id = "nvg",
+               |  id = 3,
                |  name = "efl"
                |}]
                |""".stripMargin
@@ -27,15 +27,7 @@ class DatabaseClientTests extends ExecutionTests {
         val filename = s"$basePath/subset_of_columns.cooma"
         val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
         result shouldBe
-            """|[{
-               |  id = "lyb",
-               |  c1 = "hwk",
-               |  c3 = "diy"
-               |}, {
-               |  id = "gbb",
-               |  c1 = "qfd",
-               |  c3 = "gut"
-               |}]
+            """|[{ id = 1, c1 = "hwk", c3 = "diy" }, { id = 2, c1 = "qfd", c3 = "gut" }]
                |""".stripMargin
     }
 
@@ -45,21 +37,21 @@ class DatabaseClientTests extends ExecutionTests {
         result shouldBe
             """|{
                |  tc = [{
-               |    id = "fvt",
+               |    id = 1,
                |    name = "jlr"
                |  }, {
-               |    id = "bdt",
+               |    id = 2,
                |    name = "mhu"
                |  }, {
-               |    id = "nvg",
+               |    id = 3,
                |    name = "efl"
                |  }],
                |  mtc = [{
-               |    id = "lyb",
+               |    id = 1,
                |    c1 = "hwk",
                |    c3 = "diy"
                |  }, {
-               |    id = "gbb",
+               |    id = 2,
                |    c1 = "qfd",
                |    c3 = "gut"
                |  }],
@@ -83,21 +75,21 @@ class DatabaseClientTests extends ExecutionTests {
         result shouldBe
             """|{
                |  tc = [{
-               |    id = "fvt",
+               |    id = 1,
                |    name = "jlr"
                |  }, {
-               |    id = "bdt",
+               |    id = 2,
                |    name = "mhu"
                |  }, {
-               |    id = "nvg",
+               |    id = 3,
                |    name = "efl"
                |  }],
                |  mtc = [{
-               |    id = "lyb",
+               |    id = 1,
                |    c1 = "hwk",
                |    c3 = "diy"
                |  }, {
-               |    id = "gbb",
+               |    id = 2,
                |    c1 = "qfd",
                |    c3 = "gut"
                |  }],
@@ -127,6 +119,7 @@ class DatabaseClientTests extends ExecutionTests {
                |    y = 197
                |  }],
                |  t = [{
+               |    id = 1,
                |    x = "nbf"
                |  }]
                |}
@@ -177,27 +170,32 @@ class DatabaseClientTests extends ExecutionTests {
         val filename = s"$basePath/extraneous_column.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
         result shouldBe
-            """|CapabilityException: DatabaseClient: specification of table 'many_text_columns' does not match actual table:
-               |    column 'e' does not exist
+            """|PrimitiveException: DatabaseClient: the following tables have errors:
+               |    many_text_columns:
+               |        column 'e' does not exist
                |""".stripMargin
     }
 
     test(s"non-existent database file") { implicit bc =>
         val filename = s"$basePath/one_database_one_table.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_5.db"))
-        result shouldBe "CapabilityException: DatabaseClient: file src/test/resources/capability/db/test_5.db does not exist\n"
+        result shouldBe "PrimitiveException: DatabaseClient: 'src/test/resources/capability/db/test_5.db' is not a file\n"
     }
 
     test(s"invalid database file") { implicit bc =>
         val filename = s"$basePath/one_database_one_table.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_4.db"))
-        result shouldBe "CapabilityException: DatabaseClient: src/test/resources/capability/db/test_4.db is not an SQLite database\n"
+        result shouldBe "PrimitiveException: DatabaseClient: 'src/test/resources/capability/db/test_4.db' is not an SQLite database\n"
     }
 
     test(s"non-existent table") { implicit bc =>
         val filename = s"$basePath/non_existent_table.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
-        result shouldBe "CapabilityException: DatabaseClient: table e does not exist\n"
+        result shouldBe
+            """|PrimitiveException: DatabaseClient: the following tables have errors:
+               |    e:
+               |        the table does not exist
+               |""".stripMargin
     }
 
     test(s"boolean columns") { implicit bc =>
@@ -211,19 +209,19 @@ class DatabaseClientTests extends ExecutionTests {
         val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
         result shouldBe
             """|[{
-               |  id = "rfn",
+               |  id = 1,
                |  name_1 = << Some = "iit" >>,
                |  name_2 = << Some = "ics" >>
                |}, {
-               |  id = "tjz",
+               |  id = 2,
                |  name_1 = << Some = "cxa" >>,
                |  name_2 = << None = {} >>
                |}, {
-               |  id = "rfa",
+               |  id = 3,
                |  name_1 = << None = {} >>,
                |  name_2 = << Some = "pdg" >>
                |}, {
-               |  id = "rci",
+               |  id = 4,
                |  name_1 = << None = {} >>,
                |  name_2 = << None = {} >>
                |}]
@@ -234,9 +232,11 @@ class DatabaseClientTests extends ExecutionTests {
         val filename = s"$basePath/mismatching_column_types.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
         result shouldBe
-            """|CapabilityException: DatabaseClient: specification of table 'mixed_columns' does not match actual table:
-               |    column 'a' has type 'TEXT', incompatible with 'Boolean'
-               |    column 'b' has type 'TEXT', incompatible with 'Int'
+            """|PrimitiveException: DatabaseClient: the following tables have errors:
+               |    mixed_columns:
+               |        column 'a' has type 'TEXT', incompatible with Boolean
+               |        column 'b' has type 'TEXT', incompatible with Int
+               |        column 'b' is nullable
                |""".stripMargin
     }
 
@@ -244,9 +244,10 @@ class DatabaseClientTests extends ExecutionTests {
         val filename = s"$basePath/mismatching_nullability.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
         result shouldBe
-            """|CapabilityException: DatabaseClient: specification of table 'mixed_columns' does not match actual table:
-               |    column 'a' is non-nullable
-               |    column 'b' is nullable
+            """|PrimitiveException: DatabaseClient: the following tables have errors:
+               |    mixed_columns:
+               |        column 'a' is non-nullable
+               |        column 'b' is nullable
                |""".stripMargin
     }
 

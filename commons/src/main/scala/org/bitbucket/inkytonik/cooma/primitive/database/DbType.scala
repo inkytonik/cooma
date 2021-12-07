@@ -73,8 +73,8 @@ object DbType {
             override def writes(o : DbType) : JsObject =
                 Json.writes[DbTypeSpec]
                     .contramap[DbType] {
-                        case tipe : Atomic  => DbTypeSpec(tipe.toString, true)
-                        case Nullable(tipe) => DbTypeSpec(tipe.toString, false)
+                        case tipe : Atomic  => DbTypeSpec(tipe.toString, false)
+                        case Nullable(tipe) => DbTypeSpec(tipe.toString, true)
                     }
                     .writes(o)
 

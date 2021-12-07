@@ -76,7 +76,7 @@ object Validation {
                     def getColumns(out : Map[String, SqlColumn]) : Map[String, SqlColumn] =
                         if (result.next()) {
                             val name = result.getString("name")
-                            val tipe = result.getString("tipe")
+                            val tipe = result.getString("type")
                             val nullable = !result.getBoolean("notnull")
                             val primaryKey = result.getBoolean("pk")
                             val actualColumn = SqlColumn(name, tipe, nullable, primaryKey)

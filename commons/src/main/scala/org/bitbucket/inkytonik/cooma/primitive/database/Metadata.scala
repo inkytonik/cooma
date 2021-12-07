@@ -35,7 +35,7 @@ object Metadata {
                             case None         => None
                         }
                     case _ =>
-                        None
+                        Some(out)
                 }
             coomaTables match {
                 case FieldType(name, App(Idn(IdnUse("Table")), Vector(RecT(coomaColumns)))) +: tl =>
@@ -44,7 +44,7 @@ object Metadata {
                         case None          => None
                     }
                 case _ =>
-                    None
+                    Some(out)
             }
         }
         auxTables(tables).map(Metadata(_))
