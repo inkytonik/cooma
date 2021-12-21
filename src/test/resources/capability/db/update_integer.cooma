@@ -5,6 +5,6 @@ fun (db : Database({
     y : Int
   })
 })) {
-  val _ = db.integer_columns.insert({ id = 3, x = 23, y = 49 })
-  db.integer_columns.getById(3)
+  val _ = db.integer_columns.update({ id = 2, x = 3, y = 6 })
+  db.integer_columns.getById(2)
 }

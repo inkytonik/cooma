@@ -103,7 +103,11 @@
   }
 
   type Table = fun (A : Type) {
-    all : () Vector(A)
+    all : () Vector(A),
+    getById : (Int) <<Some : A, None : Unit>>,
+    insert : (A) Unit,
+    update : (A) Unit,
+    delete : (Int) Unit
   }
 
   type Writer = {

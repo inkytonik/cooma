@@ -1,10 +1,10 @@
 fun (db : Database({
   nullable_columns : Table({
     id : Int,
-    name_1 : String,
-    name_2 : String
+    name_1 : Option(String),
+    name_2 : Option(String)
   })
 })) {
   val _ = db.nullable_columns.insert({ id = 5, name_1 = <<Some = "asdf">>, name_2 = <<None = {}>>})
-  db.nullable_columns.get_by_id(5)
+  db.nullable_columns.getById(5)
 }

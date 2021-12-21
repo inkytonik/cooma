@@ -1,0 +1,10 @@
+fun (db : Database({
+  boolean_columns : Table({
+    id : Int,
+    p : Boolean,
+    q : Boolean
+  })
+})) {
+  val _ = db.boolean_columns.update({ id = 1, p = <<True = {}>>, q = <<True = {}>>})
+  db.boolean_columns.getById(1)
+}

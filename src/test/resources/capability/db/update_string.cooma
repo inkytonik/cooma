@@ -4,7 +4,6 @@ fun (db : Database({
     name : String
   })
 })) {
-  val _ = db.text_columns.insert({ id = 4, name = "abc" })
-  db.text_columns.getById(4)
+  val _ = db.text_columns.update({ id = 2, name = "zxcv" })
+  db.text_columns.getById(2)
 }
-

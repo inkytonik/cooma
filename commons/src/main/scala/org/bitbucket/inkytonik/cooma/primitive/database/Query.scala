@@ -43,7 +43,7 @@ object Query {
         id : DbValue.Integer
     ) : Option[Seq[(String, DbValue)]] = {
         val Metadata.Table(tablename, columns) = table
-        val query = s"SELECT * FROM $tablename WHERE id = $id;"
+        val query = s"SELECT * FROM $tablename WHERE id = ${id.toSql};"
         val result = conn.prepareStatement(query).executeQuery()
         if (result.next()) Some(columns.map(getColumn(result, _)))
         else None
@@ -57,7 +57,7 @@ object Query {
         val Metadata.Table(tablename, _) = table
         val (headers, values) = row.unzip
         val headersString = headers.mkString("(", ", ", ")")
-        val valuesString = values.mkString("(", ", ", ")")
+        val valuesString = values.map(_.toSql).mkString("(", ", ", ")")
         val query = s"INSERT INTO $tablename $headersString VALUES $valuesString;"
         conn.prepareStatement(query).executeUpdate()
     }

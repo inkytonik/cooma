@@ -8,10 +8,11 @@ class DatabaseClientTests extends ExecutionTests {
 
     val basePath = "src/test/resources/capability/db"
 
-    def run(filename: String, databases: Int*)(implicit bc: BackendConfig): String = {
+    def run(filename : String, databases : Int*)(implicit bc : BackendConfig) : String = {
         val args = databases.map(i => s"$basePath/test_$i.db").toSeq
         val paths = args.map(s => (Paths.get(s), Paths.get(s"$s.bak")))
-        for ((actualPath, backupPath) <- paths) Files.copy(actualPath, backupPath)
+        for ((actualPath, backupPath) <- paths)
+            Files.copy(actualPath, backupPath, StandardCopyOption.REPLACE_EXISTING)
         val result = runFile(filename, Seq("-r"), args)
         for ((actualPath, backupPath) <- paths) {
             Files.copy(backupPath, actualPath, StandardCopyOption.REPLACE_EXISTING)
@@ -23,16 +24,7 @@ class DatabaseClientTests extends ExecutionTests {
     test("integer columns") { implicit bc =>
         val filename = s"$basePath/integer_columns.cooma"
         val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
-        result shouldBe
-            """|[{
-               |  id = 1,
-               |  x = 17,
-               |  y = 30
-               |}, {
-               |  id = 2,
-               |  x = 90,
-               |  y = 22
-               |}]""".stripMargin
+        result shouldBe "[{ id = 1, x = 17, y = 30 }, { id = 2, x = 90, y = 22 }]\n"
     }
 
     test("string columns") { implicit bc =>
@@ -48,7 +40,8 @@ class DatabaseClientTests extends ExecutionTests {
                |}, {
                |  id = 3,
                |  name = "efl"
-               |}]""".stripMargin
+               |}]
+               |""".stripMargin
     }
 
     test(s"boolean columns") { implicit bc =>
@@ -282,37 +275,54 @@ class DatabaseClientTests extends ExecutionTests {
     test("mismatching primary key") { implicit bc =>
         val filename = s"$basePath/mismatching_primary_key.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_5.db"))
-        result shouldBe "" // TODO
+        result shouldBe
+            """|PrimitiveException: DatabaseClient: the following tables have errors:
+               |    mismatching_primary_key:
+               |        column 'id' is not a primary key
+               |        column 'x' is a primary key
+               |""".stripMargin
     }
 
     test("missing primary key") { implicit bc =>
         val filename = s"$basePath/missing_primary_key.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
-        result shouldBe "" // TODO
+        result shouldBe
+            """|PrimitiveException: DatabaseClient: the following tables have errors:
+               |    text_columns:
+               |        table must have 'id' column
+               |""".stripMargin
     }
 
     test("nullable primary key") { implicit bc =>
         val filename = s"$basePath/nullable_primary_key.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_5.db"))
-        result shouldBe "" // TODO
+        result shouldBe
+            """|PrimitiveException: DatabaseClient: the following tables have errors:
+               |    nullable_primary_key:
+               |        column 'id' must have type 'Int'
+               |""".stripMargin
     }
 
     test("non-integer primary key") { implicit bc =>
         val filename = s"$basePath/non_integer_primary_key.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_5.db"))
-        result shouldBe "" // TODO
+        result shouldBe
+            """|PrimitiveException: DatabaseClient: the following tables have errors:
+               |    non_integer_primary_key:
+               |        column 'id' must have type 'Int'
+               |""".stripMargin
     }
 
     test("getById: row exists") { implicit bc =>
         val filename = s"$basePath/get_by_id_row_exists.cooma"
         val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
-        result shouldBe "" // TODO
+        result shouldBe """<< Some = { id = 2, name = "mhu" } >>""" + "\n"
     }
 
     test("getById: row does not exist") { implicit bc =>
         val filename = s"$basePath/get_by_id_row_does_not_exist.cooma"
         val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
-        result shouldBe "" // TODO
+        result shouldBe "<< None = {} >>\n"
     }
 
     test("insert: integer") { implicit bc =>
@@ -340,27 +350,33 @@ class DatabaseClientTests extends ExecutionTests {
     }
 
     test("update: integer") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/update_integer.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
     test("update: string") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/update_string.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
     test("update: boolean") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/update_boolean.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
     test("update: nullable") { implicit bc =>
-        // TODO
-    }
-
-    test("update: subset of columns") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/update_nullable.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
     test("delete") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/delete.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
 }

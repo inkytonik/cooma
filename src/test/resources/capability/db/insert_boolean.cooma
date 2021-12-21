@@ -6,5 +6,5 @@ fun (db : Database({
   })
 })) {
   val _ = db.boolean_columns.insert({ id = 2, p = <<False = {}>>, q = <<True = {}>>})
-  db.boolean_columns.get_by_id(2)
+  db.boolean_columns.getById(2)
 }
