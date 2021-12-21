@@ -1,10 +1,25 @@
 package org.bitbucket.inkytonik.cooma.test.execution.capability
 
-import org.bitbucket.inkytonik.cooma.test.ExecutionTests
+import java.nio.file.{CopyOption, Files, Paths, StandardCopyOption}
+
+import org.bitbucket.inkytonik.cooma.test.{BackendConfig, ExecutionTests}
+import org.scalactic.source.Position
 
 class DatabaseClientTests extends ExecutionTests {
 
     val basePath = "src/test/resources/capability/db"
+
+    def run(filename: String, databases: Int*)(implicit bc: BackendConfig): String = {
+        val args = databases.map(i => s"$basePath/test_$i.db").toSeq
+        val paths = args.map(s => (Paths.get(s), Paths.get(s"$s.bak")))
+        for ((actualPath, backupPath) <- paths) Files.copy(actualPath, backupPath)
+        val result = runFile(filename, Seq("-r"), args)
+        for ((actualPath, backupPath) <- paths) {
+            Files.copy(backupPath, actualPath, StandardCopyOption.REPLACE_EXISTING)
+            Files.delete(backupPath)
+        }
+        result
+    }
 
     test("integer columns") { implicit bc =>
         val filename = s"$basePath/integer_columns.cooma"
@@ -221,13 +236,13 @@ class DatabaseClientTests extends ExecutionTests {
     }
 
     test(s"non-existent database file") { implicit bc =>
-        val filename = s"$basePath/one_database_one_table.cooma"
-        val result = runFile(filename, Seq(), Seq(s"$basePath/test_5.db"))
-        result shouldBe "PrimitiveException: DatabaseClient: 'src/test/resources/capability/db/test_5.db' is not a file\n"
+        val filename = s"$basePath/string_columns.cooma"
+        val result = runFile(filename, Seq(), Seq(s"$basePath/test_0.db"))
+        result shouldBe "PrimitiveException: DatabaseClient: 'src/test/resources/capability/db/test_0.db' is not a file\n"
     }
 
     test(s"invalid database file") { implicit bc =>
-        val filename = s"$basePath/one_database_one_table.cooma"
+        val filename = s"$basePath/string_columns.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_4.db"))
         result shouldBe "PrimitiveException: DatabaseClient: 'src/test/resources/capability/db/test_4.db' is not an SQLite database\n"
     }
@@ -266,19 +281,27 @@ class DatabaseClientTests extends ExecutionTests {
     }
 
     test("mismatching primary key") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/mismatching_primary_key.cooma"
+        val result = runFile(filename, Seq(), Seq(s"$basePath/test_5.db"))
+        result shouldBe "" // TODO
     }
 
-    test("missing ID column") { implicit bc =>
-        // TODO
+    test("missing primary key") { implicit bc =>
+        val filename = s"$basePath/missing_primary_key.cooma"
+        val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
+        result shouldBe "" // TODO
     }
 
-    test("nullable ID column") { implicit bc =>
-        // TODO
+    test("nullable primary key") { implicit bc =>
+        val filename = s"$basePath/nullable_primary_key.cooma"
+        val result = runFile(filename, Seq(), Seq(s"$basePath/test_5.db"))
+        result shouldBe "" // TODO
     }
 
-    test("non-integer ID column") { implicit bc =>
-        // TODO
+    test("non-integer primary key") { implicit bc =>
+        val filename = s"$basePath/non_integer_primary_key.cooma"
+        val result = runFile(filename, Seq(), Seq(s"$basePath/test_5.db"))
+        result shouldBe "" // TODO
     }
 
     test("getById: row exists") { implicit bc =>

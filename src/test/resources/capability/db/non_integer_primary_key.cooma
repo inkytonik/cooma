@@ -1,0 +1,5 @@
+fun (db : Database({
+  non_integer_primary_key : Table({
+    id : String
+  })
+})) db.non_integer_primary_key.all()
