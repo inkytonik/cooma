@@ -1,0 +1,10 @@
+fun (db : Database({
+  text_columns : Table({
+    id : Int,
+    name : String
+  })
+})) {
+  val _ = db.text_columns.insert({ id = 4, name = "abc" })
+  db.text_columns.get_by_id(4)
+}
+

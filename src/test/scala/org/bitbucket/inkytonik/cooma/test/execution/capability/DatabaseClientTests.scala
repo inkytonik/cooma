@@ -1,9 +1,8 @@
 package org.bitbucket.inkytonik.cooma.test.execution.capability
 
-import java.nio.file.{CopyOption, Files, Paths, StandardCopyOption}
+import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import org.bitbucket.inkytonik.cooma.test.{BackendConfig, ExecutionTests}
-import org.scalactic.source.Position
 
 class DatabaseClientTests extends ExecutionTests {
 
@@ -317,27 +316,27 @@ class DatabaseClientTests extends ExecutionTests {
     }
 
     test("insert: integer") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/insert_integer.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
     test("insert: string") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/insert_string.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
     test("insert: boolean") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/insert_boolean.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
     test("insert: nullable") { implicit bc =>
-        // TODO
-    }
-
-    test("insert: missing default columns") { implicit bc =>
-        // TODO
-    }
-
-    test("insert: missing non-default column") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/insert_nullable.cooma"
+        val result = run(filename, 1)
+        result shouldBe "" // TODO
     }
 
     test("update: integer") { implicit bc =>
@@ -361,10 +360,6 @@ class DatabaseClientTests extends ExecutionTests {
     }
 
     test("delete") { implicit bc =>
-        // TODO
-    }
-
-    test("multiple capabilities") { implicit bc =>
         // TODO
     }
 
