@@ -1,0 +1,6 @@
+fun (db : Database({
+  text_columns : Table({
+    id : Int
+    name : String
+  })
+})) db.text_columns.getById(2)

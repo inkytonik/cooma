@@ -305,11 +305,15 @@ class DatabaseClientTests extends ExecutionTests {
     }
 
     test("getById: row exists") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/get_by_id_row_exists.cooma"
+        val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
+        result shouldBe "" // TODO
     }
 
     test("getById: row does not exist") { implicit bc =>
-        // TODO
+        val filename = s"$basePath/get_by_id_row_does_not_exist.cooma"
+        val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
+        result shouldBe "" // TODO
     }
 
     test("insert: integer") { implicit bc =>
