@@ -1,0 +1,7 @@
+fun (db : Database({
+  integer_columns : Table({
+    id : Int,
+    x : Int,
+    y : Int
+  })
+})) db.integer_columns.all()

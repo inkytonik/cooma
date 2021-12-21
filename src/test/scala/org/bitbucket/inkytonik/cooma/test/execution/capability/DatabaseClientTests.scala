@@ -6,8 +6,23 @@ class DatabaseClientTests extends ExecutionTests {
 
     val basePath = "src/test/resources/capability/db"
 
-    test(s"one database, one table") { implicit bc =>
-        val filename = s"$basePath/one_database_one_table.cooma"
+    test("integer columns") { implicit bc =>
+        val filename = s"$basePath/integer_columns.cooma"
+        val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
+        result shouldBe
+            """|[{
+               |  id = 1,
+               |  x = 17,
+               |  y = 30
+               |}, {
+               |  id = 2,
+               |  x = 90,
+               |  y = 22
+               |}]""".stripMargin
+    }
+
+    test("string columns") { implicit bc =>
+        val filename = s"$basePath/string_columns.cooma"
         val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
         result shouldBe
             """|[{
@@ -19,6 +34,35 @@ class DatabaseClientTests extends ExecutionTests {
                |}, {
                |  id = 3,
                |  name = "efl"
+               |}]""".stripMargin
+    }
+
+    test(s"boolean columns") { implicit bc =>
+        val filename = s"$basePath/boolean_columns.cooma"
+        val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
+        result shouldBe "[{ id = 1, p = << True = {} >>, q = << False = {} >> }]\n"
+    }
+
+    test("nullable columns") { implicit bc =>
+        val filename = s"$basePath/nullable_columns.cooma"
+        val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
+        result shouldBe
+            """|[{
+               |  id = 1,
+               |  name_1 = << Some = "iit" >>,
+               |  name_2 = << Some = "ics" >>
+               |}, {
+               |  id = 2,
+               |  name_1 = << Some = "cxa" >>,
+               |  name_2 = << None = {} >>
+               |}, {
+               |  id = 3,
+               |  name_1 = << None = {} >>,
+               |  name_2 = << Some = "pdg" >>
+               |}, {
+               |  id = 4,
+               |  name_1 = << None = {} >>,
+               |  name_2 = << None = {} >>
                |}]
                |""".stripMargin
     }
@@ -31,8 +75,8 @@ class DatabaseClientTests extends ExecutionTests {
                |""".stripMargin
     }
 
-    test(s"one database, multiple tables") { implicit bc =>
-        val filename = s"$basePath/one_database_multiple_tables.cooma"
+    test(s"multiple tables") { implicit bc =>
+        val filename = s"$basePath/multiple_tables.cooma"
         val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
         result shouldBe
             """|{
@@ -68,8 +112,8 @@ class DatabaseClientTests extends ExecutionTests {
                |""".stripMargin
     }
 
-    test(s"multiple databases, multiple tables") { implicit bc =>
-        val filename = s"$basePath/multiple_databases_multiple_tables.cooma"
+    test(s"multiple databases") { implicit bc =>
+        val filename = s"$basePath/multiple_databases.cooma"
         val args = (1 to 3).map(n => s"$basePath/test_$n.db")
         val result = runFile(filename, Seq("-r"), args)
         result shouldBe
@@ -136,7 +180,7 @@ class DatabaseClientTests extends ExecutionTests {
                |""".stripMargin
     }
 
-    test(s"non-Table database field") { implicit bc =>
+    test(s"non-Table Database field") { implicit bc =>
         val filename = s"$basePath/non_table_database_field.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
         result shouldBe
@@ -198,36 +242,6 @@ class DatabaseClientTests extends ExecutionTests {
                |""".stripMargin
     }
 
-    test(s"boolean columns") { implicit bc =>
-        val filename = s"$basePath/boolean_columns.cooma"
-        val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
-        result shouldBe "[{ id = 1, p = << True = {} >>, q = << False = {} >> }]\n"
-    }
-
-    test("nullable columns") { implicit bc =>
-        val filename = s"$basePath/nullable_columns.cooma"
-        val result = runFile(filename, Seq("-r"), Seq(s"$basePath/test_1.db"))
-        result shouldBe
-            """|[{
-               |  id = 1,
-               |  name_1 = << Some = "iit" >>,
-               |  name_2 = << Some = "ics" >>
-               |}, {
-               |  id = 2,
-               |  name_1 = << Some = "cxa" >>,
-               |  name_2 = << None = {} >>
-               |}, {
-               |  id = 3,
-               |  name_1 = << None = {} >>,
-               |  name_2 = << Some = "pdg" >>
-               |}, {
-               |  id = 4,
-               |  name_1 = << None = {} >>,
-               |  name_2 = << None = {} >>
-               |}]
-               |""".stripMargin
-    }
-
     test("mismatching column types") { implicit bc =>
         val filename = s"$basePath/mismatching_column_types.cooma"
         val result = runFile(filename, Seq(), Seq(s"$basePath/test_1.db"))
@@ -249,6 +263,82 @@ class DatabaseClientTests extends ExecutionTests {
                |        column 'a' is non-nullable
                |        column 'b' is nullable
                |""".stripMargin
+    }
+
+    test("mismatching primary key") { implicit bc =>
+        // TODO
+    }
+
+    test("missing ID column") { implicit bc =>
+        // TODO
+    }
+
+    test("nullable ID column") { implicit bc =>
+        // TODO
+    }
+
+    test("non-integer ID column") { implicit bc =>
+        // TODO
+    }
+
+    test("getById: row exists") { implicit bc =>
+        // TODO
+    }
+
+    test("getById: row does not exist") { implicit bc =>
+        // TODO
+    }
+
+    test("insert: integer") { implicit bc =>
+        // TODO
+    }
+
+    test("insert: string") { implicit bc =>
+        // TODO
+    }
+
+    test("insert: boolean") { implicit bc =>
+        // TODO
+    }
+
+    test("insert: nullable") { implicit bc =>
+        // TODO
+    }
+
+    test("insert: missing default columns") { implicit bc =>
+        // TODO
+    }
+
+    test("insert: missing non-default column") { implicit bc =>
+        // TODO
+    }
+
+    test("update: integer") { implicit bc =>
+        // TODO
+    }
+
+    test("update: string") { implicit bc =>
+        // TODO
+    }
+
+    test("update: boolean") { implicit bc =>
+        // TODO
+    }
+
+    test("update: nullable") { implicit bc =>
+        // TODO
+    }
+
+    test("update: subset of columns") { implicit bc =>
+        // TODO
+    }
+
+    test("delete") { implicit bc =>
+        // TODO
+    }
+
+    test("multiple capabilities") { implicit bc =>
+        // TODO
     }
 
 }
