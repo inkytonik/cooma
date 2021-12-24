@@ -4,6 +4,6 @@ fun (db : Database({
     name : String
   })
 })) {
-  val _ = db.boolean_columns.delete(2)
-  db.boolean_columns.get_by_id(2)
+  val _ = db.text_columns.delete(2)
+  db.text_columns.getById(2)
 }

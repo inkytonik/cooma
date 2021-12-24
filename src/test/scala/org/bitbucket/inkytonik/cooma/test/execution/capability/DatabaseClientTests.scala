@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma.test.execution.capability
 
-import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.nio.file.{Files, Paths}
 
 import org.bitbucket.inkytonik.cooma.test.{BackendConfig, ExecutionTests}
 
@@ -9,15 +9,12 @@ class DatabaseClientTests extends ExecutionTests {
     val basePath = "src/test/resources/capability/db"
 
     def run(filename : String, databases : Int*)(implicit bc : BackendConfig) : String = {
-        val args = databases.map(i => s"$basePath/test_$i.db").toSeq
-        val paths = args.map(s => (Paths.get(s), Paths.get(s"$s.bak")))
-        for ((actualPath, backupPath) <- paths)
-            Files.copy(actualPath, backupPath, StandardCopyOption.REPLACE_EXISTING)
-        val result = runFile(filename, Seq("-r"), args)
-        for ((actualPath, backupPath) <- paths) {
-            Files.copy(backupPath, actualPath, StandardCopyOption.REPLACE_EXISTING)
-            Files.delete(backupPath)
-        }
+        val now = System.currentTimeMillis()
+        val paths = databases.map(i => (s"$basePath/test_$i.db", s"$basePath/test_${i}_$now.db")).toSeq
+        paths.foreach { case (base, copy) => Files.copy(Paths.get(base), Paths.get(copy)) }
+        val (_, copyPaths) = paths.unzip
+        val result = runFile(filename, Seq("-r"), copyPaths)
+        copyPaths.foreach(path => Files.delete(Paths.get(path)))
         result
     }
 
@@ -328,55 +325,67 @@ class DatabaseClientTests extends ExecutionTests {
     test("insert: integer") { implicit bc =>
         val filename = s"$basePath/insert_integer.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe "<< Some = { id = 3, x = 23, y = 49 } >>\n"
     }
 
     test("insert: string") { implicit bc =>
         val filename = s"$basePath/insert_string.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe """<< Some = { id = 4, name = "abc" } >>""" + "\n"
     }
 
     test("insert: boolean") { implicit bc =>
         val filename = s"$basePath/insert_boolean.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe "<< Some = { id = 2, p = << False = {} >>, q = << True = {} >> } >>\n"
     }
 
     test("insert: nullable") { implicit bc =>
         val filename = s"$basePath/insert_nullable.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe
+            """|<< Some = {
+               |  id = 5,
+               |  name_1 = << Some = "asdf" >>,
+               |  name_2 = << None = {} >>
+               |} >>
+               |""".stripMargin
     }
 
     test("update: integer") { implicit bc =>
         val filename = s"$basePath/update_integer.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe "<< Some = { id = 2, x = 3, y = 6 } >>\n"
     }
 
     test("update: string") { implicit bc =>
         val filename = s"$basePath/update_string.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe """<< Some = { id = 2, name = "zxcv" } >>""" + "\n"
     }
 
     test("update: boolean") { implicit bc =>
         val filename = s"$basePath/update_boolean.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe """<< Some = { id = 1, p = << True = {} >>, q = << True = {} >> } >>""" + "\n"
     }
 
     test("update: nullable") { implicit bc =>
         val filename = s"$basePath/update_nullable.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe
+            """|<< Some = {
+               |  id = 3,
+               |  name_1 = << Some = "qwerty" >>,
+               |  name_2 = << None = {} >>
+               |} >>
+               |""".stripMargin
     }
 
     test("delete") { implicit bc =>
         val filename = s"$basePath/delete.cooma"
         val result = run(filename, 1)
-        result shouldBe "" // TODO
+        result shouldBe "<< None = {} >>\n"
     }
 
 }

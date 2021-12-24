@@ -73,11 +73,11 @@ object Query {
         val query =
             nonKeys
                 .iterator
-                .map { case (header, value) => s"$header = $value" }
+                .map { case (header, value) => s"$header = ${value.toSql}" }
                 .mkString(
                     s"UPDATE $tablename SET ",
                     ", ",
-                    s"WHERE id = $id;"
+                    s" WHERE id = ${id.toSql};"
                 )
         conn.prepareStatement(query).executeUpdate()
     }
@@ -88,7 +88,7 @@ object Query {
         id : DbValue.Integer
     ) : Unit = {
         val Metadata.Table(tablename, _) = table
-        val query = s"DELETE FROM $tablename WHERE id = $id;"
+        val query = s"DELETE FROM $tablename WHERE id = ${id.toSql};"
         conn.prepareStatement(query).executeUpdate()
     }
 

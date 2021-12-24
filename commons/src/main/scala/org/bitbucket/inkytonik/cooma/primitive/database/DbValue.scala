@@ -27,12 +27,12 @@ sealed trait DbValue extends Product {
         }
     }
 
-    def toSql =
+    def toSql : String =
         this match {
             case DbValue.Boolean(boolean) => boolean.toString.toUpperCase
             case DbValue.Integer(int)     => int.toString
             case DbValue.String(string)   => s"'$string'"
-            case DbValue.NotNull(value)   => value.toString
+            case DbValue.NotNull(value)   => value.toSql
             case DbValue.Null             => "NULL"
         }
 
@@ -82,7 +82,7 @@ object DbValue {
             isStrR(v).map(String)
         def tryNotNull(v : ValueR) =
             isVarR(v) match {
-                case Some(("Some", value)) => fromCooma(backend)(value)
+                case Some(("Some", value)) => fromCooma(backend)(value).collect { case v : Atomic => NotNull(v) }
                 case _                     => None
             }
         def tryNull(v : ValueR) =
