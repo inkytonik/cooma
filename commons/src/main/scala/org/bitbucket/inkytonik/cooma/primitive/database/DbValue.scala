@@ -31,7 +31,7 @@ sealed trait DbValue extends Product {
         this match {
             case DbValue.Boolean(boolean) => boolean.toString.toUpperCase
             case DbValue.Integer(int)     => int.toString
-            case DbValue.String(string)   => s"'$string'"
+            case DbValue.String(string)   => s"'${string.replaceAll("'", "''")}'"
             case DbValue.NotNull(value)   => value.toSql
             case DbValue.Null             => "NULL"
         }
