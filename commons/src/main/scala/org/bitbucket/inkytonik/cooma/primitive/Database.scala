@@ -1,6 +1,6 @@
 package org.bitbucket.inkytonik.cooma.primitive
 
-import java.sql.Connection
+import java.sql.{Connection, SQLException}
 
 import org.bitbucket.inkytonik.cooma.Backend
 import org.bitbucket.inkytonik.cooma.CoomaException._
@@ -9,6 +9,7 @@ import org.bitbucket.inkytonik.cooma.primitive.database.Validation.validateDatab
 
 import scala.annotation.tailrec
 import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
 
 trait Database {
 
@@ -44,23 +45,33 @@ trait Database {
     def dbInsert(index : Int, tablename : String, row : ValueR) : ValueR = {
         val (conn, table) = validateTable(index, tablename)
         val dbrow = validateRow(table, row)
-        Query.insert(conn, table, dbrow)
-        uniR
+        resultToCooma(Query.insert(conn, table, dbrow))
     }
 
     def dbUpdate(index : Int, tablename : String, row : ValueR) : ValueR = {
         val (conn, table) = validateTable(index, tablename)
         val dbrow = validateRow(table, row)
-        Query.update(conn, table, dbrow)
-        uniR
+        resultToCooma(Query.update(conn, table, dbrow))
     }
 
     def dbDelete(index : Int, tablename : String, id : ValueR) : ValueR = {
         val (conn, table) = validateTable(index, tablename)
         val dbid = validateId(id)
-        Query.delete(conn, table, dbid)
-        uniR
+        resultToCooma(Query.delete(conn, table, dbid))
     }
+
+    private def resultToCooma(result : => Int) : ValueR =
+        Try(result) match {
+            case Success(count) =>
+                varR("Right", intR(count))
+            case Failure(e : SQLException) =>
+                varR("Left", recR(Vector(
+                    fldR("code", intR(e.getErrorCode)),
+                    fldR("message", strR(e.getMessage))
+                )))
+            case Failure(e) =>
+                throw e
+        }
 
     def validateTable(index : Int, tablename : String) : (Connection, Metadata.Table) =
         connections.get(index) match {

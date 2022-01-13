@@ -179,6 +179,12 @@ Runner :
   {
     run : (args : Vector(String)) RunnerReturn
   };
+DbError :
+  Type =
+  {
+    code : Int,
+    message : String
+  };
 Table :
   (A : Type) Type =
   fun (A : Type) {
@@ -187,9 +193,18 @@ Table :
       Some : A,
       None : Unit
     >>,
-    insert : (A) Unit,
-    update : (A) Unit,
-    delete : (Int) Unit
+    insert : (A) <<
+      Left : DbError,
+      Right : Int
+    >>,
+    update : (A) <<
+      Left : DbError,
+      Right : Int
+    >>,
+    delete : (Int) <<
+      Left : DbError,
+      Right : Int
+    >>
   };
 Writer :
   Type =

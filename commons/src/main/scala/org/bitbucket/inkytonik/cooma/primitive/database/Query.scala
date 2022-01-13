@@ -53,7 +53,7 @@ object Query {
         conn : Connection,
         table : Metadata.Table,
         row : Seq[(String, DbValue)]
-    ) : Unit = {
+    ) : Int = {
         val Metadata.Table(tablename, _) = table
         val (headers, values) = row.unzip
         val headersString = headers.mkString("(", ", ", ")")
@@ -66,7 +66,7 @@ object Query {
         conn : Connection,
         table : Metadata.Table,
         row : Seq[(String, DbValue)]
-    ) : Unit = {
+    ) : Int = {
         val Metadata.Table(tablename, _) = table
         val (keys, nonKeys) = row.partition { case (header, _) => header == "id" }
         val (_, id) = keys.head
@@ -86,7 +86,7 @@ object Query {
         conn : Connection,
         table : Metadata.Table,
         id : DbValue.Integer
-    ) : Unit = {
+    ) : Int = {
         val Metadata.Table(tablename, _) = table
         val query = s"DELETE FROM $tablename WHERE id = ${id.toSql};"
         conn.prepareStatement(query).executeUpdate()

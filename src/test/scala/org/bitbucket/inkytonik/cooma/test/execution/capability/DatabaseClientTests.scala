@@ -352,6 +352,14 @@ class DatabaseClientTests extends ExecutionTests {
                |""".stripMargin
     }
 
+    test("insert: return integer") { implicit bc =>
+        ???
+    }
+
+    test("insert: error") { implicit bc =>
+        ???
+    }
+
     test("update: integer") { implicit bc =>
         val filename = s"$basePath/update_integer.cooma"
         val result = run(filename, 1)
@@ -386,6 +394,10 @@ class DatabaseClientTests extends ExecutionTests {
         val filename = s"$basePath/delete.cooma"
         val result = run(filename, 1)
         result shouldBe "<< None = {} >>\n"
+    }
+
+    test("escape strings") { implicit bc =>
+        ???
     }
 
 }
