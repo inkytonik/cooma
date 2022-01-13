@@ -353,11 +353,20 @@ class DatabaseClientTests extends ExecutionTests {
     }
 
     test("insert: return integer") { implicit bc =>
-        ???
+        val filename = s"$basePath/insert_return_integer.cooma"
+        val result = run(filename, 1)
+        result shouldBe "<< Right = 1 >>\n"
     }
 
     test("insert: error") { implicit bc =>
-        ???
+        val filename = s"$basePath/insert_error.cooma"
+        val result = run(filename, 1)
+        result shouldBe
+            """|<< Left = {
+               |  code = 19,
+               |  message = "[SQLITE_CONSTRAINT_NOTNULL]  A NOT NULL constraint failed (NOT NULL constraint failed: integer_columns.y)"
+               |} >>
+               |""".stripMargin
     }
 
     test("update: integer") { implicit bc =>
@@ -397,7 +406,9 @@ class DatabaseClientTests extends ExecutionTests {
     }
 
     test("escape strings") { implicit bc =>
-        ???
+        val filename = s"$basePath/escape_strings.cooma"
+        val result = run(filename, 1)
+        result shouldBe """<< Some = { id = 2, name = "'" } >>""" + "\n"
     }
 
 }
