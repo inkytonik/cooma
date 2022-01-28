@@ -1,11 +1,11 @@
 fun (
   db_1 : Database({
     text_columns : Table({
-      id : String,
+      id : Int,
       name : String
     }),
     many_text_columns : Table({
-      id : String,
+      id : Int,
       c1 : String,
       c3 : String
     }),
@@ -28,6 +28,7 @@ fun (
   }),
   db_3 : Database({
     t : Table({
+      id : Int,
       x : String
     })
   })

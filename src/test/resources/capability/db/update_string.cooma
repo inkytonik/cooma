@@ -1,0 +1,9 @@
+fun (db : Database({
+  text_columns : Table({
+    id : Int,
+    name : String
+  })
+})) {
+  val _ = db.text_columns.update({ id = 2, name = "zxcv" })
+  db.text_columns.getById(2)
+}

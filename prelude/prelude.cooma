@@ -102,8 +102,17 @@
     run : (args : Vector(String)) RunnerReturn
   }
 
+  type DbError = {
+    code : Int,
+    message : String
+  }
+
   type Table = fun (A : Type) {
-    all : () Vector(A)
+    all : () Vector(A),
+    getById : (Int) <<Some : A, None : Unit>>,
+    insert : (A) <<Left : DbError, Right : Int>>,
+    update : (A) <<Left : DbError, Right : Int>>,
+    delete : (Int) <<Left : DbError, Right : Int>>
   }
 
   type Writer = {

@@ -1,6 +1,6 @@
 fun (db : Database({
   mixed_columns : Table({
-    id : String,
+    id : Int,
     a : Boolean,
     b : Int
   })

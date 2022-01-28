@@ -1,6 +1,6 @@
 fun (db : Database({
   many_text_columns : Table({
-    id : String,
+    id : Int,
     c1 : String,
     e : String,
     c3 : String

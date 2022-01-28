@@ -1,10 +1,10 @@
 fun (db : Database({
   text_columns : Table({
-    id : String,
+    id : Int,
     name : String
   }),
   many_text_columns : Table({
-    id : String,
+    id : Int,
     c1 : String,
     c3 : String
   }),

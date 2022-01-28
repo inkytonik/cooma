@@ -1,0 +1,10 @@
+fun (db : Database({
+  integer_columns : Table({
+    id : Int,
+    x : Int,
+    y : Int
+  })
+})) {
+  val _ = db.integer_columns.update({ id = 2, x = 3, y = 6 })
+  db.integer_columns.getById(2)
+}

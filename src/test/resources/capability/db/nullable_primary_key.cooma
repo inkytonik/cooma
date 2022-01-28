@@ -1,0 +1,5 @@
+fun (db : Database({
+  nullable_primary_key : Table({
+    id : Option(Int)
+  })
+})) db.nullable_primary_key.all()

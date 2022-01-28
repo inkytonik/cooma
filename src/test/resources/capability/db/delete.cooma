@@ -1,0 +1,9 @@
+fun (db : Database({
+  text_columns : Table({
+    id : Int,
+    name : String
+  })
+})) {
+  val _ = db.text_columns.delete(2)
+  db.text_columns.getById(2)
+}

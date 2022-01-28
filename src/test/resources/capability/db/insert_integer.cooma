@@ -1,0 +1,10 @@
+fun (db : Database({
+  integer_columns : Table({
+    id : Int,
+    x : Int,
+    y : Int
+  })
+})) {
+  val _ = db.integer_columns.insert({ id = 3, x = 23, y = 49 })
+  db.integer_columns.getById(3)
+}

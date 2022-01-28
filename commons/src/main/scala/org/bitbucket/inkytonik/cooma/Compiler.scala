@@ -10,9 +10,7 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.cooma.SymbolTable.{BoolT, IntT}
-import org.bitbucket.inkytonik.cooma.primitive.Database
-import org.bitbucket.inkytonik.cooma.primitive.Database.{Column, DatabaseType, DtBoolean, DtInt, DtString}
+import org.bitbucket.inkytonik.cooma.primitive.database.Metadata
 
 trait Compiler {
 
@@ -149,37 +147,12 @@ trait Compiler {
                                 case Idn(IdnUse(name)) if capabilityTypeNames(name) =>
                                     name :: Nil
                                 case App(Idn(IdnUse("Database")), Vector(RecT(ts))) =>
-                                    val tables =
-                                        ts.map {
-                                            case FieldType(tablename, exp) =>
-                                                exp match {
-                                                    case App(Idn(IdnUse("Table")), Vector(RecT(fields))) =>
-                                                        tablename -> fields.map {
-                                                            case FieldType(columnName, tipe) =>
-                                                                def getBaseType(tipe : Expression) : DatabaseType =
-                                                                    tipe match {
-                                                                        case BoolT() =>
-                                                                            DtBoolean
-                                                                        case IntT() =>
-                                                                            DtInt
-                                                                        case StrT() =>
-                                                                            DtString
-                                                                        case _ =>
-                                                                            sys.error(s"compileTopArg: ${show(t)} arguments not supported")
-                                                                    }
-                                                                val (baseType, nullable) =
-                                                                    tipe match {
-                                                                        case App(Idn(IdnUse("Option")), Vector(t : Expression)) => (t, true)
-                                                                        case t => (t, false)
-                                                                    }
-                                                                columnName -> Column(getBaseType(baseType), nullable)
-                                                        }.toMap
-                                                    case _ =>
-                                                        sys.error(s"compileTopArg: ${show(t)} arguments not supported")
-                                                }
-                                        }
-
-                                    Database.encodeSpec(nArg, tables.toMap) :: Nil
+                                    Metadata.fromCooma(ts) match {
+                                        case Some(metadata) =>
+                                            s"DatabaseClient:$nArg:${metadata.toSpec}" :: Nil
+                                        case None =>
+                                            sys.error(s"compileTopArg: invalid database type ${show(t)}")
+                                    }
                                 case t =>
                                     sys.error(s"compileTopArg: ${show(t)} arguments not supported")
                             }

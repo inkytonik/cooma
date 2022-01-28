@@ -1,38 +1,38 @@
 CREATE TABLE text_columns (
-    id TEXT PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY NOT NULL,
     name TEXT NOT NULL
 );
 
-INSERT INTO text_columns (id, name) VALUES
-('fvt', 'jlr'),
-('bdt', 'mhu'),
-('nvg', 'efl');
+INSERT INTO text_columns (name) VALUES
+('jlr'),
+('mhu'),
+('efl');
 
 
 CREATE TABLE many_text_columns (
-    id TEXT PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY NOT NULL,
     c1 TEXT NOT NULL,
     c2 TEXT NOT NULL,
     c3 TEXT NOT NULL,
     c4 TEXT NOT NULL
 );
 
-INSERT INTO many_text_columns (id, c1, c2, c3, c4) VALUES
-('lyb', 'hwk', 'oqk', 'diy', 'rdu'),
-('gbb', 'qfd', 'ryl', 'gut', 'qig');
+INSERT INTO many_text_columns (c1, c2, c3, c4) VALUES
+('hwk', 'oqk', 'diy', 'rdu'),
+('qfd', 'ryl', 'gut', 'qig');
 
 
 CREATE TABLE nullable_columns (
-    id TEXT PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY NOT NULL,
     name_1 TEXT,
     name_2 TEXT
 );
 
-INSERT INTO nullable_columns (id, name_1, name_2) VALUES
-('rfn', 'iit', 'ics'),
-('tjz', 'cxa', NULL),
-('rfa', NULL, 'pdg'),
-('rci', NULL, NULL);
+INSERT INTO nullable_columns (name_1, name_2) VALUES
+('iit', 'ics'),
+('cxa', NULL),
+(NULL, 'pdg'),
+(NULL, NULL);
 
 
 CREATE TABLE integer_columns (

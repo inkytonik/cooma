@@ -1,0 +1,6 @@
+fun (db : Database({
+  mismatching_primary_key : Table({
+    id : Int,
+    x : Int
+  })
+})) db.mismatching_primary_key.all()

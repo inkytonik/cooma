@@ -1,6 +1,6 @@
 fun (db : Database({
   nullable_columns : Table({
-    id : String,
+    id : Int,
     name_1 : Option(String),
     name_2 : Option(String)
   })

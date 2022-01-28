@@ -1,6 +1,5 @@
 fun (db : Database({
   text_columns : Table({
-    id : String,
     name : String
   })
 })) db.text_columns.all()

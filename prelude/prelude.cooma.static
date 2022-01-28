@@ -115,7 +115,10 @@ RunnerReturn :
 FolderRunner :
   Type =
   {
-    run : (suffix : String, args : Vector(String)) RunnerReturn
+    run : (suffix : String, args : Vector(String)) <<
+      Left : String,
+      Right : RunnerReturn
+    >>
   };
 FolderWriter :
   Type =
@@ -176,10 +179,32 @@ Runner :
   {
     run : (args : Vector(String)) RunnerReturn
   };
+DbError :
+  Type =
+  {
+    code : Int,
+    message : String
+  };
 Table :
   (A : Type) Type =
   fun (A : Type) {
-    all : () Vector(A)
+    all : () Vector(A),
+    getById : (Int) <<
+      Some : A,
+      None : Unit
+    >>,
+    insert : (A) <<
+      Left : DbError,
+      Right : Int
+    >>,
+    update : (A) <<
+      Left : DbError,
+      Right : Int
+    >>,
+    delete : (Int) <<
+      Left : DbError,
+      Right : Int
+    >>
   };
 Writer :
   Type =

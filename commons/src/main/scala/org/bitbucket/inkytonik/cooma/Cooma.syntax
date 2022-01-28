@@ -201,7 +201,11 @@ FldV =
 Primitive =
     "Argument" IntLit                      {ArgumentP, 1: Integer.parseInt : Int}
   | "Capability" Identifier                {CapabilityP}
-  | 'DbTableAll' Filename                  {DbTableAllP}
+  | 'DbTableAll' IntLit StringLit          {DbTableAllP, 1: Integer.parseInt : Int}
+  | 'DbTableDelete' IntLit StringLit       {DbTableDeleteP, 1: Integer.parseInt : Int}
+  | 'DbTableGetById' IntLit StringLit      {DbTableGetByIdP, 1: Integer.parseInt : Int}
+  | 'DbTableInsert' IntLit StringLit       {DbTableInsertP, 1: Integer.parseInt : Int}
+  | 'DbTableUpdate' IntLit StringLit       {DbTableUpdateP, 1: Integer.parseInt : Int}
   | "FolderReaderRead" Filename            {FolderReaderReadP}
   | "FolderRunnerRun" Filename             {FolderRunnerRunP}
   | "FolderWriterWrite" Filename           {FolderWriterWriteP}
