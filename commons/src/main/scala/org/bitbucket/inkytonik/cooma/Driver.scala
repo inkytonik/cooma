@@ -75,7 +75,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 publishSourceTreeProduct(source, pretty(any(program)))
             }
             val env = preludeStaticEnv(config)
-            desugar(program, env, positions) match {
+            desugar(program, env, positions).flatMap(TopLevelRewriter(_)) match {
                 case Left(messages) =>
                     Right(messages)
                 case Right(desugaredProgram) =>
