@@ -48,7 +48,7 @@ class FunctionTypeTests extends SemanticTests {
 
     test(
         "type argument",
-        "{fun (t : Type, x : t) x}",
+        "{val f = fun (t : Type, x : t) x { } }",
         ""
     )
 

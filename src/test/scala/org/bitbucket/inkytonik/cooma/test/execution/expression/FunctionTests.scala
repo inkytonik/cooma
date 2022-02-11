@@ -90,10 +90,10 @@ class FunctionTests extends ExpressionTests {
     )
 
     test(
-        "function program result (type arg)",
-        "{fun (t : Type, x : t) x}",
-        "<function>",
-        "(t : Type, x : t) t"
+        "function with type arg",
+        "{val f = fun (t : Type, x : t) x { }}",
+        "{}",
+        "Unit"
     )
 
     test(
