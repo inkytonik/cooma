@@ -72,8 +72,8 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
-                        case Vec(e) =>
-                            checkVectorElements(e)
+                        case v : Vec =>
+                            checkVectorElements(v)
                     }
         }
 
@@ -273,19 +273,19 @@ class SemanticAnalyser(
             noMessages
     }
 
-    def checkVectorElements(elems : VecElems) : Messages =
-        if (elems.optExpressions.isEmpty)
+    def checkVectorElements(vec : Vec) : Messages = {
+        val elems = vec.vecElems
+        if (elems.optExpressions.isEmpty || lubType(elems) != NoLUBType)
             noMessages
         else
-            tipe(elems.optExpressions.head) match {
-                case Some(firstType) =>
-                    if (elems.optExpressions.forall(e => subtype(tipe(e), firstType)))
-                        noMessages
-                    else
-                        error(elems, s"all the elements in this vector must be of type ${show(firstType)}")
-                case None =>
-                    noMessages
-            }
+            error(vec, s"vector elements must be of same type or subtypes of a common supertype")
+    }
+
+    val lubType : VecElems => LUBType =
+        attr {
+            case VecElems(elems) =>
+                lubType(elems)
+        }
 
     object Scope {
         def unapply(n : ASTNode) : Boolean =
@@ -545,10 +545,10 @@ class SemanticAnalyser(
                 if (elems.optExpressions.isEmpty)
                     Some(VecNilT())
                 else
-                    tipe(elems.optExpressions.head) match {
-                        case Some(firstType) =>
-                            Some(VecT(firstType))
-                        case None =>
+                    lubType(elems) match {
+                        case LUB(t) =>
+                            Some(VecT(t))
+                        case _ =>
                             None
                     }
 
@@ -975,5 +975,105 @@ class SemanticAnalyser(
                 case (t, u) =>
                     subtype(t, u)
             })
+
+    sealed abstract class LUBType
+    case object IgnoreLUBType extends LUBType
+    case object NoLUBType extends LUBType
+    case class LUB(tipe : Expression) extends LUBType
+
+    def lubType(es : Vector[Expression]) : LUBType = {
+        val optTypes = es.map(tipe)
+        if (optTypes.isEmpty || optTypes.contains(None))
+            IgnoreLUBType
+        else {
+            val ts = optTypes.map(_.get)
+            ts.tail.foldLeft(LUB(ts.head) : LUBType) {
+                case (LUB(lub), t) =>
+                    join(lub, t) match {
+                        case Some(newlub) =>
+                            LUB(newlub)
+                        case None =>
+                            NoLUBType
+                    }
+                case (lub, _) =>
+                    lub
+            }
+        }
+    }
+
+    def join(t : Expression, u : Expression) : Option[Expression] =
+        if (subtype(t, u))
+            Some(u)
+        else if (subtype(u, t))
+            Some(t)
+        else
+            (unalias(t, t), unalias(u, u)) match {
+                // FIXME: add case for joining function types
+
+                case (Some(RecT(tr)), Some(RecT(ur))) =>
+                    // Intersect the fields, joining common field types.
+                    val common =
+                        tr.foldLeft(Vector[FieldType]()) {
+                            case (fts, FieldType(tf, tt)) =>
+                                ur.find(_.identifier == tf) match {
+                                    case Some(FieldType(_, ut)) =>
+                                        join(tt, ut) match {
+                                            case Some(t) =>
+                                                // Field common with join, include joined version
+                                                fts :+ FieldType(tf, t)
+                                            case None =>
+                                                // Field common with no join, drop it
+                                                fts
+                                        }
+                                    case None =>
+                                        fts
+                                }
+                        }
+                    if (common.isEmpty)
+                        None
+                    else
+                        Some(RecT(common))
+
+                case (Some(VarT(tr)), Some(VarT(ur))) =>
+                    // Union the fields, joining common field types.
+                    val (_, fromLeft) =
+                        tr.foldLeft((true, Vector[FieldType]())) {
+                            case ((cont, fts), tft @ FieldType(tf, tt)) =>
+                                if (cont)
+                                    ur.find(_.identifier == tf) match {
+                                        case Some(FieldType(_, ut)) =>
+                                            join(tt, ut) match {
+                                                case Some(t) =>
+                                                    // Field common with join, include joined version
+                                                    (true, fts :+ FieldType(tf, t))
+                                                case None =>
+                                                    // Common field can't be joined, abort
+                                                    (false, Vector())
+                                            }
+                                        case None =>
+                                            // Field not common, include it
+                                            (true, fts :+ tft)
+                                    }
+                                else
+                                    // Abort if earlier abort
+                                    (false, Vector())
+                        }
+                    if (fromLeft.isEmpty)
+                        // No fields remaining from left, so no join
+                        None
+                    else {
+                        // Join ok, add in all right fields not already present
+                        val fromLeftFields = fromLeft.map(_.identifier)
+                        val fromRight = ur.filterNot(ft => fromLeftFields.contains(ft.identifier))
+                        Some(VarT(fromLeft ++ fromRight))
+                    }
+
+                case (Some(VecT(tt)), Some(VecT(ut))) =>
+                    // Join vector types by joining their element types
+                    join(tt, ut).map(VecT)
+
+                case _ =>
+                    None
+            }
 
 }
