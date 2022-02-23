@@ -12,8 +12,6 @@ package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.cooma.primitive.database.Metadata
 
-import scala.annotation.tailrec
-
 trait Compiler {
 
     self : Backend =>
@@ -170,26 +168,6 @@ trait Compiler {
                     compileTopArg(arg, a, t, e)
                 case Fun(Arguments((arg @ Argument(IdnDef(a), t, _)) +: as), e) =>
                     compileTopArg(arg, a, t, Fun(Arguments(as), e))
-                case Blk(blockExp) =>
-                    @tailrec
-                    def aux(
-                        blockExp : BlockExp,
-                        f : BlockExp => BlockExp
-                    ) : Term =
-                        blockExp match {
-                            case BlkDef(defs, blockExp) =>
-                                aux(blockExp, e => f(BlkDef(defs, e)))
-                            case BlkLet(let, blockExp) =>
-                                aux(blockExp, e => f(BlkLet(let, e)))
-                            case Return(Fun(args, body)) =>
-                                // main function
-                                val precompiled = Fun(args, Blk(f(Return(body))))
-                                compileTop(precompiled, nArg)
-                            case Return(_) =>
-                                // nullary program
-                                compileHalt(exp)
-                        }
-                    aux(blockExp, identity)
                 case _ =>
                     compileHalt(exp)
             }
