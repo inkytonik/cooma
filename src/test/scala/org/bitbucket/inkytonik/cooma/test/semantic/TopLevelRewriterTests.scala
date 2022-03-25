@@ -3,6 +3,7 @@ package org.bitbucket.inkytonik.cooma.test.semantic
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.Program
 import org.bitbucket.inkytonik.cooma.Desugar.desugar
 import org.bitbucket.inkytonik.cooma.SymbolTable.loadPrelude
+import org.bitbucket.inkytonik.cooma.test.SemanticTests
 import org.bitbucket.inkytonik.cooma.{CoomaParser, TopLevelRewriter}
 import org.bitbucket.inkytonik.kiama.util.Messaging.Messages
 import org.bitbucket.inkytonik.kiama.util.{Positions, StringSource}
@@ -12,42 +13,68 @@ import org.scalatest.matchers.should
 
 class TopLevelRewriterTests extends AnyFunSuiteLike with should.Matchers with EitherValues {
 
-    def compile(source : String) : Program = {
-        val positions = new Positions
-        val parser = new CoomaParser(StringSource(source), positions)
-        val result = parser.pProgram(0)
-        val program = parser.value(result).asInstanceOf[Program]
-        val env = loadPrelude(s"./prelude/prelude.cooma.static").toOption.get
-        desugar(program, env, positions).toOption.get
+    // check the output of the rewriter
+    object TopLevelRewriterOnly {
+
+        def compile(source : String) : Program = {
+            val positions = new Positions
+            val parser = new CoomaParser(StringSource(source), positions)
+            val result = parser.pProgram(0)
+            val program = parser.value(result).asInstanceOf[Program]
+            val env = loadPrelude(s"./prelude/prelude.cooma.static").toOption.get
+            desugar(program, env, positions).toOption.get
+        }
+
+        def check(source : String, f : Either[Messages, Program] => Unit) : Unit =
+            f(TopLevelRewriter(compile(source)))
+
+        def test(name : String, source : String, expected : Either[Seq[String], String]) : Unit =
+            TopLevelRewriterTests.this.test(name) {
+                val program = TopLevelRewriter(compile(source))
+                expected match {
+                    case Right(expected) => program.value shouldEqual compile(expected)
+                    case Left(expected)  => program.left.value.map(_.label) shouldEqual expected.toVector
+                }
+            }
+
     }
 
-    def check(source : String, f : Either[Messages, Program] => Unit) : Unit =
-        f(TopLevelRewriter(compile(source)))
+    // check that the rewriter works with the semantic analyser
+    object WithSemanticAnalysis extends SemanticTests {
+
+        override def test(name : String, expression : String, expectedMessages : String) : Unit =
+            TopLevelRewriterTests.this.test(name) {
+                runAnalysis(expression.stripMargin) shouldBe expectedMessages.stripMargin
+            }
+
+    }
+
+    def test(name : String, source : String, expected : Either[(String, Seq[String]), String]) : Unit = {
+        TopLevelRewriterOnly.test(s"[TopLevelRewriter] $name", source, expected.left.map(_._2))
+        WithSemanticAnalysis.test(s"[SemanticAnalyser] $name", source, expected match {
+            case Right(_)           => ""
+            case Left((message, _)) => message
+        })
+    }
+
+    def test(name : String, source : String, message : String, messages : Seq[String]) : Unit =
+        test(name, source, Left((message, messages)))
 
     def test(name : String, source : String, expected : String) : Unit =
-        test(name) {
-            val program = TopLevelRewriter(compile(source))
-            program.value shouldEqual compile(expected)
-        }
-
-    def test(name : String, source : String, expected : Seq[String]) : Unit =
-        test(name) {
-            val program = TopLevelRewriter(compile(source))
-            program.left.value.map(_.label) shouldEqual expected.toVector
-        }
+        test(name, source, Right(expected))
 
     test("do not rewrite a program consisting of a non-block expression", "0", "0")
 
     test(
         "do not rewrite a program containing a top-level function",
-        """fun (name: String) { val prefix = "Hello " concat(prefix, name) }""",
-        """fun (name: String) { val prefix = "Hello " concat(prefix, name) }""",
+        """fun (name: String) { val prefix = "Hello " Strings.concat(prefix, name) }""",
+        """fun (name: String) { val prefix = "Hello " Strings.concat(prefix, name) }""",
     )
 
     test(
         "do not rewrite a program consisting of a block with a non-function return",
-        """{ val x = 42 (fun (x: Int) x + 1) x }""",
-        """{ val x = 42 (fun (x: Int) x + 1) x }""",
+        """{ val x = 42 val f = fun (x: Int) x + 1 f(x) }""",
+        """{ val x = 42 val f = fun (x: Int) x + 1 f(x) }""",
     )
 
     test(
@@ -57,6 +84,13 @@ class TopLevelRewriterTests extends AnyFunSuiteLike with should.Matchers with Ei
            |    def box (A : Type, value : A) Box(A) = { value = value }
            |    fun (s : String) box(String, s)
            |}
+           |""".stripMargin,
+        """|2:5:error: def not allowed here
+           |    def Box (A : Type) Type = { value : A }
+           |    ^
+           |3:5:error: def not allowed here
+           |    def box (A : Type, value : A) Box(A) = { value = value }
+           |    ^
            |""".stripMargin,
         Seq("def not allowed here", "def not allowed here")
     )
@@ -173,7 +207,7 @@ class TopLevelRewriterTests extends AnyFunSuiteLike with should.Matchers with Ei
            |    type Student = { id : Int, name : String, wam : Option(Int) }
            |    type StudentTable = Table(Student)
            |    type Db = Database({ student : StudentTable })
-           |    fun (db : Db) db.all()
+           |    fun (db : Db) db.student.all()
            |}
            |""".stripMargin,
         """|fun (
@@ -188,7 +222,7 @@ class TopLevelRewriterTests extends AnyFunSuiteLike with should.Matchers with Ei
            |    type Student = { id : Int, name : String, wam : Option(Int) }
            |    type StudentTable = Table(Student)
            |    type Db = Database({ student : StudentTable })
-           |    db.all()
+           |    db.student.all()
            |}
            |""".stripMargin
     )
@@ -196,7 +230,11 @@ class TopLevelRewriterTests extends AnyFunSuiteLike with should.Matchers with Ei
     test(
         "reject unsupported expressions",
         "{ type Box = fun (A : Type) { value : A } fun () { } }",
-        Seq("not allowed here")
+        """|1:14:error: not allowed here
+           |{ type Box = fun (A : Type) { value : A } fun () { } }
+           |             ^
+           |""".stripMargin,
+        Seq("not allowed here"),
     )
 
 }
