@@ -6,37 +6,37 @@ class TypeAliasTests extends SemanticTests {
 
     test(
         "non-type name used as argument type",
-        "{ val x = 1 fun (y : x) y }",
-        """|1:22:error: expected Type, got x of type Int
-           |{ val x = 1 fun (y : x) y }
-           |                     ^
+        "{ val x = 1 val f = fun (y : x) y { } }",
+        """|1:30:error: expected Type, got x of type Int
+           |{ val x = 1 val f = fun (y : x) y { } }
+           |                             ^
            |"""
     )
 
     test(
         "non-type name used as argument type in function type",
-        "{ val x = 1 fun (y : (x) Int) y }",
-        """|1:23:error: expected Type, got x of type Int
-           |{ val x = 1 fun (y : (x) Int) y }
-           |                      ^
+        "{ val x = 1 val f = fun (y : (x) Int) y { } }",
+        """|1:31:error: expected Type, got x of type Int
+           |{ val x = 1 val f = fun (y : (x) Int) y { } }
+           |                              ^
            |"""
     )
 
     test(
         "non-type name used as return type in function type",
-        "{ val x = 1 fun (y : (Int) x) y }",
-        """|1:28:error: expected Type, got x of type Int
-           |{ val x = 1 fun (y : (Int) x) y }
-           |                           ^
+        "{ val x = 1 val f = fun (y : (Int) x) y { } }",
+        """|1:36:error: expected Type, got x of type Int
+           |{ val x = 1 val f = fun (y : (Int) x) y { } }
+           |                                   ^
            |"""
     )
 
     test(
         "non-type name used as field type",
-        "{ val x = 1 fun (y : {a : x}) 1 }",
-        """|1:27:error: expected Type, got x of type Int
-           |{ val x = 1 fun (y : {a : x}) 1 }
-           |                          ^
+        "{ val x = 1 val f = fun (y : {a : x}) 1 { } }",
+        """|1:35:error: expected Type, got x of type Int
+           |{ val x = 1 val f = fun (y : {a : x}) 1 { } }
+           |                                  ^
            |"""
     )
 
@@ -54,7 +54,7 @@ class TypeAliasTests extends SemanticTests {
 
     test(
         "alias of record type",
-        "{ type Foo = { x : Int, y : String } fun (f : Foo) f.x }",
+        "{ type Foo = { x : Int, y : String } val f = fun (f : Foo) f.x { } }",
         ""
     )
 
@@ -63,17 +63,18 @@ class TypeAliasTests extends SemanticTests {
         """{
         |   type Foo = { x : Int, y : String }
         |   type Bar = { x : Int }
-        |   fun (f : Foo, b : Bar) f & b
+        |   val f = fun (f : Foo, b : Bar) f & b
+        |   { }
         |}""",
-        """|4:27:error: record concatenation has overlapping field(s) x
-           |   fun (f : Foo, b : Bar) f & b
-           |                          ^
+        """|4:35:error: record concatenation has overlapping field(s) x
+           |   val f = fun (f : Foo, b : Bar) f & b
+           |                                  ^
            |"""
     )
 
     test(
         "alias of function type",
-        "{ type Foo = (Int) String fun (f : Foo) f(0) }",
+        "{ type Foo = (Int) String val f = fun (f : Foo) f(0) { } }",
         ""
     )
 

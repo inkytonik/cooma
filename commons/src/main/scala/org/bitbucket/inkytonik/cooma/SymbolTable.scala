@@ -10,7 +10,7 @@
 
 package org.bitbucket.inkytonik.cooma
 
-import org.bitbucket.inkytonik.kiama.util.{Entity, Environments}
+import org.bitbucket.inkytonik.kiama.util.{Entity, Environments, Message, Source}
 
 /**
  * Superclass of all Cooma entities. Provides generic access to
@@ -223,27 +223,34 @@ object SymbolTable extends Environments[CoomaEntity] {
         if (config.noPrelude() || config.compilePrelude())
             rootenv()
         else {
-            val staticPreludePath = s"${config.preludePath()}.static"
-            val source = FileSource(staticPreludePath)
-            val positions = new Positions()
-            val p = new CoomaParser(source, positions)
-            val pr = p.pStaticPrelude(0)
-            if (pr.hasValue) {
-                val prelude = p.value(pr).asInstanceOf[StaticPrelude]
-                val entries = prelude.optStaticPreludeEntrys
-                entries.foldLeft(rootenv()) {
-                    case (env, StaticTypedEntry(id, tipe)) =>
-                        define(env, id, PredefTypedEntity(id, tipe))
-                    case (env, StaticLetEntry(id, tipe, exp)) =>
-                        define(env, id, PredefLetEntity(id, tipe, exp))
+            val path = s"${config.preludePath()}.static"
+            loadPrelude(path)
+                .left
+                .map {
+                    case (source, positions, message) =>
+                        val messaging = new Messaging(positions)
+                        config.output().emitln(s"cooma: can't read static prelude '$path'")
+                        messaging.report(source, Vector(message), config.output())
+                        sys.exit(1)
                 }
-            } else {
-                val messaging = new Messaging(positions)
-                config.output().emitln(s"cooma: can't read static prelude '$staticPreludePath'")
-                val message = p.errorToMessage(pr.parseError)
-                messaging.report(source, Vector(message), config.output())
-                sys.exit(1)
-            }
+                .merge
         }
+
+    def loadPrelude(path : String) : Either[(Source, Positions, Message), Environment] = {
+        val source = FileSource(path)
+        val positions = new Positions
+        val parser = new CoomaParser(source, positions)
+        val result = parser.pStaticPrelude(0)
+        if (result.hasValue) {
+            val prelude = parser.value(result).asInstanceOf[StaticPrelude]
+            val entries = prelude.optStaticPreludeEntrys
+            Right(entries.foldLeft(rootenv()) {
+                case (env, StaticTypedEntry(id, tipe)) =>
+                    define(env, id, PredefTypedEntity(id, tipe))
+                case (env, StaticLetEntry(id, tipe, exp)) =>
+                    define(env, id, PredefLetEntity(id, tipe, exp))
+            })
+        } else Left((source, positions, parser.errorToMessage(result.parseError)))
+    }
 
 }

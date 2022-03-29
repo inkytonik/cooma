@@ -20,7 +20,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout, pretty, show}
     import org.bitbucket.inkytonik.cooma.SymbolTable.{Environment, capabilityTypeNames, preludeStaticEnv, StrT}
     import org.bitbucket.inkytonik.kiama.output.PrettyPrinterTypes.Document
-    import org.bitbucket.inkytonik.kiama.relation.Tree
+    import org.bitbucket.inkytonik.kiama.relation.{EnsureTree, Tree}
     import org.bitbucket.inkytonik.kiama.util.Messaging.{Messages, noMessages}
     import org.bitbucket.inkytonik.kiama.util.Source
 
@@ -75,7 +75,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 publishSourceTreeProduct(source, pretty(any(program)))
             }
             val env = preludeStaticEnv(config)
-            desugar(program, env, positions) match {
+            desugar(program, env, positions).flatMap(TopLevelRewriter(_)) match {
                 case Left(messages) =>
                     Right(messages)
                 case Right(desugaredProgram) =>
@@ -98,7 +98,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
         if (!config.server() && config.filenames().isEmpty) {
             noMessages
         } else {
-            val tree = new Tree[ASTNode, Program](program)
+            val tree = new Tree[ASTNode, Program](program, EnsureTree)
             val analyser = new SemanticAnalyser(tree, env)
             analysers.get(source) match {
                 case Some(prevAnalyser) =>
@@ -107,7 +107,7 @@ abstract class Driver extends CompilerBase[ASTNode, Program, Config] with Server
                 // Do nothing
             }
             analysers(source) = analyser
-            analyser.tipe(program.expression) match {
+            analyser.tipe(tree.root.expression) match {
                 case Some(tipe) =>
                     if (config.typePrint())
                         config.output().emitln(show(tipe))
