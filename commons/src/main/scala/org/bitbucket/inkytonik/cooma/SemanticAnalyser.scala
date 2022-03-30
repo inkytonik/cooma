@@ -15,6 +15,8 @@ import org.bitbucket.inkytonik.cooma.SymbolTable._
 import org.bitbucket.inkytonik.kiama.attribution.Attribution
 import org.bitbucket.inkytonik.kiama.relation.Tree
 
+import scala.annotation.tailrec
+
 class SemanticAnalyser(
     val tree : Tree[ASTNode, ASTNode],
     predefStaticEnv : Environment = rootenv()
@@ -975,5 +977,202 @@ class SemanticAnalyser(
                 case (t, u) =>
                     subtype(t, u)
             })
+
+    sealed trait BoundResult extends Product
+    case object IgnoreBound extends BoundResult
+    case object NoBound extends BoundResult
+    case class Bound(tipe: Expression) extends BoundResult
+
+    // for covariant records and contravariant variants
+    def rowLub(tr: Vector[FieldType], ur: Vector[FieldType]): Option[Vector[FieldType]] = {
+        // ordering of fields: according to `t`
+        val urMap = ur.map { case FieldType(idn, tipe) => idn -> tipe }.toMap
+        @tailrec
+        def aux(
+            tr: Vector[FieldType],
+            out: Vector[FieldType]
+        ): Option[Vector[FieldType]] = {
+            tr match {
+                case FieldType(idn, tt) +: tl =>
+                    urMap.get(idn) match {
+                        case Some(ut) =>
+                            // common field, find LUB
+                            lub(tt, ut) match {
+                                case Some(t) =>
+                                    // found LUB
+                                    aux(tl, out :+ FieldType(idn, t))
+                                case None =>
+                                    // no LUB, omit field
+                                    aux(tl, out)
+                            }
+                        case None =>
+                            // field not in `u`, omit
+                            aux(tl, out)
+                    }
+                case Vector() =>
+                    if (out.isEmpty) None
+                    else Some(out)
+            }
+        }
+        aux(tr, Vector.empty)
+    }
+
+    // for contravariant records and covariant variants
+    def rowGlb(tr: Vector[FieldType], ur: Vector[FieldType]): Option[Vector[FieldType]] = {
+        // ordering of fields: all of `t`, then all of `u` minus `t`
+        val urMap = ur.map { case FieldType(idn, tipe) => idn -> tipe }.toMap
+        @tailrec
+        def aux(
+            tr: Vector[FieldType],
+            out: Vector[FieldType]
+        ): Option[Vector[FieldType]] =
+            tr match {
+                case FieldType(idn, tt) +: tl =>
+                    urMap.get(idn) match {
+                        case Some(ut) =>
+                            // common field, find LUB
+                            lub(tt, ut) match {
+                                case Some(t) =>
+                                    // found LUB
+                                    aux(tl, out :+ FieldType(idn, t))
+                                case None =>
+                                    // no LUB, abort
+                                    None
+                            }
+                        case None =>
+                            // field not in `u`, retain as in `t`
+                            aux(tl, out :+ FieldType(idn, tt))
+                    }
+                case Vector() =>
+                    // include all fields in `u` minus `t`
+                    val trSet = tr.map(_.identifier).toSet
+                    val urx = ur.filterNot { case FieldType(idn, _) => trSet(idn) }
+                    val result = out ++ urx
+                    if (result.isEmpty) None
+                    else Some(result)
+            }
+        aux(tr, Vector.empty)
+    }
+
+    sealed trait BoundDirection extends Product
+    case object Lub extends BoundDirection
+    case object Glb extends BoundDirection
+
+    def funBound(t: FunT, u: FunT, direction: BoundDirection): Option[FunT] = {
+        val (FunT(ArgumentTypes(tats), trt), FunT(ArgumentTypes(uats), urt)) = (t, u)
+        if (tats.length != uats.length)
+            // arity mismatch
+            None
+        else {
+            // covariance and contravariance
+            val (checkArg, checkReturn) =
+                direction match {
+                    // lub(A0 -> B0, A1 -> B1) = glb(A0, A1) -> lub(B0, B1)
+                    case Lub => (glb _, lub _)
+                    // glb(A0 -> B0, A1 -> B1) = lub(A0, A1) -> glb(B0, B1)
+                    case Glb => (lub _, glb _)
+                }
+            // check return type
+            checkReturn(trt, urt) match {
+                case Some(rt) =>
+                    // check arguments
+                    @tailrec
+                    def aux(
+                        ats: Vector[(ArgumentType, ArgumentType)],
+                        out: Vector[ArgumentType]
+                    ): Option[Vector[ArgumentType]] =
+                        ats match {
+                            case (ArgumentType(tio, tt), ArgumentType(uio, ut)) +: tl =>
+                                // prefer identifier name on the left
+                                val idnOpt =
+                                    (tio, uio) match {
+                                        case (Some(ti), _) => Some(ti)
+                                        case (None, Some(ui)) => Some(ui)
+                                        case (None, None) => None
+                                    }
+                                checkArg(tt, ut) match {
+                                    case Some(t) =>
+                                        // found GLB, continue
+                                        aux(tl, out :+ ArgumentType(idnOpt, t))
+                                    case None =>
+                                        // no GLB, abort
+                                        None
+                                }
+                            case Vector() =>
+                                Some(out)
+                        }
+                    aux(tats.zip(uats), Vector.empty).map(ats => FunT(ArgumentTypes(ats), rt))
+                case None =>
+                    None
+            }
+        }
+    }
+
+
+    def lub(t: Expression, u: Expression): Option[Expression] = {
+        val unaliased =
+            (unalias(t, t), unalias(u, u)) match {
+                case (Some(t), Some(u)) => Some((t, u))
+                case _ => None
+            }
+        unaliased.flatMap {
+            // records
+            case (RecT(tr), RecT(ur)) =>
+                rowLub(tr, ur).map(RecT)
+            // variants
+            case (VarT(tr), VarT(ur)) =>
+                rowGlb(tr, ur).map(VarT)
+            // vectors
+            case (VecT(tt), VecT(ut)) =>
+                lub(tt, ut).map(VecT)
+            case (VecNilT(), VecT(t)) =>
+                Some(VecT(t))
+            case (VecT(t), VecNilT()) =>
+                Some(VecT(t))
+            case (VecNilT(), VecNilT()) =>
+                Some(VecNilT())
+            // functions
+            case (t: FunT, u: FunT) =>
+                funBound(t, u, Lub)
+            // atomics
+            case (StrT(), StrT()) =>
+                Some(Idn(IdnUse("String")))
+            case (IntT(), IntT()) =>
+                Some(Idn(IdnUse("Int")))
+            case _ =>
+                None
+        }
+    }
+
+    def glb(t: Expression, u: Expression): Option[Expression] = {
+        val unaliased =
+            (unalias(t, t), unalias(u, u)) match {
+                case (Some(t), Some(u)) => Some((t, u))
+                case _ => None
+            }
+        unaliased.flatMap {
+            // records
+            case (RecT(tr), RecT(ur)) =>
+                rowGlb(tr, ur).map(RecT)
+            // variants
+            case (VarT(tr), VarT(ur)) =>
+                rowLub(tr, ur).map(VarT)
+            // vectors
+            case (VecT(tt), VecT(ut)) =>
+                glb(tt, ut).map(VecT)
+            case (VecNilT(), _) | (VecNilT(), _) =>
+                Some(VecNilT())
+            // functions
+            case (t: FunT, u: FunT) =>
+                funBound(t, u, Glb)
+            // atomics
+            case (StrT(), StrT()) =>
+                Some(Idn(IdnUse("String")))
+            case (IntT(), IntT()) =>
+                Some(Idn(IdnUse("Int")))
+            case _ =>
+                None
+        }
+    }
 
 }
