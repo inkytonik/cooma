@@ -74,8 +74,8 @@ class SemanticAnalyser(
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
-                        case Vec(e) =>
-                            checkVectorElements(e)
+                        case vec : Vec =>
+                            checkVectorElements(vec)
                     }
         }
 
@@ -275,19 +275,17 @@ class SemanticAnalyser(
             noMessages
     }
 
-    def checkVectorElements(elems : VecElems) : Messages =
-        if (elems.optExpressions.isEmpty)
-            noMessages
-        else
-            tipe(elems.optExpressions.head) match {
-                case Some(firstType) =>
-                    if (elems.optExpressions.forall(e => subtype(tipe(e), firstType)))
-                        noMessages
-                    else
-                        error(elems, s"all the elements in this vector must be of type ${show(firstType)}")
-                case None =>
-                    noMessages
-            }
+    val vecLubType : VecElems => BoundResult =
+        attr {
+            case VecElems(elems) =>
+                getLub(elems)
+        }
+
+    def checkVectorElements(vec : Vec) : Messages =
+        vecLubType(vec.vecElems) match {
+            case Bound(_) | IgnoreBound => noMessages
+            case NoBound                => error(vec, "Vector elements be of a common supertype")
+        }
 
     object Scope {
         def unapply(n : ASTNode) : Boolean =
@@ -981,17 +979,53 @@ class SemanticAnalyser(
     sealed trait BoundResult extends Product
     case object IgnoreBound extends BoundResult
     case object NoBound extends BoundResult
-    case class Bound(tipe: Expression) extends BoundResult
+    case class Bound(tipe : Expression) extends BoundResult
+
+    def getLub(es : Vector[Expression]) : BoundResult = {
+        val tipesOpt = es.map(tipe)
+        // unwrap options, if `None` appears then ignore bound (error occurred elsewhere)
+        @tailrec
+        def flatten(
+            tipesOpt : Vector[Option[Expression]],
+            out : Vector[Expression]
+        ) : Option[Vector[Expression]] =
+            tipesOpt match {
+                case Some(hd) +: tl => flatten(tl, out :+ hd)
+                case None +: _      => None
+                case _              => Some(out)
+            }
+        flatten(tipesOpt, Vector.empty) match {
+            case Some(hd +: tl) =>
+                @tailrec
+                def aux(
+                    tipes : Vector[Expression],
+                    out : Expression
+                ) : BoundResult =
+                    (tipes, out) match {
+                        case (u +: tl, t) =>
+                            lub(t, u) match {
+                                case Some(t) => aux(tl, t)
+                                case None    => NoBound
+                            }
+                        case (_, t) =>
+                            Bound(t)
+                    }
+                aux(tl, hd)
+            case _ =>
+                // empty or error occurred elsewhere
+                IgnoreBound
+        }
+    }
 
     // for covariant records and contravariant variants
-    def rowLub(tr: Vector[FieldType], ur: Vector[FieldType]): Option[Vector[FieldType]] = {
+    def rowLub(tr : Vector[FieldType], ur : Vector[FieldType]) : Option[Vector[FieldType]] = {
         // ordering of fields: according to `t`
         val urMap = ur.map { case FieldType(idn, tipe) => idn -> tipe }.toMap
         @tailrec
         def aux(
-            tr: Vector[FieldType],
-            out: Vector[FieldType]
-        ): Option[Vector[FieldType]] = {
+            tr : Vector[FieldType],
+            out : Vector[FieldType]
+        ) : Option[Vector[FieldType]] = {
             tr match {
                 case FieldType(idn, tt) +: tl =>
                     urMap.get(idn) match {
@@ -1009,7 +1043,7 @@ class SemanticAnalyser(
                             // field not in `u`, omit
                             aux(tl, out)
                     }
-                case Vector() =>
+                case _ =>
                     if (out.isEmpty) None
                     else Some(out)
             }
@@ -1018,14 +1052,14 @@ class SemanticAnalyser(
     }
 
     // for contravariant records and covariant variants
-    def rowGlb(tr: Vector[FieldType], ur: Vector[FieldType]): Option[Vector[FieldType]] = {
+    def rowGlb(tr : Vector[FieldType], ur : Vector[FieldType]) : Option[Vector[FieldType]] = {
         // ordering of fields: all of `t`, then all of `u` minus `t`
         val urMap = ur.map { case FieldType(idn, tipe) => idn -> tipe }.toMap
         @tailrec
         def aux(
-            tr: Vector[FieldType],
-            out: Vector[FieldType]
-        ): Option[Vector[FieldType]] =
+            tr : Vector[FieldType],
+            out : Vector[FieldType]
+        ) : Option[Vector[FieldType]] =
             tr match {
                 case FieldType(idn, tt) +: tl =>
                     urMap.get(idn) match {
@@ -1043,7 +1077,7 @@ class SemanticAnalyser(
                             // field not in `u`, retain as in `t`
                             aux(tl, out :+ FieldType(idn, tt))
                     }
-                case Vector() =>
+                case _ =>
                     // include all fields in `u` minus `t`
                     val trSet = tr.map(_.identifier).toSet
                     val urx = ur.filterNot { case FieldType(idn, _) => trSet(idn) }
@@ -1058,7 +1092,7 @@ class SemanticAnalyser(
     case object Lub extends BoundDirection
     case object Glb extends BoundDirection
 
-    def funBound(t: FunT, u: FunT, direction: BoundDirection): Option[FunT] = {
+    def funBound(t : FunT, u : FunT, direction : BoundDirection) : Option[FunT] = {
         val (FunT(ArgumentTypes(tats), trt), FunT(ArgumentTypes(uats), urt)) = (t, u)
         if (tats.length != uats.length)
             // arity mismatch
@@ -1078,17 +1112,17 @@ class SemanticAnalyser(
                     // check arguments
                     @tailrec
                     def aux(
-                        ats: Vector[(ArgumentType, ArgumentType)],
-                        out: Vector[ArgumentType]
-                    ): Option[Vector[ArgumentType]] =
+                        ats : Vector[(ArgumentType, ArgumentType)],
+                        out : Vector[ArgumentType]
+                    ) : Option[Vector[ArgumentType]] =
                         ats match {
                             case (ArgumentType(tio, tt), ArgumentType(uio, ut)) +: tl =>
                                 // prefer identifier name on the left
                                 val idnOpt =
                                     (tio, uio) match {
-                                        case (Some(ti), _) => Some(ti)
+                                        case (Some(ti), _)    => Some(ti)
                                         case (None, Some(ui)) => Some(ui)
-                                        case (None, None) => None
+                                        case (None, None)     => None
                                     }
                                 checkArg(tt, ut) match {
                                     case Some(t) =>
@@ -1098,7 +1132,7 @@ class SemanticAnalyser(
                                         // no GLB, abort
                                         None
                                 }
-                            case Vector() =>
+                            case _ =>
                                 Some(out)
                         }
                     aux(tats.zip(uats), Vector.empty).map(ats => FunT(ArgumentTypes(ats), rt))
@@ -1108,12 +1142,11 @@ class SemanticAnalyser(
         }
     }
 
-
-    def lub(t: Expression, u: Expression): Option[Expression] = {
+    def lub(t : Expression, u : Expression) : Option[Expression] = {
         val unaliased =
             (unalias(t, t), unalias(u, u)) match {
                 case (Some(t), Some(u)) => Some((t, u))
-                case _ => None
+                case _                  => None
             }
         unaliased.flatMap {
             // records
@@ -1132,7 +1165,7 @@ class SemanticAnalyser(
             case (VecNilT(), VecNilT()) =>
                 Some(VecNilT())
             // functions
-            case (t: FunT, u: FunT) =>
+            case (t : FunT, u : FunT) =>
                 funBound(t, u, Lub)
             // atomics
             case (StrT(), StrT()) =>
@@ -1144,11 +1177,11 @@ class SemanticAnalyser(
         }
     }
 
-    def glb(t: Expression, u: Expression): Option[Expression] = {
+    def glb(t : Expression, u : Expression) : Option[Expression] = {
         val unaliased =
             (unalias(t, t), unalias(u, u)) match {
                 case (Some(t), Some(u)) => Some((t, u))
-                case _ => None
+                case _                  => None
             }
         unaliased.flatMap {
             // records
@@ -1163,7 +1196,7 @@ class SemanticAnalyser(
             case (VecNilT(), _) | (VecNilT(), _) =>
                 Some(VecNilT())
             // functions
-            case (t: FunT, u: FunT) =>
+            case (t : FunT, u : FunT) =>
                 funBound(t, u, Glb)
             // atomics
             case (StrT(), StrT()) =>
