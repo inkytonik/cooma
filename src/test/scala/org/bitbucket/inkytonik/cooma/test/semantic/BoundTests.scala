@@ -366,7 +366,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
            |    { }
            |}
            |""".stripMargin,
-        """|4:14:error: Vector elements be of a common supertype
+        """|4:14:error: Vector elements be of a common type
            |    val fs = [add_one, add]
            |             ^
            |""".stripMargin

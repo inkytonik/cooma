@@ -283,7 +283,7 @@ class SemanticAnalyser(
     def checkVectorElements(vec : Vec) : Messages =
         vecLubType(vec.vecElems) match {
             case Bound(_) | IgnoreBound => noMessages
-            case NoBound                => error(vec, "Vector elements be of a common type")
+            case NoBound                => error(vec, "Vector elements must be of a common type")
         }
 
     object Scope {
