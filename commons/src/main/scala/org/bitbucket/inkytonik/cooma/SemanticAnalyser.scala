@@ -16,6 +16,7 @@ import org.bitbucket.inkytonik.kiama.attribution.Attribution
 import org.bitbucket.inkytonik.kiama.relation.Tree
 
 import scala.annotation.tailrec
+import scala.collection.immutable.SeqMap
 
 class SemanticAnalyser(
     val tree : Tree[ASTNode, ASTNode],
@@ -125,10 +126,8 @@ class SemanticAnalyser(
 
     def checkCaseExpressionTypes(c : Case, m : Mat) : Messages =
         matchType(m) match {
-            case BadCases() =>
-                error(c.expression, s"case expression types are not the same")
-            case t =>
-                noMessages
+            case NoBound => error(c.expression, s"case expressions must be of a common type")
+            case _       => noMessages
         }
 
     def checkCaseVariants(c : Case, m : Mat) : Messages =
@@ -284,7 +283,7 @@ class SemanticAnalyser(
     def checkVectorElements(vec : Vec) : Messages =
         vecLubType(vec.vecElems) match {
             case Bound(_) | IgnoreBound => noMessages
-            case NoBound                => error(vec, "Vector elements be of a common supertype")
+            case NoBound                => error(vec, "Vector elements be of a common type")
         }
 
     object Scope {
@@ -494,10 +493,8 @@ class SemanticAnalyser(
 
             case m : Mat =>
                 matchType(m) match {
-                    case OkCases(optType) =>
-                        optType
-                    case BadCases() =>
-                        None
+                    case Bound(t) => Some(t)
+                    case _        => None
                 }
 
             case _ : Mul =>
@@ -545,11 +542,9 @@ class SemanticAnalyser(
                 if (elems.optExpressions.isEmpty)
                     Some(VecNilT())
                 else
-                    tipe(elems.optExpressions.head) match {
-                        case Some(firstType) =>
-                            Some(VecT(firstType))
-                        case None =>
-                            None
+                    vecLubType(elems) match {
+                        case IgnoreBound | NoBound => None
+                        case Bound(t)              => Some(VecT(t))
                     }
 
             case _ : VecNilT | _ : VecT =>
@@ -677,21 +672,8 @@ class SemanticAnalyser(
     case class BadCases() extends MatchType
     case class OkCases(optType : Option[Expression]) extends MatchType
 
-    lazy val matchType : Mat => MatchType =
-        attr {
-            case m =>
-                val caseTypes =
-                    m.cases.map {
-                        case Case(_, _, e) =>
-                            tipe(e)
-                    }.distinct
-                if (caseTypes contains None)
-                    OkCases(None)
-                else if (caseTypes.length > 1)
-                    BadCases()
-                else
-                    OkCases(caseTypes(0))
-        }
+    lazy val matchType : Mat => BoundResult =
+        attr { case Mat(_, cases) => getLub(cases.map(_.expression)) }
 
     val unaliasedType : Expression => Option[Expression] =
         attr {
@@ -1058,7 +1040,7 @@ class SemanticAnalyser(
         @tailrec
         def aux(
             tr : Vector[FieldType],
-            out : Vector[FieldType]
+            out : SeqMap[String, Expression]
         ) : Option[Vector[FieldType]] =
             tr match {
                 case FieldType(idn, tt) +: tl =>
@@ -1068,24 +1050,24 @@ class SemanticAnalyser(
                             lub(tt, ut) match {
                                 case Some(t) =>
                                     // found LUB
-                                    aux(tl, out :+ FieldType(idn, t))
+                                    aux(tl, out.updated(idn, t))
                                 case None =>
                                     // no LUB, abort
                                     None
                             }
                         case None =>
                             // field not in `u`, retain as in `t`
-                            aux(tl, out :+ FieldType(idn, tt))
+                            aux(tl, out + (idn -> tt))
                     }
                 case _ =>
                     // include all fields in `u` minus `t`
-                    val trSet = tr.map(_.identifier).toSet
-                    val urx = ur.filterNot { case FieldType(idn, _) => trSet(idn) }
-                    val result = out ++ urx
+                    val trx = out.toVector.map { case (idn, t) => FieldType(idn, t) }
+                    val urx = ur.filterNot { case FieldType(idn, _) => out.contains(idn) }
+                    val result = trx ++ urx
                     if (result.isEmpty) None
                     else Some(result)
             }
-        aux(tr, Vector.empty)
+        aux(tr, SeqMap.empty)
     }
 
     sealed trait BoundDirection extends Product
@@ -1149,6 +1131,9 @@ class SemanticAnalyser(
                 case _                  => None
             }
         unaliased.flatMap {
+            // unit
+            case (UniT(), UniT()) =>
+                Some(Idn(IdnUse("Unit")))
             // records
             case (RecT(tr), RecT(ur)) =>
                 rowLub(tr, ur).map(RecT)
@@ -1184,6 +1169,9 @@ class SemanticAnalyser(
                 case _                  => None
             }
         unaliased.flatMap {
+            // unit
+            case (UniT(), UniT()) =>
+                Some(Idn(IdnUse("Unit")))
             // records
             case (RecT(tr), RecT(ur)) =>
                 rowGlb(tr, ur).map(RecT)
