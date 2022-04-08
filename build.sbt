@@ -6,8 +6,8 @@ import scala.sys.process._
 
 name := "cooma"
 version := "0.1.0"
-organization in ThisBuild := "org.bitbucket.inkytonik.cooma"
-scalaVersion in ThisBuild := "2.13.4"
+ThisBuild / organization := "org.bitbucket.inkytonik.cooma"
+ThisBuild / scalaVersion := "2.13.4"
 
 lazy val kiamaDependencies = Seq(
 	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.4.0",
@@ -16,17 +16,11 @@ lazy val kiamaDependencies = Seq(
 	"org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.4.0" % "test" classifier ("tests")
 )
 
-// Global/excludeLintKeys ++=
-// 	Set(
-// 		buildInfoKeys,
-// 		buildInfoPackage
-// 	)
-
 lazy val commonsettings = Seq(
 	organization := "org.bitbucket.inkytonik.cooma",
 	scalaVersion := "2.13.4",
 
-	unmanagedSourceDirectories in Compile += baseDirectory.value / "truffle/target/scala-2.13/classes/org/bitbucket/inkytonik/cooma/truffle",
+	Compile / unmanagedSourceDirectories += baseDirectory.value / "truffle/target/scala-2.13/classes/org/bitbucket/inkytonik/cooma/truffle",
 	scalacOptions ++=
 		Seq(
 			"-deprecation",
@@ -44,8 +38,8 @@ lazy val commonsettings = Seq(
 		Resolver.bintrayRepo("wolfendale", "maven")
 	),
 
-	buildInfoKeys := Seq[BuildInfoKey](name, version),
-	buildInfoPackage := organization.value,
+	// buildInfoKeys := Seq[BuildInfoKey](name, version),
+	// buildInfoPackage := organization.value,
 	compileOrder := CompileOrder.Mixed,
 	logLevel := Level.Info,
 	shellPrompt := {
@@ -53,13 +47,13 @@ lazy val commonsettings = Seq(
 			Project.extract(state).currentRef.project + " " + version.value +
 				" " + scalaVersion.value + "> "
 	},
-	testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
-	logBuffered in Test := false,
+	Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
+	Test / logBuffered := false,
 	fork := true,
-	connectInput in run := true,
-	outputStrategy in run := Some(StdoutOutput),
-	javaOptions in run ++= Seq("-Xss16m", "-Xmx1G"),
-	javaOptions in Test ++= Seq("-Xss16m", "-Xmx1G"),
+	run / connectInput := true,
+	run / outputStrategy := Some(StdoutOutput),
+	run / javaOptions ++= Seq("-Xss16m", "-Xmx1G"),
+	Test / javaOptions ++= Seq("-Xss16m", "-Xmx1G"),
 
 	// ScalariForm
 	scalariformPreferences := scalariformPreferences.value
@@ -90,18 +84,18 @@ lazy val commonsettings = Seq(
 
 // Assembly
 lazy val assemblySettings = Seq(
-	assemblyJarName in assembly := name.value + ".jar",
-	assemblyMergeStrategy in assembly := {
+	assembly / assemblyJarName := name.value + ".jar",
+	assembly / assemblyMergeStrategy := {
 		case PathList("org","xmlpull", xs @ _*) => MergeStrategy.last
 		case PathList("META-INF", "truffle", "language") => MergeStrategy.deduplicate
 		case PathList("META-INF", "ECLIPSE_.RSA") => MergeStrategy.discard
 		case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
 		case x =>
-			val oldStrategy = (assemblyMergeStrategy in assembly).value
+			val oldStrategy = (assembly / assemblyMergeStrategy).value
 			oldStrategy(x)
 	},
-	assemblyExcludedJars in assembly := {
-		val cp = (fullClasspath in assembly).value
+	assembly / assemblyExcludedJars := {
+		val cp = (assembly / fullClasspath).value
 		cp filter { f =>
 			//f.data.getName.contains("truffle-api") ||
 			//f.data.getName.contains("truffle-tck")
@@ -109,7 +103,7 @@ lazy val assemblySettings = Seq(
 			f.data.getName.contains("graal-sdk")
 		}
 	},
-	test in assembly := {}
+	assembly / test := {}
 )
 
 // Modules
@@ -119,7 +113,7 @@ lazy val root = (project in file("."))
 		version := "0.1.0",
 		assemblySettings,
 		commonsettings,
-		mainClass in Compile := (mainClass in Compile in reference).value,
+		Compile / mainClass := (reference / Compile / mainClass).value,
 		libraryDependencies ++= Seq(
 			"org.http4s" %% "http4s-blaze-server" % "0.21.16" % "test",
 			"org.http4s" %% "http4s-blaze-client" % "0.21.16" % "test",
@@ -149,7 +143,7 @@ lazy val root = (project in file("."))
 lazy val reference = (project in file("reference"))
 	.settings(
 		commonsettings,
-		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main")
+		Compile / run / mainClass := Some("org.bitbucket.inkytonik.cooma.Main")
 	) dependsOn (commons)
 
 lazy val truffle_root = (project in file("truffle_root"))
@@ -219,4 +213,4 @@ lazy val trufflecomponent = (project in file("truffle-component"))
 // Custom tasks
 
 val testFailing = taskKey[Unit]("Launch tests, tracing only failures")
-testFailing := (testOnly in Test).toTask(" * -- -oC").value
+testFailing := (Test / testOnly).toTask(" * -- -oC").value
