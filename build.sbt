@@ -7,7 +7,7 @@ import scala.sys.process._
 name := "cooma"
 version := "0.1.0"
 ThisBuild / organization := "org.bitbucket.inkytonik.cooma"
-ThisBuild / scalaVersion := "2.13.4"
+ThisBuild / scalaVersion := "2.13.8"
 
 lazy val kiamaDependencies = Seq(
 	"org.bitbucket.inkytonik.kiama" %% "kiama" % "2.4.0",
@@ -18,7 +18,7 @@ lazy val kiamaDependencies = Seq(
 
 lazy val commonsettings = Seq(
 	organization := "org.bitbucket.inkytonik.cooma",
-	scalaVersion := "2.13.4",
+	scalaVersion := "2.13.8",
 
 	Compile / unmanagedSourceDirectories += baseDirectory.value / "truffle/target/scala-2.13/classes/org/bitbucket/inkytonik/cooma/truffle",
 	scalacOptions ++=
