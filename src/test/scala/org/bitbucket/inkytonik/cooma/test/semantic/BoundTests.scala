@@ -40,74 +40,74 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         }
     }
 
-    def test(name : String, tipes : Vector[String], expected : Option[String]) : Unit =
+    def testLub(name : String, tipes : Vector[String], expected : Option[String]) : Unit =
         super.test(name)(runTest(tipes, expected))
 
     ///////////
     // BASIC //
     ///////////
 
-    test(
+    testLub(
         "Equal primitives",
         Vector("1", "2"),
         Some("Int")
     )
 
-    test(
+    testLub(
         "Unrelated primitives",
         Vector("1", "\"foo\""),
         None
     )
 
-    test(
+    testLub(
         "Primitive and non-primitive",
         Vector("\"bar\"", "{ x = 1 }"),
         None
     )
 
-    test(
+    testLub(
         "Record and variant",
         Vector("{ a = 1 }", "<< A = 1 >>"),
         None
     )
 
-    test(
+    testLub(
         "Unit and Unit",
         Vector("{}", "{}"),
         Some("Unit")
     )
 
-    test(
+    testLub(
         "Records of equal type",
         Vector("{ x = 1 }", "{ x = 2 }", "{ x = 3 }"),
         Some("{ x: Int }")
     )
 
-    test(
+    testLub(
         "Variants of equal type",
         Vector("<< Some = 1 >>", "<< Some = 2 >>", "<< Some = 3 >>"),
         Some("<< Some: Int >>")
     )
 
-    test(
+    testLub(
         "Empty vectors",
         Vector.fill(3)("[]"),
         Some("Vector()")
     )
 
-    test(
+    testLub(
         "Vectors of equal type",
         Vector("[1]", "[2, 3, 4]", "[5, 6]"),
         Some("Vector(Int)")
     )
 
-    test(
+    testLub(
         "Vectors of equal type with empty vectors",
         Vector("[1]", "[]", "[2, 3, 4]", "[5, 6]", "[]"),
         Some("Vector(Int)")
     )
 
-    test(
+    testLub(
         "Vectors of unrelated type",
         Vector("[]", "[42]", "\"qwerty\""),
         None
@@ -117,7 +117,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
     // RECORDS //
     /////////////
 
-    test(
+    testLub(
         "Equal record types",
         Vector(
             "{ foo = 1, bar = \"qwerty\" }",
@@ -126,7 +126,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         Some("{ foo: Int, bar: String }")
     )
 
-    test(
+    testLub(
         "Two records with non-empty LUB",
         Vector(
             "{ foo = 1, bar = \"qwerty\", baz = 42 }",
@@ -135,7 +135,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         Some("{ bar: String, baz: Int }")
     )
 
-    test(
+    testLub(
         "Two records with empty LUB",
         Vector(
             "{ foo = 1 }",
@@ -144,7 +144,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         None
     )
 
-    test(
+    testLub(
         "Records A >: B >: C",
         Vector(
             "{ foo = 1 }",
@@ -154,7 +154,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         Some("{ foo: Int }")
     )
 
-    test(
+    testLub(
         "Records A <: B <: C",
         Vector(
             "{ foo = 3, bar = \"b\", baz = 4 }",
@@ -164,7 +164,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         Some("{ foo: Int }")
     )
 
-    test(
+    testLub(
         "Preservation of record field ordering",
         Vector(
             "{ foo = 1, bar = 2, baz = 3 }",
@@ -178,7 +178,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
     // VARIANTS //
     //////////////
 
-    test(
+    testLub(
         "Equal variant types",
         Vector(
             "<< Some = 1 >>",
@@ -187,7 +187,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         Some("<< Some: Int >>")
     )
 
-    test(
+    testLub(
         "Two variants of different type",
         Vector(
             "<< Left = \"qwerty\" >>",
@@ -196,7 +196,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         Some("<< Left: String, Right: Int >>")
     )
 
-    test(
+    testLub(
         "Multiple variants, some overlapping",
         Vector(
             "<< None = { } >>",
@@ -207,7 +207,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         Some("<< None: Unit, Some: Int >>")
     )
 
-    test(
+    testLub(
         "Preservation of variant field ordering",
         Vector(
             "<< A = 1 >>",
@@ -224,7 +224,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
     // NESTING //
     /////////////
 
-    test(
+    testLub(
         "Records with common field of unrelated types",
         Vector(
             "{ bar = 42 }",
@@ -233,7 +233,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         None
     )
 
-    test(
+    testLub(
         "Records with common fields of related types",
         Vector(
             """|{
@@ -278,7 +278,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         )
     )
 
-    test(
+    testLub(
         "Variants with common field of unrelated type",
         Vector(
             "<< Some = 42 >>",
@@ -287,7 +287,7 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         None
     )
 
-    test(
+    testLub(
         "Variants with common field of related type",
         Vector(
             "<< None = { } >>",
@@ -328,13 +328,13 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
         )
     )
 
-    test(
+    testLub(
         "Vector with elements of unrelated type",
         Vector("[42, \"qwerty\", []]"),
         None
     )
 
-    test(
+    testLub(
         "Vector with elements of related type",
         Vector("[{ a = 1 }, { a = 1, b = 2 }]"),
         Some("Vector({ a: Int })")

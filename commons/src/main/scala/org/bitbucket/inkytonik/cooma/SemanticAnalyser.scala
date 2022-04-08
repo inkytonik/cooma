@@ -1018,8 +1018,8 @@ class SemanticAnalyser(
                                     // found LUB
                                     aux(tl, out :+ FieldType(idn, t))
                                 case None =>
-                                    // no LUB, omit field
-                                    aux(tl, out)
+                                    // no LUB
+                                    None
                             }
                         case None =>
                             // field not in `u`, omit
@@ -1046,13 +1046,13 @@ class SemanticAnalyser(
                 case FieldType(idn, tt) +: tl =>
                     urMap.get(idn) match {
                         case Some(ut) =>
-                            // common field, find LUB
-                            lub(tt, ut) match {
+                            // common field, find GLB
+                            glb(tt, ut) match {
                                 case Some(t) =>
-                                    // found LUB
-                                    aux(tl, out.updated(idn, t))
+                                    // found GLB
+                                    aux(tl, out + (idn -> tt))
                                 case None =>
-                                    // no LUB, abort
+                                    // no GLB, abort
                                     None
                             }
                         case None =>
@@ -1108,10 +1108,10 @@ class SemanticAnalyser(
                                     }
                                 checkArg(tt, ut) match {
                                     case Some(t) =>
-                                        // found GLB, continue
+                                        // found bound, continue
                                         aux(tl, out :+ ArgumentType(idnOpt, t))
                                     case None =>
-                                        // no GLB, abort
+                                        // no bound, abort
                                         None
                                 }
                             case _ =>
