@@ -38,8 +38,8 @@ lazy val commonsettings = Seq(
 		Resolver.bintrayRepo("wolfendale", "maven")
 	),
 
-	// buildInfoKeys := Seq[BuildInfoKey](name, version),
-	// buildInfoPackage := organization.value,
+	buildInfoKeys := Seq[BuildInfoKey](name, version),
+	buildInfoPackage := organization.value,
 	compileOrder := CompileOrder.Mixed,
 	logLevel := Level.Info,
 	shellPrompt := {
@@ -118,9 +118,9 @@ lazy val root = (project in file("."))
 			"org.http4s" %% "http4s-blaze-server" % "0.21.16" % "test",
 			"org.http4s" %% "http4s-blaze-client" % "0.21.16" % "test",
 			"org.http4s" %% "http4s-dsl" % "0.21.16" % "test",
-            "org.scalatest" %% "scalatest" % "3.2.3" % "test",
-			"org.scalatestplus" %% "scalacheck-1-15" % "3.2.3.0" % "test",
-            "org.scalacheck" %% "scalacheck" % "1.15.2" % "test",
+            "org.scalatest" %% "scalatest" % "3.2.11" % "test",
+			"org.scalatestplus" %% "scalacheck-1-15" % "3.2.11.0" % "test",
+            "org.scalacheck" %% "scalacheck" % "1.15.4" % "test",
 			"org.xerial" % "sqlite-jdbc" % "3.34.0",
 			"io.github.wolfendale" %% "scalacheck-gen-regexp" % "0.1.3"
 		) ++ kiamaDependencies
