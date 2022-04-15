@@ -130,7 +130,8 @@ lazy val root = (project in file("."))
 			"org.xerial" % "sqlite-jdbc" % "3.34.0",
 			"io.github.wolfendale" %% "scalacheck-gen-regexp" % "0.1.3",
 		) ++ kiamaDependencies,
-		fork in Test := false
+		Test / fork := false,
+		Test / parallelExecution := false
 	)
 	.dependsOn(
 		commons,

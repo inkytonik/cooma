@@ -69,8 +69,8 @@ class SemanticAnalyser(
                             noMessages
                         case Idn(u @ IdnUse(i)) if entity(u) == UnknownEntity() =>
                             error(u, s"$i is not declared")
-                        case Mat(e, cs) =>
-                            checkMatch(e, cs)
+                        case m : Mat =>
+                            checkMatch(m)
                         case Sel(e, f) =>
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
@@ -112,7 +112,6 @@ class SemanticAnalyser(
         c match {
             case tree.parent(m : Mat) =>
                 checkCaseDup(c, m) ++
-                    checkCaseExpressionTypes(c, m) ++
                     checkCaseVariants(c, m)
             case _ =>
                 sys.error(s"checkCase: can't find enclosing match")
@@ -124,9 +123,9 @@ class SemanticAnalyser(
         else
             noMessages
 
-    def checkCaseExpressionTypes(c : Case, m : Mat) : Messages =
+    def checkCaseExpressionTypes(m : Mat) : Messages =
         matchType(m) match {
-            case NoBound => error(c.expression, s"case expressions must be of a common type")
+            case NoBound => error(m, s"case expressions must be of a common type")
             case _       => noMessages
         }
 
@@ -198,8 +197,11 @@ class SemanticAnalyser(
         }
     }
 
-    def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
-        checkMatchCaseNum(e, cs) ++ checkMatchDiscType(e)
+    def checkMatch(m : Mat) : Messages = {
+        val e = m.expression
+        val cs = m.cases
+        checkMatchCaseNum(e, cs) ++ checkMatchDiscType(e) ++ checkCaseExpressionTypes(m)
+    }
 
     def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
         tipe(e) match {
@@ -963,6 +965,17 @@ class SemanticAnalyser(
     case object NoBound extends BoundResult
     case class Bound(tipe : Expression) extends BoundResult
 
+    sealed trait BoundDirection extends Product {
+        def bound =
+            this match {
+                case Lub => lub _
+                case Glb => glb _
+            }
+    }
+
+    case object Lub extends BoundDirection
+    case object Glb extends BoundDirection
+
     def getLub(es : Vector[Expression]) : BoundResult = {
         val tipesOpt = es.map(tipe)
         // unwrap options, if `None` appears then ignore bound (error occurred elsewhere)
@@ -1000,7 +1013,11 @@ class SemanticAnalyser(
     }
 
     // for covariant records and contravariant variants
-    def rowLub(tr : Vector[FieldType], ur : Vector[FieldType]) : Option[Vector[FieldType]] = {
+    def rowLub(
+        tr : Vector[FieldType],
+        ur : Vector[FieldType],
+        direction : BoundDirection
+    ) : Option[Vector[FieldType]] = {
         // ordering of fields: according to `t`
         val urMap = ur.map { case FieldType(idn, tipe) => idn -> tipe }.toMap
         @tailrec
@@ -1012,13 +1029,13 @@ class SemanticAnalyser(
                 case FieldType(idn, tt) +: tl =>
                     urMap.get(idn) match {
                         case Some(ut) =>
-                            // common field, find LUB
-                            lub(tt, ut) match {
+                            // common field, find bound
+                            direction.bound(tt, ut) match {
                                 case Some(t) =>
-                                    // found LUB
+                                    // found bound
                                     aux(tl, out :+ FieldType(idn, t))
                                 case None =>
-                                    // no LUB
+                                    // no bound
                                     None
                             }
                         case None =>
@@ -1034,7 +1051,11 @@ class SemanticAnalyser(
     }
 
     // for contravariant records and covariant variants
-    def rowGlb(tr : Vector[FieldType], ur : Vector[FieldType]) : Option[Vector[FieldType]] = {
+    def rowGlb(
+        tr : Vector[FieldType],
+        ur : Vector[FieldType],
+        direction : BoundDirection
+    ) : Option[Vector[FieldType]] = {
         // ordering of fields: all of `t`, then all of `u` minus `t`
         val urMap = ur.map { case FieldType(idn, tipe) => idn -> tipe }.toMap
         @tailrec
@@ -1046,13 +1067,13 @@ class SemanticAnalyser(
                 case FieldType(idn, tt) +: tl =>
                     urMap.get(idn) match {
                         case Some(ut) =>
-                            // common field, find GLB
-                            glb(tt, ut) match {
+                            // common field, find bound
+                            direction.bound(tt, ut) match {
                                 case Some(t) =>
-                                    // found GLB
-                                    aux(tl, out + (idn -> tt))
+                                    // found bound
+                                    aux(tl, out + (idn -> t))
                                 case None =>
-                                    // no GLB, abort
+                                    // no bound, abort
                                     None
                             }
                         case None =>
@@ -1069,10 +1090,6 @@ class SemanticAnalyser(
             }
         aux(tr, SeqMap.empty)
     }
-
-    sealed trait BoundDirection extends Product
-    case object Lub extends BoundDirection
-    case object Glb extends BoundDirection
 
     def funBound(t : FunT, u : FunT, direction : BoundDirection) : Option[FunT] = {
         val (FunT(ArgumentTypes(tats), trt), FunT(ArgumentTypes(uats), urt)) = (t, u)
@@ -1136,10 +1153,10 @@ class SemanticAnalyser(
                 Some(Idn(IdnUse("Unit")))
             // records
             case (RecT(tr), RecT(ur)) =>
-                rowLub(tr, ur).map(RecT)
+                rowLub(tr, ur, Lub).map(RecT)
             // variants
             case (VarT(tr), VarT(ur)) =>
-                rowGlb(tr, ur).map(VarT)
+                rowGlb(tr, ur, Lub).map(VarT)
             // vectors
             case (VecT(tt), VecT(ut)) =>
                 lub(tt, ut).map(VecT)
@@ -1174,10 +1191,10 @@ class SemanticAnalyser(
                 Some(Idn(IdnUse("Unit")))
             // records
             case (RecT(tr), RecT(ur)) =>
-                rowGlb(tr, ur).map(RecT)
+                rowGlb(tr, ur, Glb).map(RecT)
             // variants
             case (VarT(tr), VarT(ur)) =>
-                rowLub(tr, ur).map(VarT)
+                rowLub(tr, ur, Glb).map(VarT)
             // vectors
             case (VecT(tt), VecT(ut)) =>
                 glb(tt, ut).map(VecT)

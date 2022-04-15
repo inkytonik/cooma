@@ -165,12 +165,9 @@ class TypeAliasTests extends SemanticTests {
         |        v match { case a(c) => x case b(d) => y }
         |    0
         |}""",
-        """|5:32:error: case expressions must be of a common type
+        """|5:9:error: case expressions must be of a common type
            |        v match { case a(c) => x case b(d) => y }
-           |                               ^
-           |5:47:error: case expressions must be of a common type
-           |        v match { case a(c) => x case b(d) => y }
-           |                                              ^
+           |        ^
            |"""
     )
 

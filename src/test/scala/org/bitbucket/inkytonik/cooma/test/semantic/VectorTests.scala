@@ -85,7 +85,10 @@ class VectorTests extends SemanticTests {
     test(
         "heterogeneous vector type (record, field type mismatch)",
         """{ val x : Vector({b : Int}) = [{a = 1, b = 2}, {a = "hi", b = 3}] x }""",
-        ""
+        """|1:31:error: Vector elements must be of a common type
+           |{ val x : Vector({b : Int}) = [{a = 1, b = 2}, {a = "hi", b = 3}] x }
+           |                              ^
+           |""".stripMargin
     )
 
     test(

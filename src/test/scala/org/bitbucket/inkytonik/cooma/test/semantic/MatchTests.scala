@@ -79,12 +79,9 @@ class MatchTests extends SemanticTests {
           |  def f () <<x : Int, y : Int>> = <<x = 3>>
           |  f () match { case x(a) => 1 case y(b) => "hi" }
           |}""",
-        """|3:29:error: case expression types are not the same
+        """|3:3:error: case expressions must be of a common type
            |  f () match { case x(a) => 1 case y(b) => "hi" }
-           |                            ^
-           |3:44:error: case expression types are not the same
-           |  f () match { case x(a) => 1 case y(b) => "hi" }
-           |                                           ^
+           |  ^
            |"""
     )
 
@@ -125,6 +122,25 @@ class MatchTests extends SemanticTests {
            |  f () match { case w(a) => 1 case y(b) => 2 }
            |               ^
            |"""
+    )
+
+    test(
+        "cases evaluating to values of common supertype",
+        """|{
+           |    type T = <<
+           |        A : Unit,
+           |        B : Int,
+           |        C : String
+           |    >>
+           |    val t: T = << A = { } >>
+           |    t match {
+           |        case A(_) => { x = "a" }
+           |        case B(y) => { x = "b", y = y }
+           |        case C(z) => { x = "c", z = z }
+           |    }
+           |}
+           |""".stripMargin,
+        ""
     )
 
 }
