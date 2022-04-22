@@ -41,26 +41,122 @@ class VectorTests extends SemanticTests {
     )
 
     test(
-        "val explicit heterogeneous vector type (ok)",
-        """{ val x : Vector({a : Int}) = [{a = 1}, {a = 1, b = 2}] x }""",
-        ""
-    )
-
-    test(
-        "val explicit heterogeneous vector type (bad subtype)",
-        """{ val x = [{a = 1, b = 2}, {a = 1}] x }""",
-        """|1:12:error: all the elements in this vector must be of type { a : Int, b : Int }
-           |{ val x = [{a = 1, b = 2}, {a = 1}] x }
-           |           ^
+        "bad heterogeneous vector type (simple)",
+        """[1, "hi"]""",
+        """|1:1:error: Vector elements must be of a common type
+           |[1, "hi"]
+           |^
            |"""
     )
 
     test(
-        "val explicit heterogeneous vector type (bad type)",
-        """{ val x = [1, "hi"] x }""",
-        """|1:12:error: all the elements in this vector must be of type Int
-           |{ val x = [1, "hi"] x }
-           |           ^
+        "heterogeneous vector type (record, increasing)",
+        "{ val x : Vector({a : Int}) = [{a = 1}, {a = 2, b = 3}, {a = 4, b = 5, c = 6}] x }",
+        ""
+    )
+
+    test(
+        "heterogeneous vector type (record, decreasing)",
+        "{ val x : Vector({a : Int}) = [{a = 4, b = 5, c = 6}, {a = 2, b = 3}, {a = 1}] x }",
+        ""
+    )
+
+    test(
+        "heterogeneous vector type (record, mixed)",
+        "{ val x : Vector({a : Int}) = [{a = 4, b = 5, c = 6}, {a = 1}, {a = 2, b = 3}] x }",
+        ""
+    )
+
+    test(
+        "heterogeneous vector type (record, new type)",
+        "{ val x : Vector({a : Int}) = [{a = 1, b = 2}, {a = 3, c = 4}] x }",
+        ""
+    )
+
+    test(
+        "bad heterogeneous vector type (record)",
+        "[{a = 1, b = 2}, {c = 3}]",
+        """|1:1:error: Vector elements must be of a common type
+           |[{a = 1, b = 2}, {c = 3}]
+           |^
+           |"""
+    )
+
+    test(
+        "heterogeneous vector type (record, field type mismatch)",
+        """{ val x : Vector({b : Int}) = [{a = 1, b = 2}, {a = "hi", b = 3}] x }""",
+        """|1:31:error: Vector elements must be of a common type
+           |{ val x : Vector({b : Int}) = [{a = 1, b = 2}, {a = "hi", b = 3}] x }
+           |                              ^
+           |""".stripMargin
+    )
+
+    test(
+        "bad heterogeneous vector type (record, no common fields)",
+        """[{a = 1, b = 2}, {a = "hi"}]""",
+        """|1:1:error: Vector elements must be of a common type
+           |[{a = 1, b = 2}, {a = "hi"}]
+           |^
+           |"""
+    )
+
+    test(
+        "heterogeneous vector type (record, recursive)",
+        """{ val x : Vector({a : {b : Int}}) = [{a = {b = 1, c = 2}}, {a = {b = 3, d = 4}}] x }""",
+        ""
+    )
+
+    test(
+        "heterogeneous vector type (vector, increasing)",
+        "{ val x : Vector(Vector(Int)) = [[], [1,2], [], [3, 4, 5]] x }",
+        ""
+    )
+
+    test(
+        "heterogeneous vector type (vector, decreasing)",
+        "{ val x : Vector(Vector(Int)) = [[1,2], [], [3, 4, 5]] x }",
+        ""
+    )
+
+    test(
+        "bad heterogeneous vector type (vector)",
+        """[[1,2], ["hi"]]""",
+        """|1:1:error: Vector elements must be of a common type
+           |[[1,2], ["hi"]]
+           |^
+           |"""
+    )
+
+    test(
+        "heterogeneous vector type (vector, recursive)",
+        """{ val x : Vector(Vector({a : {b : Int}})) = [[{a = {b = 1, c = 2}}], [{a = {b = 3, d = 4}}]] x }""",
+        ""
+    )
+
+    test(
+        "heterogeneous vector type (variant, one field)",
+        "{ val x : Vector(<<a : Int>>) = [<<a = 1>>, <<a = 2>>] x }",
+        ""
+    )
+
+    test(
+        "heterogeneous vector type (variant, multiple fields)",
+        "{ val x : Vector(<<a : Int, b : Int, c : Int>>) = [<<a = 1>>, <<b = 2>>, <<a = 3>>, <<c = 4>>] x }",
+        ""
+    )
+
+    test(
+        "heterogeneous vector type (variant, different fields)",
+        """{ val x : Vector(<<a : Int, b : String, c : Int>>) = [<<a = 1>>, <<b = "hi">>, <<c = 2>>] x }""",
+        ""
+    )
+
+    test(
+        "bad heterogeneous vector type (variant, field type mismatch)",
+        """[<<a = 1>>, <<b = 2>>, <<b = "hi">>, <<c = 3>>]""",
+        """|1:1:error: Vector elements must be of a common type
+           |[<<a = 1>>, <<b = 2>>, <<b = "hi">>, <<c = 3>>]
+           |^
            |"""
     )
 

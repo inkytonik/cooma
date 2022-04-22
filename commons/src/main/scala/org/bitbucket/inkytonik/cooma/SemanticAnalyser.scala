@@ -15,6 +15,9 @@ import org.bitbucket.inkytonik.cooma.SymbolTable._
 import org.bitbucket.inkytonik.kiama.attribution.Attribution
 import org.bitbucket.inkytonik.kiama.relation.Tree
 
+import scala.annotation.tailrec
+import scala.collection.immutable.SeqMap
+
 class SemanticAnalyser(
     val tree : Tree[ASTNode, ASTNode],
     predefStaticEnv : Environment = rootenv()
@@ -66,14 +69,14 @@ class SemanticAnalyser(
                             noMessages
                         case Idn(u @ IdnUse(i)) if entity(u) == UnknownEntity() =>
                             error(u, s"$i is not declared")
-                        case Mat(e, cs) =>
-                            checkMatch(e, cs)
+                        case m : Mat =>
+                            checkMatch(m)
                         case Sel(e, f) =>
                             checkFieldUse(e, f)
                         case prm @ Prm(_, _) =>
                             checkPrimitive(prm)
-                        case Vec(e) =>
-                            checkVectorElements(e)
+                        case vec : Vec =>
+                            checkVectorElements(vec)
                     }
         }
 
@@ -109,7 +112,6 @@ class SemanticAnalyser(
         c match {
             case tree.parent(m : Mat) =>
                 checkCaseDup(c, m) ++
-                    checkCaseExpressionTypes(c, m) ++
                     checkCaseVariants(c, m)
             case _ =>
                 sys.error(s"checkCase: can't find enclosing match")
@@ -121,12 +123,10 @@ class SemanticAnalyser(
         else
             noMessages
 
-    def checkCaseExpressionTypes(c : Case, m : Mat) : Messages =
+    def checkCaseExpressionTypes(m : Mat) : Messages =
         matchType(m) match {
-            case BadCases() =>
-                error(c.expression, s"case expression types are not the same")
-            case t =>
-                noMessages
+            case NoBound => error(m, s"case expressions must be of a common type")
+            case _       => noMessages
         }
 
     def checkCaseVariants(c : Case, m : Mat) : Messages =
@@ -197,8 +197,11 @@ class SemanticAnalyser(
         }
     }
 
-    def checkMatch(e : Expression, cs : Vector[Case]) : Messages =
-        checkMatchCaseNum(e, cs) ++ checkMatchDiscType(e)
+    def checkMatch(m : Mat) : Messages = {
+        val e = m.expression
+        val cs = m.cases
+        checkMatchCaseNum(e, cs) ++ checkMatchDiscType(e) ++ checkCaseExpressionTypes(m)
+    }
 
     def checkMatchCaseNum(e : Expression, cs : Vector[Case]) : Messages =
         tipe(e) match {
@@ -273,19 +276,17 @@ class SemanticAnalyser(
             noMessages
     }
 
-    def checkVectorElements(elems : VecElems) : Messages =
-        if (elems.optExpressions.isEmpty)
-            noMessages
-        else
-            tipe(elems.optExpressions.head) match {
-                case Some(firstType) =>
-                    if (elems.optExpressions.forall(e => subtype(tipe(e), firstType)))
-                        noMessages
-                    else
-                        error(elems, s"all the elements in this vector must be of type ${show(firstType)}")
-                case None =>
-                    noMessages
-            }
+    val vecLubType : VecElems => BoundResult =
+        attr {
+            case VecElems(elems) =>
+                getLub(elems)
+        }
+
+    def checkVectorElements(vec : Vec) : Messages =
+        vecLubType(vec.vecElems) match {
+            case Bound(_) | IgnoreBound => noMessages
+            case NoBound                => error(vec, "Vector elements must be of a common type")
+        }
 
     object Scope {
         def unapply(n : ASTNode) : Boolean =
@@ -494,10 +495,8 @@ class SemanticAnalyser(
 
             case m : Mat =>
                 matchType(m) match {
-                    case OkCases(optType) =>
-                        optType
-                    case BadCases() =>
-                        None
+                    case Bound(t) => Some(t)
+                    case _        => None
                 }
 
             case _ : Mul =>
@@ -545,11 +544,9 @@ class SemanticAnalyser(
                 if (elems.optExpressions.isEmpty)
                     Some(VecNilT())
                 else
-                    tipe(elems.optExpressions.head) match {
-                        case Some(firstType) =>
-                            Some(VecT(firstType))
-                        case None =>
-                            None
+                    vecLubType(elems) match {
+                        case IgnoreBound | NoBound => None
+                        case Bound(t)              => Some(VecT(t))
                     }
 
             case _ : VecNilT | _ : VecT =>
@@ -677,21 +674,8 @@ class SemanticAnalyser(
     case class BadCases() extends MatchType
     case class OkCases(optType : Option[Expression]) extends MatchType
 
-    lazy val matchType : Mat => MatchType =
-        attr {
-            case m =>
-                val caseTypes =
-                    m.cases.map {
-                        case Case(_, _, e) =>
-                            tipe(e)
-                    }.distinct
-                if (caseTypes contains None)
-                    OkCases(None)
-                else if (caseTypes.length > 1)
-                    BadCases()
-                else
-                    OkCases(caseTypes(0))
-        }
+    lazy val matchType : Mat => BoundResult =
+        attr { case Mat(_, cases) => getLub(cases.map(_.expression)) }
 
     val unaliasedType : Expression => Option[Expression] =
         attr {
@@ -975,5 +959,258 @@ class SemanticAnalyser(
                 case (t, u) =>
                     subtype(t, u)
             })
+
+    sealed trait BoundResult extends Product
+    case object IgnoreBound extends BoundResult
+    case object NoBound extends BoundResult
+    case class Bound(tipe : Expression) extends BoundResult
+
+    sealed trait BoundDirection extends Product {
+        def bound =
+            this match {
+                case Lub => lub _
+                case Glb => glb _
+            }
+    }
+
+    case object Lub extends BoundDirection
+    case object Glb extends BoundDirection
+
+    def getLub(es : Vector[Expression]) : BoundResult = {
+        val tipesOpt = es.map(tipe)
+        // unwrap options, if `None` appears then ignore bound (error occurred elsewhere)
+        @tailrec
+        def flatten(
+            tipesOpt : Vector[Option[Expression]],
+            out : Vector[Expression]
+        ) : Option[Vector[Expression]] =
+            tipesOpt match {
+                case Some(hd) +: tl => flatten(tl, out :+ hd)
+                case None +: _      => None
+                case _              => Some(out)
+            }
+        flatten(tipesOpt, Vector.empty) match {
+            case Some(hd +: tl) =>
+                @tailrec
+                def aux(
+                    tipes : Vector[Expression],
+                    out : Expression
+                ) : BoundResult =
+                    (tipes, out) match {
+                        case (u +: tl, t) =>
+                            lub(t, u) match {
+                                case Some(t) => aux(tl, t)
+                                case None    => NoBound
+                            }
+                        case (_, t) =>
+                            Bound(t)
+                    }
+                aux(tl, hd)
+            case _ =>
+                // empty or error occurred elsewhere
+                IgnoreBound
+        }
+    }
+
+    // for covariant records and contravariant variants
+    def rowLub(
+        tr : Vector[FieldType],
+        ur : Vector[FieldType],
+        direction : BoundDirection
+    ) : Option[Vector[FieldType]] = {
+        // ordering of fields: according to `t`
+        val urMap = ur.map { case FieldType(idn, tipe) => idn -> tipe }.toMap
+        @tailrec
+        def aux(
+            tr : Vector[FieldType],
+            out : Vector[FieldType]
+        ) : Option[Vector[FieldType]] = {
+            tr match {
+                case FieldType(idn, tt) +: tl =>
+                    urMap.get(idn) match {
+                        case Some(ut) =>
+                            // common field, find bound
+                            direction.bound(tt, ut) match {
+                                case Some(t) =>
+                                    // found bound
+                                    aux(tl, out :+ FieldType(idn, t))
+                                case None =>
+                                    // no bound
+                                    None
+                            }
+                        case None =>
+                            // field not in `u`, omit
+                            aux(tl, out)
+                    }
+                case _ =>
+                    if (out.isEmpty) None
+                    else Some(out)
+            }
+        }
+        aux(tr, Vector.empty)
+    }
+
+    // for contravariant records and covariant variants
+    def rowGlb(
+        tr : Vector[FieldType],
+        ur : Vector[FieldType],
+        direction : BoundDirection
+    ) : Option[Vector[FieldType]] = {
+        // ordering of fields: all of `t`, then all of `u` minus `t`
+        val urMap = ur.map { case FieldType(idn, tipe) => idn -> tipe }.toMap
+        @tailrec
+        def aux(
+            tr : Vector[FieldType],
+            out : SeqMap[String, Expression]
+        ) : Option[Vector[FieldType]] =
+            tr match {
+                case FieldType(idn, tt) +: tl =>
+                    urMap.get(idn) match {
+                        case Some(ut) =>
+                            // common field, find bound
+                            direction.bound(tt, ut) match {
+                                case Some(t) =>
+                                    // found bound
+                                    aux(tl, out + (idn -> t))
+                                case None =>
+                                    // no bound, abort
+                                    None
+                            }
+                        case None =>
+                            // field not in `u`, retain as in `t`
+                            aux(tl, out + (idn -> tt))
+                    }
+                case _ =>
+                    // include all fields in `u` minus `t`
+                    val trx = out.toVector.map { case (idn, t) => FieldType(idn, t) }
+                    val urx = ur.filterNot { case FieldType(idn, _) => out.contains(idn) }
+                    val result = trx ++ urx
+                    if (result.isEmpty) None
+                    else Some(result)
+            }
+        aux(tr, SeqMap.empty)
+    }
+
+    def funBound(t : FunT, u : FunT, direction : BoundDirection) : Option[FunT] = {
+        val (FunT(ArgumentTypes(tats), trt), FunT(ArgumentTypes(uats), urt)) = (t, u)
+        if (tats.length != uats.length)
+            // arity mismatch
+            None
+        else {
+            // covariance and contravariance
+            val (checkArg, checkReturn) =
+                direction match {
+                    // lub(A0 -> B0, A1 -> B1) = glb(A0, A1) -> lub(B0, B1)
+                    case Lub => (glb _, lub _)
+                    // glb(A0 -> B0, A1 -> B1) = lub(A0, A1) -> glb(B0, B1)
+                    case Glb => (lub _, glb _)
+                }
+            // check return type
+            checkReturn(trt, urt) match {
+                case Some(rt) =>
+                    // check arguments
+                    @tailrec
+                    def aux(
+                        ats : Vector[(ArgumentType, ArgumentType)],
+                        out : Vector[ArgumentType]
+                    ) : Option[Vector[ArgumentType]] =
+                        ats match {
+                            case (ArgumentType(tio, tt), ArgumentType(uio, ut)) +: tl =>
+                                // prefer identifier name on the left
+                                val idnOpt =
+                                    (tio, uio) match {
+                                        case (Some(ti), _)    => Some(ti)
+                                        case (None, Some(ui)) => Some(ui)
+                                        case (None, None)     => None
+                                    }
+                                checkArg(tt, ut) match {
+                                    case Some(t) =>
+                                        // found bound, continue
+                                        aux(tl, out :+ ArgumentType(idnOpt, t))
+                                    case None =>
+                                        // no bound, abort
+                                        None
+                                }
+                            case _ =>
+                                Some(out)
+                        }
+                    aux(tats.zip(uats), Vector.empty).map(ats => FunT(ArgumentTypes(ats), rt))
+                case None =>
+                    None
+            }
+        }
+    }
+
+    def lub(t : Expression, u : Expression) : Option[Expression] = {
+        val unaliased =
+            (unalias(t, t), unalias(u, u)) match {
+                case (Some(t), Some(u)) => Some((t, u))
+                case _                  => None
+            }
+        unaliased.flatMap {
+            // unit
+            case (UniT(), UniT()) =>
+                Some(Idn(IdnUse("Unit")))
+            // records
+            case (RecT(tr), RecT(ur)) =>
+                rowLub(tr, ur, Lub).map(RecT)
+            // variants
+            case (VarT(tr), VarT(ur)) =>
+                rowGlb(tr, ur, Lub).map(VarT)
+            // vectors
+            case (VecT(tt), VecT(ut)) =>
+                lub(tt, ut).map(VecT)
+            case (VecNilT(), VecT(t)) =>
+                Some(VecT(t))
+            case (VecT(t), VecNilT()) =>
+                Some(VecT(t))
+            case (VecNilT(), VecNilT()) =>
+                Some(VecNilT())
+            // functions
+            case (t : FunT, u : FunT) =>
+                funBound(t, u, Lub)
+            // atomics
+            case (StrT(), StrT()) =>
+                Some(Idn(IdnUse("String")))
+            case (IntT(), IntT()) =>
+                Some(Idn(IdnUse("Int")))
+            case _ =>
+                None
+        }
+    }
+
+    def glb(t : Expression, u : Expression) : Option[Expression] = {
+        val unaliased =
+            (unalias(t, t), unalias(u, u)) match {
+                case (Some(t), Some(u)) => Some((t, u))
+                case _                  => None
+            }
+        unaliased.flatMap {
+            // unit
+            case (UniT(), UniT()) =>
+                Some(Idn(IdnUse("Unit")))
+            // records
+            case (RecT(tr), RecT(ur)) =>
+                rowGlb(tr, ur, Glb).map(RecT)
+            // variants
+            case (VarT(tr), VarT(ur)) =>
+                rowLub(tr, ur, Glb).map(VarT)
+            // vectors
+            case (VecT(tt), VecT(ut)) =>
+                glb(tt, ut).map(VecT)
+            case (VecNilT(), _) | (VecNilT(), _) =>
+                Some(VecNilT())
+            // functions
+            case (t : FunT, u : FunT) =>
+                funBound(t, u, Glb)
+            // atomics
+            case (StrT(), StrT()) =>
+                Some(Idn(IdnUse("String")))
+            case (IntT(), IntT()) =>
+                Some(Idn(IdnUse("Int")))
+            case _ =>
+                None
+        }
+    }
 
 }
