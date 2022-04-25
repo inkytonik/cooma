@@ -1,4 +1,6 @@
-%letc $k1 x =
+%letv _ =
+  %prim ArgumentCheck 0
+%in %letc $k1 x =
   %letc $k2 y =
     %halt y
   %in %letv $i3 =

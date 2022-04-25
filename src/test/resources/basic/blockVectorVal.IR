@@ -1,4 +1,6 @@
-letc k1 x = letv f10 = fun k11 t = letv f12 = fun k13 v = letv f14 = fun k15 e = letv r16 = VecAppend t v e
+%letv _ =
+  %prim ArgumentCheck 0
+%in letc k1 x = letv f10 = fun k11 t = letv f12 = fun k13 v = letv f14 = fun k15 e = letv r16 = VecAppend t v e
                                                                                  k15 r16
                                                           k13 f14
                                    k11 f12

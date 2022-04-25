@@ -1,4 +1,6 @@
-%letv $x1 =
+%letv _ =
+  %prim ArgumentCheck 1
+%in %letv $x1 =
   %prim Argument 0
 %in %letv $c2 =
   %prim Capability Reader $x1

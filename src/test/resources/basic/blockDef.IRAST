@@ -1,32 +1,38 @@
-LetF(
-  Vector(
-    DefTerm(
-      "f",
-      "$k1",
-      "x",
-      AppC(
-        IdnC(
-          "$k1"),
-        "x")),
-    DefTerm(
-      "g",
-      "$k2",
-      "y",
-      AppF(
+LetV(
+  "_",
+  PrmV(
+    ArgumentCheckP(
+      0),
+    Vector()),
+  LetF(
+    Vector(
+      DefTerm(
         "f",
-        "$k2",
-        "y"))),
-  LetV(
-    "$i5",
-    IntV(
-      10),
-    LetC(
-      "$k3",
-      "$r4",
-      AppC(
-        HaltC(),
-        "$r4"),
-      AppF(
+        "$k1",
+        "x",
+        AppC(
+          IdnC(
+            "$k1"),
+          "x")),
+      DefTerm(
         "g",
+        "$k2",
+        "y",
+        AppF(
+          "f",
+          "$k2",
+          "y"))),
+    LetV(
+      "$i5",
+      IntV(
+        10),
+      LetC(
         "$k3",
-        "$i5"))))
+        "$r4",
+        AppC(
+          HaltC(),
+          "$r4"),
+        AppF(
+          "g",
+          "$k3",
+          "$i5")))))

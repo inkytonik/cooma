@@ -1,4 +1,6 @@
-%letc $k1 Foo =
+%letv _ =
+  %prim ArgumentCheck 0
+%in %letc $k1 Foo =
   %letf
     %def add $k2 l =
       %letv $f3 =

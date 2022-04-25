@@ -1,34 +1,40 @@
 LetV(
-  "$x1",
+  "_",
   PrmV(
-    ArgumentP(
-      0),
+    ArgumentCheckP(
+      1),
     Vector()),
   LetV(
-    "w",
+    "$x1",
     PrmV(
-      CapabilityP(
-        "Writer"),
-      Vector(
-        "$x1")),
+      ArgumentP(
+        0),
+      Vector()),
     LetV(
-      "$f4",
+      "w",
       PrmV(
-        RecSelectP(),
+        CapabilityP(
+          "Writer"),
         Vector(
-          "w",
-          "write")),
+          "$x1")),
       LetV(
-        "$s5",
-        StrV(
-          "Hello world!\n"),
-        LetC(
-          "$k2",
-          "$r3",
-          AppC(
-            HaltC(),
-            "$r3"),
-          AppF(
-            "$f4",
+        "$f4",
+        PrmV(
+          RecSelectP(),
+          Vector(
+            "w",
+            "write")),
+        LetV(
+          "$s5",
+          StrV(
+            "Hello world!\n"),
+          LetC(
             "$k2",
-            "$s5"))))))
+            "$r3",
+            AppC(
+              HaltC(),
+              "$r3"),
+            AppF(
+              "$f4",
+              "$k2",
+              "$s5")))))))

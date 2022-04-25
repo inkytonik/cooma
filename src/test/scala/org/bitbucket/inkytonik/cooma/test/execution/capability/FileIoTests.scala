@@ -75,7 +75,7 @@ class FileIoTests extends ExecutionTests {
 
         test(s"run: $name: no args") { implicit bc =>
             val result = runFile(filename, Seq(), Seq())
-            result shouldBe s"PrimitiveException: Argument: command-line argument 0 does not exist (arg count = 0)\n"
+            result shouldBe s"PrimitiveException: ArgumentCheck: expected 1 argument(s), found 0\n"
         }
 
         test(s"run: $name: standard out") { implicit bc =>
@@ -188,13 +188,13 @@ class FileIoTests extends ExecutionTests {
 
         test(s"run: $name: no args") { implicit bc =>
             val result = runFile(filename, Seq(), Seq())
-            result shouldBe s"PrimitiveException: Argument: command-line argument 0 does not exist (arg count = 0)\n"
+            result shouldBe s"PrimitiveException: ArgumentCheck: expected 2 argument(s), found 0\n"
         }
 
         test(s"run: $name: one arg") { implicit bc =>
             createFile(writer, "")
             val result = runFile(filename, Seq(), Seq(writer))
-            result shouldBe s"PrimitiveException: Argument: command-line argument 1 does not exist (arg count = 1)\n"
+            result shouldBe s"PrimitiveException: ArgumentCheck: expected 2 argument(s), found 1\n"
             deleteFile(writer)
         }
     }

@@ -1,23 +1,29 @@
 LetV(
-  "$f3",
-  FunV(
-    "$k4",
-    "x",
-    AppC(
-      IdnC(
-        "$k4"),
-      "x")),
+  "_",
+  PrmV(
+    ArgumentCheckP(
+      0),
+    Vector()),
   LetV(
-    "$i5",
-    IntV(
-      10),
-    LetC(
-      "$k1",
-      "$r2",
+    "$f3",
+    FunV(
+      "$k4",
+      "x",
       AppC(
-        HaltC(),
-        "$r2"),
-      AppF(
-        "$f3",
+        IdnC(
+          "$k4"),
+        "x")),
+    LetV(
+      "$i5",
+      IntV(
+        10),
+      LetC(
         "$k1",
-        "$i5"))))
+        "$r2",
+        AppC(
+          HaltC(),
+          "$r2"),
+        AppF(
+          "$f3",
+          "$k1",
+          "$i5")))))

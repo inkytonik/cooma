@@ -1,4 +1,6 @@
-%letv $f3 =
+%letv _ =
+  %prim ArgumentCheck 0
+%in %letv $f3 =
   %fun $k4 x =
     $k4 x
 %in %letv $i5 =
