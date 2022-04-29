@@ -1,4 +1,6 @@
-%letv $f5 =
+%letv _ =
+  %prim ArgumentCheck 0
+%in %letv $f5 =
   %fun $k6 x =
     %letv $f7 =
       %fun $k8 y =

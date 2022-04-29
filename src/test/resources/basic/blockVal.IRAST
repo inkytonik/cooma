@@ -1,25 +1,31 @@
-LetC(
-  "$k1",
-  "x",
+LetV(
+  "_",
+  PrmV(
+    ArgumentCheckP(
+      0),
+    Vector()),
   LetC(
-    "$k2",
-    "y",
-    AppC(
-      HaltC(),
-      "y"),
+    "$k1",
+    "x",
+    LetC(
+      "$k2",
+      "y",
+      AppC(
+        HaltC(),
+        "y"),
+      LetV(
+        "$i3",
+        IntV(
+          20),
+        AppC(
+          IdnC(
+            "$k2"),
+          "$i3"))),
     LetV(
-      "$i3",
+      "$i4",
       IntV(
-        20),
+        10),
       AppC(
         IdnC(
-          "$k2"),
-        "$i3"))),
-  LetV(
-    "$i4",
-    IntV(
-      10),
-    AppC(
-      IdnC(
-        "$k1"),
-      "$i4")))
+          "$k1"),
+        "$i4"))))

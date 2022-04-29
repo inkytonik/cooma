@@ -77,7 +77,7 @@ trait Primitives extends Database with FileIo {
 
     def numArgs(p : Primitive) : Int =
         p match {
-            case ArgumentP(_) =>
+            case ArgumentP(_) | ArgumentCheckP(_) =>
                 0
             case CapabilityP(_) | DbTableAllP(_, _) | DbTableDeleteP(_, _) |
                 DbTableGetByIdP(_, _) | DbTableInsertP(_, _) | DbTableUpdateP(_, _) |
@@ -129,6 +129,9 @@ trait Primitives extends Database with FileIo {
         prim match {
             case ArgumentP(i) =>
                 argument(prim, i, args)
+
+            case ArgumentCheckP(i) =>
+                argumentCheck(i, args)
 
             case CapabilityP(cap) =>
                 capability(cap, rho, xs(0))
@@ -227,6 +230,12 @@ trait Primitives extends Database with FileIo {
             errPrim("Argument", s"command-line argument $i does not exist (arg count = ${args.length})")
         else
             strR(args(i))
+
+    def argumentCheck(i : Int, args : Seq[String]) : ValueR =
+        if (args.length != i)
+            errPrim("ArgumentCheck", s"expected $i argument(s), found ${args.length}")
+        else
+            uniR
 
     /**
      * @param cap       the capability specifier

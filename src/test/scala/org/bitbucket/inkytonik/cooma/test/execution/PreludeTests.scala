@@ -28,7 +28,7 @@ class PreludeTests extends ExecutionTests {
 
         test(s"use ok prelude : $testFilename") { implicit bc =>
             runMain(prelude, Seq("-P"), Seq())
-            val result = runFile(testFilename, Seq("-p", prelude, "-r"), Seq(testFilename))
+            val result = runFile(testFilename, Seq("-p", prelude, "-r"), Seq())
             result shouldBe FileSource(testFilenameOut).content
             deleteFile(staticFilename)
             deleteFile(dynamicFilename)

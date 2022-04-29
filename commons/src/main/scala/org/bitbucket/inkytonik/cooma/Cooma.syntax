@@ -200,6 +200,7 @@ FldV =
 
 Primitive =
     "Argument" IntLit                      {ArgumentP, 1: Integer.parseInt : Int}
+  | "ArgumentCheck" IntLit                 {ArgumentCheckP, 1: Integer.parseInt : Int}
   | "Capability" Identifier                {CapabilityP}
   | 'DbTableAll' IntLit StringLit          {DbTableAllP, 1: Integer.parseInt : Int}
   | 'DbTableDelete' IntLit StringLit       {DbTableDeleteP, 1: Integer.parseInt : Int}

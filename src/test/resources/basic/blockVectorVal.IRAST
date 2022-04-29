@@ -1,268 +1,274 @@
-LetC(
-  "k1",
-  "x",
-  LetV(
-    "f10",
-    FunV(
-      "k11",
-      "t",
-      LetV(
-        "f12",
-        FunV(
-          "k13",
-          "v",
-          LetV(
-            "f14",
-            FunV(
-              "k15",
-              "e",
-              LetV(
-                "r16",
-                PrmV(
-                  VecAppendP(),
-                  Vector(
-                    "t",
-                    "v",
-                    "e")),
-                AppC(
-                  "k15",
-                  "r16"))),
-            AppC(
-              "k13",
-              "f14"))),
-        AppC(
-          "k11",
-          "f12"))),
+LetV(
+  "_",
+  PrmV(
+    ArgumentCheckP(
+      0),
+    Vector()),
+  LetC(
+    "k1",
+    "x",
     LetV(
-      "f17",
+      "f10",
       FunV(
-        "k18",
+        "k11",
         "t",
         LetV(
-          "f19",
+          "f12",
           FunV(
-            "k20",
+            "k13",
             "v",
             LetV(
-              "f21",
+              "f14",
               FunV(
-                "k22",
-                "vr",
+                "k15",
+                "e",
                 LetV(
-                  "r23",
+                  "r16",
                   PrmV(
-                    VecConcatP(),
+                    VecAppendP(),
                     Vector(
                       "t",
                       "v",
-                      "vr")),
+                      "e")),
                   AppC(
-                    "k22",
-                    "r23"))),
+                    "k15",
+                    "r16"))),
               AppC(
-                "k20",
-                "f21"))),
+                "k13",
+                "f14"))),
           AppC(
-            "k18",
-            "f19"))),
+            "k11",
+            "f12"))),
       LetV(
-        "f24",
+        "f17",
         FunV(
-          "k25",
+          "k18",
           "t",
           LetV(
-            "f26",
+            "f19",
             FunV(
-              "k27",
+              "k20",
               "v",
               LetV(
-                "f28",
+                "f21",
                 FunV(
-                  "k29",
-                  "i",
+                  "k22",
+                  "vr",
                   LetV(
-                    "r30",
+                    "r23",
                     PrmV(
-                      VecGetP(),
+                      VecConcatP(),
                       Vector(
                         "t",
                         "v",
-                        "i")),
+                        "vr")),
                     AppC(
-                      "k29",
-                      "r30"))),
+                      "k22",
+                      "r23"))),
                 AppC(
-                  "k27",
-                  "f28"))),
+                  "k20",
+                  "f21"))),
             AppC(
-              "k25",
-              "f26"))),
+              "k18",
+              "f19"))),
         LetV(
-          "f31",
+          "f24",
           FunV(
-            "k32",
+            "k25",
             "t",
             LetV(
-              "f33",
+              "f26",
               FunV(
-                "k34",
+                "k27",
                 "v",
                 LetV(
-                  "r35",
-                  PrmV(
-                    VecLengthP(),
-                    Vector(
-                      "t",
-                      "v")),
+                  "f28",
+                  FunV(
+                    "k29",
+                    "i",
+                    LetV(
+                      "r30",
+                      PrmV(
+                        VecGetP(),
+                        Vector(
+                          "t",
+                          "v",
+                          "i")),
+                      AppC(
+                        "k29",
+                        "r30"))),
                   AppC(
-                    "k34",
-                    "r35"))),
+                    "k27",
+                    "f28"))),
               AppC(
-                "k32",
-                "f33"))),
+                "k25",
+                "f26"))),
           LetV(
-            "f36",
+            "f31",
             FunV(
-              "k37",
+              "k32",
               "t",
               LetV(
-                "f38",
+                "f33",
                 FunV(
-                  "k39",
+                  "k34",
                   "v",
                   LetV(
-                    "f40",
-                    FunV(
-                      "k41",
-                      "e",
-                      LetV(
-                        "r42",
-                        PrmV(
-                          VecPrependP(),
-                          Vector(
-                            "t",
-                            "v",
-                            "e")),
-                        AppC(
-                          "k41",
-                          "r42"))),
+                    "r35",
+                    PrmV(
+                      VecLengthP(),
+                      Vector(
+                        "t",
+                        "v")),
                     AppC(
-                      "k39",
-                      "f40"))),
+                      "k34",
+                      "r35"))),
                 AppC(
-                  "k37",
-                  "f38"))),
+                  "k32",
+                  "f33"))),
             LetV(
-              "f43",
+              "f36",
               FunV(
-                "k44",
+                "k37",
                 "t",
                 LetV(
-                  "f45",
+                  "f38",
                   FunV(
-                    "k46",
+                    "k39",
                     "v",
                     LetV(
-                      "f47",
+                      "f40",
                       FunV(
-                        "k48",
-                        "i",
+                        "k41",
+                        "e",
                         LetV(
-                          "f49",
-                          FunV(
-                            "k50",
-                            "e",
-                            LetV(
-                              "r51",
-                              PrmV(
-                                VecPutP(),
-                                Vector(
-                                  "t",
-                                  "v",
-                                  "i",
-                                  "e")),
-                              AppC(
-                                "k50",
-                                "r51"))),
+                          "r42",
+                          PrmV(
+                            VecPrependP(),
+                            Vector(
+                              "t",
+                              "v",
+                              "e")),
                           AppC(
-                            "k48",
-                            "f49"))),
+                            "k41",
+                            "r42"))),
                       AppC(
-                        "k46",
-                        "f47"))),
+                        "k39",
+                        "f40"))),
                   AppC(
-                    "k44",
-                    "f45"))),
+                    "k37",
+                    "f38"))),
               LetV(
-                "r9",
-                RecV(
-                  Vector(
-                    FieldValue(
-                      "append",
-                      "f10"),
-                    FieldValue(
-                      "concat",
-                      "f17"),
-                    FieldValue(
-                      "get",
-                      "f24"),
-                    FieldValue(
-                      "length",
-                      "f31"),
-                    FieldValue(
-                      "prepend",
-                      "f36"),
-                    FieldValue(
-                      "put",
-                      "f43"))),
-                LetV(
-                  "f8",
-                  PrmV(
-                    RecSelectP(),
-                    Vector(
-                      "r9",
-                      "get")),
+                "f43",
+                FunV(
+                  "k44",
+                  "t",
                   LetV(
-                    "u52",
-                    RecV(
-                      Vector()),
-                    LetC(
-                      "k6",
-                      "r7",
-                      LetC(
-                        "k4",
-                        "r5",
-                        LetV(
-                          "i53",
-                          IntV(
-                            0),
-                          LetC(
-                            "k2",
-                            "r3",
+                    "f45",
+                    FunV(
+                      "k46",
+                      "v",
+                      LetV(
+                        "f47",
+                        FunV(
+                          "k48",
+                          "i",
+                          LetV(
+                            "f49",
+                            FunV(
+                              "k50",
+                              "e",
+                              LetV(
+                                "r51",
+                                PrmV(
+                                  VecPutP(),
+                                  Vector(
+                                    "t",
+                                    "v",
+                                    "i",
+                                    "e")),
+                                AppC(
+                                  "k50",
+                                  "r51"))),
                             AppC(
-                              "$halt",
-                              "r3"),
-                            AppF(
-                              "r5",
-                              "k2",
-                              "i53"))),
-                        AppF(
-                          "r7",
-                          "k4",
-                          "x")),
-                      AppF(
-                        "f8",
+                              "k48",
+                              "f49"))),
+                        AppC(
+                          "k46",
+                          "f47"))),
+                    AppC(
+                      "k44",
+                      "f45"))),
+                LetV(
+                  "r9",
+                  RecV(
+                    Vector(
+                      FieldValue(
+                        "append",
+                        "f10"),
+                      FieldValue(
+                        "concat",
+                        "f17"),
+                      FieldValue(
+                        "get",
+                        "f24"),
+                      FieldValue(
+                        "length",
+                        "f31"),
+                      FieldValue(
+                        "prepend",
+                        "f36"),
+                      FieldValue(
+                        "put",
+                        "f43"))),
+                  LetV(
+                    "f8",
+                    PrmV(
+                      RecSelectP(),
+                      Vector(
+                        "r9",
+                        "get")),
+                    LetV(
+                      "u52",
+                      RecV(
+                        Vector()),
+                      LetC(
                         "k6",
-                        "u52"))))))))))),
-  LetV(
-    "i55",
-    IntV(
-      999),
+                        "r7",
+                        LetC(
+                          "k4",
+                          "r5",
+                          LetV(
+                            "i53",
+                            IntV(
+                              0),
+                            LetC(
+                              "k2",
+                              "r3",
+                              AppC(
+                                "$halt",
+                                "r3"),
+                              AppF(
+                                "r5",
+                                "k2",
+                                "i53"))),
+                          AppF(
+                            "r7",
+                            "k4",
+                            "x")),
+                        AppF(
+                          "f8",
+                          "k6",
+                          "u52"))))))))))),
     LetV(
-      "v54",
-      VecV(
-        Vector(
-          "i55")),
-      AppC(
-        "k1",
-        "v54"))))
+      "i55",
+      IntV(
+        999),
+      LetV(
+        "v54",
+        VecV(
+          Vector(
+            "i55")),
+        AppC(
+          "k1",
+          "v54")))))

@@ -161,16 +161,26 @@ trait Compiler {
 
             }
 
-            exp match {
-                case Fun(Arguments(Vector()), e) =>
-                    compileHalt(e)
-                case Fun(Arguments(Vector(arg @ Argument(IdnDef(a), t, _))), e) =>
-                    compileTopArg(arg, a, t, e)
-                case Fun(Arguments((arg @ Argument(IdnDef(a), t, _)) +: as), e) =>
-                    compileTopArg(arg, a, t, Fun(Arguments(as), e))
-                case _ =>
-                    compileHalt(exp)
-            }
+            val result =
+                exp match {
+                    case Fun(Arguments(Vector()), e) =>
+                        compileHalt(e)
+                    case Fun(Arguments(Vector(arg @ Argument(IdnDef(a), t, _))), e) =>
+                        compileTopArg(arg, a, t, e)
+                    case Fun(Arguments((arg @ Argument(IdnDef(a), t, _)) +: as), e) =>
+                        compileTopArg(arg, a, t, Fun(Arguments(as), e))
+                    case _ =>
+                        compileHalt(exp)
+                }
+
+            if (nArg == 0) {
+                val numArgs =
+                    exp match {
+                        case Fun(Arguments(args), _) => args.length
+                        case _                       => 0
+                    }
+                mkLetV(exp, "_", prmV(ArgumentCheckP(numArgs), Vector()), result)
+            } else result
         }
 
         /**

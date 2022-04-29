@@ -1,4 +1,6 @@
-%letf
+%letv _ =
+  %prim ArgumentCheck 0
+%in %letf
   %def f $k1 x =
     $k1 x
   %def g $k2 y =
