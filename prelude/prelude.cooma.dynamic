@@ -227,56 +227,60 @@
                     %prim StrSubstr s i
                   %in $k118 $r119
               %in $k116 $f117
+          %in %letv $f120 =
+            %fun $k121 l =
+              %letv $f122 =
+                %fun $k123 r =
+                  %letv $r124 =
+                    %prim StrLt l r
+                  %in $k123 $r124
+              %in $k121 $f122
+          %in %letv $f125 =
+            %fun $k126 l =
+              %letv $f127 =
+                %fun $k128 r =
+                  %letv $r129 =
+                    %prim StrLte l r
+                  %in $k128 $r129
+              %in $k126 $f127
+          %in %letv $f130 =
+            %fun $k131 l =
+              %letv $f132 =
+                %fun $k133 r =
+                  %letv $r134 =
+                    %prim StrGt l r
+                  %in $k133 $r134
+              %in $k131 $f132
+          %in %letv $f135 =
+            %fun $k136 l =
+              %letv $f137 =
+                %fun $k138 r =
+                  %letv $r139 =
+                    %prim StrGte l r
+                  %in $k138 $r139
+              %in $k136 $f137
           %in %letv $r106 =
             {
               concat = $f107
               length = $f112
               substr = $f115
+              lt = $f120
+              lte = $f125
+              gt = $f130
+              gte = $f135
             }
           %in $k21 $r106
-        %in %letv $f121 =
-          %fun $k122 i =
-            %letv $r123 =
+        %in %letv $f141 =
+          %fun $k142 i =
+            %letv $r143 =
               %prim IntAbs i
-            %in $k122 $r123
-        %in %letv $f124 =
-          %fun $k125 l =
-            %letv $f126 =
-              %fun $k127 r =
-                %letv $r128 =
-                  %prim IntAdd l r
-                %in $k127 $r128
-            %in $k125 $f126
-        %in %letv $f129 =
-          %fun $k130 l =
-            %letv $f131 =
-              %fun $k132 r =
-                %letv $r133 =
-                  %prim IntDiv l r
-                %in $k132 $r133
-            %in $k130 $f131
-        %in %letv $f134 =
-          %fun $k135 l =
-            %letv $f136 =
-              %fun $k137 r =
-                %letv $r138 =
-                  %prim IntMod l r
-                %in $k137 $r138
-            %in $k135 $f136
-        %in %letv $f139 =
-          %fun $k140 l =
-            %letv $f141 =
-              %fun $k142 r =
-                %letv $r143 =
-                  %prim IntMul l r
-                %in $k142 $r143
-            %in $k140 $f141
+            %in $k142 $r143
         %in %letv $f144 =
           %fun $k145 l =
             %letv $f146 =
               %fun $k147 r =
                 %letv $r148 =
-                  %prim IntPow l r
+                  %prim IntAdd l r
                 %in $k147 $r148
             %in $k145 $f146
         %in %letv $f149 =
@@ -284,7 +288,7 @@
             %letv $f151 =
               %fun $k152 r =
                 %letv $r153 =
-                  %prim IntSub l r
+                  %prim IntDiv l r
                 %in $k152 $r153
             %in $k150 $f151
         %in %letv $f154 =
@@ -292,7 +296,7 @@
             %letv $f156 =
               %fun $k157 r =
                 %letv $r158 =
-                  %prim IntLt l r
+                  %prim IntMod l r
                 %in $k157 $r158
             %in $k155 $f156
         %in %letv $f159 =
@@ -300,7 +304,7 @@
             %letv $f161 =
               %fun $k162 r =
                 %letv $r163 =
-                  %prim IntLte l r
+                  %prim IntMul l r
                 %in $k162 $r163
             %in $k160 $f161
         %in %letv $f164 =
@@ -308,7 +312,7 @@
             %letv $f166 =
               %fun $k167 r =
                 %letv $r168 =
-                  %prim IntGt l r
+                  %prim IntPow l r
                 %in $k167 $r168
             %in $k165 $f166
         %in %letv $f169 =
@@ -316,81 +320,113 @@
             %letv $f171 =
               %fun $k172 r =
                 %letv $r173 =
-                  %prim IntGte l r
+                  %prim IntSub l r
                 %in $k172 $r173
             %in $k170 $f171
-        %in %letv $r120 =
+        %in %letv $f174 =
+          %fun $k175 l =
+            %letv $f176 =
+              %fun $k177 r =
+                %letv $r178 =
+                  %prim IntLt l r
+                %in $k177 $r178
+            %in $k175 $f176
+        %in %letv $f179 =
+          %fun $k180 l =
+            %letv $f181 =
+              %fun $k182 r =
+                %letv $r183 =
+                  %prim IntLte l r
+                %in $k182 $r183
+            %in $k180 $f181
+        %in %letv $f184 =
+          %fun $k185 l =
+            %letv $f186 =
+              %fun $k187 r =
+                %letv $r188 =
+                  %prim IntGt l r
+                %in $k187 $r188
+            %in $k185 $f186
+        %in %letv $f189 =
+          %fun $k190 l =
+            %letv $f191 =
+              %fun $k192 r =
+                %letv $r193 =
+                  %prim IntGte l r
+                %in $k192 $r193
+            %in $k190 $f191
+        %in %letv $r140 =
           {
-            abs = $f121
-            add = $f124
-            div = $f129
-            mod = $f134
-            mul = $f139
-            pow = $f144
-            sub = $f149
-            lt = $f154
-            lte = $f159
-            gt = $f164
-            gte = $f169
+            abs = $f141
+            add = $f144
+            div = $f149
+            mod = $f154
+            mul = $f159
+            pow = $f164
+            sub = $f169
+            lt = $f174
+            lte = $f179
+            gt = $f184
+            gte = $f189
           }
-        %in $k20 $r120
-      %in %letv $f175 =
-        %fun $k176 l =
-          %letv $f177 =
-            %fun $k178 r =
-              %letc $k183 $r184 =
-                %letc $k181 $r182 =
-                  %letc $k179 $r180 =
-                    $r180 $k178 false
-                  %in $r182 $k179 r
-                %in $r184 $k181 l
-              %in ite $k183 Boolean
-          %in $k176 $f177
-      %in %letv $f185 =
-        %fun $k186 b =
-          %letc $k191 $r192 =
-            %letc $k189 $r190 =
-              %letc $k187 $r188 =
-                $r188 $k186 true
-              %in $r190 $k187 false
-            %in $r192 $k189 b
-          %in ite $k191 Boolean
-      %in %letv $f193 =
-        %fun $k194 l =
-          %letv $f195 =
-            %fun $k196 r =
-              %letc $k201 $r202 =
-                %letc $k199 $r200 =
-                  %letc $k197 $r198 =
-                    $r198 $k196 r
-                  %in $r200 $k197 true
-                %in $r202 $k199 l
-              %in ite $k201 Boolean
-          %in $k194 $f195
-      %in %letv $r174 =
+        %in $k20 $r140
+      %in %letv $f195 =
+        %fun $k196 l =
+          %letv $f197 =
+            %fun $k198 r =
+              %letc $k203 $r204 =
+                %letc $k201 $r202 =
+                  %letc $k199 $r200 =
+                    $r200 $k198 false
+                  %in $r202 $k199 r
+                %in $r204 $k201 l
+              %in ite $k203 Boolean
+          %in $k196 $f197
+      %in %letv $f205 =
+        %fun $k206 b =
+          %letc $k211 $r212 =
+            %letc $k209 $r210 =
+              %letc $k207 $r208 =
+                $r208 $k206 true
+              %in $r210 $k207 false
+            %in $r212 $k209 b
+          %in ite $k211 Boolean
+      %in %letv $f213 =
+        %fun $k214 l =
+          %letv $f215 =
+            %fun $k216 r =
+              %letc $k221 $r222 =
+                %letc $k219 $r220 =
+                  %letc $k217 $r218 =
+                    $r218 $k216 r
+                  %in $r220 $k217 true
+                %in $r222 $k219 l
+              %in ite $k221 Boolean
+          %in $k214 $f215
+      %in %letv $r194 =
         {
-          and = $f175
-          not = $f185
-          or = $f193
+          and = $f195
+          not = $f205
+          or = $f213
         }
-      %in $k13 $r174
-    %in %letv $u204 =
+      %in $k13 $r194
+    %in %letv $u224 =
       {
       }
-    %in %letv $r203 =
+    %in %letv $r223 =
       <<
-        True = $u204
+        True = $u224
       >>
-    %in $k3 $r203
-  %in %letv $u206 =
+    %in $k3 $r223
+  %in %letv $u226 =
     {
     }
-  %in %letv $r205 =
+  %in %letv $r225 =
     <<
-      False = $u206
+      False = $u226
     >>
-  %in $k2 $r205
-%in %letv $u207 =
+  %in $k2 $r225
+%in %letv $u227 =
   {
   }
-%in $k1 $u207
+%in $k1 $u227

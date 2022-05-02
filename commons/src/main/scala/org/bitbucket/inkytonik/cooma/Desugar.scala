@@ -45,7 +45,19 @@ object Desugar {
         def vecOp(n : Expression, field : String, elemType : Expression, args : Expression*) : Expression =
             appOp(n, "Vectors", field, elemType +: args)
 
-        val desugarOps =
+        val desugarOps = {
+            def relational(n : Rel, field : String, l : Expression, r : Expression) : ASTNode =
+                analyser.tipe(l) match {
+                    case Some(IntT()) =>
+                        intOp(n, field, l, r)
+                    case Some(StrT()) =>
+                        strOp(n, field, l, r)
+                    case Some(_) =>
+                        addError(n, "illegal relational operator, only Int or String supported")
+                    case None =>
+                        n
+                }
+
             rule[ASTNode] {
                 case n @ Abs(e) =>
                     analyser.tipe(e) match {
@@ -148,14 +160,15 @@ object Desugar {
                     boolOp(n, "not", e)
 
                 case n @ Rel(l, Gt(), r) =>
-                    intOp(n, "gt", l, r)
+                    relational(n, "gt", l, r)
                 case n @ Rel(l, Gte(), r) =>
-                    intOp(n, "gte", l, r)
+                    relational(n, "gte", l, r)
                 case n @ Rel(l, Lt(), r) =>
-                    intOp(n, "lt", l, r)
+                    relational(n, "lt", l, r)
                 case n @ Rel(l, Lte(), r) =>
-                    intOp(n, "lte", l, r)
+                    relational(n, "lte", l, r)
             }
+        }
 
         val newRoot = rewrite(everywhere(desugarOps))(root)
         if (messages.isEmpty)

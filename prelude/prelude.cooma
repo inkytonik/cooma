@@ -40,7 +40,11 @@
   val Strings = {
     concat = fun (l : String, r : String) prim StrConcat(l, r),
     length = fun (s : String) prim StrLength(s),
-    substr = fun (s : String, i : Int) prim StrSubstr(s, i)
+    substr = fun (s : String, i : Int) prim StrSubstr(s, i),
+    lt = fun (l : String, r : String) prim StrLt(l, r),
+    lte = fun (l : String, r : String) prim StrLte(l, r),
+    gt = fun (l : String, r : String) prim StrGt(l, r),
+    gte = fun (l : String, r : String) prim StrGte(l, r)
   }
 
   val Vectors = {

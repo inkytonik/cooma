@@ -203,6 +203,8 @@ object SymbolTable extends Environments[CoomaEntity] {
                 mkPrimType(Vector(strT), intT)
             case StrSubstrP() =>
                 mkPrimType(Vector(strT, intT), strT)
+            case StrGtP() | StrGteP() | StrLtP() | StrLteP() =>
+                mkPrimType(Vector(strT, strT), boolT)
             case VecAppendP() =>
                 mkVectorPrimTypeWithArgNames(Vector(("e", Idn(IdnUse("t")))), VecT(Idn(IdnUse("t"))))
             case VecConcatP() =>
