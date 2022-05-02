@@ -1148,6 +1148,10 @@ class SemanticAnalyser(
                 case _                  => None
             }
         unaliased.flatMap {
+            // type variables
+            case (Idn(IdnUse(ti)), Idn(IdnUse(ui))) =>
+                if (ti == ui) Some(Idn(IdnUse(ti)))
+                else None
             // unit
             case (UniT(), UniT()) =>
                 Some(Idn(IdnUse("Unit")))
@@ -1186,6 +1190,10 @@ class SemanticAnalyser(
                 case _                  => None
             }
         unaliased.flatMap {
+            // type variables
+            case (Idn(IdnUse(ti)), Idn(IdnUse(ui))) =>
+                if (ti == ui) Some(Idn(IdnUse(ti)))
+                else None
             // unit
             case (UniT(), UniT()) =>
                 Some(Idn(IdnUse("Unit")))

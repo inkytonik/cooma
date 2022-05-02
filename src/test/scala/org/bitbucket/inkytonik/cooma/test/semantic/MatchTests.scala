@@ -143,4 +143,18 @@ class MatchTests extends SemanticTests {
         ""
     )
 
+    test(
+        "cases evaluating to a type parameter",
+        """|{
+           |  def ite(t: Type, b: Boolean, l: t, r: t) t =
+           |    b match {
+           |      case True(_) => l
+           |      case False(_) => r
+           |    }
+           |  { }
+           |}
+           |""".stripMargin,
+        ""
+    )
+
 }
