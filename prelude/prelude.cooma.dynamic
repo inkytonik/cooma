@@ -1,4 +1,6 @@
-%letc $k1 Boolean =
+%letv _ =
+  %prim ArgumentCheck 0
+%in %letc $k1 Boolean =
   %letc $k2 false =
     %letc $k3 true =
       %letf
