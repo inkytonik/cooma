@@ -84,7 +84,23 @@ Strings :
   {
     concat : (l : String, r : String) String,
     length : (s : String) Int,
-    substr : (s : String, i : Int) String
+    substr : (s : String, i : Int) String,
+    lt : (l : String, r : String) <<
+      False : Unit,
+      True : Unit
+    >>,
+    lte : (l : String, r : String) <<
+      False : Unit,
+      True : Unit
+    >>,
+    gt : (l : String, r : String) <<
+      False : Unit,
+      True : Unit
+    >>,
+    gte : (l : String, r : String) <<
+      False : Unit,
+      True : Unit
+    >>
   };
 Vectors :
   {

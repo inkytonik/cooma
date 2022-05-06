@@ -43,6 +43,14 @@ object Primitives {
             IntLtP()
         )
 
+    def allStrPrimRelOps =
+        Vector(
+            StrGteP(),
+            StrGtP(),
+            StrLteP(),
+            StrLtP()
+        )
+
     def primName(prim : Product) : String =
         prim.productPrefix.dropRight(1)
 
@@ -92,7 +100,8 @@ trait Primitives extends Database with FileIo {
                         1
                     case IntAddP() | IntDivP() | IntGtP() | IntGteP() | IntLtP() |
                         IntLteP() | IntModP() | IntMulP() | IntPowP() | IntSubP() |
-                        StrConcatP() | StrSubstrP() | VecLengthP() =>
+                        StrConcatP() | StrGteP() | StrGtP() | StrLteP() | StrLtP() |
+                        StrSubstrP() | VecLengthP() =>
                         2
                     case EqualP() | VecConcatP() | VecGetP() | VecAppendP() |
                         VecPrependP() =>
@@ -206,8 +215,16 @@ trait Primitives extends Database with FileIo {
                         intBinPrim(prim, rho, xs(0), xs(1), _ - _)
                     case StrConcatP() =>
                         strConcat(prim, rho, xs(0), xs(1))
+                    case StrGtP() =>
+                        strRelPrim(prim, rho, xs(0), xs(1), _ > _)
+                    case StrGteP() =>
+                        strRelPrim(prim, rho, xs(0), xs(1), _ >= _)
                     case StrLengthP() =>
                         strLength(prim, rho, xs(0))
+                    case StrLtP() =>
+                        strRelPrim(prim, rho, xs(0), xs(1), _ < _)
+                    case StrLteP() =>
+                        strRelPrim(prim, rho, xs(0), xs(1), _ <= _)
                     case StrSubstrP() =>
                         strSubstr(prim, rho, xs(0), xs(1))
                     case VecAppendP() =>
@@ -582,6 +599,12 @@ trait Primitives extends Database with FileIo {
     def strLength(prim : UserPrimitive, rho : Env, x : String) : ValueR = {
         val sx = getStrParam(prim, rho, x)
         intR(unescape(sx).length)
+    }
+
+    def strRelPrim(prim : UserPrimitive, rho : Env, l : String, r : String, op : (String, String) => Boolean) : ValueR = {
+        val li = getStrParam(prim, rho, l)
+        val ri = getStrParam(prim, rho, r)
+        if (op(li, ri)) trueR else falseR
     }
 
     def strSubstr(prim : UserPrimitive, rho : Env, x : String, i : String) : ValueR = {

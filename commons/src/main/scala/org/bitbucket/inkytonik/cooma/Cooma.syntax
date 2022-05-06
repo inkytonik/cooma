@@ -232,7 +232,11 @@ UserPrimitive =
   | 'IntPow'      {IntPowP}
   | 'IntSub'      {IntSubP}
   | 'StrConcat'   {StrConcatP}
+  | 'StrGte'      {StrGteP}
+  | 'StrGt'       {StrGtP}
   | 'StrLength'   {StrLengthP}
+  | 'StrLte'      {StrLteP}
+  | 'StrLt'       {StrLtP}
   | 'StrSubstr'   {StrSubstrP}
   | 'VecAppend'   {VecAppendP}
   | 'VecConcat'   {VecConcatP}
