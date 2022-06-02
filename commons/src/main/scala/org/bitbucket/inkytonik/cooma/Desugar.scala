@@ -130,7 +130,10 @@ object Desugar {
                     intOp(n, "pow", l, r)
 
                 case n @ If(c, l, r) if analyser.tipe(l).isDefined =>
-                    appFun(n, "ite", analyser.tipe(l).get, c, l, r)
+                    positions.dupPos(n, Mat(c, Vector(
+                        Case("True", IdnDef("_"), l),
+                        Case("False", IdnDef("_"), r)
+                    )))
 
                 case n @ Ind(e, Index(), i) =>
                     analyser.tipe(e) match {
