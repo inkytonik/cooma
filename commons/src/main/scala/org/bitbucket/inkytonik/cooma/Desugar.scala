@@ -155,9 +155,15 @@ object Desugar {
                     intOp(n, "mul", l, r)
 
                 case n @ And(l, AmpAmp(), r) =>
-                    boolOp(n, "and", l, r)
+                    positions.dupPos(n, Mat(l, Vector(
+                        Case("True", IdnDef("_"), r),
+                        Case("False", IdnDef("_"), Var(Field("False", Uni())))
+                    )))
                 case n @ Or(l, BarBar(), r) =>
-                    boolOp(n, "or", l, r)
+                    positions.dupPos(n, Mat(l, Vector(
+                        Case("True", IdnDef("_"), Var(Field("True", Uni()))),
+                        Case("False", IdnDef("_"), r)
+                    )))
 
                 case n @ Pre(Bang(), e) =>
                     boolOp(n, "not", e)
