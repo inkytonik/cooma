@@ -6,16 +6,8 @@
   val false : Boolean = <<False = {}>>
   val true : Boolean = <<True = {}>>
 
-  def ite(t : Type, b : Boolean, l : t, r : t) t =
-    b match {
-      case True(_) => l
-      case False(_) => r
-    }
-
   val Booleans = {
-    and = fun (l : Boolean, r : Boolean) ite(Boolean, l, r, false),
-    not = fun (b : Boolean) ite(Boolean, b, false, true),
-    or = fun (l : Boolean, r : Boolean) ite(Boolean, l, true, r)
+    not = fun (b : Boolean) if b then false else true
   }
 
   def equal(t : Type, l : t, r : t) Boolean =
