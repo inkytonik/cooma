@@ -67,7 +67,7 @@ Specification and reference implementation is under way.
 ```ml
 root 0.1.0 2.13.4> run
 [info] ... sbt messages ...
-roor 0.1.0 REPL - Reference backend
+root 0.1.0 REPL - Reference backend
 
 Enter definitions or expressions (:help for commands)
 
@@ -130,7 +130,7 @@ E.g., for the program `src/test/resources/basic/multiArgCall.cooma` which is a s
 we get the following using the `-r` option to print the program result:
 
 ```ml
-cooma 0.1.0 2.13.4> run -r src/test/resources/basic/multiArgCall.cooma`
+cooma 0.1.0 2.13.4> run -r src/test/resources/basic/multiArgCall.cooma
 [info] ... sbt messages ...
 10
 ```
@@ -141,7 +141,9 @@ E.g., use `-i` to print the IR AST:
 ```ml
 cooma 0.1.0 2.13.4> run -i -r src/test/resources/basic/multiArgCall.cooma
 [info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r reference/src/test/resources/basic/multiArgCall.cooma
-%letv $f5 =
+%letv _ =
+  %prim ArgumentCheck 0
+%in %letv $f5 =
   %fun $k6 x =
     %letv $f7 =
       %fun $k8 y =
@@ -156,7 +158,6 @@ cooma 0.1.0 2.13.4> run -i -r src/test/resources/basic/multiArgCall.cooma
     %halt $r2
   %in $r4 $k1 $s10
 %in $f5 $k3 $i9
-10
 ```
 
 ### Testing
