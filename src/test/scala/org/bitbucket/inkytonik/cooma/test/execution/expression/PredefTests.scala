@@ -22,29 +22,29 @@ class PredefTests extends ExpressionTests {
     )
 
     test(
-        "Booleans.and(false, false)",
-        "Booleans.and(false, false)",
+        "false && false",
+        "false && false",
         "<< False = {} >>",
         "<< False : Unit, True : Unit >>"
     )
 
     test(
-        "Booleans.and(false, true)",
-        "Booleans.and(false, true)",
+        "false && true",
+        "false && true",
         "<< False = {} >>",
         "<< False : Unit, True : Unit >>"
     )
 
     test(
-        "Booleans.and(true, false)",
-        "Booleans.and(true, false)",
+        "true && false",
+        "true && false",
         "<< False = {} >>",
         "<< False : Unit, True : Unit >>"
     )
 
     test(
-        "Booleans.and(true, true)",
-        "Booleans.and(true, true)",
+        "true && true",
+        "true && true",
         "<< True = {} >>",
         "<< False : Unit, True : Unit >>"
     )
@@ -64,59 +64,39 @@ class PredefTests extends ExpressionTests {
     )
 
     test(
-        "Booleans.or(false, false)",
-        "Booleans.or(false, false)",
+        "false || false",
+        "false || false",
         "<< False = {} >>",
-        "<< False : Unit, True : Unit >>"
+        "<< True : Unit, False : Unit >>"
     )
 
     test(
-        "Booleans.or(false, true)",
-        "Booleans.or(false, true)",
+        "false || true",
+        "false || true",
         "<< True = {} >>",
-        "<< False : Unit, True : Unit >>"
+        "<< True : Unit, False : Unit >>"
     )
 
     test(
-        "Booleans.or(true, false)",
-        "Booleans.or(true, false)",
+        "true || false",
+        "true || false",
         "<< True = {} >>",
-        "<< False : Unit, True : Unit >>"
+        "<< True : Unit, False : Unit >>"
     )
 
     test(
-        "Booleans.or(true, true)",
-        "Booleans.or(true, true)",
+        "true || true",
+        "true || true",
         "<< True = {} >>",
-        "<< False : Unit, True : Unit >>"
+        "<< True : Unit, False : Unit >>"
     )
 
     test(
         "Booleans",
         "Booleans",
-        "{ and = <function>, not = <function>, or = <function> }",
+        "{ not = <function> }",
         """{
-          |  and : (l : <<
-          |    False : Unit,
-          |    True : Unit
-          |  >>, r : <<
-          |    False : Unit,
-          |    True : Unit
-          |  >>) <<
-          |    False : Unit,
-          |    True : Unit
-          |  >>,
           |  not : (b : <<
-          |    False : Unit,
-          |    True : Unit
-          |  >>) <<
-          |    False : Unit,
-          |    True : Unit
-          |  >>,
-          |  or : (l : <<
-          |    False : Unit,
-          |    True : Unit
-          |  >>, r : <<
           |    False : Unit,
           |    True : Unit
           |  >>) <<

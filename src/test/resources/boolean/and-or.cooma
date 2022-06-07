@@ -1,0 +1,19 @@
+fun (w: Writer, s0: String, s1: String) {
+  val both = {
+    val _ = w.write("checking s0\n")
+    s0 == ""
+  } && {
+    val _ = w.write("checking s1\n")
+    s1 == ""
+  }
+  val either = {
+    val _ = w.write("checking s0\n")
+    s0 == ""
+  } || {
+    val _ = w.write("checking s1\n")
+    s1 == ""
+  }
+  if both then w.write("both strings are empty\n")
+  else if either then w.write("one of the strings is empty\n")
+  else w.write("neither string is empty\n")
+}

@@ -1,0 +1,6 @@
+{
+  def factorial(n: Int) Int =
+    if n > 0 then n * factorial(n - 1)
+    else 1
+  factorial(7)
+}

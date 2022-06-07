@@ -14,34 +14,9 @@ true :
     False : Unit,
     True : Unit
   >>;
-ite :
-  (t : Type, b : <<
-    False : Unit,
-    True : Unit
-  >>, l : t, r : t) t;
 Booleans :
   {
-    and : (l : <<
-      False : Unit,
-      True : Unit
-    >>, r : <<
-      False : Unit,
-      True : Unit
-    >>) <<
-      False : Unit,
-      True : Unit
-    >>,
     not : (b : <<
-      False : Unit,
-      True : Unit
-    >>) <<
-      False : Unit,
-      True : Unit
-    >>,
-    or : (l : <<
-      False : Unit,
-      True : Unit
-    >>, r : <<
       False : Unit,
       True : Unit
     >>) <<

@@ -24,7 +24,7 @@ class OperatorTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks {
 
     test(s"run: binary Boolean operator ||") { implicit bc =>
         forAll { (l : Boolean, r : Boolean) =>
-            runExprTest(s"$l || $r", boolReplType, toCoomaString(l || r))
+            runExprTest(s"$l || $r", " : << True : Unit, False : Unit >>", toCoomaString(l || r))
         }
     }
 
@@ -271,11 +271,11 @@ class OperatorTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks {
     // Precedence and associativity
 
     test("disjunction binds tighter than if-then-else") { implicit bc =>
-        runExprTest("if true then false || true else false", boolReplType, toCoomaString(true))
+        runExprTest("if true then false || true else false", " : << True : Unit, False : Unit >>", toCoomaString(true))
     }
 
     test("conjunction binds tighter than disjunction") { implicit bc =>
-        runExprTest("true || false && true", boolReplType, toCoomaString(true))
+        runExprTest("true || false && true", " : << True : Unit, False : Unit >>", toCoomaString(true))
     }
 
     test("equality binds tighter than conjunction") { implicit bc =>
@@ -303,7 +303,7 @@ class OperatorTests extends ExecutionTests with ScalaCheckDrivenPropertyChecks {
     }
 
     test("complement binds tighter than disjunction") { implicit bc =>
-        runExprTest("!true || true", boolReplType, toCoomaString(true))
+        runExprTest("!true || true", " : << True : Unit, False : Unit >>", toCoomaString(true))
     }
 
     test("complement binds tighter than conjunction") { implicit bc =>

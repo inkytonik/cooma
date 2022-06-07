@@ -93,10 +93,10 @@ class VectorTests extends ExpressionTests {
 
     test(
         "Boolean vector declaration with operations",
-        """[Booleans.and(false, false),
-            Booleans.and(false, true),
-            Booleans.and(true, false),
-            Booleans.and(true, true)]""",
+        """[false && false,
+            false && true,
+            true && false,
+            true && true]""",
         "[<< False = {} >>, << False = {} >>, << False = {} >>, << True = {} >>]",
         "Vector(<< False : Unit, True : Unit >>)"
     )

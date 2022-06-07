@@ -1,0 +1,1 @@
+fun (w: Writer, s: String) if s == "" then w.write("s is empty\n") else w.write("s is non-empty\n")
