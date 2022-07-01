@@ -94,6 +94,53 @@ provide functions that will use the corresponding HTTP method in the request.
 Like file IO capabilities, these capabilities can be combined using record type
 concatenation.
 
-## Database capabilities
+## Database capability
 
-// TODO
+The `Database` capability provides access to a database. (Currently only SQLite
+is supported.) `Database` is a type constructor whose argument is a record type
+representing the database schema. A user running the program will provide the
+path to the database as the command-line argument, and the Cooma runtime will
+verify that the schema provided by the programmer is compatible with the actual
+database.
+
+Suppose we have a database with the following SQL schema:
+
+```
+CREATE TABLE student (
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    wam INTEGER
+);
+
+CREATE TABLE subject (
+    id INTEGER PRIMARY KEY NOT NULL,
+    code INTEGER NOT NULL,
+    name TEXT NOT NULL
+);
+```
+
+A program accepting this database might look like this:
+
+```
+fun (
+  db : Database({
+    student : Table({
+      id : Int,
+      name : String,
+      wam : Option(Int)
+    }),
+    subject : Table({
+      id : Int,
+      code : Int,
+      name : String
+    })
+  })
+) …
+```
+
+Currently, it is required that each table have an integer `id` column as the
+(sole) primary key.
+
+The tables of `db` can be accessed as `db.student` and `db.subject`.
+
+Each table has the `all`, `getById`, `insert`, `update`, and `delete` methods.
