@@ -1,5 +1,7 @@
 package org.bitbucket.inkytonik.cooma.test.execution
 
+import java.nio.file.{Files, Paths}
+
 import org.bitbucket.inkytonik.cooma.test.ExecutionTests
 import org.bitbucket.inkytonik.kiama.util.FileSource
 import org.bitbucket.inkytonik.kiama.util.IO.deleteFile
@@ -83,6 +85,25 @@ class PreludeTests extends ExecutionTests {
             result shouldBe FileSource(testFilenameOut).content
             deleteFile(staticFilename)
             deleteFile(dynamicFilename)
+        }
+    }
+
+    {
+        val prelude = "./prelude/prelude.cooma"
+        val preludeTest = "./prelude/prelude.test.cooma"
+        val static = "./prelude/prelude.cooma.static"
+        val staticTest = "./prelude/prelude.test.cooma.static"
+        val dynamic = "./prelude/prelude.cooma.dynamic"
+        val dynamicTest = "./prelude/prelude.test.cooma.dynamic"
+        test("prelude should compile") { implicit bc =>
+            Files.copy(Paths.get(prelude), Paths.get(preludeTest))
+            val result = runMain(preludeTest, Seq("-P"), Seq())
+            result shouldBe s"Wrote $staticTest\nWrote $dynamicTest\n"
+            FileSource(staticTest).content shouldBe FileSource(static).content
+            FileSource(dynamicTest).content shouldBe FileSource(dynamic).content
+            deleteFile(preludeTest)
+            deleteFile(staticTest)
+            deleteFile(dynamicTest)
         }
     }
 
