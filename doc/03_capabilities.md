@@ -29,9 +29,8 @@ ensure that the user executing the program has permissions to read the file.
 The `read` function reads the contents of the file and returns the text as a
 string.
 
-While `Reader` as an command-line argument type directs the compiler to treat
-it specially, from the programmer's perspective, `Reader` is just a record
-type:
+While `Reader` as a command-line argument type directs the compiler to treat it
+specially, from the programmer's perspective, `Reader` is just a record type:
 
 ```
 type Reader = { read : () Result(String) }

@@ -193,7 +193,7 @@ Read more about capabilities [here](doc/03_capabilities.md).
 
 ## Participants
 
-* Anthony Sloane (Anthony.Sloane@mq.edu.au)
+* Anthony Sloane (inkytonik@gmail.com)
 * Nicholas Weston
 
 ## Previous Participants

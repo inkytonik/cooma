@@ -37,6 +37,7 @@ The operands of record concatenation must not have overlapping fields:
 ```
 val x = { a = 1, b = 2 }
 val y = { b = 3, c = "asdf" }
+x & y
 > 1:1:error: record concatenation has overlapping field(s) b
 > x & y
 > ^
