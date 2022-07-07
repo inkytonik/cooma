@@ -90,6 +90,10 @@
     put : (suffix : String) <<Left : String, Right : HttpReturn>>
   }
 
+  type HttpServer = {
+    start : () Unit
+  }
+
   type Reader = {
     read : () <<Left : String, Right : String>>
   }

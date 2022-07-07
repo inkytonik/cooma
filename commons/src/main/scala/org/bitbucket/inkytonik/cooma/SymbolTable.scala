@@ -161,7 +161,7 @@ object SymbolTable extends Environments[CoomaEntity] {
         Set("HttpDelete", "HttpGet", "HttpPost", "HttpPut")
 
     val capabilityTypeNames =
-        Set("Database", "FolderReader", "FolderRunner", "FolderWriter", "Reader", "Runner", "Writer") ++ httpMethodNames
+        Set("Database", "FolderReader", "FolderRunner", "FolderWriter", "HttpServer", "Reader", "Runner", "Writer") ++ httpMethodNames
 
     // Primitive types
 

@@ -157,6 +157,11 @@ HttpPut :
       Right : HttpReturn
     >>
   };
+HttpServer :
+  Type =
+  {
+    start : () Unit
+  };
 Reader :
   Type =
   {
