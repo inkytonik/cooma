@@ -5,52 +5,14 @@ The Cooma project at Macquarie University is investigating secure programming la
 [![License: MPL v2.0](https://img.shields.io/badge/License-MPL%20v2-blue.svg)](http://mozilla.org/MPL/2.0/)
 ![Test](https://github.com/inkytonik/cooma/workflows/Test/badge.svg)
 
-## Participants
-
-* Anthony Sloane (Anthony.Sloane@mq.edu.au)
-* Nicholas Weston
-
-## Previous Participants
-
-* Diego Ocampo Herrera
-* Cameron Pappas
-* Scott Buckley
-
-## Sponsors
-
-![Oracle](https://plvmq.bitbucket.io/SAPLING/images/Oracle%20Red%20Badge.png)
-
-## Features
+## Goals and features
 
 * Functional core compiled to a continuation-passing intermediate representation (["Compiling with continuations, continued", Kennedy, ICFP 2007](https://doi.org/10.1145/1291151.1291179))
-
 * Row-based data types capable of encoding record types with variants and object-oriented style extension (["Abstracting extensible data types: or, rows by any other name", Morris and McKinna, POPL 2019](https://doi.org/10.1145/3290325))
-
 * Fine-grained object capability-based effects (["A Study of Capability-Based Effect Systems", Liu, EPFL, 2016](https://github.com/liufengyun/stoic))
-
-* Resource capabilities checked and provided by runtime system
-
 * Implicit argument resolution to avoid passing many capability parameters (["COCHIS: Stable and coherent implicits", Schrivjers, Oliveira, Wadler and Mantirosian, JFP, 2019](http://dx.doi.org/10.1017/s0956796818000242))
 
-## Status
-
-Specification and reference implementation is under way.
-
-* Functional core with tail call optimisation
-* Row-based record and variant data types (literals, selection, concatenation, simple matching)
-* Object capabilities via records
-* Runtime-provided resource capabilities (I/O operations only)
-* Implicit argument resolution (not started)
-* Single shared frontend (parsing, semantic analysis, compilation to continuation-based IR)
-* Two IR backends (reference and Truffle/GraalVM)
-* File-based execution and read-eval-print loop (REPL)
-
-### Related projects
-
-* [Kiama language processing library](https://bitbucket.org/inkytonik/kiama)
-* [sbt-rats parser generator](https://bitbucket.org/inkytonik/sbt-rats)
-
-## Implementation
+## Getting started
 
 ### Prerequisites
 
@@ -58,16 +20,18 @@ Specification and reference implementation is under way.
 
 ### Running
 
-* clone this project
-* go to the cloned directory
-* run `sbt` to get cooma project prompt
+* Clone this project.
+* Go to the cloned directory.
+* Run `sbt`.
 
 ### Running interactively (REPL mode)
+
+To enter REPL mode, type `run`.
 
 ```ml
 root 0.1.0 2.13.4> run
 [info] ... sbt messages ...
-roor 0.1.0 REPL - Reference backend
+root 0.1.0 REPL - Reference backend
 
 Enter definitions or expressions (:help for commands)
 
@@ -81,42 +45,17 @@ def f (x : Int) Int = exp   add new function definition
 :paste                      enter single multi-line input until :end
 :quit                       quit the REPL (also Control-D)
 
-cooma> 10
-res0 = 10
-
-cooma> res0
-res1 : Int = 10
-
 cooma> val x = 20
 x : Int = 20
 
 cooma> x
-res2 : Int = 20
+res0 : Int = 20
 
 cooma> def f (x : Int) Int = x
 f : (Int) Int = <function>
 
-cooma> f(20)
-res3 : Int = 20
-
-cooma> :lines
-val a = 1
-val b = 2
-:end
-a : Int = 1
-b : Int = 2
-
-cooma> a
-res4 : Int = 1
-
-cooma> :paste
-{
-   val c = 1
-   val d = 2
-   c
-}
-:end
-res5 : Int = 1
+cooma> f(x)
+res1 : Int = 20
 ```
 
 ### Running on files (compiler mode)
@@ -130,40 +69,20 @@ E.g., for the program `src/test/resources/basic/multiArgCall.cooma` which is a s
 we get the following using the `-r` option to print the program result:
 
 ```ml
-cooma 0.1.0 2.13.4> run -r src/test/resources/basic/multiArgCall.cooma`
+cooma 0.1.0 2.13.4> run -r src/test/resources/basic/multiArgCall.cooma
 [info] ... sbt messages ...
 10
 ```
 
-Use `run --help` to see all of the options for printing the source AST, IR and IR AST.
-E.g., use `-i` to print the IR AST:
-
-```ml
-cooma 0.1.0 2.13.4> run -i -r src/test/resources/basic/multiArgCall.cooma
-[info] Running (fork) org.bitbucket.inkytonik.cooma.Main -i -r reference/src/test/resources/basic/multiArgCall.cooma
-%letv $f5 =
-  %fun $k6 x =
-    %letv $f7 =
-      %fun $k8 y =
-        $k8 x
-    %in $k6 $f7
-%in %letv $i9 =
-  10
-%in %letc $k3 $r4 =
-  %letv $s10 =
-    "hello"
-  %in %letc $k1 $r2 =
-    %halt $r2
-  %in $r4 $k1 $s10
-%in $f5 $k3 $i9
-10
-```
+Use `run --help` to see all of the options for printing the source AST.
 
 ### Testing
 
 Use the sbt command `test` to run the automated tests.
 
 ## Examples
+
+See the [tutorials](doc) for further examples.
 
 NOTE: sbt `[info]` markers have been removed to simplify the output.
 
@@ -213,6 +132,8 @@ NOTE: sbt `[info]` markers have been removed to simplify the output.
 10
 ```
 
+Read more about records [here](doc/02_composite-types.md).
+
 ### String command-line arguments
 
 ```ml
@@ -227,7 +148,7 @@ fun (s : String, t : String) t
 "there"
 ```
 
-### Writer capability
+### Capabilities
 
 Capability arguments at the top-level are automatically linked with the command-line arguments and checked.
 E.g., a Writer capability allows the program to write to the named file or device.
@@ -250,17 +171,7 @@ If the specified file name is not writeable, the runtime system causes the execu
 cooma: Writer capability unavailable: can't write /does/not/exist
 ```
 
-### Writer and Reader capabilities
-
-```ml
-fun (w : Writer, r : Reader) w.write(r.read())
-
-> run -r src/test/resources/capability/writerAndReaderCmdArg.cooma /dev/tty src/test/resources/basic/multiArgCall.cooma
-(fun (x : Int, y : String) x) (10, "hello")
-{}
-```
-
-A Reader capability is only provided if the designated file can be read.
+A file capability is only provided if the designated file can be read.
 
 ```ml
 
@@ -277,3 +188,25 @@ fun (rw : Reader & Writer) {
     result
 }
 ```
+
+Read more about capabilities [here](doc/03_capabilities.md).
+
+## Participants
+
+* Anthony Sloane (inkytonik@gmail.com)
+* Nicholas Weston
+
+## Previous Participants
+
+* Diego Ocampo Herrera
+* Cameron Pappas
+* Scott Buckley
+
+## Sponsors
+
+![Oracle](https://plvmq.bitbucket.io/SAPLING/images/Oracle%20Red%20Badge.png)
+
+## Related projects
+
+* [Kiama language processing library](https://bitbucket.org/inkytonik/kiama)
+* [sbt-rats parser generator](https://bitbucket.org/inkytonik/sbt-rats)
