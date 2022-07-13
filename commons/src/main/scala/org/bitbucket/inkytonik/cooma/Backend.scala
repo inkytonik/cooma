@@ -78,9 +78,13 @@ trait Backend extends Primitives {
     def emptyEnv : Env
 
     def lookupR(rho : Env, x : String) : ValueR
+    // def insertR TODO
 
     def stdout : Writer
     def getConfig : Config
+
+    case class Result(rho : Env, value : ValueR)
+    def interpret(term : Term, rho : Env, args : Seq[String], config : Config) : Either[String, Result]
 
     /**
      * When evaluating a program using Truffle, what we get as an output

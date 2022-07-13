@@ -472,7 +472,7 @@ trait Primitives extends Database with FileIo with HttpServer {
         }
 
     def httpServer(prim : Primitive, rho : Env, port : Int) : ValueR =
-        serverStart(port)
+        serverStart(port, rho)
 
     def intBinPrim(prim : UserPrimitive, rho : Env, l : String, r : String, op : (BigInt, BigInt) => BigInt) : ValueR = {
         val li = getIntParam(prim, rho, l)

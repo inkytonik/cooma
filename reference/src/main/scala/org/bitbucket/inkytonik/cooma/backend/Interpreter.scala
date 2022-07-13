@@ -24,8 +24,6 @@ class Interpreter(config : Config) {
     import scala.annotation.tailrec
     import scala.util.Try
 
-    case class Result(rho : Env, value : ValueR)
-
     sealed abstract class ValueR
     case class ClsR(f : String, x : String, env : Env, e : Term) extends ValueR
     case class IntR(num : BigInt) extends ValueR

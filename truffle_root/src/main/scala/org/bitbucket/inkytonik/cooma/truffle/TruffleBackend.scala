@@ -187,4 +187,7 @@ class TruffleBackend(
 
     def getConfig : Config = config
 
+    override def interpret(term : CoomaTermNode, rho : Rho, args : Seq[String], config : Config) : Either[String, Result] =
+        Left("TruffleBackend::interpret not supported")
+
 }
