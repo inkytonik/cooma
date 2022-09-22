@@ -185,6 +185,8 @@ class TruffleBackend(
 
     def lookupR(rho : Env, x : String) : RuntimeValue = rho.get(x)
 
+    def insertR(rho : Env, x : String, value : ValueR) : Env = defineVar(rho, x, value)
+
     def getConfig : Config = config
 
     override def interpret(term : CoomaTermNode, rho : Rho, args : Seq[String], config : Config) : Either[String, Result] =

@@ -90,8 +90,8 @@
     put : (suffix : String) <<Left : String, Right : HttpReturn>>
   }
 
-  type HttpServer = {
-    start : () Unit
+  type HttpServer = fun (A : Type) {
+    start : (A) Unit
   }
 
   type Reader = {

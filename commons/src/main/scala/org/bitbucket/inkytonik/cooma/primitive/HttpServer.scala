@@ -14,7 +14,7 @@ trait HttpServer {
     case class Instance(
         port : Int,
         env : Env,
-        endpoints : Map[String, Value]
+        endpoints : Map[String, ValueR]
     ) {
 
         val server = Server.create(new InetSocketAddress(port), 0)
@@ -37,35 +37,29 @@ trait HttpServer {
                         }
                         aux()
                     }
-                    endpoints.get(xchg.getRequestURI.getPath) match {
+                    val path = xchg.getRequestURI.getPath.substring(1)
+                    endpoints.get(path) match {
                         case Some(endpoint) =>
                             val term =
                                 letC(
-                                    "$hk1",
-                                    "$hf",
+                                    "$hk2",
+                                    "$hx",
                                     letC(
-                                        "$hk2",
-                                        "$hx",
-                                        letC(
-                                            "$hk3",
-                                            "$hr4",
-                                            appC(haltC(), "$hr4"),
-                                            appF("f", "$hk3", "$hx")
-                                        ),
-                                        letV(
-                                            "$hs5",
-                                            strV(body),
-                                            appC(idnC("$hk2"), "$hs5")
-                                        )
+                                        "$hk3",
+                                        "$hr4",
+                                        appC(haltC(), "$hr4"),
+                                        appF("f", "$hk3", "$hx")
                                     ),
                                     letV(
-                                        "$hf6",
-                                        endpoint, // handler goes here
-                                        appC(idnC("$hk1"), "$hf6")
+                                        "$hs5",
+                                        strV(body),
+                                        appC(idnC("$hk2"), "$hs5")
                                     )
                                 )
+                            val config = new Config(Seq("-r"))
+                            config.verify()
                             val (response, code) =
-                                interpret(term, env, Seq.empty, new Config(Seq("-r"))) match {
+                                interpret(term, insertR(env, "f", endpoint), Seq.empty, config) match {
                                     case Right(Result(_, out)) =>
                                         isStrR(out) match {
                                             case Some(out) => (out, 200)
@@ -88,19 +82,10 @@ trait HttpServer {
 
     }
 
-    def serverStart(port : Int, env : Env) : ValueR = {
-        val server = Server.create(new InetSocketAddress(port), 0)
-        val handler =
-            new HttpHandler {
-                override def handle(xchg : HttpExchange) : Unit = {
-                    val response = "Hello, world!"
-                    xchg.sendResponseHeaders(200, response.length)
-                    val os = xchg.getResponseBody
-                    os.write(response.getBytes)
-                    os.close()
-                }
-            }
-        server.createContext("/", handler)
+    def serverStart(port : Int, env : Env, endpoints : Map[String, ValueR]) : ValueR = {
+        val instance = Instance(port, env, endpoints)
+        val server = instance.server
+        server.createContext("/", instance.handler)
         server.setExecutor(null)
         server.start()
         System.in.read()

@@ -158,9 +158,9 @@ HttpPut :
     >>
   };
 HttpServer :
-  Type =
-  {
-    start : () Unit
+  (A : Type) Type =
+  fun (A : Type) {
+    start : (A) Unit
   };
 Reader :
   Type =

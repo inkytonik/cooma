@@ -78,7 +78,7 @@ trait Backend extends Primitives {
     def emptyEnv : Env
 
     def lookupR(rho : Env, x : String) : ValueR
-    // def insertR TODO
+    def insertR(rho : Env, x : String, value : ValueR) : Env
 
     def stdout : Writer
     def getConfig : Config

@@ -173,7 +173,7 @@ trait Primitives extends Database with FileIo with HttpServer {
                 httpClient(prim, rho, method, url, xs(0))
 
             case HttpServerP(port) =>
-                httpServer(prim, rho, port)
+                httpServer(prim, rho, port, xs(0))
 
             case ReaderReadP(filename) =>
                 readerRead(prim, filename)
@@ -471,8 +471,21 @@ trait Primitives extends Database with FileIo with HttpServer {
                 errCap(primName(prim), s"can't find string operand $x")
         }
 
-    def httpServer(prim : Primitive, rho : Env, port : Int) : ValueR =
-        serverStart(port, rho)
+    def httpServer(prim : Primitive, rho : Env, port : Int, endpointsIdn : String) : ValueR =
+        isRecR(lookupR(rho, endpointsIdn)) match {
+            case Some(endpointsRec) =>
+                val endpoints =
+                    endpointsRec
+                        .map { fld =>
+                            val name = getFieldName(fld)
+                            val endpoint = getFieldValue(fld)
+                            name -> endpoint
+                        }
+                        .toMap
+                serverStart(port, rho, endpoints)
+            case None =>
+                errCap(primName(prim), "expected record")
+        }
 
     def intBinPrim(prim : UserPrimitive, rho : Env, l : String, r : String, op : (BigInt, BigInt) => BigInt) : ValueR = {
         val li = getIntParam(prim, rho, l)

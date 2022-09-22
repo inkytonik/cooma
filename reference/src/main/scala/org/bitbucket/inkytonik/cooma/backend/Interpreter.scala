@@ -205,6 +205,9 @@ class Interpreter(config : Config) {
                 errInterp("lookupR", s"can't find value $x")
         }
 
+    def insertR(rho : Env, x : String, value : ValueR) : Env =
+        ConsVE(x, value, rho)
+
     def lookupC(rho : Env, x : String) : ClsC =
         rho match {
             case ConsCE(y, v, _) if x == y =>

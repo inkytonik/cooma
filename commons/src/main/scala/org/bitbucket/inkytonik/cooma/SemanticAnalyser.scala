@@ -251,6 +251,9 @@ class SemanticAnalyser(
                             }
                         case _ => false
                     }
+                case App(Idn(IdnUse("HttpServer")), Vector(RecT(endpoints))) =>
+                    // TODO: check endpoints
+                    true
                 case StrT() =>
                     true
                 case Idn(IdnUse(name)) if capabilityTypeNames(name) =>
