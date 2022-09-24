@@ -658,7 +658,7 @@ trait Primitives extends Database with FileIo {
         val elems = lookupVector(rho, v)
         isIntR(lookupR(rho, i)) match {
             case Some(idx) =>
-                if (elems.indices contains idx)
+                if (0 <= idx && idx < elems.length)
                     vecR(elems.updated(idx.intValue, lookupR(rho, x)))
                 else
                     errPrim(primName(prim), s"vector index out of bounds - size: ${elems.size}, index: $idx")

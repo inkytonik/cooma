@@ -29,7 +29,7 @@ The Cooma project at Macquarie University is investigating secure programming la
 To enter REPL mode, type `run`.
 
 ```ml
-root 0.1.0 2.13.4> run
+root 0.1.0 2.13.9> run
 [info] ... sbt messages ...
 root 0.1.0 REPL - Reference backend
 
@@ -69,7 +69,7 @@ E.g., for the program `src/test/resources/basic/multiArgCall.cooma` which is a s
 we get the following using the `-r` option to print the program result:
 
 ```ml
-cooma 0.1.0 2.13.4> run -r src/test/resources/basic/multiArgCall.cooma
+cooma 0.1.0 2.13.9> run -r src/test/resources/basic/multiArgCall.cooma
 [info] ... sbt messages ...
 10
 ```
