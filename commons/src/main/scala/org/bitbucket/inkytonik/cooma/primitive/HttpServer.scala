@@ -97,13 +97,4 @@ trait HttpServer {
         interpret(term, env, Seq.empty, new Config(Seq("-r")))
             .flatMap { case Result(_, out) => isStrR(out).toRight("expected String") }
 
-    /**
-     * Creates the term to evaluate.
-     *
-     * @param f    the name of the endpoint function in the environment
-     * @param x    the body of the request
-     * @return     the term to evaluate for this request
-     */
-    protected def createTerm(f : String, x : String) : Term = ???
-
 }
