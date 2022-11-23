@@ -1,0 +1,13 @@
+fun (
+    server: HttpServer({
+        lorem: (String) String,
+        hello: (String) String,
+        echo: (String) String
+    })
+) {
+    server.start({
+        lorem = fun (_: String) "Lorem ipsum dolor sit amet",
+        hello = fun (name: String) Strings.concat("Hello ", name),
+        echo = fun (s: String) s
+    })
+}

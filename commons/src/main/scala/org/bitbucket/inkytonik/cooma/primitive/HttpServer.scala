@@ -6,6 +6,7 @@ import com.sun.net.httpserver.{HttpExchange, HttpHandler, HttpServer => Server}
 import org.bitbucket.inkytonik.cooma.Backend
 import org.bitbucket.inkytonik.cooma.Config
 import java.io.ByteArrayOutputStream
+import scala.annotation.tailrec
 
 trait HttpServer {
 
@@ -88,7 +89,13 @@ trait HttpServer {
         server.createContext("/", instance.handler)
         server.setExecutor(null)
         server.start()
-        System.in.read()
+        @tailrec
+        def aux() : Unit = {
+            Thread.sleep(1_000)
+            if (System.in.read() > 0) ()
+            else aux()
+        }
+        aux()
         server.stop(0)
         uniR
     }

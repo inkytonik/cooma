@@ -246,7 +246,6 @@ class Interpreter(config : Config) {
             if ((new File(filename)).isFile)
                 FileSource(filename)
             else {
-                println(filename)
                 val stream = getClass.getClassLoader.getResourceAsStream(filename)
                 val br = new BufferedReader(new InputStreamReader(stream))
                 val text = br.lines().collect(Collectors.joining("\n"))

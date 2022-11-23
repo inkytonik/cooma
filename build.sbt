@@ -86,7 +86,7 @@ lazy val commonsettings = Seq(
 	)),
 	Test/headerLicense := headerLicense.value,
 	updateOptions := updateOptions.value.withCachedResolution(true)
-)
+) ++ assemblySettings
 
 // Assembly
 lazy val assemblySettings = Seq(
@@ -121,7 +121,6 @@ lazy val root = (project in file("."))
 	.settings(
 		name := "cooma",
 		version := "0.1.0",
-		assemblySettings,
 		commonsettings,
 		mainClass in Compile := (mainClass in Compile in reference).value,
 		unmanagedResourceDirectories in Compile := Seq(baseDirectory.value / "prelude"),
@@ -156,12 +155,10 @@ lazy val root = (project in file("."))
 lazy val reference = (project in file("reference"))
 	.settings(
 		commonsettings,
-		assemblySettings,
 		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main")
 	) dependsOn (commons)
 lazy val truffle_root = (project in file("truffle_root"))
 	.settings(
-		assemblySettings,
 		commonsettings
 	)
     .aggregate(truffle)
@@ -169,7 +166,6 @@ lazy val truffle_root = (project in file("truffle_root"))
 
 lazy val truffle = (project in file("truffle"))
 	.settings(
-		assemblySettings,
 		commonsettings,
 
 		// sbt-rats
@@ -188,7 +184,6 @@ lazy val commons = (project in file("commons"))
 	.enablePlugins(BuildInfoPlugin)
 	.settings(
 		commonsettings,
-		assemblySettings,
 
 		// sbt-rats
 		ratsScalaRepetitionType := Some(VectorType),
@@ -212,7 +207,6 @@ lazy val installGraalVMComponent = taskKey[Unit]("Installs the generated compone
 
 lazy val trufflecomponent = (project in file("truffle-component"))
 	.settings(
-		assemblySettings,
 		buildComponent := {
 			val files = assembly.all(ScopeFilter(inProjects(truffle_root))).value
 			baseDirectory.value + "/make_component.sh" !
