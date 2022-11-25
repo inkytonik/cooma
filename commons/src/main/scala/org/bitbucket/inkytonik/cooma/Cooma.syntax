@@ -211,6 +211,7 @@ Primitive =
   | "FolderRunnerRun" Filename             {FolderRunnerRunP}
   | "FolderWriterWrite" Filename           {FolderWriterWriteP}
   | "HttpClient" Identifier sp StringLit   {HttpClientP}
+  | "HttpStart" IntLit                     {HttpServerP, 1: Integer.parseInt : Int}
   | "ReaderRead" Filename                  {ReaderReadP}
   | 'RecConcat'                            {RecConcatP}
   | 'RecSelect'                            {RecSelectP}

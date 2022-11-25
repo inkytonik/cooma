@@ -1,5 +1,4 @@
 import sbt.Keys.{name, unmanagedSourceDirectories, version}
-import sbtassembly.AssemblyPlugin.autoImport._
 import scalariform.formatter.preferences._
 
 import scala.sys.process._
@@ -87,30 +86,34 @@ lazy val commonsettings = Seq(
 	)),
 	Test/headerLicense := headerLicense.value,
 	updateOptions := updateOptions.value.withCachedResolution(true)
-)
+) ++ assemblySettings
 
 // Assembly
 lazy val assemblySettings = Seq(
 	assembly / assemblyJarName := name.value + ".jar",
 	assembly / assemblyMergeStrategy := {
-		case PathList("org","xmlpull", xs @ _*) => MergeStrategy.last
-		case PathList("META-INF", "truffle", "language") => MergeStrategy.deduplicate
-		case PathList("META-INF", "ECLIPSE_.RSA") => MergeStrategy.discard
-		case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
-		case x =>
-			val oldStrategy = (assembly / assemblyMergeStrategy).value
-			oldStrategy(x)
+		// case "module-info.class" => MergeStrategy.discard
+		case PathList("META-INF", _*) => MergeStrategy.discard
+		case _ => MergeStrategy.first
 	},
 	assembly / assemblyExcludedJars := {
-		val cp = (assembly / fullClasspath).value
+		val cp = (fullClasspath in assembly).value
 		cp filter { f =>
 			//f.data.getName.contains("truffle-api") ||
 			//f.data.getName.contains("truffle-tck")
 			f.data.getName.contains("truffle-dsl-processor") ||
-			f.data.getName.contains("graal-sdk")
+			f.data.getName.contains("graal-sdk") ||
+			f.data.getName.contains("jackson")
 		}
 	},
-	assembly / test := {}
+	assembly / test := {},
+	assembly / mainClass := Some("org.bitbucket.inkytonik.cooma.Main"),
+	assembly / assembledMappings += {
+		sbtassembly.MappingSet(None, Vector(
+			(baseDirectory.value / "prelude" / "prelude.cooma.dynamic") -> "prelude/prelude.cooma.dynamic",
+			(baseDirectory.value / "prelude" / "prelude.cooma.static") -> "prelude/prelude.cooma.static",
+		))
+	}
 )
 
 // Modules
@@ -118,9 +121,9 @@ lazy val root = (project in file("."))
 	.settings(
 		name := "cooma",
 		version := "0.1.0",
-		assemblySettings,
 		commonsettings,
-		Compile / mainClass := (reference / Compile / mainClass).value,
+		mainClass in Compile := (mainClass in Compile in reference).value,
+		unmanagedResourceDirectories in Compile := Seq(baseDirectory.value / "prelude"),
 		libraryDependencies ++= Seq(
 			"org.http4s" %% "http4s-blaze-server" % "0.21.16" % "test",
 			"org.http4s" %% "http4s-blaze-client" % "0.21.16" % "test",
@@ -152,11 +155,10 @@ lazy val root = (project in file("."))
 lazy val reference = (project in file("reference"))
 	.settings(
 		commonsettings,
-		Compile / run / mainClass := Some("org.bitbucket.inkytonik.cooma.Main")
+		mainClass in(Compile, run) := Some("org.bitbucket.inkytonik.cooma.Main")
 	) dependsOn (commons)
 lazy val truffle_root = (project in file("truffle_root"))
 	.settings(
-		assemblySettings,
 		commonsettings
 	)
     .aggregate(truffle)
@@ -164,7 +166,6 @@ lazy val truffle_root = (project in file("truffle_root"))
 
 lazy val truffle = (project in file("truffle"))
 	.settings(
-		assemblySettings,
 		commonsettings,
 
 		// sbt-rats

@@ -11,6 +11,12 @@
 package org.bitbucket.inkytonik.cooma
 package backend
 
+import java.io.File
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import org.bitbucket.inkytonik.kiama.util.StringSource
+import java.util.stream.Collectors
+
 class Interpreter(config : Config) {
 
     self : ReferenceBackend =>
@@ -23,8 +29,6 @@ class Interpreter(config : Config) {
 
     import scala.annotation.tailrec
     import scala.util.Try
-
-    case class Result(rho : Env, value : ValueR)
 
     sealed abstract class ValueR
     case class ClsR(f : String, x : String, env : Env, e : Term) extends ValueR
@@ -207,6 +211,9 @@ class Interpreter(config : Config) {
                 errInterp("lookupR", s"can't find value $x")
         }
 
+    def insertR(rho : Env, x : String, value : ValueR) : Env =
+        ConsVE(x, value, rho)
+
     def lookupC(rho : Env, x : String) : ClsC =
         rho match {
             case ConsCE(y, v, _) if x == y =>
@@ -235,7 +242,16 @@ class Interpreter(config : Config) {
             }
 
     def readDynamicPrelude(filename : String, config : Config) : Env = {
-        val source = FileSource(filename)
+        val source =
+            if ((new File(filename)).isFile)
+                FileSource(filename)
+            else {
+                val stream = getClass.getClassLoader.getResourceAsStream(filename)
+                val br = new BufferedReader(new InputStreamReader(stream))
+                val text = br.lines().collect(Collectors.joining("\n"))
+                stream.close()
+                StringSource(text)
+            }
         val positions = new Positions()
         val p = new CoomaParser(source, positions)
         val pr = p.pDynamicPrelude(0)

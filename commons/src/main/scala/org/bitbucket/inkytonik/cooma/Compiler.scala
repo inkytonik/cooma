@@ -157,6 +157,8 @@ trait Compiler {
                                         case None =>
                                             sys.error(s"compileTopArg: invalid database type ${show(t)}")
                                     }
+                                case App(Idn(IdnUse("HttpServer")), Vector(RecT(ts))) =>
+                                    "HttpServer" :: Nil
                                 case t =>
                                     sys.error(s"compileTopArg: ${show(t)} arguments not supported")
                             }

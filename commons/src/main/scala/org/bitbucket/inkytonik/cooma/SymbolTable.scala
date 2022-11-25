@@ -11,6 +11,11 @@
 package org.bitbucket.inkytonik.cooma
 
 import org.bitbucket.inkytonik.kiama.util.{Entity, Environments, Message, Source}
+import java.io.File
+import org.bitbucket.inkytonik.kiama.util.StringSource
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.stream.Collectors
 
 /**
  * Superclass of all Cooma entities. Provides generic access to
@@ -161,7 +166,7 @@ object SymbolTable extends Environments[CoomaEntity] {
         Set("HttpDelete", "HttpGet", "HttpPost", "HttpPut")
 
     val capabilityTypeNames =
-        Set("Database", "FolderReader", "FolderRunner", "FolderWriter", "Reader", "Runner", "Writer") ++ httpMethodNames
+        Set("Database", "FolderReader", "FolderRunner", "FolderWriter", "HttpServer", "Reader", "Runner", "Writer") ++ httpMethodNames
 
     // Primitive types
 
@@ -239,7 +244,16 @@ object SymbolTable extends Environments[CoomaEntity] {
         }
 
     def loadPrelude(path : String) : Either[(Source, Positions, Message), Environment] = {
-        val source = FileSource(path)
+        val source =
+            if ((new File(path)).isFile)
+                FileSource(path)
+            else {
+                val stream = getClass.getClassLoader.getResourceAsStream(path)
+                val br = new BufferedReader(new InputStreamReader(stream))
+                val text = br.lines().collect(Collectors.joining("\n"))
+                stream.close()
+                StringSource(text)
+            }
         val positions = new Positions
         val parser = new CoomaParser(source, positions)
         val result = parser.pStaticPrelude(0)

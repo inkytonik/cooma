@@ -157,6 +157,11 @@ HttpPut :
       Right : HttpReturn
     >>
   };
+HttpServer :
+  (A : Type) Type =
+  fun (A : Type) {
+    start : (A) Unit
+  };
 Reader :
   Type =
   {

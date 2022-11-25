@@ -251,6 +251,11 @@ class SemanticAnalyser(
                             }
                         case _ => false
                     }
+                case App(Idn(IdnUse("HttpServer")), Vector(RecT(endpoints))) =>
+                    endpoints.forall {
+                        case FieldType(_, FunT(ArgumentTypes(Vector(ArgumentType(_, StrT()))), StrT())) => true
+                        case _ => false
+                    }
                 case StrT() =>
                     true
                 case Idn(IdnUse(name)) if capabilityTypeNames(name) =>

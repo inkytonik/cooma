@@ -14,7 +14,7 @@ import java.net.SocketException
 
 import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
 import org.bitbucket.inkytonik.cooma.primitive.database.Metadata
-import org.bitbucket.inkytonik.cooma.primitive.{Database, FileIo}
+import org.bitbucket.inkytonik.cooma.primitive.{Database, FileIo, HttpServer}
 
 import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
@@ -59,7 +59,7 @@ object Primitives {
 
 }
 
-trait Primitives extends Database with FileIo {
+trait Primitives extends Database with FileIo with HttpServer {
 
     self : Backend =>
 
@@ -87,10 +87,10 @@ trait Primitives extends Database with FileIo {
         p match {
             case ArgumentP(_) | ArgumentCheckP(_) =>
                 0
-            case CapabilityP(_) | DbTableAllP(_, _) | DbTableDeleteP(_, _) |
+            case CapabilityP(_) | DbTableAllP(_, _) | DbTableDeleteP(_, _) | HttpServerP(_) |
                 DbTableGetByIdP(_, _) | DbTableInsertP(_, _) | DbTableUpdateP(_, _) |
-                FolderReaderReadP(_) | HttpClientP(_, _) | ReaderReadP(_) | RunnerRunP(_) |
-                WriterWriteP(_) =>
+                FolderReaderReadP(_) | HttpClientP(_, _) | ReaderReadP(_) |
+                RunnerRunP(_) | WriterWriteP(_) =>
                 1
             case RecConcatP() | RecSelectP() | FolderRunnerRunP(_) | FolderWriterWriteP(_) =>
                 2
@@ -171,6 +171,9 @@ trait Primitives extends Database with FileIo {
 
             case HttpClientP(method, url) =>
                 httpClient(prim, rho, method, url, xs(0))
+
+            case HttpServerP(port) =>
+                httpServer(prim, rho, port, xs(0))
 
             case ReaderReadP(filename) =>
                 readerRead(prim, filename)
@@ -330,6 +333,8 @@ trait Primitives extends Database with FileIo {
             case "HttpDelete" | "HttpGet" | "HttpPost" | "HttpPut" =>
                 val method = cap.drop(4).toLowerCase()
                 makeCapability(Vector((method, HttpClientP(method, argument), 1)))
+            case "HttpServer" =>
+                makeCapability(Vector(("start", HttpServerP(argument.toInt), 1)))
             case "Reader" =>
                 checkReader(argument)
                 makeCapability(Vector(("read", ReaderReadP(argument), 1)))
@@ -464,6 +469,22 @@ trait Primitives extends Database with FileIo {
                 }
             case None =>
                 errCap(primName(prim), s"can't find string operand $x")
+        }
+
+    def httpServer(prim : Primitive, rho : Env, port : Int, endpointsIdn : String) : ValueR =
+        isRecR(lookupR(rho, endpointsIdn)) match {
+            case Some(endpointsRec) =>
+                val endpoints =
+                    endpointsRec
+                        .map { fld =>
+                            val name = getFieldName(fld)
+                            val endpoint = getFieldValue(fld)
+                            name -> endpoint
+                        }
+                        .toMap
+                serverStart(port, rho, endpoints)
+            case None =>
+                errCap(primName(prim), "expected record")
         }
 
     def intBinPrim(prim : UserPrimitive, rho : Env, l : String, r : String, op : (BigInt, BigInt) => BigInt) : ValueR = {
