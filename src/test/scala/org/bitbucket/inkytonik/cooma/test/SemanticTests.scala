@@ -8,30 +8,30 @@ import org.bitbucket.inkytonik.kiama.util.{StringSource, Tests}
 
 trait SemanticTests extends Tests {
 
-    val driver = new ReferenceDriver
-    val config = {
-        val newConfig = driver.createConfig(Seq())
-        newConfig.verify()
-        newConfig
+  val driver = new ReferenceDriver
+  val config = {
+    val newConfig = driver.createConfig(Seq())
+    newConfig.verify()
+    newConfig
+  }
+
+  def test(name: String, expression: String, expectedMessages: String): Unit =
+    test(name) {
+      runAnalysis(expression.stripMargin) shouldBe expectedMessages.stripMargin
     }
 
-    def test(name : String, expression : String, expectedMessages : String) : Unit =
-        test(name) {
-            runAnalysis(expression.stripMargin) shouldBe expectedMessages.stripMargin
-        }
-
-    def runAnalysis(expression : String) : String = {
-        val messages =
-            driver.makeast(StringSource(expression), config) match {
-                case Left(ast) =>
-                    val tree = new Tree[ASTNode, Program](ast, EnsureTree)
-                    val env = preludeStaticEnv(config)
-                    val analyser = new SemanticAnalyser(tree, env)
-                    analyser.errors
-                case Right(messages) =>
-                    messages
-            }
-        driver.messaging.formatMessages(messages)
-    }
+  def runAnalysis(expression: String): String = {
+    val messages =
+      driver.makeast(StringSource(expression), config) match {
+        case Left(ast) =>
+          val tree = new Tree[ASTNode, Program](ast, EnsureTree)
+          val env = preludeStaticEnv(config)
+          val analyser = new SemanticAnalyser(tree, env)
+          analyser.errors
+        case Right(messages) =>
+          messages
+      }
+    driver.messaging.formatMessages(messages)
+  }
 
 }

@@ -18,47 +18,54 @@ import scala.util.Try
 
 trait TruffleREPL extends REPL {
 
-    self : Compiler with TruffleBackend =>
+  self: Compiler with TruffleBackend =>
 
-    def driver : TruffleDriver
+  def driver: TruffleDriver
 
-    import org.bitbucket.inkytonik.cooma.Config
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
-    import org.bitbucket.inkytonik.cooma.PrettyPrinter.format
-    import org.graalvm.polyglot.Context
+  import org.bitbucket.inkytonik.cooma.Config
+  import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
+  import org.bitbucket.inkytonik.cooma.PrettyPrinter.format
+  import org.graalvm.polyglot.Context
 
-    var currentDynamicEnv : Context = _
+  var currentDynamicEnv: Context = _
 
-    override def initialise(config : Config) : Unit = {
-        currentDynamicEnv = Context.newBuilder(CoomaConstants.ID).build()
-        super.initialise(config)
-    }
+  override def initialise(config: Config): Unit = {
+    currentDynamicEnv = Context.newBuilder(CoomaConstants.ID).build()
+    super.initialise(config)
+  }
 
-    def process(
-        program : Program,
-        i : String,
-        optTypeValue : Option[Expression],
-        optAliasedType : Option[Expression],
-        config : Config,
-        analyser : SemanticAnalyser
-    ) : Unit = {
-        driver.setAnalyser(analyser)
-        execute(i, optTypeValue, optAliasedType, config, {
-            val line = format(program).layout
-            Try(currentDynamicEnv.eval(CoomaConstants.ID, line)).toEither match {
-                case Right(value) =>
-                    output(i, optTypeValue, optAliasedType, Some(value), config)
-                case Left(e : PolyglotException) if e.isGuestException =>
-                    config.output().emitln(e.getMessage)
-                case Left(e) =>
-                    config.output().emitln(getUnhandledMessage(e))
-            }
-        })
-    }
+  def process(
+      program: Program,
+      i: String,
+      optTypeValue: Option[Expression],
+      optAliasedType: Option[Expression],
+      config: Config,
+      analyser: SemanticAnalyser
+  ): Unit = {
+    driver.setAnalyser(analyser)
+    execute(
+      i,
+      optTypeValue,
+      optAliasedType,
+      config, {
+        val line = format(program).layout
+        Try(currentDynamicEnv.eval(CoomaConstants.ID, line)).toEither match {
+          case Right(value) =>
+            output(i, optTypeValue, optAliasedType, Some(value), config)
+          case Left(e: PolyglotException) if e.isGuestException =>
+            config.output().emitln(e.getMessage)
+          case Left(e) =>
+            config.output().emitln(getUnhandledMessage(e))
+        }
+      }
+    )
+  }
 
 }
 
 object TruffleReplFrontendHolder {
-    def repl(config : Config, td : TruffleDriver) : REPL with Compiler with Backend =
-        new TruffleBackend(config) with TruffleREPL with Compiler { override val driver = td }
+  def repl(config: Config, td: TruffleDriver): REPL with Compiler with Backend =
+    new TruffleBackend(config) with TruffleREPL with Compiler {
+      override val driver = td
+    }
 }

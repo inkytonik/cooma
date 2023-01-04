@@ -14,47 +14,51 @@ import org.bitbucket.inkytonik.cooma.backend.ReferenceBackend
 
 trait ReferenceREPL extends REPL {
 
-    self : Compiler with ReferenceBackend =>
+  self: Compiler with ReferenceBackend =>
 
-    import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
-    import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout}
+  import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
+  import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout}
 
-    var currentDynamicEnv : Env = _
+  var currentDynamicEnv: Env = _
 
-    override def initialise(config : Config) : Unit = {
-        currentDynamicEnv =
-            preludeDynamicEnv(config).left.map { msg =>
-                config.output().emitln(msg)
-                sys.exit(-1)
-            }.merge
-        super.initialise(config)
-    }
+  override def initialise(config: Config): Unit = {
+    currentDynamicEnv = preludeDynamicEnv(config).left.map { msg =>
+      config.output().emitln(msg)
+      sys.exit(-1)
+    }.merge
+    super.initialise(config)
+  }
 
-    def process(
-        program : Program,
-        i : String,
-        optTypeValue : Option[Expression],
-        optAliasedType : Option[Expression],
-        config : Config,
-        analyser : SemanticAnalyser
-    ) : Unit = {
-        val term = compileStandalone(program, positions, analyser)
+  def process(
+      program: Program,
+      i: String,
+      optTypeValue: Option[Expression],
+      optAliasedType: Option[Expression],
+      config: Config,
+      analyser: SemanticAnalyser
+  ): Unit = {
+    val term = compileStandalone(program, positions, analyser)
 
-        if (config.irPrint())
-            config.output().emitln(showTerm(term))
-        if (config.irASTPrint())
-            config.output().emitln(layout(any(term), 5))
+    if (config.irPrint())
+      config.output().emitln(showTerm(term))
+    if (config.irASTPrint())
+      config.output().emitln(layout(any(term), 5))
 
-        execute(i, optTypeValue, optAliasedType, config, {
-            val args = config.filenames()
-            interpret(term, currentDynamicEnv, args, config) match {
-                case Right(Result(_, value)) =>
-                    currentDynamicEnv = ConsVE(i, value, currentDynamicEnv)
-                    output(i, optTypeValue, optAliasedType, Some(value), config)
-                case Left(msg) =>
-                    config.output().emitln(msg)
-            }
-        })
-    }
+    execute(
+      i,
+      optTypeValue,
+      optAliasedType,
+      config, {
+        val args = config.filenames()
+        interpret(term, currentDynamicEnv, args, config) match {
+          case Right(Result(_, value)) =>
+            currentDynamicEnv = ConsVE(i, value, currentDynamicEnv)
+            output(i, optTypeValue, optAliasedType, Some(value), config)
+          case Left(msg) =>
+            config.output().emitln(msg)
+        }
+      }
+    )
+  }
 
 }
