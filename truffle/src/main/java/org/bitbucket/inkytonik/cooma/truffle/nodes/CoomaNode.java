@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,27 +19,27 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 public class CoomaNode extends Node {
 
-    protected Rho obtainRho(){
-        return getContext().getRho();
-    }
+	protected Rho obtainRho() {
+		return getContext().getRho();
+	}
 
-    protected RuntimeValue obtainFromRho(String key) {
-        return Utils.obtainFromRho(getContext(), key);
-    }
+	protected RuntimeValue obtainFromRho(String key) {
+		return Utils.obtainFromRho(getContext(), key);
+	}
 
-    protected void extendRho(String key, RuntimeValue value) {
-        Utils.extendRho(getContext(), key, value);
-    }
+	protected void extendRho(String key, RuntimeValue value) {
+		Utils.extendRho(getContext(), key, value);
+	}
 
-    protected void replaceRho(Rho newRho) {
-        Utils.replaceRho(getContext(), newRho);
-    }
+	protected void replaceRho(Rho newRho) {
+		Utils.replaceRho(getContext(), newRho);
+	}
 
-    protected CoomaContext getContext(){
-        return ((CoomaRootNode) getRootNode()).getContext();
-    }
+	protected CoomaContext getContext() {
+		return ((CoomaRootNode) getRootNode()).getContext();
+	}
 
-    protected String[] getArgs(){
-        return getContext().getApplicationArguments();
-    }
+	protected String[] getArgs() {
+		return getContext().getApplicationArguments();
+	}
 }

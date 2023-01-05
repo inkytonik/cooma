@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -43,9 +43,7 @@ import xtc.parser.ParseException;
 
 import static scala.collection.JavaConverters.collectionAsScalaIterableConverter;
 
-@TruffleLanguage.Registration(id = CoomaConstants.ID, name = "cooma", defaultMimeType = CoomaConstants.MIME_TYPE,
-		characterMimeTypes = CoomaConstants.MIME_TYPE, contextPolicy = TruffleLanguage.ContextPolicy.SHARED,
-		fileTypeDetectors = CoomaFileDetector.class, interactive = true)
+@TruffleLanguage.Registration(id = CoomaConstants.ID, name = "cooma", defaultMimeType = CoomaConstants.MIME_TYPE, characterMimeTypes = CoomaConstants.MIME_TYPE, contextPolicy = TruffleLanguage.ContextPolicy.SHARED, fileTypeDetectors = CoomaFileDetector.class, interactive = true)
 public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 
 	private TruffleDriver truffleDriver = new TruffleDriver();
@@ -96,7 +94,8 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 	protected boolean isObjectOfLanguage(Object object) {
 		if (!(object instanceof TruffleObject)) {
 			return false;
-		} else return RuntimeValue.class.isAssignableFrom(object.getClass());
+		} else
+			return RuntimeValue.class.isAssignableFrom(object.getClass());
 	}
 
 	@Override
@@ -126,21 +125,21 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 		return Truffle.getRuntime().createCallTarget(evalMain);
 	}
 
-    private Rho preludeDynamicEnv(CoomaContext context, Config config) {
-        if (config.noPrelude().isSupplied() || config.compilePrelude().isSupplied())
-            return new Rho();
-        else
-            return readDynamicPrelude(config.preludePath().apply() + ".dynamic", context, config);
+	private Rho preludeDynamicEnv(CoomaContext context, Config config) {
+		if (config.noPrelude().isSupplied() || config.compilePrelude().isSupplied())
+			return new Rho();
+		else
+			return readDynamicPrelude(config.preludePath().apply() + ".dynamic", context, config);
 	}
 
-    private Rho readDynamicPrelude(String filename, CoomaContext context, Config config) {
+	private Rho readDynamicPrelude(String filename, CoomaContext context, Config config) {
 		try {
 			FileReader reader = new FileReader(filename);
 			CoomaTermParser p = new CoomaTermParser(reader, filename);
 			p.setBackend(new TruffleBackend(config));
 			Result pr = p.pDynamicPrelude(0);
 			if (pr.hasValue()) {
-				CoomaTermNode prelude = (CoomaTermNode)p.value(pr);
+				CoomaTermNode prelude = (CoomaTermNode) p.value(pr);
 				context.setRho(new Rho());
 				RootNode preludeRoot = new CoomaRootNode(this, context, prelude);
 				CallTarget callTarget = Truffle.getRuntime().createCallTarget(preludeRoot);
@@ -153,24 +152,20 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 				output(config, filename + ":" + col.line + ":" + col.column + ": " + error.msg);
 				System.exit(1);
 			}
-		}
-		catch (FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
 			output(config, "cooma: can't find dynamic prelude '" + filename + "'");
 			output(config, e.getMessage());
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			output(config, "cooma: I/O error reading dynamic prelude '" + filename + "'");
 			output(config, e.getMessage());
-		}
-		catch (ParseException e) {
+		} catch (ParseException e) {
 			output(config, "cooma: xtc parse exception reading dynamic prelude '" + filename + "'");
 			output(config, e.getMessage());
-		}
-		catch (CoomaException e) {
+		} catch (CoomaException e) {
 			CoomaException.errPrelude(e);
 		}
 		return new Rho();
-    }
+	}
 
 	private void output(Config config, String s) {
 		config.output().apply().emitln(s);
@@ -188,10 +183,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 			// since config object is different to frontend. If not
 			// testing, errors have already been reported.
 			Emitter emitter = config.output().apply();
-			String message =
-					(emitter instanceof StringEmitter) ?
-							((StringEmitter) emitter).result() :
-							"";
+			String message = (emitter instanceof StringEmitter) ? ((StringEmitter) emitter).result() : "";
 			throw new CoomaFrontendException(message);
 		}
 	}
@@ -226,10 +218,7 @@ public class CoomaLanguage extends TruffleLanguage<CoomaContext> {
 	}
 
 	public enum Type {
-		Int("Number"),
-		String("String"),
-		Record("Record"),
-		Closure("Closure");
+		Int("Number"), String("String"), Record("Record"), Closure("Closure");
 
 		final String value;
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,14 +19,14 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.StringRuntimeValue;
 @NodeInfo(shortName = "strV", description = "String value")
 public class CoomaStringValueNode extends CoomaValueNode {
 
-    private final String value;
+	private final String value;
 
-    public CoomaStringValueNode(String value) {
-        this.value = value;
-    }
+	public CoomaStringValueNode(String value) {
+		this.value = value;
+	}
 
-    @Override
-    public StringRuntimeValue evaluate(VirtualFrame frame) {
-        return new StringRuntimeValue(value);
-    }
+	@Override
+	public StringRuntimeValue evaluate(VirtualFrame frame) {
+		return new StringRuntimeValue(value);
+	}
 }

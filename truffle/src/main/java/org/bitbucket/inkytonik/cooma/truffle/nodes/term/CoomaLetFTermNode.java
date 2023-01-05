@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,31 +20,31 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.FuncDefs;
 @NodeInfo(shortName = "letF", description = "Function bindings")
 public class CoomaLetFTermNode extends CoomaTermNode {
 
-    @Children
-    private final CoomaDefTerm[] defTerms;
+	@Children
+	private final CoomaDefTerm[] defTerms;
 
-    @Child
-    private CoomaTermNode body;
+	@Child
+	private CoomaTermNode body;
 
-    public CoomaLetFTermNode(CoomaDefTerm[] defTerms, CoomaTermNode body) {
-        this.defTerms = defTerms;
-        this.body = body;
-    }
+	public CoomaLetFTermNode(CoomaDefTerm[] defTerms, CoomaTermNode body) {
+		this.defTerms = defTerms;
+		this.body = body;
+	}
 
-    @Override
-    public Object executeGeneric(VirtualFrame frame) {
-        Rho p = obtainRho();
-        FuncDefs defs = new FuncDefs();
+	@Override
+	public Object executeGeneric(VirtualFrame frame) {
+		Rho p = obtainRho();
+		FuncDefs defs = new FuncDefs();
 
-        for (CoomaDefTerm tmp : defTerms) {
-            defs.getDefs().put(tmp.getF(), tmp);
-            p = p.extend(tmp.getF(), defs);
-        }
+		for (CoomaDefTerm tmp : defTerms) {
+			defs.getDefs().put(tmp.getF(), tmp);
+			p = p.extend(tmp.getF(), defs);
+		}
 
-        final Rho finalP = p;
-        defs.setP2(Lazy.of(()-> finalP));
-        replaceRho(finalP);
+		final Rho finalP = p;
+		defs.setP2(Lazy.of(() -> finalP));
+		replaceRho(finalP);
 
-        return body.executeGeneric(frame);
-    }
+		return body.executeGeneric(frame);
+	}
 }

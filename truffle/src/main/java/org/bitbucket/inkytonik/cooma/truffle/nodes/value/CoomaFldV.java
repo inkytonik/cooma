@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,20 +15,20 @@ import lombok.Value;
 @Value
 public class CoomaFldV {
 
-    String f;
-    String x;
+	String f;
+	String x;
 
-    public CoomaFldV(String f, String x) {
-        this.f = f;
-        this.x = x;
-    }
+	public CoomaFldV(String f, String x) {
+		this.f = f;
+		this.x = x;
+	}
 
-    String getF() {
-        return f;
-    }
+	String getF() {
+		return f;
+	}
 
-    String getX() {
-        return x;
-    }
+	String getX() {
+		return x;
+	}
 
 }

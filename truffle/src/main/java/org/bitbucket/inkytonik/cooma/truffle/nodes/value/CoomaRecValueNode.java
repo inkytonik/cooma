@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,18 +25,18 @@ import lombok.Getter;
 @NodeInfo(shortName = "recV", description = "Record value")
 public class CoomaRecValueNode extends CoomaValueNode {
 
-    private final CoomaFldV[] fields;
+	private final CoomaFldV[] fields;
 
-    public CoomaRecValueNode(CoomaFldV[] fields) {
-        this.fields = fields;
-    }
+	public CoomaRecValueNode(CoomaFldV[] fields) {
+		this.fields = fields;
+	}
 
-    @Override
-    public RuntimeValue evaluate(VirtualFrame frame) {
-        List<FieldValueRuntime> fieldRL = Arrays.stream(fields)
-                .map((CoomaFldV field) -> new FieldValueRuntime(field.getF(), obtainFromRho(field.getX())))
-                .collect(Collectors.toList());
-        return new RecRuntimeValue(fieldRL.toArray(new FieldValueRuntime[fields.length]));
-    }
+	@Override
+	public RuntimeValue evaluate(VirtualFrame frame) {
+		List<FieldValueRuntime> fieldRL = Arrays.stream(fields)
+				.map((CoomaFldV field) -> new FieldValueRuntime(field.getF(), obtainFromRho(field.getX())))
+				.collect(Collectors.toList());
+		return new RecRuntimeValue(fieldRL.toArray(new FieldValueRuntime[fields.length]));
+	}
 
 }

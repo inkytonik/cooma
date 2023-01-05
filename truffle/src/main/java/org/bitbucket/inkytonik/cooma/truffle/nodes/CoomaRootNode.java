@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,33 +22,34 @@ import org.bitbucket.inkytonik.cooma.truffle.runtime.CoomaContext;
 import org.bitbucket.inkytonik.cooma.truffle.runtime.RuntimeValue;
 
 /**
- * The root of all CoomaIR execution trees.
- * It is a Truffle requirement that the tree root extends the class {@link RootNode}.
+ * The root of all CoomaIR execution trees. It is a Truffle requirement that the
+ * tree root extends the class {@link RootNode}.
  */
 
 @NodeInfo(language = "cooma", description = "The root Node of every cooma IR AST")
 public class CoomaRootNode extends RootNode {
 
-    @Child private CoomaTermNode termNode;
-    private CoomaContext context;
+	@Child
+	private CoomaTermNode termNode;
+	private CoomaContext context;
 
-    public CoomaContext getContext() {
-        return context;
-    }
+	public CoomaContext getContext() {
+		return context;
+	}
 
-    public CoomaRootNode(TruffleLanguage<CoomaContext> language, CoomaContext coomaContext, CoomaTermNode termNode) {
-        super(language);
-        this.context = coomaContext;
-        this.termNode = termNode;
-    }
+	public CoomaRootNode(TruffleLanguage<CoomaContext> language, CoomaContext coomaContext, CoomaTermNode termNode) {
+		super(language);
+		this.context = coomaContext;
+		this.termNode = termNode;
+	}
 
-    public CoomaTermNode getTermNode() {
-        return termNode;
-    }
+	public CoomaTermNode getTermNode() {
+		return termNode;
+	}
 
-    @Override
-    public Object execute(VirtualFrame frame) {
-        return termNode.executeGeneric(frame);
-    }
+	@Override
+	public Object execute(VirtualFrame frame) {
+		return termNode.executeGeneric(frame);
+	}
 
 }

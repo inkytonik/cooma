@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,18 +19,18 @@ import org.bitbucket.inkytonik.cooma.truffle.nodes.term.CoomaTermNode;
 @NodeInfo(shortName = "defTerm", description = "A single function definition in letF")
 public class CoomaDefTerm extends CoomaNode {
 
-    private final String f;
-    private final String k;
-    private final String x;
+	private final String f;
+	private final String k;
+	private final String x;
 
-    @Child
-    private CoomaTermNode body;
+	@Child
+	private CoomaTermNode body;
 
-    public CoomaDefTerm(String f, String k, String x, CoomaTermNode body) {
-        this.f = f;
-        this.k = k;
-        this.x = x;
-        this.body = body;
-    }
+	public CoomaDefTerm(String f, String k, String x, CoomaTermNode body) {
+		this.f = f;
+		this.k = k;
+		this.x = x;
+		this.body = body;
+	}
 
 }

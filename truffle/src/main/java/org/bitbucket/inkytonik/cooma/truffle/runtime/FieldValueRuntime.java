@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,7 +27,8 @@ public class FieldValueRuntime implements Comparable<FieldValueRuntime>, PrettyP
 	@Override
 	public int compareTo(FieldValueRuntime fieldValueRuntime) {
 		int xc = x.compareTo(fieldValueRuntime.getX());
-		if (xc != 0) return xc;
+		if (xc != 0)
+			return xc;
 		return this.v.equals(fieldValueRuntime.getV()) ? 0 : -1;
 	}
 

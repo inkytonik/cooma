@@ -1,7 +1,7 @@
 /*
  * This file is part of Cooma.
  *
- * Copyright (C) 2019-2021 Anthony M Sloane, Macquarie University.
+ * Copyright (C) 2019-2023 Anthony M Sloane, Macquarie University.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,7 +18,7 @@ import java.nio.file.Paths;
 
 public class PrimitiveUtils {
 
-	public static String readReaderContents(Reader in) throws IOException{
+	public static String readReaderContents(Reader in) throws IOException {
 		try (Reader intry = in) {
 			StringBuilder sb = new StringBuilder();
 			int c;
@@ -29,11 +29,11 @@ public class PrimitiveUtils {
 		}
 	}
 
-	public static boolean isFileWritable(String filePath){
+	public static boolean isFileWritable(String filePath) {
 		return Files.isWritable(Paths.get(filePath));
 	}
 
-	public static boolean isFileReadable(String filePath){
+	public static boolean isFileReadable(String filePath) {
 		return Files.isReadable(Paths.get(filePath));
 	}
 
