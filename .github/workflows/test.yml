@@ -22,11 +22,5 @@ jobs:
       - name: Install cram
         run: python -m pip install cram
 
-      - name: Run sbt tests
-        run: sbt +test
-
-      - name: Build assembly jar
-        run: sbt assembly
-
-      - name: Run cram tests
-        run: cram src/test/cram/test.t
+      - name: Run tests
+        run: ./test

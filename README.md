@@ -17,6 +17,7 @@ The Cooma project at Macquarie University is investigating secure programming la
 ### Prerequisites
 
 * [Scala Build Tool - sbt](https://www.scala-sbt.org)
+* [Cram shell testing tool](https://bitheap.org/cram/)
 
 ### Running
 
@@ -78,7 +79,7 @@ Use `run --help` to see all of the options for printing the source AST.
 
 ### Testing
 
-Use the sbt command `test` to run the automated tests.
+Use the shell command `./test` to run the automated tests.
 
 ## Examples
 

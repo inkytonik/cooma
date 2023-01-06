@@ -1,0 +1,12 @@
+#! /bin/sh
+
+echo "Run sbt tests"
+sbt +test
+
+echo
+echo "Build assembly jar"
+sbt assembly
+
+echo
+echo "Run cram tests"
+cram src/test/cram/test.t
