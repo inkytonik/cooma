@@ -195,10 +195,10 @@ Read more about capabilities [here](doc/03_capabilities.md).
 ## Participants
 
 * Anthony Sloane (inkytonik@gmail.com)
-* Nicholas Weston
 
 ## Previous Participants
 
+* Nicholas Weston
 * Diego Ocampo Herrera
 * Cameron Pappas
 * Scott Buckley
