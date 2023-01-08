@@ -9,7 +9,7 @@ import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import scalaj.http.Http
 
-import scala.annotation.tailrec
+import scala.annotation.{nowarn, tailrec}
 import scala.concurrent.ExecutionContext.global
 import scala.util.Try
 
@@ -40,10 +40,10 @@ class HttpClientTests extends ExecutionTests {
     }
   }
 
-  lazy val thread =
-    new Thread(() => Try(HttpServer.main(Array())))
+  var thread: Thread = null
 
-  {
+  override def beforeAll(): Unit = {
+    thread = new Thread(() => Try(HttpServer.main(Array())))
     // start the thread and wait for the server to become reachable
     thread.start()
     @tailrec
@@ -54,6 +54,10 @@ class HttpClientTests extends ExecutionTests {
         aux()
       }
     aux()
+  }
+
+  override protected def afterAll(): Unit = {
+    thread.stop(): @nowarn
   }
 
   {
@@ -118,8 +122,5 @@ class HttpClientTests extends ExecutionTests {
            |""".stripMargin
     }
   }
-
-  override def finalize(): Unit =
-    thread.interrupt()
 
 }

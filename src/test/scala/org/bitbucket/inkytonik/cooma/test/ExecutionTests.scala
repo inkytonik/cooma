@@ -17,6 +17,7 @@ import org.rogach.scallop.throwError
 import org.scalacheck.Gen
 import org.scalactic.source.Position
 import wolfendale.scalacheck.regexp.RegexpGen
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should
 
@@ -25,7 +26,8 @@ import scala.util.{Failure, Success, Try}
 trait ExecutionTests
     extends REPLDriver
     with AnyFunSuiteLike
-    with should.Matchers {
+    with should.Matchers
+    with BeforeAndAfterAll {
 
   def test(name: String)(f: BackendConfig => Any)(implicit
       pos: Position
