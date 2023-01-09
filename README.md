@@ -5,13 +5,6 @@ The Cooma project is investigating secure programming language design based on f
 [![License: MPL v2.0](https://img.shields.io/badge/License-MPL%20v2-blue.svg)](http://mozilla.org/MPL/2.0/)
 ![Test](https://github.com/inkytonik/cooma/workflows/Test/badge.svg)
 
-## Goals and features
-
-* Functional core compiled to a continuation-passing intermediate representation (["Compiling with continuations, continued", Kennedy, ICFP 2007](https://doi.org/10.1145/1291151.1291179))
-* Row-based data types capable of encoding record types with variants and object-oriented style extension (["Abstracting extensible data types: or, rows by any other name", Morris and McKinna, POPL 2019](https://doi.org/10.1145/3290325))
-* Fine-grained object capability-based effects (["A Study of Capability-Based Effect Systems", Liu, EPFL, 2016](https://github.com/liufengyun/stoic))
-* Implicit argument resolution to avoid passing many capability parameters (["COCHIS: Stable and coherent implicits", Schrivjers, Oliveira, Wadler and Mantirosian, JFP, 2019](http://dx.doi.org/10.1017/s0956796818000242))
-
 ## Getting started
 
 ### Prerequisites
