@@ -143,7 +143,7 @@ trait REPL extends REPLBase[Config] {
   def defineLet(
       i: String,
       optV: Option[Expression],
-      optT: Option[Expression],
+      optT: Option[Type],
       e: Expression
   ): REPLLet = {
     val letValue =
@@ -153,7 +153,7 @@ trait REPL extends REPLBase[Config] {
         case _ =>
           e
       }
-    val let = Let(Val(), IdnDef(i), optT.map(LetType), letValue)
+    val let = ValLet(IdnDef(i), optT.map(LetType), letValue)
     currentStaticEnv = define(enter(currentStaticEnv), i, LetEntity(let))
     REPLLet(let)
   }
@@ -161,7 +161,7 @@ trait REPL extends REPLBase[Config] {
   case class CheckedInput(
       input: REPLInput,
       typeValue: Option[Expression],
-      replType: Option[Expression],
+      replType: Option[Type],
       analyser: SemanticAnalyser
   )
 
@@ -195,10 +195,14 @@ trait REPL extends REPLBase[Config] {
               nResults = nResults + 1
               defineLet(i, optTypeValue, optReplType, e)
 
-            case REPLLet(Let(_, IdnDef(i), None, e)) =>
+            case REPLLet(TypeLet(IdnDef(i), t)) =>
+              // FIXME: need to allow type lets
+              input
+
+            case REPLLet(ValLet(IdnDef(i), None, e)) =>
               defineLet(i, optTypeValue, optReplType, e)
 
-            case REPLLet(Let(_, IdnDef(i), Some(LetType(t)), e)) =>
+            case REPLLet(ValLet(IdnDef(i), Some(LetType(t)), e)) =>
               defineLet(i, optTypeValue, analyser.unalias(e, t), e)
           }
         Right(CheckedInput(input2, optTypeValue, optReplType, analyser))
@@ -213,7 +217,7 @@ trait REPL extends REPLBase[Config] {
   def processInput(
       input: REPLInput,
       optTypeValue: Option[Expression],
-      optReplType: Option[Expression],
+      optReplType: Option[Type],
       config: Config,
       analyser: SemanticAnalyser
   ): Unit =
@@ -222,7 +226,7 @@ trait REPL extends REPLBase[Config] {
         processDef(i, fd, optTypeValue, optReplType, config, analyser)
       case REPLExp(e: Idn) =>
         processIdn(show(input), e, optTypeValue, optReplType, config, analyser)
-      case REPLLet(vd @ Let(_, IdnDef(i), _, e)) =>
+      case REPLLet(vd @ ValLet(IdnDef(i), _, e)) =>
         processLet(i, vd, optTypeValue, optReplType, config, analyser)
       case _ =>
         sys.error(s"$input not supported for the moment")
@@ -234,7 +238,7 @@ trait REPL extends REPLBase[Config] {
       i: String,
       ld: Let,
       optTypeValue: Option[Expression],
-      optReplType: Option[Expression],
+      optReplType: Option[Type],
       config: Config,
       analyser: SemanticAnalyser
   ): Unit = {
@@ -248,7 +252,7 @@ trait REPL extends REPLBase[Config] {
       i: String,
       fd: Def,
       optTypeValue: Option[Expression],
-      optReplType: Option[Expression],
+      optReplType: Option[Type],
       config: Config,
       analyser: SemanticAnalyser
   ): Unit = {
@@ -262,7 +266,7 @@ trait REPL extends REPLBase[Config] {
       i: String,
       e: Expression,
       optTypeValue: Option[Expression],
-      optReplType: Option[Expression],
+      optReplType: Option[Type],
       config: Config,
       analyser: SemanticAnalyser
   ): Unit = {
@@ -276,7 +280,7 @@ trait REPL extends REPLBase[Config] {
       program: Program,
       i: String,
       optTypeValue: Option[Expression],
-      optReplType: Option[Expression],
+      optReplType: Option[Type],
       config: Config,
       analyser: SemanticAnalyser
   ): Unit
@@ -287,7 +291,7 @@ trait REPL extends REPLBase[Config] {
   def execute(
       i: String,
       optTypeValue: Option[Expression],
-      optReplType: Option[Expression],
+      optReplType: Option[Type],
       config: Config,
       eval: => Unit
   ) =
@@ -303,7 +307,7 @@ trait REPL extends REPLBase[Config] {
   def output(
       i: String,
       optTypeValue: Option[Expression],
-      optReplType: Option[Expression],
+      optReplType: Option[Type],
       optResult: Option[OutputValueR],
       config: Config
   ): Unit = {

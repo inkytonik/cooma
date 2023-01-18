@@ -51,45 +51,49 @@ object TopLevelRewriter {
       Fun(Arguments(argsr.toVector), Blk(aux(lets)))
     }
 
-  def rewriteLets(lets: Seq[Let]): Either[Messages, Map[String, Expression]] = {
-    val zero: Either[Messages, Map[String, Expression]] = Right(Map.empty)
-    lets.foldLeft(zero) { case (out, Let(_, IdnDef(name), _, exp)) =>
-      out.flatMap(env => rewrite(exp, env).map(exp => env + (name -> exp)))
+  def rewriteLets(lets: Seq[Let]): Either[Messages, Map[String, Type]] = {
+    val zero: Either[Messages, Map[String, Type]] = Right(Map.empty)
+    lets.foldLeft(zero) {
+      case (out, _: ValLet) =>
+        // Ignore value lets
+        out
+      case (out, TypeLet(IdnDef(name), typ)) =>
+        out.flatMap(env => rewrite(typ, env).map(exp => env + (name -> exp)))
     }
   }
 
   def rewriteArgs(
       args: Seq[Argument],
-      env: Map[String, Expression]
+      env: Map[String, Type]
   ): Either[Messages, Seq[Argument]] = {
-    val rewritten = args.map { case Argument(idn, exp, doc) =>
-      rewrite(exp, env).map(Argument(idn, _, doc))
+    val rewritten = args.map { case Argument(idn, typ, doc) =>
+      rewrite(typ, env).map(Argument(idn, _, doc))
     }
     validate(rewritten).left.map(_.toVector)
   }
 
   def rewrite(
-      exp: Expression,
-      env: Map[String, Expression]
-  ): Either[Messages, Expression] = {
+      typ: Type,
+      env: Map[String, Type]
+  ): Either[Messages, Type] = {
     // returns rewritten body (right) or sequence of illegal expressions (left)
     def aux(
-        exp: Expression,
-        env: Map[String, Expression]
-    ): Either[Seq[Expression], Expression] =
-      exp match {
-        case Cat(e1, e2) =>
+        typ: Type,
+        env: Map[String, Type]
+    ): Either[Seq[Type], Type] =
+      typ match {
+        case CatT(e1, e2) =>
           val e1r = aux(e1, env)
           val e2r = aux(e2, env)
           (e1r, e2r) match {
-            case (Right(e1r), Right(e2r)) => Right(Cat(e1r, e2r))
+            case (Right(e1r), Right(e2r)) => Right(CatT(e1r, e2r))
             case _                        => Left(collectErrors(Seq(e1r, e2r)))
           }
-        case App(f, args) =>
+        case AppT(f, args) =>
           val fr = aux(f, env)
           val argsr = validate(args.map(aux(_, env)))
           (fr, argsr) match {
-            case (Right(fr), Right(argsr)) => Right(App(fr, argsr.toVector))
+            case (Right(fr), Right(argsr)) => Right(AppT(fr, argsr.toVector))
             case _ => Left(collectErrors(Seq(fr, argsr)))
           }
         case RecT(flds) =>
@@ -106,15 +110,15 @@ object TopLevelRewriter {
           Right(VecNilT())
         case VecT(e) =>
           aux(e, env).map(VecT)
-        case Idn(IdnUse(idn)) =>
+        case IdnT(IdnUse(idn)) =>
           env.get(idn) match {
-            case Some(exp) => aux(exp, env)
-            case None      => Right(exp)
+            case Some(exp) => aux(typ, env)
+            case None      => Right(typ)
           }
-        case exp =>
-          Left(Seq(exp))
+        case typ =>
+          Left(Seq(typ))
       }
-    aux(exp, env).left.map(_.flatMap(error(_, "not allowed here")).toVector)
+    aux(typ, env).left.map(_.flatMap(error(_, "not allowed here")).toVector)
   }
 
   /** Flattens a sequence of results whose failures may contain multiple errors.

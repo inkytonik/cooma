@@ -53,7 +53,6 @@ trait Compiler {
     }
     import org.bitbucket.inkytonik.cooma.PrettyPrinter.show
     import org.bitbucket.inkytonik.cooma.SymbolTable.{
-      PrimitiveType,
       StrT,
       capabilityTypeNames,
       uniT
@@ -139,7 +138,7 @@ trait Compiler {
       def compileTopArg(
           arg: Argument,
           a: String,
-          t: Expression,
+          t: Type,
           e: Expression
       ): Term = {
 
@@ -212,13 +211,13 @@ trait Compiler {
               compileTop(e, nArg + 1)
             )
           case t =>
-            def aux(t: Expression): List[String] =
+            def aux(t: Type): List[String] =
               t match {
-                case Cat(e1, e2) =>
+                case CatT(e1, e2) =>
                   aux(e1) ::: aux(e2)
-                case Idn(IdnUse(name)) if capabilityTypeNames(name) =>
+                case IdnT(IdnUse(name)) if capabilityTypeNames(name) =>
                   name :: Nil
-                case App(Idn(IdnUse("Database")), Vector(RecT(ts))) =>
+                case AppT(IdnT(IdnUse("Database")), Vector(RecT(ts))) =>
                   Metadata.fromCooma(ts) match {
                     case Some(metadata) =>
                       s"DatabaseClient:$nArg:${metadata.toSpec}" :: Nil
@@ -227,7 +226,7 @@ trait Compiler {
                         s"compileTopArg: invalid database type ${show(t)}"
                       )
                   }
-                case App(Idn(IdnUse("HttpServer")), Vector(RecT(ts))) =>
+                case AppT(IdnT(IdnUse("HttpServer")), Vector(RecT(ts))) =>
                   "HttpServer" :: Nil
                 case t =>
                   sys.error(
@@ -322,9 +321,6 @@ trait Compiler {
         case Fun(Arguments(Argument(IdnDef(x), t, _) +: as), e) =>
           compileFun(exp, x, t, Fun(Arguments(as), e), kappa)
 
-        case Type() =>
-          compile(exp, Uni(), kappa)
-
         case Idn(IdnUse(i)) =>
           kappa(i)
 
@@ -377,21 +373,10 @@ trait Compiler {
           sys.error(s"compile: unexpected expression $exp")
       }
 
-    object Type {
-      def unapply(e: Expression): Boolean =
-        e match {
-          case _: FunT | _: RecT | _: VarT | _: VecT | _: VecNilT |
-              PrimitiveType() =>
-            true
-          case _ =>
-            false
-        }
-    }
-
     def compileFun(
         exp: Expression,
         x: String,
-        t: Expression,
+        t: Type,
         e: Expression,
         kappa: String => Term
     ): Term = {
@@ -409,9 +394,12 @@ trait Compiler {
             compileBlockExp(be2, kappa)
           )
 
-        case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
+        case BlkLet(ValLet(IdnDef(x), _, e), be2) =>
           val j = fresh("k")
           mkLetC(be, j, x, compileBlockExp(be2, kappa), tailCompile(e, j))
+
+        case BlkLet(_: TypeLet, be2) =>
+          compileBlockExp(be2, kappa)
 
         case Return(e) =>
           compile(e, kappa)
@@ -542,9 +530,6 @@ trait Compiler {
         case Fun(Arguments(a +: as), e) =>
           tailCompile(exp, Fun(Arguments(Vector(a)), Fun(Arguments(as), e)), k)
 
-        case Type() =>
-          tailCompile(exp, Uni(), k)
-
         case Idn(IdnUse(x)) =>
           mkAppC(source, idnC(k), x)
 
@@ -625,7 +610,7 @@ trait Compiler {
     def tailCompileFun(
         exp: Expression,
         x: String,
-        t: Expression,
+        t: Type,
         e: Expression,
         k: String
     ): Term = {
@@ -643,9 +628,12 @@ trait Compiler {
             tailCompileBlockExp(be2, k)
           )
 
-        case BlkLet(Let(_, IdnDef(x), _, e), be2) =>
+        case BlkLet(ValLet(IdnDef(x), _, e), be2) =>
           val j = fresh("k")
           mkLetC(be, j, x, tailCompileBlockExp(be2, k), tailCompile(e, j))
+
+        case BlkLet(_: TypeLet, be2) =>
+          tailCompileBlockExp(be2, k)
 
         case Return(e) =>
           tailCompile(e, k)

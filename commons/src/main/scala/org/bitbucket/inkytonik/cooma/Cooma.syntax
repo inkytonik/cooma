@@ -14,7 +14,6 @@ Program =
 
 Expression {paren} =
     "fun" '(' Arguments ")" Expression                    {Fun, right, 15}
-  | '(' ArgumentTypes ")" Expression                      {FunT, right, 15}
   | Expression sp "match" '{' nest(Case+) \n '}'          {Mat, left, 14}
   | "if" Expression "then" Expression "else" Expression   {If, right, 13}
   | Expression sp "&" Expression                          {Cat, left, 12}
@@ -33,16 +32,23 @@ Expression {paren} =
   | '{' '}'                                               {Uni}
   | '{' nestnl(BlockExp) \n '}'                           {Blk}
   | '{' nest(Field ++ ',') \n '}'                         {Rec}
-  | '{' nest(FieldType ++ ',') \n '}'                     {RecT}
   | '<<' nest(Field) \n '>>'                              {Var}
-  | '<<' nest(FieldType ++ ',') \n '>>'                   {VarT}
   | IntLit                                                {Num, 1: BigInt.apply : BigInt}
   | StringLit                                             {Str}
   | '[' VecElems ']'                                      {Vec}
-  | 'Vector' '(' ')'                                      {VecNilT}
-  | 'Vector' '(' Expression ')'                           {VecT}
   | "prim" UserPrimitive '(' Expression ** "," ')'        {Prm}
   | IdnUse                                                {Idn}.
+
+Type {paren} =
+    '(' ArgumentTypes ")" Type                            {FunT, right, 3}
+  | Type sp "&" Type                                      {CatT, left, 2}
+  | Type '(' Type ** "," ')'                              {AppT, left, 1}
+  | '{' '}'                                               {UniT}
+  | '{' nest(FieldType ++ ',') \n '}'                     {RecT}
+  | '<<' nest(FieldType ++ ',') \n '>>'                   {VarT}
+  | 'Vector' '(' ')'                                      {VecNilT}
+  | 'Vector' '(' Type ')'                                 {VecT}
+  | IdnUse                                                {IdnT}.
 
 AddOp =
     "++" {Concat}
@@ -83,13 +89,13 @@ Arguments =
   Argument ** ",".
 
 Argument =
-  IdnDef sp ":" Expression StringLit?.
+  IdnDef sp ":" Type StringLit?.
 
 ArgumentTypes =
   ArgumentType ** ",".
 
 ArgumentType =
-  (IdnDef sp ":")? Expression.
+  (IdnDef sp ":")? Type.
 
 Case =
   \n "case" Identifier '(' IdnDef ")" '=>' nestnl(Expression).
@@ -112,20 +118,17 @@ Def =
   "def" IdnDef sp Body \n.
 
 Body =
-  '(' Arguments ")" Expression sp '=' nestnl(Expression).
+  '(' Arguments ")" Type sp '=' nestnl(Expression).
 
 Let =
-  LetKind IdnDef LetType? sp "=" Expression \n.
+    "type" IdnDef sp "=" Type \n                 {TypeLet}
+  | "val" IdnDef LetType? sp "=" Expression \n   {ValLet}.
 
 LetType =
-  sp ":" Expression.
-
-LetKind =
-    "type" {Type}
-  | "val" {Val}.
+  sp ":" Type.
 
 FieldType =
-  \n Identifier sp ":" Expression.
+  \n Identifier sp ":" Type.
 
 VecElems =
   Expression ** ",".
@@ -255,9 +258,9 @@ StaticPrelude =
   Spacing StaticPreludeEntry* EOF.
 
 StaticPreludeEntry =
-    Identifier sp ':' nestnl(Expression) sp '=' nestnl(Expression) ';' \n
-      {StaticLetEntry}
-  | Identifier sp ':' nestnl(Expression) ';' \n {StaticTypedEntry}.
+    Identifier sp ':' nestnl(Type) sp '=' nestnl(Expression) ';' \n {StaticValEntry}
+  | Identifier sp '=' nestnl(Type) ';' \n {StaticTypeEntry}
+  | Identifier sp ':' nestnl(Type) ';' \n {StaticTypedEntry}.
 
 DynamicPrelude =
   Spacing Term EOF.

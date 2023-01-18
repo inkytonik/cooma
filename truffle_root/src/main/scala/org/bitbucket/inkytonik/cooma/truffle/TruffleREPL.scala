@@ -23,7 +23,11 @@ trait TruffleREPL extends REPL {
   def driver: TruffleDriver
 
   import org.bitbucket.inkytonik.cooma.Config
-  import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
+  import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{
+    Expression,
+    Program,
+    Type
+  }
   import org.bitbucket.inkytonik.cooma.PrettyPrinter.format
   import org.graalvm.polyglot.Context
 
@@ -38,7 +42,7 @@ trait TruffleREPL extends REPL {
       program: Program,
       i: String,
       optTypeValue: Option[Expression],
-      optAliasedType: Option[Expression],
+      optAliasedType: Option[Type],
       config: Config,
       analyser: SemanticAnalyser
   ): Unit = {

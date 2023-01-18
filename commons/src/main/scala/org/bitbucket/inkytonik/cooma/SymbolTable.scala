@@ -56,22 +56,34 @@ object SymbolTable extends Environments[CoomaEntity] {
 
   case class LetEntity(decl: Let) extends CoomaOkEntity {
     val desc =
-      decl.letKind match {
-        case Type() => "type"
-        case Val()  => "value"
+      decl match {
+        case _: TypeLet => "type"
+        case _: ValLet  => "value"
       }
+
+    val idnDef =
+      decl match {
+        case TypeLet(idnDef, _)   => idnDef
+        case ValLet(idnDef, _, _) => idnDef
+      }
+
+    val id = idnDef.identifier
   }
 
-  case class PredefTypedEntity(name: String, tipe: Expression)
-      extends CoomaOkEntity {
+  case class PredefTypedEntity(name: String, tipe: Type) extends CoomaOkEntity {
     val decl = null
     val desc = "predef typed"
   }
 
-  case class PredefLetEntity(name: String, tipe: Expression, value: Expression)
+  case class PredefValEntity(name: String, tipe: Type, value: Expression)
       extends CoomaOkEntity {
     val decl = null
-    val desc = "predef typed and valued"
+    val desc = "predef val"
+  }
+
+  case class PredefTypeEntity(name: String, tipe: Type) extends CoomaOkEntity {
+    val decl = null
+    val desc = "predef type"
   }
 
   /** An entity represented by names for whom we have seen more than one
@@ -90,16 +102,16 @@ object SymbolTable extends Environments[CoomaEntity] {
 
   // Short-hands for types and standard type checks
 
-  def boolT: Expression = Idn(IdnUse("Boolean"))
-  def intT: Expression = Idn(IdnUse("Int"))
-  def strT: Expression = Idn(IdnUse("String"))
-  def typT: Expression = Idn(IdnUse("Type"))
-  def uniT: Expression = Idn(IdnUse("Unit"))
+  def boolT: Type = IdnT(IdnUse("Boolean"))
+  def intT: Type = IdnT(IdnUse("Int"))
+  def strT: Type = IdnT(IdnUse("String"))
+  def typT: Type = IdnT(IdnUse("Type"))
+  def uniT: Type = IdnT(IdnUse("Unit"))
 
   object BoolT {
-    def unapply(e: Expression): Boolean =
+    def unapply(e: Type): Boolean =
       e match {
-        case Idn(IdnUse("Boolean")) =>
+        case IdnT(IdnUse("Boolean")) =>
           true
         case _ =>
           false
@@ -107,9 +119,9 @@ object SymbolTable extends Environments[CoomaEntity] {
   }
 
   object IntT {
-    def unapply(e: Expression): Boolean =
+    def unapply(e: Type): Boolean =
       e match {
-        case Idn(IdnUse("Int")) =>
+        case IdnT(IdnUse("Int")) =>
           true
         case _ =>
           false
@@ -117,9 +129,9 @@ object SymbolTable extends Environments[CoomaEntity] {
   }
 
   object StrT {
-    def unapply(e: Expression): Boolean =
+    def unapply(e: Type): Boolean =
       e match {
-        case Idn(IdnUse("String")) =>
+        case IdnT(IdnUse("String")) =>
           true
         case _ =>
           false
@@ -127,9 +139,9 @@ object SymbolTable extends Environments[CoomaEntity] {
   }
 
   object TypT {
-    def unapply(e: Expression): Boolean =
+    def unapply(e: Type): Boolean =
       e match {
-        case Idn(IdnUse("Type")) =>
+        case IdnT(IdnUse("Type")) =>
           true
         case _ =>
           false
@@ -137,9 +149,9 @@ object SymbolTable extends Environments[CoomaEntity] {
   }
 
   object UniT {
-    def unapply(e: Expression): Boolean =
+    def unapply(e: Type): Boolean =
       e match {
-        case Idn(IdnUse("Unit")) =>
+        case IdnT(IdnUse("Unit")) =>
           true
         case _ =>
           false
@@ -150,9 +162,9 @@ object SymbolTable extends Environments[CoomaEntity] {
     (s == "Int") || (s == "String") || (s == "Type") || (s == "Unit")
 
   object PrimitiveType {
-    def unapply(e: Expression): Boolean =
+    def unapply(e: Type): Boolean =
       e match {
-        case Idn(IdnUse(s)) if isPrimitiveTypeName(s) =>
+        case IdnT(IdnUse(s)) if isPrimitiveTypeName(s) =>
           true
         case _ =>
           false
@@ -161,7 +173,7 @@ object SymbolTable extends Environments[CoomaEntity] {
 
   object PrimitiveTypeName {
     def unapply(s: String): Boolean =
-      PrimitiveType.unapply(Idn(IdnUse(s)))
+      PrimitiveType.unapply(IdnT(IdnUse(s)))
   }
 
   val httpMethodNames =
@@ -181,12 +193,12 @@ object SymbolTable extends Environments[CoomaEntity] {
 
   // Primitive types
 
-  def mkPrimType(args: Vector[Expression], retType: Expression): FunT =
+  def mkPrimType(args: Vector[Type], retType: Type): FunT =
     FunT(ArgumentTypes(args.map { case e => ArgumentType(None, e) }), retType)
 
   def mkPrimTypeWithArgNames(
-      args: Vector[(String, Expression)],
-      retType: Expression
+      args: Vector[(String, Type)],
+      retType: Type
   ): FunT =
     FunT(
       ArgumentTypes(args.map { case (x, e) =>
@@ -196,18 +208,18 @@ object SymbolTable extends Environments[CoomaEntity] {
     )
 
   def mkVectorPrimTypeWithArgNames(
-      args: Vector[(String, Expression)],
-      retType: Expression
+      args: Vector[(String, Type)],
+      retType: Type
   ): FunT =
     mkPrimTypeWithArgNames(
-      Vector(("t", typT), ("v", VecT(Idn(IdnUse("t"))))) ++ args,
+      Vector(("t", typT), ("v", VecT(IdnT(IdnUse("t"))))) ++ args,
       retType
     )
 
-  def mkIntUnPrimType(retType: Expression): FunT =
+  def mkIntUnPrimType(retType: Type): FunT =
     mkPrimType(Vector(intT), retType)
 
-  def mkIntBinPrimType(retType: Expression): FunT =
+  def mkIntBinPrimType(retType: Type): FunT =
     mkPrimType(Vector(intT, intT), retType)
 
   def userPrimitiveType(p: UserPrimitive): FunT =
@@ -216,8 +228,8 @@ object SymbolTable extends Environments[CoomaEntity] {
         mkPrimTypeWithArgNames(
           Vector(
             ("t", typT),
-            ("l", Idn(IdnUse("t"))),
-            ("l", Idn(IdnUse("t")))
+            ("l", IdnT(IdnUse("t"))),
+            ("l", IdnT(IdnUse("t")))
           ),
           boolT
         )
@@ -238,27 +250,27 @@ object SymbolTable extends Environments[CoomaEntity] {
         mkPrimType(Vector(strT, strT), boolT)
       case VecAppendP() =>
         mkVectorPrimTypeWithArgNames(
-          Vector(("e", Idn(IdnUse("t")))),
-          VecT(Idn(IdnUse("t")))
+          Vector(("e", IdnT(IdnUse("t")))),
+          VecT(IdnT(IdnUse("t")))
         )
       case VecConcatP() =>
         mkVectorPrimTypeWithArgNames(
-          Vector(("vr", VecT(Idn(IdnUse("t"))))),
-          VecT(Idn(IdnUse("t")))
+          Vector(("vr", VecT(IdnT(IdnUse("t"))))),
+          VecT(IdnT(IdnUse("t")))
         )
       case VecGetP() =>
-        mkVectorPrimTypeWithArgNames(Vector(("i", intT)), Idn(IdnUse("t")))
+        mkVectorPrimTypeWithArgNames(Vector(("i", intT)), IdnT(IdnUse("t")))
       case VecLengthP() =>
         mkVectorPrimTypeWithArgNames(Vector(), intT)
       case VecPrependP() =>
         mkVectorPrimTypeWithArgNames(
-          Vector(("e", Idn(IdnUse("t")))),
-          VecT(Idn(IdnUse("t")))
+          Vector(("e", IdnT(IdnUse("t")))),
+          VecT(IdnT(IdnUse("t")))
         )
       case VecPutP() =>
         mkVectorPrimTypeWithArgNames(
-          Vector(("i", intT), ("e", Idn(IdnUse("t")))),
-          VecT(Idn(IdnUse("t")))
+          Vector(("i", intT), ("e", IdnT(IdnUse("t")))),
+          VecT(IdnT(IdnUse("t")))
         )
     }
 
@@ -299,8 +311,10 @@ object SymbolTable extends Environments[CoomaEntity] {
       Right(entries.foldLeft(rootenv()) {
         case (env, StaticTypedEntry(id, tipe)) =>
           define(env, id, PredefTypedEntity(id, tipe))
-        case (env, StaticLetEntry(id, tipe, exp)) =>
-          define(env, id, PredefLetEntity(id, tipe, exp))
+        case (env, StaticValEntry(id, tipe, exp)) =>
+          define(env, id, PredefValEntity(id, tipe, exp))
+        case (env, StaticTypeEntry(id, tipe)) =>
+          define(env, id, PredefTypeEntity(id, tipe))
       })
     } else Left((source, positions, parser.errorToMessage(result.parseError)))
   }

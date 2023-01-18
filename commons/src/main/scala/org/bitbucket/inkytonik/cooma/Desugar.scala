@@ -57,15 +57,15 @@ object Desugar {
 
     def equalOp(
         n: Expression,
-        t: Expression,
+        t: Type,
         l: Expression,
         r: Expression
     ): Expression =
-      appFun(n, "equal", t, l, r)
+      appFun(n, "equal", l, r)
 
     def notEqualOp(
         n: Expression,
-        t: Expression,
+        t: Type,
         l: Expression,
         r: Expression
     ): Expression =
@@ -80,10 +80,10 @@ object Desugar {
     def vecOp(
         n: Expression,
         field: String,
-        elemType: Expression,
+        elemType: Type,
         args: Expression*
     ): Expression =
-      appOp(n, "Vectors", field, elemType +: args)
+      appOp(n, "Vectors", field, args)
 
     val desugarOps = {
       def relational(

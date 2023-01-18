@@ -34,8 +34,8 @@ object DbType {
 
   case class Nullable(tipe: Atomic) extends DbType
 
-  def fromCooma(tipe: Expression): Option[DbType] = {
-    def getAtomicType(tipe: Expression): Option[Atomic] =
+  def fromCooma(tipe: Type): Option[DbType] = {
+    def getAtomicType(tipe: Type): Option[Atomic] =
       tipe match {
         case BoolT() => Some(Boolean)
         case IntT()  => Some(Integer)
@@ -43,7 +43,7 @@ object DbType {
         case _       => None
       }
     tipe match {
-      case App(Idn(IdnUse("Option")), Vector(tipe)) =>
+      case AppT(IdnT(IdnUse("Option")), Vector(tipe)) =>
         getAtomicType(tipe).map(Nullable)
       case tipe => getAtomicType(tipe)
     }

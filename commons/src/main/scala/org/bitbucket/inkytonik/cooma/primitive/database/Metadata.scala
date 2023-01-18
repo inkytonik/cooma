@@ -40,7 +40,7 @@ object Metadata {
       coomaTables match {
         case FieldType(
               name,
-              App(Idn(IdnUse("Table")), Vector(RecT(coomaColumns)))
+              AppT(IdnT(IdnUse("Table")), Vector(RecT(coomaColumns)))
             ) +: tl =>
           auxColumns(coomaColumns) match {
             case Some(columns) => auxTables(tl, out :+ Table(name, columns))

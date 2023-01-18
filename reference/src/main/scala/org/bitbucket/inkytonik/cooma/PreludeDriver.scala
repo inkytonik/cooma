@@ -64,18 +64,17 @@ class PreludeDriver extends Driver {
         analyser.entityType(entity) match {
           case Some(tipe) =>
             entity match {
-              case LetEntity(decl) =>
-                if (entityIsType(entity))
-                  builder.addOne(StaticLetEntry(id, tipe, decl.expression))
-                else
-                  builder.addOne(StaticTypedEntry(id, tipe))
+              case LetEntity(TypeLet(IdnDef(id), t)) =>
+                builder.addOne(StaticTypeEntry(id, tipe))
+              case LetEntity(ValLet(IdnDef(id), _, e)) =>
+                builder.addOne(StaticValEntry(id, tipe, e))
               case FunctionEntity(decl) =>
                 if (entityIsType(entity))
                   builder.addOne(
-                    StaticLetEntry(
+                    StaticValEntry(
                       id,
                       tipe,
-                      Fun(decl.body.arguments, decl.body.expression2)
+                      Fun(decl.body.arguments, decl.body.expression)
                     )
                   )
                 else

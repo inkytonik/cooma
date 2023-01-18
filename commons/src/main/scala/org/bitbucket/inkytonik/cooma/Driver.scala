@@ -140,24 +140,24 @@ abstract class Driver
 
   def printUsage(
       expression: Expression,
-      tipe: Expression,
+      tipe: Type,
       config: Config
   ): Unit = {
 
     def printArgument(argument: Argument): Unit = {
       config.output().emit(s"  ${argument.idnDef.identifier}: ")
-      def aux(t: Expression): Seq[String] =
+      def aux(t: Type): Seq[String] =
         t match {
-          case Idn(IdnUse(name)) if capabilityTypeNames(name) =>
+          case IdnT(IdnUse(name)) if capabilityTypeNames(name) =>
             Seq(capabilityDesc(name))
-          case Cat(e1, e2) =>
+          case CatT(e1, e2) =>
             aux(e1) ++ aux(e2)
           case StrT() =>
             Seq("a string")
           case t =>
             Seq(s"unsupported argument type ${show(t)}")
         }
-      val description = aux(argument.expression).mkString(", ")
+      val description = aux(argument.typeField).mkString(", ")
       config.output().emit(description)
       argument.optStringLit match {
         case Some(doc) =>
@@ -190,7 +190,7 @@ abstract class Driver
           arguments.map(printArgument)
       }
 
-    def printResultType(resultType: Expression): Unit =
+    def printResultType(resultType: Type): Unit =
       config.output().emitln(s"result type:\n  ${show(resultType)}")
 
     config.output().emitln("arguments:")

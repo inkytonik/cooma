@@ -1,10 +1,6 @@
 package org.bitbucket.inkytonik.cooma.test.semantic
 
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{
-  ASTNode,
-  Expression,
-  Uni
-}
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Type, Uni}
 import org.bitbucket.inkytonik.cooma.test.SemanticTests
 import org.bitbucket.inkytonik.cooma.{CoomaParser, SemanticAnalyser}
 import org.bitbucket.inkytonik.kiama.relation.Tree
@@ -18,18 +14,18 @@ class BoundTests extends SemanticTests with ScalaCheckDrivenPropertyChecks {
 
   val analyser = new SemanticAnalyser(new Tree[ASTNode, ASTNode](Uni()))
 
-  def parse(s: String): Expression = {
+  def parse(s: String): Type = {
     val source = StringSource(s)
     val positions = new Positions
     val p = new CoomaParser(source, positions)
-    val pr = p.pExpression(0)
+    val pr = p.pType(0)
     if (pr.hasValue)
-      p.value(pr).asInstanceOf[Expression]
+      p.value(pr).asInstanceOf[Type]
     else
       fail(p.formatParseError(pr.parseError, false))
   }
 
-  def parse(ss: Vector[String]): Vector[Expression] =
+  def parse(ss: Vector[String]): Vector[Type] =
     ss.map(parse)
 
   def runTest(tipes: Vector[String], expected: Option[String]): Unit = {

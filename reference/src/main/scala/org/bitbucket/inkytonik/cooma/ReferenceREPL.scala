@@ -16,7 +16,11 @@ trait ReferenceREPL extends REPL {
 
   self: Compiler with ReferenceBackend =>
 
-  import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{Expression, Program}
+  import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{
+    Expression,
+    Program,
+    Type
+  }
   import org.bitbucket.inkytonik.cooma.PrettyPrinter.{any, layout}
 
   var currentDynamicEnv: Env = _
@@ -33,7 +37,7 @@ trait ReferenceREPL extends REPL {
       program: Program,
       i: String,
       optTypeValue: Option[Expression],
-      optAliasedType: Option[Expression],
+      optAliasedType: Option[Type],
       config: Config,
       analyser: SemanticAnalyser
   ): Unit = {

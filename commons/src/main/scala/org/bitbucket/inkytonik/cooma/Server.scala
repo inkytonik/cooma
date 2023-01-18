@@ -113,7 +113,7 @@ trait Server {
       case ArgumentEntity(decl)  => Some(decl.idnDef)
       case CaseValueEntity(decl) => Some(decl.idnDef)
       case FunctionEntity(decl)  => Some(decl.idnDef)
-      case LetEntity(decl)       => Some(decl.idnDef)
+      case entity: LetEntity     => Some(entity.idnDef)
       case _ =>
         None
     }
@@ -163,12 +163,12 @@ trait Server {
       case Vector(r: RecT) =>
         hoverMarkdown(
           s"record field type ${n.identifier}",
-          analyser.unalias(n, n.expression)
+          analyser.unalias(n, n.typeField)
         )
       case Vector(v: VarT) =>
         hoverMarkdown(
           s"variant field type ${n.identifier}",
-          analyser.unalias(n, n.expression)
+          analyser.unalias(n, n.typeField)
         )
       case v =>
         s"fieldTypeHover: FieldType $n doesn't have a sensible parent $v"
@@ -194,8 +194,10 @@ trait Server {
         s"multiply-defined $i"
       case UnknownEntity() =>
         s"unknown $i"
-      case PredefLetEntity(name, tipe, value) =>
+      case PredefValEntity(name, tipe, value) =>
         hoverMarkdown(s"prelude $name", Some(tipe), Some(toDoc(value)))
+      case PredefTypeEntity(name, tipe) =>
+        hoverMarkdown(s"prelude $name", Some(tipe))
       case PredefTypedEntity(name, tipe) =>
         hoverMarkdown(s"prelude $name", Some(tipe))
       case e: CoomaOkEntity =>
@@ -228,7 +230,7 @@ trait Server {
 
   def hoverMarkdown(
       title: String,
-      tipe: Option[Expression] = None,
+      tipe: Option[Type] = None,
       optDoc: Option[Doc] = None
   ): String = {
 

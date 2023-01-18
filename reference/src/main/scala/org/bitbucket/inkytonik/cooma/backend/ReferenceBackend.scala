@@ -24,7 +24,6 @@ class ReferenceBackend(
   import org.bitbucket.inkytonik.cooma.CoomaParserSyntax
   import org.bitbucket.inkytonik.cooma.CoomaParserSyntax._
   import org.bitbucket.inkytonik.cooma.PrettyPrinter._
-  // import scala.collection.mutable
 
   override def backendName: String = "Reference"
 

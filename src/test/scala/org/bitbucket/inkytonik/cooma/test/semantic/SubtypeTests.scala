@@ -1,10 +1,6 @@
 package org.bitbucket.inkytonik.cooma.test.semantic
 
-import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{
-  ASTNode,
-  Expression,
-  Uni
-}
+import org.bitbucket.inkytonik.cooma.CoomaParserSyntax.{ASTNode, Type, Uni}
 import org.bitbucket.inkytonik.cooma.{CoomaParser, SemanticAnalyser}
 import org.bitbucket.inkytonik.kiama.relation.Tree
 import org.bitbucket.inkytonik.kiama.util.{StringSource, Tests}
@@ -16,18 +12,18 @@ class SubtypeTests extends Tests {
   val analyser = new SemanticAnalyser(new Tree[ASTNode, ASTNode](Uni()))
   import analyser.{subtype, subtypes}
 
-  def parseType(s: String): Expression = {
+  def parseType(s: String): Type = {
     val source = new StringSource(s)
     val positions = new Positions
     val p = new CoomaParser(source, positions)
-    val pr = p.pExpression(0)
+    val pr = p.pType(0)
     if (pr.hasValue)
-      p.value(pr).asInstanceOf[Expression]
+      p.value(pr).asInstanceOf[Type]
     else
       fail(p.formatParseError(pr.parseError, false))
   }
 
-  def parseTypes(ss: Vector[String]): Vector[Expression] =
+  def parseTypes(ss: Vector[String]): Vector[Type] =
     ss.map(parseType)
 
   // NOTE: these must be designed to not be sub-types of each other
