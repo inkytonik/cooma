@@ -39,13 +39,171 @@
     gte = fun (l : String, r : String) prim StrGte(l, r)
   }
 
+  // Useful type constructors
+
+  def Option (T : Type) Type = <<None : Unit, Some : T>>
+
+  def Either (A : Type, B : Type) Type = <<Left : A, Right : B>>
+
   val Vectors = {
-    append = fun (t : Type, v : Vector(t), e : t) prim VecAppend(t, v, e),
-    concat = fun (t : Type, l : Vector(t), r : Vector(t)) prim VecConcat(t, l, r),
-    get = fun (t : Type, v : Vector(t), i : Int) prim VecGet(t, v, i),
-    length = fun (t : Type, v : Vector(t)) prim VecLength(t, v),
-    prepend = fun (t : Type, v : Vector(t), e : t) prim VecPrepend(t, v, e),
-    put = fun (t : Type, v : Vector(t), i : Int, e : t) prim VecPut(t, v, i, e)
+
+    // primitives
+    val append = fun (t : Type, v : Vector(t), e : t) prim VecAppend(t, v, e)
+    val concat = fun (t : Type, l : Vector(t), r : Vector(t)) prim VecConcat(t, l, r)
+    val get = fun (t : Type, v : Vector(t), i : Int) prim VecGet(t, v, i)
+    val length = fun (t : Type, v : Vector(t)) prim VecLength(t, v)
+    val prepend = fun (t : Type, v : Vector(t), e : t) prim VecPrepend(t, v, e)
+    val put = fun (t : Type, v : Vector(t), i : Int, e : t) prim VecPut(t, v, i, e)
+
+    def contains(t : Type, v : Vector(t), x : t) Boolean = {
+      def aux(i : Int) Boolean =
+        i < length(t, v) match {
+          case True(_) =>
+            get(t, v, i) == x match {
+              case True(_) => true
+              case False(_) => aux(i + 1)
+            }
+          case False(_) =>
+            false
+        }
+      aux(0)
+    }
+
+    def exists(t : Type, v : Vector(t), p: (t) Boolean) Boolean = {
+      def aux(i : Int) Boolean =
+        i < length(t, v) match {
+          case True(_) =>
+            p(get(t, v, i)) match {
+              case True(_) => true
+              case False(_) => aux(i + 1)
+            }
+          case False(_) =>
+            false
+        }
+      aux(0)
+    }
+
+    def filter(t : Type, v : Vector(t), p : (t) Boolean) Vector(t) = {
+      def aux(i : Int, out : Vector(t)) Vector(t) =
+        i < length(t, v) match {
+          case True(_) => {
+            val x = get(t, v, i)
+            val next =
+              p(x) match {
+                case True(_) => append(t, out, x)
+                case False(_) => out
+              }
+            aux(i + 1, next)
+          }
+          case False(_) =>
+            out
+        }
+      aux(0, [])
+    }
+
+    def find(t : Type, v : Vector(t), p : (t) Boolean) Option(t) = {
+      def aux(i : Int) Option(t) =
+        i < length(t, v) match {
+          case True(_) => {
+            val x = get(t, v, i)
+            p(x) match {
+              case True(_) => <<Some = x>>
+              case False(_) => aux(i + 1)
+            }
+          }
+          case False(_) =>
+            <<None = {}>>
+        }
+      aux(0)
+    }
+
+    def flatMap(t0 : Type, t1 : Type, v : Vector(t0), f : (t0) Vector(t1)) Vector(t1) = {
+      def aux(i : Int, out : Vector(t1)) Vector(t1) =
+        i < length(t0, v) match {
+          case True(_) =>
+            aux(i + 1, concat(t1, out, f(get(t0, v, i))))
+          case False(_) =>
+            out
+        }
+      aux(0, [])
+    }
+
+    def forall(t : Type, v : Vector(t), p : (A) Boolean) Boolean = {
+      def aux(i : Int) Boolean =
+        i < length(t, v) match {
+          case True(_) =>
+            p(get(t, v, i)) match {
+              case True(_) => aux(i + 1)
+              case False(_) => false
+            }
+          case False(_) =>
+            true
+        }
+      aux(0)
+    }
+
+    def map(t0 : Type, t1 : Type, v : Vector(t0), f : (t0) t1) Vector(t1) = {
+      def aux(i : Int, out : Vector(t1)) Vector(t1) =
+        i < length(t0, v) match {
+          case True(_) =>
+            aux(i + 1, append(t1, out, f(get(t0, v, i))))
+          case False(_) =>
+            out
+        }
+      aux(0, [])
+    }
+
+    def reduce(t0 : Type, t1 : Type, v : Vector(t0), z : t1, f : (t1, t0) t1) t1 = {
+      def aux(i : Int, out : t1) t1 =
+        i < length(t0, v) match {
+          case True(_) =>
+            aux(i + 1, f(out, get(t0, v, i)))
+          case False(_) =>
+            out
+        }
+      aux(0, z)
+    }
+
+    def reverse(t : Type, v : Vector(t)) Vector(t) = {
+      def aux(i : Int, out : Vector(t)) Vector(t) =
+        i < length(t, v) match {
+          case True(_) =>
+            aux(i + 1, append(t, out, get(t, v, length(t, v) - i - 1)))
+          case False(_) =>
+            out
+        }
+      aux(0, [])
+    }
+
+    def slice(t : Type, v : Vector(t), start : Int, end : Int) Vector(t) = {
+      val j = if end < length(t, v) then end else length(t, v)
+      def aux(i : Int, out : Vector(t)) Vector(t) =
+        i < end match {
+          case True(_) => aux(i + 1, append(t, get(t, v, i)))
+          case False(_) => out
+        }
+      aux(if 0 < start then start else 0, [])
+    }
+
+    {
+      append = append,
+      concat = concat,
+      get = get,
+      length = length,
+      prepend = prepend,
+      put = put,
+      contains = contains,
+      exists = exists,
+      filter = filter,
+      find = find,
+      flatMap = flatMap,
+      forall = forall,
+      map = map,
+      reduce = reduce,
+      reverse = reverse,
+      slice = slice
+    }
+
   }
 
   // Capability types
@@ -118,12 +276,6 @@
   type Writer = {
     write : (s : String) <<Left : String, Right : Unit>>
   }
-
-  // Useful type constructors
-
-  def Option (T : Type) Type = <<None : Unit, Some : T>>
-
-  def Either (A : Type, B : Type) Type = <<Left : A, Right : B>>
 
   {}
 }
